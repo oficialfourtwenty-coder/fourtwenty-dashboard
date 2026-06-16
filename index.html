@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FT Dashboard</title>
+<style>
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--border:#1a1a1a;--text:#f0f0f0;--text2:#888;--text3:#444;--red:#ef4444;--amber:#eab308;--green:#22c55e;--blue:#3b82f6;--r:10px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:20px;min-height:100vh}
+.header{display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#1a2a10,#0a1a08);border:1px solid #2a4020;display:flex;align-items:center;justify-content:center;font-size:16px}
+.brand{font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.date{font-size:11px;color:var(--text3)}
+.time{font-size:24px;font-weight:300;color:#555;font-variant-numeric:tabular-nums}
+.stats{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px;display:flex;align-items:center;gap:8px}
+.stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
+.stat-value{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat-red{border-color:#3d1414;background:#1a0a0a}
+.stat-red .stat-value{color:var(--red)}
+.stat-blue{border-color:#1a2540;background:#0a1020}
+.stat-blue .stat-value{color:var(--blue)}
+.stat-green{border-color:#143d20;background:#0a1a10}
+.stat-green .stat-value{color:var(--green)}
+.grid{display:grid;grid-template-columns:1fr 280px;gap:20px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+.section-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.task{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);margin-bottom:6px;transition:all .15s}
+.task:hover{border-color:#333}
+.task-check{width:16px;height:16px;border-radius:4px;border:2px solid #333;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.task-check:hover{border-color:#555}
+.task-check.done{background:var(--green);border-color:var(--green)}
+.task-check.done::after{content:'✓';font-size:10px;color:#000;font-weight:700}
+.task-name{flex:1;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.task-name.done{text-decoration:line-through;color:var(--text3)}
+.task-project{font-size:10px;color:var(--text3)}
+.badge{font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 8px;border-radius:4px;text-transform:uppercase;white-space:nowrap}
+.badge-alta{background:#1a0a0a;border:1px solid #3d1414;color:var(--red)}
+.badge-media{background:#1a1508;border:1px solid #3d3014;color:var(--amber)}
+.badge-baja{background:#0a1a10;border:1px solid #143d20;color:var(--green)}
+.area-tag{font-size:12px;padding:2px 6px;border-radius:4px}
+.sidebar-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px;margin-bottom:8px}
+.project-status{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.project-name{font-size:13px;font-weight:600;color:#ddd}
+.progress-bg{height:4px;background:var(--bg3);border-radius:2px;margin-top:8px;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px;transition:width .5s}
+.capture-input{width:100%;background:#0d0d0d;border:1px solid #1e1e1e;border-radius:8px;padding:10px 14px;color:#ccc;font-size:13px;font-family:inherit;outline:none;transition:border-color .2s}
+.capture-input:focus{border-color:var(--green)}
+.capture-input::placeholder{color:#333}
+.note{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;background:#0d0d0d;border:1px solid #151515;font-size:11px;color:var(--text2);margin-top:4px}
+.note-del{color:#333;cursor:pointer;font-size:10px;flex-shrink:0}
+.note-del:hover{color:var(--red)}
+.area-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;background:#0d0d0d;margin-bottom:4px}
+.area-count{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.empty-state{background:#0a1a10;border:1px solid #143d20;border-radius:var(--r);padding:24px;text-align:center}
+.empty-icon{font-size:20px;margin-bottom:8px}
+.empty-text{font-size:13px;color:var(--green)}
+.divider{border-top:1px solid #141414;margin:16px 0}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div>
+      <div class="brand">FourTwenty</div>
+      <div class="date" id="date"></div>
+    </div>
+  </div>
+  <div class="time" id="time"></div>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="grid">
+  <div>
+    <div class="section-title"><span style="color:var(--red)">🔥</span> HOY — EJECUTAR POR PRIORIDAD</div>
+    <div id="tasks"></div>
+  </div>
+  <div>
+    <div class="section-title">📁 Proyectos activos</div>
+    <div id="projects"></div>
+
+    <div class="divider"></div>
+
+    <div class="section-title">✏️ Captura rápida</div>
+    <input class="capture-input" id="capture" placeholder="Idea rápida..." />
+    <div id="notes"></div>
+
+    <div class="divider"></div>
+
+    <div class="section-title">🗂️ Tareas por área</div>
+    <div id="areas"></div>
+  </div>
+</div>
+
+<script>
+const PRIORITIES = {
+  "🔴 Alta": { cls: "badge-alta", label: "ALTA", order: 0 },
+  "🟡 Media": { cls: "badge-media", label: "MEDIA", order: 1 },
+  "🟢 Baja": { cls: "badge-baja", label: "BAJA", order: 2 }
+};
+const AREAS = {
+  "🎨 Diseño": { emoji: "🎨", color: "#60a5fa" },
+  "📱 Contenidos": { emoji: "📱", color: "#a78bfa" },
+  "🏭 Producción / Taller": { emoji: "🏭", color: "#f97316" },
+  "💰 Finanzas": { emoji: "💰", color: "#22c55e" },
+  "🌐 Web / Ecommerce": { emoji: "🌐", color: "#a3764f" },
+  "📣 Marketing / Campaña": { emoji: "📣", color: "#ec4899" },
+  "⚙️ Operación": { emoji: "⚙️", color: "#888" }
+};
+
+// Demo data — replace with real Notion API connection via backend
+const TASKS = [
+  { name: "Diseñar estampado Bob v2", priority: "🔴 Alta", project: "BOB", area: "🎨 Diseño", status: "🔵 En curso", done: false },
+  { name: "Cargar productos BOB a tienda", priority: "🔴 Alta", project: "BOB", area: "🌐 Web / Ecommerce", status: "⚪ Por hacer", done: false },
+  { name: "Filmar contenido lookbook", priority: "🟡 Media", project: "BOB", area: "📱 Contenidos", status: "⚪ Por hacer", done: false },
+  { name: "Cerrar presupuesto taller", priority: "🟡 Media", project: "DENIM FT", area: "💰 Finanzas", status: "⚪ Por hacer", done: false },
+  { name: "Revisar moldería jean", priority: "🟢 Baja", project: "DENIM FT", area: "🎨 Diseño", status: "⚪ Por hacer", done: false },
+  { name: "Planificar campaña TWENTY TIME", priority: "🟢 Baja", project: "TWENTY TIME", area: "📣 Marketing / Campaña", status: "⚪ Por hacer", done: false }
+];
+
+const PROJECTS = [
+  { name: "BOB", status: "En curso", progress: 33 },
+  { name: "DENIM FT", status: "Sin empezar", progress: 0 },
+  { name: "TWENTY TIME", status: "Sin empezar", progress: 0 }
+];
+
+let tasks = [...TASKS];
+let notes = JSON.parse(localStorage.getItem("ft-notes") || "[]");
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById("time").textContent = now.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+  const d = now.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
+  document.getElementById("date").textContent = d.charAt(0).toUpperCase() + d.slice(1);
+}
+
+function renderStats() {
+  const pending = tasks.filter(t => !t.done).length;
+  const alta = tasks.filter(t => !t.done && t.priority === "🔴 Alta").length;
+  const curso = tasks.filter(t => !t.done && t.status === "🔵 En curso").length;
+  const done = tasks.filter(t => t.done).length;
+
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><span class="stat-label">Pendientes</span><span class="stat-value">${pending}</span></div>
+    ${alta ? `<div class="stat stat-red"><span class="stat-label">🔴 Urgentes</span><span class="stat-value">${alta}</span></div>` : ""}
+    ${curso ? `<div class="stat stat-blue"><span class="stat-label">🔵 En curso</span><span class="stat-value">${curso}</span></div>` : ""}
+    ${done ? `<div class="stat stat-green"><span class="stat-label">✅ Hechas</span><span class="stat-value">${done}</span></div>` : ""}
+  `;
+}
+
+function renderTasks() {
+  const active = tasks.filter(t => !t.done).sort((a, b) => {
+    const pa = PRIORITIES[a.priority]?.order ?? 3;
+    const pb = PRIORITIES[b.priority]?.order ?? 3;
+    return pa - pb;
+  });
+
+  if (active.length === 0) {
+    document.getElementById("tasks").innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Todo hecho por hoy</div></div>`;
+    return;
+  }
+
+  document.getElementById("tasks").innerHTML = active.map((t, i) => {
+    const p = PRIORITIES[t.priority] || { cls: "", label: "—" };
+    const a = AREAS[t.area];
+    const isCurso = t.status === "🔵 En curso";
+    return `<div class="task" style="${isCurso ? 'border-color:#1a2540;background:#0a1020' : ''}">
+      <div class="task-check" onclick="toggleTask(${i})" title="Marcar hecha"></div>
+      <div style="flex:1;min-width:0">
+        <div class="task-name">${t.name}</div>
+        <div class="task-project">${t.project || ""}</div>
+      </div>
+      ${a ? `<span class="area-tag" style="background:${a.color}15;color:${a.color}">${a.emoji}</span>` : ""}
+      <span class="badge ${p.cls}">${p.label}</span>
+    </div>`;
+  }).join("");
+}
+
+function toggleTask(idx) {
+  const active = tasks.filter(t => !t.done).sort((a, b) => {
+    const pa = PRIORITIES[a.priority]?.order ?? 3;
+    const pb = PRIORITIES[b.priority]?.order ?? 3;
+    return pa - pb;
+  });
+  const task = active[idx];
+  if (task) {
+    const realIdx = tasks.indexOf(task);
+    tasks[realIdx].done = true;
+  }
+  renderAll();
+}
+
+function renderProjects() {
+  document.getElementById("projects").innerHTML = PROJECTS.map(p => {
+    const color = p.status === "En curso" ? "var(--blue)" : "#666";
+    const label = p.status === "En curso" ? "EN CURSO" : "SIN EMPEZAR";
+    return `<div class="sidebar-card">
+      <div class="project-status" style="color:${color}">${label}</div>
+      <div class="project-name">${p.name}</div>
+      <div class="progress-bg"><div class="progress-fill" style="width:${p.progress}%;background:${color}"></div></div>
+    </div>`;
+  }).join("");
+}
+
+function renderAreas() {
+  const counts = {};
+  tasks.filter(t => !t.done).forEach(t => {
+    if (t.area) counts[t.area] = (counts[t.area] || 0) + 1;
+  });
+  document.getElementById("areas").innerHTML = Object.entries(AREAS).map(([name, a]) => {
+    const c = counts[name] || 0;
+    if (c === 0) return "";
+    return `<div class="area-row">
+      <span style="font-size:14px">${a.emoji}</span>
+      <span style="flex:1;font-size:11px;color:var(--text2)">${name.replace(/^[^\s]+\s/, "")}</span>
+      <span class="area-count" style="color:${a.color}">${c}</span>
+    </div>`;
+  }).join("");
+}
+
+function renderNotes() {
+  document.getElementById("notes").innerHTML = notes.slice(0, 8).map((n, i) => `
+    <div class="note">
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n}</span>
+      <span class="note-del" onclick="deleteNote(${i})">✕</span>
+    </div>
+  `).join("");
+}
+
+function deleteNote(i) {
+  notes.splice(i, 1);
+  localStorage.setItem("ft-notes", JSON.stringify(notes));
+  renderNotes();
+}
+
+document.getElementById("capture").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.value.trim()) {
+    notes.unshift(e.target.value.trim());
+    if (notes.length > 20) notes.pop();
+    localStorage.setItem("ft-notes", JSON.stringify(notes));
+    e.target.value = "";
+    renderNotes();
+  }
+});
+
+function renderAll() {
+  updateClock();
+  renderStats();
+  renderTasks();
+  renderProjects();
+  renderAreas();
+  renderNotes();
+}
+
+renderAll();
+setInterval(updateClock, 60000);
+</script>
+</body>
+</html>
