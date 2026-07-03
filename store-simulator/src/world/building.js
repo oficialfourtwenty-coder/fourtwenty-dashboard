@@ -1,23 +1,30 @@
-// Obra gruesa del local FOURTWENTY: 3 pisos VACÍOS.
+// Obra gruesa del local FOURTWENTY: 3 pisos VACÍOS, escala x5.
 // Losas, paredes, 2 escaleras y barandas en los huecos. Nada más:
 // el diseño interior lo hace el dueño desde cero (ver CLAUDE.md).
+// Ambientación pedida por el dueño: piso blanco, luz blanca, look GTA SA.
 import * as THREE from 'three';
-import { concreteFloor, plasterWall, concreteCeiling, stairConcrete, windowGlow } from './textures.js';
+import { whiteFloor, whitePlaster, lightCeiling, stairConcrete, windowDaylight } from './textures.js';
 
 // Dimensiones (metros)
-export const W = 14;            // ancho (x: -7..7)
-export const D = 10;            // profundidad (z: -5..5)
-export const FLOOR_H = 3.5;     // altura entre pisos
-export const FLOOR_YS = [0, 3.5, 7.0];
-const SLAB = 0.25;              // espesor de losa
-const WALL_T = 0.3;             // espesor de pared
-const TOP = FLOOR_YS[2] + FLOOR_H; // 10.5: cara superior interior
+export const W = 70;             // ancho (x: -35..35) — antes 14
+export const D = 50;             // profundidad (z: -25..25) — antes 10
+export const FLOOR_H = 4.0;      // altura entre pisos
+export const FLOOR_YS = [0, 4.0, 8.0];
+const HX = W / 2, HZ = D / 2;
+const SLAB = 0.3;                // espesor de losa
+const WALL_T = 0.3;              // espesor de pared
+const TOP = FLOOR_YS[2] + FLOOR_H; // 12: cara superior interior
+export const INTERIOR = { x: HX - WALL_T / 2, z: HZ - WALL_T / 2 }; // caras internas
 
 // Banda de escaleras contra la pared del fondo (z+)
-const ST_Z0 = 3.3, ST_Z1 = 4.85;
+const ST_Z0 = HZ - 3.0;          // 22.0
+const ST_Z1 = HZ - WALL_T / 2;   // 24.85
+const RUN = 11;                  // largo de cada tramo
 // Tramo A: piso 1 → 2, sube hacia +x. Tramo B: piso 2 → 3, sube hacia -x.
-const RAMP_A = { x0: -6.3, x1: -0.9, y0: 0, y1: 3.5 };
-const RAMP_B = { x0: 6.3, x1: 0.9, y0: 3.5, y1: 7.0 };
+const RAMP_A = { x0: -HX + 1, x1: -HX + 1 + RUN, y0: 0, y1: FLOOR_YS[1] };
+const RAMP_B = { x0: HX - 1, x1: HX - 1 - RUN, y0: FLOOR_YS[1], y1: FLOOR_YS[2] };
+const HOLE_A = { minX: -INTERIOR.x, maxX: RAMP_A.x1 };
+const HOLE_B = { minX: RAMP_B.x1, maxX: INTERIOR.x };
 
 const STEP_TOL = 0.55; // desnivel máximo que BOB "sube" sin escalera
 
@@ -25,16 +32,16 @@ const STEP_TOL = 0.55; // desnivel máximo que BOB "sube" sin escalera
 // rect plano: {minX,maxX,minZ,maxZ,y} · rampa: {…, ramp:true, x0,x1,y0,y1}
 const surfaces = [
   // Piso 1: todo el interior
-  { minX: -7, maxX: 7, minZ: -5, maxZ: 5, y: 0 },
-  // Piso 2: losa completa menos el hueco de la escalera A (x -6.85..-0.9 en la banda)
-  { minX: -7, maxX: 7, minZ: -5, maxZ: ST_Z0, y: 3.5 },
-  { minX: -0.9, maxX: 7, minZ: ST_Z0, maxZ: 5, y: 3.5 },
-  // Piso 3: losa completa menos el hueco de la escalera B (x 0.9..6.85 en la banda)
-  { minX: -7, maxX: 7, minZ: -5, maxZ: ST_Z0, y: 7.0 },
-  { minX: -7, maxX: 0.9, minZ: ST_Z0, maxZ: 5, y: 7.0 },
+  { minX: -HX, maxX: HX, minZ: -HZ, maxZ: HZ, y: 0 },
+  // Piso 2: losa completa menos el hueco de la escalera A
+  { minX: -HX, maxX: HX, minZ: -HZ, maxZ: ST_Z0, y: FLOOR_YS[1] },
+  { minX: HOLE_A.maxX, maxX: HX, minZ: ST_Z0, maxZ: HZ, y: FLOOR_YS[1] },
+  // Piso 3: losa completa menos el hueco de la escalera B
+  { minX: -HX, maxX: HX, minZ: -HZ, maxZ: ST_Z0, y: FLOOR_YS[2] },
+  { minX: -HX, maxX: HOLE_B.minX, minZ: ST_Z0, maxZ: HZ, y: FLOOR_YS[2] },
   // Rampas (la superficie de las escaleras)
-  { minX: -6.3, maxX: -0.9, minZ: ST_Z0, maxZ: ST_Z1, ramp: true, ...RAMP_A },
-  { minX: 0.9, maxX: 6.3, minZ: ST_Z0, maxZ: ST_Z1, ramp: true, ...RAMP_B },
+  { minX: RAMP_A.x0, maxX: RAMP_A.x1, minZ: ST_Z0, maxZ: ST_Z1, ramp: true, ...RAMP_A },
+  { minX: RAMP_B.x1, maxX: RAMP_B.x0, minZ: ST_Z0, maxZ: ST_Z1, ramp: true, ...RAMP_B },
 ];
 
 // Altura de piso bajo (x,z) alcanzable desde la altura actual.
@@ -64,17 +71,17 @@ export function floorIndexAt(y) {
 // ---- Colliders AABB {minX,maxX,minY,maxY,minZ,maxZ} -----------------------
 const colliders = [
   // Paredes exteriores (altura completa)
-  { minX: -7.15, maxX: 7.15, minY: 0, maxY: TOP, minZ: 4.85, maxZ: 5.15 },   // fondo
-  { minX: -7.15, maxX: 7.15, minY: 0, maxY: TOP, minZ: -5.15, maxZ: -4.85 }, // frente
-  { minX: -7.15, maxX: -6.85, minY: 0, maxY: TOP, minZ: -5, maxZ: 5 },       // oeste
-  { minX: 6.85, maxX: 7.15, minY: 0, maxY: TOP, minZ: -5, maxZ: 5 },         // este
+  { minX: -HX - WALL_T, maxX: HX + WALL_T, minY: 0, maxY: TOP, minZ: INTERIOR.z, maxZ: HZ + WALL_T },   // fondo
+  { minX: -HX - WALL_T, maxX: HX + WALL_T, minY: 0, maxY: TOP, minZ: -HZ - WALL_T, maxZ: -INTERIOR.z }, // frente
+  { minX: -HX - WALL_T, maxX: -INTERIOR.x, minY: 0, maxY: TOP, minZ: -HZ, maxZ: HZ },                   // oeste
+  { minX: INTERIOR.x, maxX: HX + WALL_T, minY: 0, maxY: TOP, minZ: -HZ, maxZ: HZ },                     // este
   // Barandas en los bordes de los huecos de escalera
-  { minX: -6.85, maxX: -0.9, minY: 3.5, maxY: 4.6, minZ: 3.25, maxZ: 3.35 }, // piso 2
-  { minX: 0.9, maxX: 6.85, minY: 7.0, maxY: 8.1, minZ: 3.25, maxZ: 3.35 },   // piso 3
+  { minX: HOLE_A.minX, maxX: HOLE_A.maxX, minY: FLOOR_YS[1], maxY: FLOOR_YS[1] + 1.1, minZ: ST_Z0 - 0.05, maxZ: ST_Z0 + 0.05 }, // piso 2
+  { minX: HOLE_B.minX, maxX: HOLE_B.maxX, minY: FLOOR_YS[2], maxY: FLOOR_YS[2] + 1.1, minZ: ST_Z0 - 0.05, maxZ: ST_Z0 + 0.05 }, // piso 3
 ];
 export function getColliders() { return colliders; }
 
-export const SPAWN = new THREE.Vector3(0, 0, -2.5);
+export const SPAWN = new THREE.Vector3(0, 0, -18);
 
 // ---- Construcción visual ---------------------------------------------------
 function box(w, h, d, x, y, z, mat) {
@@ -85,7 +92,7 @@ function box(w, h, d, x, y, z, mat) {
 
 function buildStair(group, ramp, stepMat) {
   const rise = ramp.y1 - ramp.y0;
-  const steps = 14;
+  const steps = 16;
   const stepRise = rise / steps;
   const run = (ramp.x1 - ramp.x0) / steps; // con signo (B baja en x)
   const width = ST_Z1 - ST_Z0;
@@ -98,11 +105,11 @@ function buildStair(group, ramp, stepMat) {
 }
 
 function buildRail(group, minX, maxX, y, z) {
-  const mat = new THREE.MeshStandardMaterial({ color: 0x4a4038, roughness: 0.6, metalness: 0.4 });
+  const mat = new THREE.MeshStandardMaterial({ color: 0x8a8a86, roughness: 0.5, metalness: 0.5 });
   const len = maxX - minX;
   const bar = box(len, 0.07, 0.07, (minX + maxX) / 2, y + 1.05, z, mat);
   group.add(bar);
-  const posts = Math.max(2, Math.round(len / 1.2));
+  const posts = Math.max(2, Math.round(len / 1.5));
   for (let i = 0; i <= posts; i++) {
     group.add(box(0.06, 1.05, 0.06, minX + (len * i) / posts, y + 0.525, z, mat));
   }
@@ -111,52 +118,51 @@ function buildRail(group, minX, maxX, y, z) {
 export function buildBuilding(scene) {
   const group = new THREE.Group();
 
-  const floorMat = new THREE.MeshStandardMaterial({ map: concreteFloor(7, 5), roughness: 0.95 });
-  const wallMat = new THREE.MeshStandardMaterial({ map: plasterWall(6, 2), roughness: 1.0 });
-  const wallMatSide = new THREE.MeshStandardMaterial({ map: plasterWall(4, 2), roughness: 1.0 });
-  const ceilMat = new THREE.MeshStandardMaterial({ map: concreteCeiling(7, 5), roughness: 1.0 });
-  const stepMat = new THREE.MeshStandardMaterial({ map: stairConcrete(1, 1), roughness: 0.95 });
-  const glowMat = new THREE.MeshBasicMaterial({ map: windowGlow() });
+  const floorMat = new THREE.MeshStandardMaterial({ map: whiteFloor(W / 2, D / 2), roughness: 0.85 });
+  const wallMat = new THREE.MeshStandardMaterial({ map: whitePlaster(18, 3), roughness: 1.0 });
+  const wallMatSide = new THREE.MeshStandardMaterial({ map: whitePlaster(13, 3), roughness: 1.0 });
+  const ceilMat = new THREE.MeshStandardMaterial({ map: lightCeiling(W / 4, D / 4), roughness: 1.0 });
+  const stepMat = new THREE.MeshStandardMaterial({ map: stairConcrete(1, 1), color: 0xd6d6d2, roughness: 0.9 });
+  const glowMat = new THREE.MeshBasicMaterial({ map: windowDaylight() });
 
   // Losa piso 1 (contrapiso)
   group.add(box(W, SLAB, D, 0, -SLAB / 2, 0, floorMat));
 
   // Losas pisos 2 y 3 (con hueco de escalera) + cara inferior = cielorraso
-  // Piso 2: hueco x -6.85..-0.9 en banda z 3.3..5
-  for (const [y, holeMinX, holeMaxX] of [
-    [3.5, -6.85, -0.9],
-    [7.0, 0.9, 6.85],
+  for (const [y, hole] of [
+    [FLOOR_YS[1], HOLE_A],
+    [FLOOR_YS[2], HOLE_B],
   ]) {
-    // pieza principal (z -5..3.3)
-    group.add(box(W, SLAB, ST_Z0 + 5, 0, y - SLAB / 2, (ST_Z0 - 5) / 2, floorMat));
+    // pieza principal (z -HZ..ST_Z0)
+    group.add(box(W, SLAB, ST_Z0 + HZ, 0, y - SLAB / 2, (ST_Z0 - HZ) / 2, floorMat));
     // banda del fondo, partes a los costados del hueco
-    if (holeMinX > -7) {
-      const w = holeMinX + 7;
-      group.add(box(w, SLAB, 5 - ST_Z0, -7 + w / 2, y - SLAB / 2, (ST_Z0 + 5) / 2, floorMat));
+    if (hole.minX > -HX) {
+      const w = hole.minX + HX;
+      group.add(box(w, SLAB, HZ - ST_Z0, -HX + w / 2, y - SLAB / 2, (ST_Z0 + HZ) / 2, floorMat));
     }
-    if (holeMaxX < 7) {
-      const w = 7 - holeMaxX;
-      group.add(box(w, SLAB, 5 - ST_Z0, 7 - w / 2, y - SLAB / 2, (ST_Z0 + 5) / 2, floorMat));
+    if (hole.maxX < HX) {
+      const w = HX - hole.maxX;
+      group.add(box(w, SLAB, HZ - ST_Z0, HX - w / 2, y - SLAB / 2, (ST_Z0 + HZ) / 2, floorMat));
     }
   }
   // Losa de techo
   group.add(box(W, SLAB, D, 0, TOP + SLAB / 2, 0, ceilMat));
 
   // Paredes exteriores
-  group.add(box(W + WALL_T * 2, TOP, WALL_T, 0, TOP / 2, 5 + WALL_T / 2, wallMat));   // fondo
-  group.add(box(W + WALL_T * 2, TOP, WALL_T, 0, TOP / 2, -5 - WALL_T / 2, wallMat));  // frente
-  group.add(box(WALL_T, TOP, D, -7 - WALL_T / 2, TOP / 2, 0, wallMatSide));           // oeste
-  group.add(box(WALL_T, TOP, D, 7 + WALL_T / 2, TOP / 2, 0, wallMatSide));            // este
+  group.add(box(W + WALL_T * 2, TOP, WALL_T, 0, TOP / 2, HZ + WALL_T / 2, wallMat));   // fondo
+  group.add(box(W + WALL_T * 2, TOP, WALL_T, 0, TOP / 2, -HZ - WALL_T / 2, wallMat));  // frente
+  group.add(box(WALL_T, TOP, D, -HX - WALL_T / 2, TOP / 2, 0, wallMatSide));           // oeste
+  group.add(box(WALL_T, TOP, D, HX + WALL_T / 2, TOP / 2, 0, wallMatSide));            // este
 
-  // Aberturas del frente (planos "vidriera" con luz falsa PS2, cara interior)
-  const front = -4.83;
-  const vidriera = new THREE.Mesh(new THREE.PlaneGeometry(6, 2.6), glowMat);
-  vidriera.position.set(0, 1.45, front);
+  // Aberturas del frente (planos "vidriera" con luz de día, cara interior)
+  const front = -INTERIOR.z + 0.02;
+  const vidriera = new THREE.Mesh(new THREE.PlaneGeometry(30, 3.2), glowMat);
+  vidriera.position.set(0, 1.7, front);
   group.add(vidriera); // vidriera del local, piso 1
-  for (const fy of [3.5, 7.0]) {
-    for (const wx of [-3.5, 3.5]) {
-      const win = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.5), glowMat);
-      win.position.set(wx, fy + 1.7, front);
+  for (const fy of [FLOOR_YS[1], FLOOR_YS[2]]) {
+    for (const wx of [-14, -7, 0, 7, 14]) {
+      const win = new THREE.Mesh(new THREE.PlaneGeometry(4, 1.9), glowMat);
+      win.position.set(wx, fy + 2.0, front);
       group.add(win);
     }
   }
@@ -166,20 +172,23 @@ export function buildBuilding(scene) {
   buildStair(group, RAMP_B, stepMat);
 
   // Barandas de los huecos
-  buildRail(group, -6.85, -0.9, 3.5, 3.3);
-  buildRail(group, 0.9, 6.85, 7.0, 3.3);
+  buildRail(group, HOLE_A.minX, HOLE_A.maxX, FLOOR_YS[1], ST_Z0);
+  buildRail(group, HOLE_B.minX, HOLE_B.maxX, FLOOR_YS[2], ST_Z0);
 
   scene.add(group);
   return group;
 }
 
-// Luces cálidas por piso + relleno general.
+// Luz blanca pareja (look GTA SA interior) + puntuales para dar profundidad.
 export function buildLights(scene) {
-  scene.add(new THREE.HemisphereLight(0xf5e3c0, 0x4a3826, 0.75));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xa8a8a0, 0.9));
+  const key = new THREE.DirectionalLight(0xffffff, 1.1);
+  key.position.set(30, 40, -20);
+  scene.add(key);
   for (const fy of FLOOR_YS) {
-    for (const lx of [-3.5, 3.5]) {
-      const p = new THREE.PointLight(0xffd9a0, 26, 14, 2);
-      p.position.set(lx, fy + 2.9, 0);
+    for (const [lx, lz] of [[-17, 0], [17, 0], [0, -12], [0, 12]]) {
+      const p = new THREE.PointLight(0xffffff, 34, 30, 2);
+      p.position.set(lx, fy + FLOOR_H - 0.5, lz);
       scene.add(p);
     }
   }

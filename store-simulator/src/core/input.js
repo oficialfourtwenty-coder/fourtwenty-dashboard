@@ -40,6 +40,11 @@ export class Input {
     return { x, z };
   }
 
+  // Shift apretado → correr (estilo GTA).
+  sprinting() {
+    return this.keys.has('ShiftLeft') || this.keys.has('ShiftRight');
+  }
+
   // Delta de mouse acumulado desde el último frame (lo consume la cámara).
   consumeMouse() {
     const d = { x: this.mouseDX, y: this.mouseDY };

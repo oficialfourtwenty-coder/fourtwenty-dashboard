@@ -6,10 +6,10 @@ export class Hud {
     this._lastFloor = 0;
   }
 
-  setFloor(n) {
+  setFloor(n, label) {
     if (n === this._lastFloor) return;
     this._lastFloor = n;
-    this.floorEl.textContent = `PISO ${n}`;
+    this.floorEl.textContent = label ? `PISO ${n} · ${label}` : `PISO ${n}`;
   }
 
   showOverlay(show) {

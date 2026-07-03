@@ -1,22 +1,24 @@
-// FOURTWENTY Store Simulator — Fase 1: local de 3 pisos vacío + BOB.
+// FOURTWENTY Store Simulator — local 3 pisos (x5), BOB 3D con feel GTA.
 import * as THREE from 'three';
 import { buildBuilding, buildLights, getColliders, SPAWN, floorIndexAt, FLOOR_YS } from './world/building.js';
-import { Bob } from './player/bob.js';
+import { buildGallery } from './world/gallery.js';
+import { COLLECTIONS } from './world/collections.js';
+import { Player } from './player/bob3d.js';
 import { ThirdPersonCamera } from './core/camera.js';
 import { Input } from './core/input.js';
 import { Hud } from './ui/hud.js';
 
-const PIXEL_SCALE = 3; // render interno a 1/3 de resolución → look PS2
+const PIXEL_SCALE = 2; // render interno a 1/2 de resolución → nítido pero retro (GTA SA)
 
 const canvas = document.getElementById('game');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
 renderer.setPixelRatio(1);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x2a2018);
-scene.fog = new THREE.Fog(0x2a2018, 9, 26);
+scene.background = new THREE.Color(0xd8dade);
+scene.fog = new THREE.Fog(0xd8dade, 28, 85);
 
-const camera = new THREE.PerspectiveCamera(62, 1, 0.1, 60);
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 140);
 
 function resize() {
   const w = Math.max(320, Math.floor(window.innerWidth / PIXEL_SCALE));
@@ -30,9 +32,12 @@ resize();
 
 buildBuilding(scene);
 buildLights(scene);
-const colliders = getColliders();
+const colliders = [
+  ...getColliders(),
+  ...COLLECTIONS.flatMap((col) => buildGallery(scene, col)),
+];
 
-const bob = new Bob(scene, SPAWN);
+const bob = new Player(scene, SPAWN);
 const tpCam = new ThirdPersonCamera(camera);
 const input = new Input(canvas);
 const hud = new Hud();
@@ -45,7 +50,8 @@ document.addEventListener('pointerlockchange', () => {
   hud.showOverlay(!input.locked);
 });
 
-window.__bob = bob; // hook de debug/testeo
+window.__bob = bob; // hooks de debug/testeo
+window.__cam = tpCam;
 
 const timer = new THREE.Timer();
 renderer.setAnimationLoop(() => {
@@ -57,7 +63,7 @@ renderer.setAnimationLoop(() => {
   input.consumeInteract(); // E: reservado para Fase 2 (prendas)
 
   const floorIdx = floorIndexAt(bob.position.y);
-  hud.setFloor(floorIdx);
+  hud.setFloor(floorIdx, COLLECTIONS[floorIdx - 1].name);
   tpCam.update(dt, mouse, bob.position, FLOOR_YS[floorIdx - 1]);
 
   renderer.render(scene, camera);

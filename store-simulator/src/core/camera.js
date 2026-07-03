@@ -5,8 +5,9 @@
 // - rango de pitch acotado: pegada al personaje, no free-cam tipo Minecraft
 // (la versión anterior quedó en camera.backup.js)
 import * as THREE from 'three';
+import { INTERIOR, FLOOR_H } from '../world/building.js';
 
-const DIST = 3.1;          // distancia al personaje (antes 4.0)
+const DIST = 3.4;          // distancia al personaje
 const FOCUS_HEIGHT = 1.15; // mira al pecho, no a la cabeza → cámara más baja
 const PITCH_MIN = -0.32;   // no se puede mirar tan al piso…
 const PITCH_MAX = 0.72;    // …ni tan al cielo (antes 1.15)
@@ -69,9 +70,9 @@ export class ThirdPersonCamera {
     );
 
     // 6) Clamp al interior del local (paredes) y al piso/techo del nivel actual.
-    cp.x = THREE.MathUtils.clamp(cp.x, -6.6, 6.6);
-    cp.z = THREE.MathUtils.clamp(cp.z, -4.6, 4.6);
-    cp.y = THREE.MathUtils.clamp(cp.y, floorY + 0.3, floorY + 3.1);
+    cp.x = THREE.MathUtils.clamp(cp.x, -(INTERIOR.x - 0.35), INTERIOR.x - 0.35);
+    cp.z = THREE.MathUtils.clamp(cp.z, -(INTERIOR.z - 0.35), INTERIOR.z - 0.35);
+    cp.y = THREE.MathUtils.clamp(cp.y, floorY + 0.3, floorY + FLOOR_H - 0.5);
 
     this.camera.position.copy(cp);
     this.camera.lookAt(this.focus);

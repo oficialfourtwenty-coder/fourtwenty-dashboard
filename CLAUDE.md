@@ -15,11 +15,16 @@ store-simulator/    → el juego (Vite + Three.js)
 ## Decisiones técnicas (NO re-discutir, ya están tomadas)
 
 - **Motor:** Three.js + Vite. Todo en navegador, gratis, sin Blender.
-- **Estética:** low-poly estilo PS2 — texturas 256px `NearestFilter`, render interno a baja
-  resolución reescalado con `image-rendering: pixelated`, niebla suave, luz cálida,
-  paleta tipo Ralph Lauren '92 (verde cazador, bordó, crema, dorado).
-- **BOB:** sprite 2D billboard (técnica Paper Mario/Doom) dentro del mundo 3D. Solo rota
-  en yaw hacia la cámara. Animación por frames PNG. **Nunca** modelo 3D.
+- **Estética (actualizada por el dueño):** look **GTA San Andreas** — piso blanco
+  showroom, paredes blancas, luz blanca pareja, render interno a 1/2 resolución
+  reescalado con `image-rendering: pixelated`, texturas procedurales 256px
+  `NearestFilter`, niebla clara. Movimiento con peso: aceleración/frenada en rampa,
+  giro suave, sprint con Shift.
+- **BOB (actualizado por el dueño):** modelo 3D low-poly en `public/assets/bob/bob.glb`
+  cargado por `src/player/bob3d.js` (escala y pies se normalizan solos; si el GLB trae
+  clips usa AnimationMixer, si no anima procedural; sombra blob estilo PS2). El sistema
+  sprite viejo (`src/player/bob.js` + PNGs) queda de **backup — NO TOCAR NI BORRAR**.
+  ⚠️ `bob.glb` existe solo en la máquina del dueño; falta pushearlo al repo.
 - **Probador:** sistema de capas PNG. BOB base + 1 PNG transparente por prenda dibujado
   sobre su pose, apiladas en tiempo real (torso/piernas/pies/accesorio). Como los avatares 2K.
 - **Login:** cuenta propia del juego, match por email contra la API de clientes de
@@ -37,9 +42,18 @@ store-simulator/    → el juego (Vite + Three.js)
 
 ## ⚠️ Regla de diseño (pedido explícito del dueño)
 
-El local es un **edificio de 3 pisos VACÍO** (obra gruesa: losas, paredes, escaleras).
-**El dueño diseña todo el interior desde cero.** NO agregar muebles, estanterías,
-percheros, probador, mostrador, decoración ni gráfica sin que él lo pida explícitamente.
+El local es un **edificio de 3 pisos** (obra gruesa: losas, paredes, escaleras) de
+**70 x 50 m por piso** (x5 del original, pedido del dueño). **El dueño diseña el
+interior desde cero.** NO agregar muebles, decoración ni gráfica sin que él lo pida
+explícitamente. Lo ya pedido y hecho:
+- **Una colección por piso** (pedido del dueño), cada una con galería/showroom estilo
+  Urban Monkey (foto de referencia): prendas colgadas con placas, atriles, pedestales
+  blancos, LEDs lineales y cartel con el nombre. Piso 1 `FT ESSENTIALS` (paleta '92),
+  piso 2 `FT STREET` (naranja/negro/gris), piso 3 `FT EXCLUSIVE` (dorado/negro, para
+  las exclusivas canjeables con FT$). Nombres/paletas editables en
+  `world/collections.js`; la geometría en `world/gallery.js`. Todo greybox/placeholder
+  hasta linkear TiendaNube (Fase 5): ahí cada colección se mapea a una categoría de TN
+  y aparecen los productos reales.
 
 ## Estado de fases
 
@@ -65,13 +79,17 @@ npm run build    # produce dist/
 ## Estructura del juego (`store-simulator/src/`)
 
 ```
-main.js               bootstrap: renderer PS2, loop, wiring de módulos
-core/input.js         input por acciones (WASD/flechas, mouse, E) — Fase 6 suma touch acá
-core/camera.js        cámara tercera persona: orbit yaw/pitch, follow exponencial, clamp al local
-world/textures.js     texturas procedurales 256px estilo PS2 (hormigón, revoque, escalera)
-world/building.js     obra gruesa: 3 losas, paredes, 2 escaleras, colliders AABB, sampleGround(x,z,y)
-player/bob.js         BOB billboard: movimiento relativo a cámara, colisión círculo-vs-AABB, frames
+main.js               bootstrap: renderer pixelado, loop, wiring de módulos
+core/input.js         input por acciones (WASD/flechas, Shift sprint, mouse, E) — Fase 6 suma touch
+core/camera.js        cámara GTA: inercia, auto-acomodo detrás al caminar, clamp al local
+world/textures.js     texturas procedurales 256px (piso blanco, pared blanca, escalera, ventanas)
+world/building.js     obra gruesa x5: 3 losas, paredes, 2 escaleras, colliders, sampleGround(x,z,y)
+world/collections.js  una colección por piso: nombre, paleta, títulos (editable)
+world/gallery.js      galería showroom reutilizable (greybox, pedido del dueño)
+player/bob3d.js       jugador ACTIVO: GLB + física GTA (aceleración, giro suave) + sombra blob
+player/bob.js         backup sprite 2D — NO TOCAR NI BORRAR
 ui/hud.js             HUD retro: título, indicador de piso, ayuda de controles
+tools/inspect_glb.py  inspector de GLB: skeleton, clips, tamaño
 ```
 
 Convenciones: ES modules, sin framework de UI (DOM plano para HUD), unidades en metros,

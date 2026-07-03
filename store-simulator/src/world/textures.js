@@ -95,6 +95,75 @@ export function stairConcrete(repeatX, repeatY) {
   return toTexture(c, repeatX, repeatY);
 }
 
+// Piso blanco: baldosas 2m con junta gris clara (look showroom GTA SA).
+export function whiteFloor(repeatX, repeatY) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#f2f1ed';
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  noise(ctx, 0, 0.04, 700);
+  ctx.strokeStyle = '#c9c7c0';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(2, 2, SIZE - 4, SIZE - 4);
+  // brillo sutil diagonal (piso pulido)
+  const g = ctx.createLinearGradient(0, 0, SIZE, SIZE);
+  g.addColorStop(0, 'rgba(255,255,255,0.10)');
+  g.addColorStop(0.5, 'rgba(0,0,0,0)');
+  g.addColorStop(1, 'rgba(120,120,115,0.08)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  return toTexture(c, repeatX, repeatY);
+}
+
+// Pared blanca tiza con textura leve.
+export function whitePlaster(repeatX, repeatY) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#efece4';
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  noise(ctx, 0, 0.05, 900);
+  const g = ctx.createLinearGradient(0, 0, 0, SIZE);
+  g.addColorStop(0, 'rgba(70,70,65,0.10)');
+  g.addColorStop(0.3, 'rgba(0,0,0,0)');
+  g.addColorStop(1, 'rgba(70,70,65,0.07)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  return toTexture(c, repeatX, repeatY);
+}
+
+// Cielorraso gris claro con placas.
+export function lightCeiling(repeatX, repeatY) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#dcdad4';
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  noise(ctx, 0, 0.04, 600);
+  ctx.strokeStyle = 'rgba(120,118,112,0.5)';
+  ctx.lineWidth = 2;
+  for (let x = 0; x <= SIZE; x += 64) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, SIZE); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, x); ctx.lineTo(SIZE, x); ctx.stroke();
+  }
+  return toTexture(c, repeatX, repeatY);
+}
+
+// Ventana con luz de día blanca (unlit, luz "falsa" estilo PS2).
+export function windowDaylight() {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 0, SIZE);
+  g.addColorStop(0, '#eaf2f8');
+  g.addColorStop(0.6, '#cfe0ec');
+  g.addColorStop(1, '#a9c2d4');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  ctx.fillStyle = '#4a4a45';
+  ctx.fillRect(0, 0, SIZE, 8); ctx.fillRect(0, SIZE - 8, SIZE, 8);
+  ctx.fillRect(0, 0, 8, SIZE); ctx.fillRect(SIZE - 8, 0, 8, SIZE);
+  ctx.fillRect(SIZE / 2 - 4, 0, 8, SIZE);
+  return toTexture(c);
+}
+
 // Vidriera / ventana: cielo cálido de atardecer (unlit, da luz "falsa" PS2).
 export function windowGlow() {
   const c = makeCanvas();
