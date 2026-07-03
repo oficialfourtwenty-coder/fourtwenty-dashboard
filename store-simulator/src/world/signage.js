@@ -29,16 +29,30 @@ function neonTexture(text, w = 1024, h = 128) {
   ctx.fillText(text, w / 2, h / 2 + 3);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
-  t.magFilter = THREE.NearestFilter;
-  t.minFilter = THREE.NearestFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.generateMipmaps = true;
+  t.anisotropy = 8;
   return t;
 }
 
+// Cartel físico: caja de marco oscuro + frente luminoso (el bloom del
+// post-processing hace brillar el tubo de neón).
 function neonSign(text, width, height) {
-  return new THREE.Mesh(
+  const group = new THREE.Group();
+  const frame = new THREE.Mesh(
+    new THREE.BoxGeometry(width + 0.15, height + 0.15, 0.18),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: 0.4, metalness: 0.6 }),
+  );
+  frame.position.z = -0.1;
+  frame.castShadow = true;
+  group.add(frame);
+  const face = new THREE.Mesh(
     new THREE.PlaneGeometry(width, height),
     new THREE.MeshBasicMaterial({ map: neonTexture(text) }),
   );
+  group.add(face);
+  return group;
 }
 
 export function buildSignage(scene) {

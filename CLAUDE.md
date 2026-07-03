@@ -15,11 +15,16 @@ store-simulator/    → el juego (Vite + Three.js)
 ## Decisiones técnicas (NO re-discutir, ya están tomadas)
 
 - **Motor:** Three.js + Vite. Todo en navegador, gratis, sin Blender.
-- **Estética (actualizada por el dueño):** look **GTA San Andreas** — piso blanco
-  showroom, paredes blancas, luz blanca pareja, render interno a 1/2 resolución
-  reescalado con `image-rendering: pixelated`, texturas procedurales 256px
-  `NearestFilter`, niebla clara. Movimiento con peso: aceleración/frenada en rampa,
-  giro suave, sprint con Shift.
+- **Estética (actualizada por el dueño — pase visual GTA V):** tienda estilo
+  Ponsonbys/Suburban. Render a resolución completa con antialiasing (NADA de
+  pixelado), texturas canvas con LinearFilter+mipmaps+anisotropía, materiales PBR
+  (piso `MeshPhysicalMaterial` roughness 0.45 con reflejo del RoomEnvironment,
+  paredes mate), luz con contraste: ambiente bajo + spots cálidos ~3200K (uno con
+  sombra real por piso, PCFSoft), y post-processing EffectComposer: bloom sutil
+  (neones), grade cálido + saturación y viñeta (shader propio en main.js).
+  **Mobile/perf:** abrir con `?q=low` desactiva sombras, AA y post. SSAO quedó
+  descartado por costo (las sombras + ambiente bajo ya dan profundidad).
+  Movimiento con peso: aceleración/frenada en rampa, giro suave, sprint con Shift.
 - **BOB (actualizado por el dueño):** modelo 3D (mono, generado con Tripo) en
   `public/assets/bob/bob.glb`, cargado por `src/player/bob3d.js` (escala y pies se
   normalizan solos; sombra blob estilo PS2; el frente del modelo es +z, sin offset).

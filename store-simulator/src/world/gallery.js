@@ -10,12 +10,23 @@ import { FLOOR_YS, FLOOR_H, INTERIOR } from './building.js';
 const WALL_W = -INTERIOR.x + 0.03; // cara interna pared oeste
 const WALL_E = INTERIOR.x - 0.03;  // cara interna pared este
 
-const nearest = (t) => {
+const smooth = (t) => {
   t.colorSpace = THREE.SRGBColorSpace;
-  t.magFilter = THREE.NearestFilter;
-  t.minFilter = THREE.NearestFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.generateMipmaps = true;
+  t.anisotropy = 8;
   return t;
 };
+
+// Canvas al doble de resolución dibujando con las mismas coordenadas.
+function hiCanvas(w, h) {
+  const c = document.createElement('canvas');
+  c.width = w * 2; c.height = h * 2;
+  const ctx = c.getContext('2d');
+  ctx.scale(2, 2);
+  return [c, ctx];
+}
 
 function box(w, h, d, x, y, z, mat) {
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
@@ -28,9 +39,7 @@ function css(color) { return `#${color.toString(16).padStart(6, '0')}`; }
 
 // Silueta de prenda: 'tee' | 'hoodie' | 'jersey'. Extras: number, monkeyFace.
 function garmentTexture(color, type, { number, monkeyFace } = {}) {
-  const c = document.createElement('canvas');
-  c.width = 96; c.height = 112;
-  const ctx = c.getContext('2d');
+  const [c, ctx] = hiCanvas(96, 112);
   const col = css(color);
   const dark = 'rgba(0,0,0,0.25)';
   ctx.fillStyle = col;
@@ -74,13 +83,11 @@ function garmentTexture(color, type, { number, monkeyFace } = {}) {
     ctx.textAlign = 'center';
     ctx.fillText('FT', 48, 58);
   }
-  return nearest(new THREE.CanvasTexture(c));
+  return smooth(new THREE.CanvasTexture(c));
 }
 
 function labelTexture(text, w, h, { title = false } = {}) {
-  const c = document.createElement('canvas');
-  c.width = w; c.height = h;
-  const ctx = c.getContext('2d');
+  const [c, ctx] = hiCanvas(w, h);
   ctx.fillStyle = '#fafafa';
   ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = '#d0d0cc';
@@ -97,14 +104,12 @@ function labelTexture(text, w, h, { title = false } = {}) {
     ctx.fillStyle = '#9a9a96';
     for (let i = 0; i < 4; i++) ctx.fillRect(8, 28 + i * 8, w - 28 - i * 12, 3);
   }
-  return nearest(new THREE.CanvasTexture(c));
+  return smooth(new THREE.CanvasTexture(c));
 }
 
 // Piso de cancha de básquet (madera + líneas pintadas).
 function courtTexture() {
-  const c = document.createElement('canvas');
-  c.width = 256; c.height = 192;
-  const ctx = c.getContext('2d');
+  const [c, ctx] = hiCanvas(256, 192);
   ctx.fillStyle = '#c8955c';
   ctx.fillRect(0, 0, 256, 192);
   ctx.strokeStyle = 'rgba(120,70,30,0.35)';
@@ -115,14 +120,12 @@ function courtTexture() {
   ctx.beginPath(); ctx.arc(128, 96, 30, 0, 7); ctx.stroke();       // círculo central
   ctx.strokeRect(8, 60, 60, 72);                                    // zona pintada
   ctx.beginPath(); ctx.arc(68, 96, 36, -Math.PI / 2, Math.PI / 2); ctx.stroke();
-  return nearest(new THREE.CanvasTexture(c));
+  return smooth(new THREE.CanvasTexture(c));
 }
 
 // Mural graffiti hip hop con "CULTURA".
 function muralTexture() {
-  const c = document.createElement('canvas');
-  c.width = 512; c.height = 160;
-  const ctx = c.getContext('2d');
+  const [c, ctx] = hiCanvas(512, 160);
   ctx.fillStyle = '#26262b';
   ctx.fillRect(0, 0, 512, 160);
   const sprays = ['#e33fa1', '#3fc1e3', '#e3d23f', '#5ee33f', '#d4af37'];
@@ -148,7 +151,7 @@ function muralTexture() {
   ctx.font = 'bold 22px monospace';
   ctx.fillStyle = '#d4af37';
   ctx.fillText('FT', 468, 140);
-  return nearest(new THREE.CanvasTexture(c));
+  return smooth(new THREE.CanvasTexture(c));
 }
 
 // ---- Piezas ---------------------------------------------------------------
@@ -186,6 +189,8 @@ function pedestals(g, colliders, Y, count, colors, types) {
     const px = WALL_W + 2.2 + row * 1.6;
     const pz = -12 + col * 3.2 + row * 0.9;
     g.add(box(0.5, h, 0.5, px, Y + h / 2, pz, white));
+    g.add(box(0.58, 0.06, 0.58, px, Y + 0.03, pz, white));       // zócalo
+    g.add(box(0.55, 0.035, 0.55, px, Y + h - 0.017, pz, white)); // remate
     if (i % 3 !== 2) {
       g.add(box(0.2, 0.09, 0.24, px, Y + h + 0.045, pz,
         new THREE.MeshStandardMaterial({ color: colors[i % colors.length], roughness: 0.9 })));
@@ -272,18 +277,40 @@ export function buildGallery(scene, collection) {
     court.rotation.x = -Math.PI / 2;
     court.position.set(WALL_W + 8.5, Y + 0.02, -3);
     g.add(court);
-    // aro: poste + tablero + anillo
+    // aro completo: base + poste + brazo + tablero con marco + anillo + red
     const px = WALL_W + 13.4, pz = -3;
-    g.add(box(0.12, 3.2, 0.12, px, Y + 1.6, pz, new THREE.MeshStandardMaterial({ color: 0x444448, roughness: 0.5, metalness: 0.6 })));
-    g.add(box(0.06, 1.05, 1.8, px - 0.25, Y + 3.2, pz, new THREE.MeshStandardMaterial({ color: 0xf5f2ea, roughness: 0.8 })));
+    const metal = new THREE.MeshStandardMaterial({ color: 0x3e3e44, roughness: 0.35, metalness: 0.75 });
+    const boardMat = new THREE.MeshStandardMaterial({ color: 0xf5f2ea, roughness: 0.4 });
+    g.add(box(0.7, 0.1, 0.7, px, Y + 0.05, pz, metal));                    // base
+    g.add(box(0.14, 3.3, 0.14, px, Y + 1.65, pz, metal));                  // poste
+    const arm = box(0.5, 0.09, 0.09, px - 0.28, Y + 3.28, pz, metal);      // brazo
+    g.add(arm);
+    g.add(box(0.06, 1.05, 1.8, px - 0.52, Y + 3.15, pz, boardMat));        // tablero
+    for (const [dy, dz, w, hh] of [[0.5, 0, 1.86, 0.05], [-0.5, 0, 1.86, 0.05], [0, 0.9, 0.05, 1.0], [0, -0.9, 0.05, 1.0]]) {
+      g.add(box(0.07, hh, w === 1.86 ? 0.05 : w, px - 0.52, Y + 3.15 + dy, pz + dz, metal)); // marco
+    }
+    // calco naranja del tablero (cuadrado interior)
+    for (const [dy, dz, w, hh] of [[0.16, 0, 0.5, 0.04], [-0.16, 0, 0.5, 0.04], [0, 0.24, 0.04, 0.3], [0, -0.24, 0.04, 0.3]]) {
+      g.add(box(0.02, hh, w === 0.5 ? 0.04 : w, px - 0.555, Y + 3.0 + dy, pz + dz,
+        new THREE.MeshStandardMaterial({ color: 0xd96b2f, roughness: 0.6 })));
+    }
     const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(0.23, 0.022, 8, 20),
-      new THREE.MeshStandardMaterial({ color: 0xd96b2f, roughness: 0.5, metalness: 0.5 }),
+      new THREE.TorusGeometry(0.23, 0.022, 10, 24),
+      new THREE.MeshStandardMaterial({ color: 0xd96b2f, roughness: 0.35, metalness: 0.6 }),
     );
     ring.rotation.x = Math.PI / 2;
-    ring.position.set(px - 0.55, Y + 3.05, pz);
+    ring.position.set(px - 0.82, Y + 2.95, pz);
     g.add(ring);
-    colliders.push({ minX: px - 0.15, maxX: px + 0.15, minY: Y, maxY: Y + 3.2, minZ: pz - 0.15, maxZ: pz + 0.15 });
+    // red: 8 tiritas blancas en cono
+    const netMat = new THREE.MeshStandardMaterial({ color: 0xf5f2ea, roughness: 0.9 });
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI * 2;
+      const strip = box(0.015, 0.34, 0.015, px - 0.82 + Math.cos(a) * 0.19, Y + 2.77, pz + Math.sin(a) * 0.19, netMat);
+      strip.rotation.z = Math.cos(a) * 0.28;
+      strip.rotation.x = -Math.sin(a) * 0.28;
+      g.add(strip);
+    }
+    colliders.push({ minX: px - 0.35, maxX: px + 0.35, minY: Y, maxY: Y + 3.3, minZ: pz - 0.35, maxZ: pz + 0.35 });
   }
 
   if (theme === 'bob') {
@@ -301,6 +328,7 @@ export function buildGallery(scene, collection) {
       const ctr = b2.getCenter(new THREE.Vector3());
       statue.position.set(sx - ctr.x, Y + 0.5 - b2.min.y, sz - ctr.z);
       statue.rotation.y = Math.PI / 2; // mirando al centro de la sala
+      statue.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
       scene.add(statue);
     });
   }
@@ -339,12 +367,21 @@ export function buildGallery(scene, collection) {
     scene.add(foco);
   }
 
-  // luz puntual sobre la zona de galería
+  // spot cálido bañando la pared de prendas (contraste, no luz pareja)
   if (theme !== 'hiphop') {
-    const spot = new THREE.PointLight(0xffffff, 26, 20, 2);
-    spot.position.set(WALL_W + 2.5, Y + FLOOR_H - 0.6, -4);
-    scene.add(spot);
+    const spot = new THREE.SpotLight(0xffc58f, 32, 24, 1.05, 0.65, 1.6);
+    spot.position.set(WALL_W + 4.5, Y + FLOOR_H - 0.3, -4);
+    spot.target.position.set(WALL_W, Y + 1.6, -4);
+    scene.add(spot, spot.target);
   }
+
+  // todo lo sólido de la galería proyecta y recibe sombra
+  g.traverse((m) => {
+    if (m.isMesh && !m.material.isMeshBasicMaterial) {
+      m.castShadow = true;
+      m.receiveShadow = true;
+    }
+  });
 
   scene.add(g);
   return colliders;

@@ -130,11 +130,12 @@ function buildRail(group, minX, maxX, y, z) {
 export function buildBuilding(scene) {
   const group = new THREE.Group();
 
-  const floorMat = new THREE.MeshStandardMaterial({ map: whiteFloor(W / 2, D / 2), roughness: 0.85 });
-  const wallMat = new THREE.MeshStandardMaterial({ map: whitePlaster(18, 6), roughness: 1.0 });
-  const wallMatSide = new THREE.MeshStandardMaterial({ map: whitePlaster(13, 6), roughness: 1.0 });
+  // Piso pulido con brillo real (roughness bajo + envMap del main); paredes mate.
+  const floorMat = new THREE.MeshPhysicalMaterial({ map: whiteFloor(W / 2, D / 2), roughness: 0.45, metalness: 0.03 });
+  const wallMat = new THREE.MeshStandardMaterial({ map: whitePlaster(18, 6), roughness: 0.95 });
+  const wallMatSide = new THREE.MeshStandardMaterial({ map: whitePlaster(13, 6), roughness: 0.95 });
   const ceilMat = new THREE.MeshStandardMaterial({ map: lightCeiling(W / 4, D / 4), roughness: 1.0 });
-  const stepMat = new THREE.MeshStandardMaterial({ map: stairConcrete(1, 1), color: 0xd6d6d2, roughness: 0.9 });
+  const stepMat = new THREE.MeshStandardMaterial({ map: stairConcrete(1, 1), color: 0xd6d6d2, roughness: 0.8 });
   const glowMat = new THREE.MeshBasicMaterial({ map: windowDaylight() });
 
   // Losa planta baja (contrapiso)
@@ -183,21 +184,40 @@ export function buildBuilding(scene) {
     buildRail(group, hole.minX, hole.maxX, FLOOR_YS[j], ST_Z0);
   }
 
+  // Sombras: todo lo sólido las proyecta y las recibe (los planos de
+  // ventana/vidriera son MeshBasic y quedan afuera).
+  group.traverse((m) => {
+    if (m.isMesh && !m.material.isMeshBasicMaterial) {
+      m.castShadow = true;
+      m.receiveShadow = true;
+    }
+  });
+
   scene.add(group);
   return group;
 }
 
-// Luz blanca pareja (look GTA SA interior).
-export function buildLights(scene) {
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xa8a8a0, 0.95));
-  const key = new THREE.DirectionalLight(0xffffff, 1.1);
+// Iluminación con contraste (pase visual GTA V): ambiente bajo + spots
+// cálidos (~3200K) que bañan zonas y dejan otras en penumbra.
+export function buildLights(scene, { shadows = true } = {}) {
+  scene.add(new THREE.HemisphereLight(0xfff4e0, 0x6b675e, 0.35)); // relleno tenue
+  const key = new THREE.DirectionalLight(0xfff0d8, 0.4);
   key.position.set(30, 40, -20);
   scene.add(key);
+  const WARM = 0xffc58f; // ~3200K
   for (const fy of FLOOR_YS) {
-    for (const lx of [-15, 15]) {
-      const p = new THREE.PointLight(0xffffff, 30, 30, 2);
-      p.position.set(lx, fy + FLOOR_H - 0.5, 0);
-      scene.add(p);
+    for (const [i, lx] of [-15, 15].entries()) {
+      const s = new THREE.SpotLight(WARM, 55, 26, 0.95, 0.55, 1.6);
+      s.position.set(lx, fy + FLOOR_H - 0.3, 0);
+      s.target.position.set(lx * 0.6, fy, 0);
+      scene.add(s, s.target);
+      if (shadows && i === 0) { // una sombra real por piso (perf)
+        s.castShadow = true;
+        s.shadow.mapSize.set(1024, 1024);
+        s.shadow.camera.near = 0.5;
+        s.shadow.camera.far = 22;
+        s.shadow.bias = -0.0004;
+      }
     }
   }
 }
