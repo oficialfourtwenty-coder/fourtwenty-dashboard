@@ -11,6 +11,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildBuilding, buildLights, getColliders, SPAWN, floorIndexAt, FLOOR_YS } from './world/building.js';
 import { buildGallery } from './world/gallery.js';
 import { buildFixtures } from './world/fixtures.js';
+import { dressFloor3 } from './world/retail.js';
 import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
 import { Player } from './player/bob3d.js';
@@ -89,6 +90,7 @@ const colliders = [
   ...getColliders(),
   ...COLLECTIONS.flatMap((col) => buildGallery(scene, col)),
   ...buildFixtures(scene),
+  ...dressFloor3(scene), // piloto retail: Piso 3 · HOOP SEASON
 ];
 
 const bob = new Player(scene, SPAWN);

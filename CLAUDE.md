@@ -99,6 +99,11 @@ world/building.js     obra gruesa x5: 3 losas, paredes, 2 escaleras, colliders, 
 world/collections.js  una colección por piso: nombre, cantidad, tema, paleta (editable)
 world/gallery.js      galería showroom por colección + ambientaciones temáticas
 world/signage.js      neones FOURTWENTY (lobby + uno por piso)
+world/fixtures.js     mobiliario básico (percheros A, mesas, espejos, caja del lobby)
+world/retail.js       mobiliario retail completo con InstancedMesh — PILOTO en piso 3
+                      (percheros circulares, estanterías+zapatillas, maniquíes,
+                      probador con cortina, caja, carteles físicos, rieles de luz).
+                      Pendiente: replicar a pisos 2/4/5 cuando el dueño apruebe.
 player/bob3d.js       jugador ACTIVO: GLB + física GTA (aceleración, giro suave) + sombra blob
 player/bob.js         backup sprite 2D — NO TOCAR NI BORRAR
 ui/hud.js             HUD retro: título, indicador de piso, ayuda de controles

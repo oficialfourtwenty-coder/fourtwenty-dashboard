@@ -106,8 +106,9 @@ export function buildFixtures(scene) {
   clothingRack(g, colliders, 0, -6, 2, 0, lobbyColors, ['hoodie', 'tee']);
   mirror(g, colliders, 0, -11, 6, Math.PI / 4);
 
-  // Pisos de colección
+  // Pisos de colección (el piso 3 tiene su vestido completo en retail.js)
   for (const col of COLLECTIONS) {
+    if (col.piso === 3) continue;
     const Y = FLOOR_YS[col.piso - 1];
     const types = col.theme === 'basket' ? ['jersey'] : ['tee', 'hoodie'];
     clothingRack(g, colliders, Y, 2, -6, 0, col.colors, types);
