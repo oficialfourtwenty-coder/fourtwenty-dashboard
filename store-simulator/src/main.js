@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { buildBuilding, buildLights, getColliders, SPAWN, floorIndexAt, FLOOR_YS } from './world/building.js';
 import { buildGallery } from './world/gallery.js';
+import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
 import { Player } from './player/bob3d.js';
 import { ThirdPersonCamera } from './core/camera.js';
@@ -32,6 +33,7 @@ resize();
 
 buildBuilding(scene);
 buildLights(scene);
+buildSignage(scene);
 const colliders = [
   ...getColliders(),
   ...COLLECTIONS.flatMap((col) => buildGallery(scene, col)),
@@ -63,7 +65,7 @@ renderer.setAnimationLoop(() => {
   input.consumeInteract(); // E: reservado para Fase 2 (prendas)
 
   const floorIdx = floorIndexAt(bob.position.y);
-  hud.setFloor(floorIdx, COLLECTIONS[floorIdx - 1].name);
+  hud.setFloor(floorIdx, COLLECTIONS.find((c) => c.piso === floorIdx)?.name ?? 'FOURTWENTY');
   tpCam.update(dt, mouse, bob.position, FLOOR_YS[floorIdx - 1]);
 
   renderer.render(scene, camera);

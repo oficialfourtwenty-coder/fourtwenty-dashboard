@@ -20,11 +20,14 @@ store-simulator/    → el juego (Vite + Three.js)
   reescalado con `image-rendering: pixelated`, texturas procedurales 256px
   `NearestFilter`, niebla clara. Movimiento con peso: aceleración/frenada en rampa,
   giro suave, sprint con Shift.
-- **BOB (actualizado por el dueño):** modelo 3D low-poly en `public/assets/bob/bob.glb`
-  cargado por `src/player/bob3d.js` (escala y pies se normalizan solos; si el GLB trae
-  clips usa AnimationMixer, si no anima procedural; sombra blob estilo PS2). El sistema
-  sprite viejo (`src/player/bob.js` + PNGs) queda de **backup — NO TOCAR NI BORRAR**.
-  ⚠️ `bob.glb` existe solo en la máquina del dueño; falta pushearlo al repo.
+- **BOB (actualizado por el dueño):** modelo 3D (mono, generado con Tripo) en
+  `public/assets/bob/bob.glb`, cargado por `src/player/bob3d.js` (escala y pies se
+  normalizan solos; sombra blob estilo PS2; el frente del modelo es +z, sin offset).
+  El GLB está optimizado: 465k → 22.5k triángulos, 15.5 MB → 2.6 MB (gltf-transform).
+  **Sin skeleton ni animation clips** → animación procedural (bounce/lean). Mejora
+  pendiente: conseguir versión riggeada con clips idle/walk (Mixamo o rig de Tripo)
+  y el AnimationMixer ya presente en bob3d.js la usa solo. El sistema sprite viejo
+  (`src/player/bob.js` + PNGs) queda de **backup — NO TOCAR NI BORRAR**.
 - **Probador:** sistema de capas PNG. BOB base + 1 PNG transparente por prenda dibujado
   sobre su pose, apiladas en tiempo real (torso/piernas/pies/accesorio). Como los avatares 2K.
 - **Login:** cuenta propia del juego, match por email contra la API de clientes de
@@ -42,18 +45,22 @@ store-simulator/    → el juego (Vite + Three.js)
 
 ## ⚠️ Regla de diseño (pedido explícito del dueño)
 
-El local es un **edificio de 3 pisos** (obra gruesa: losas, paredes, escaleras) de
-**70 x 50 m por piso** (x5 del original, pedido del dueño). **El dueño diseña el
-interior desde cero.** NO agregar muebles, decoración ni gráfica sin que él lo pida
-explícitamente. Lo ya pedido y hecho:
-- **Una colección por piso** (pedido del dueño), cada una con galería/showroom estilo
-  Urban Monkey (foto de referencia): prendas colgadas con placas, atriles, pedestales
-  blancos, LEDs lineales y cartel con el nombre. Piso 1 `FT ESSENTIALS` (paleta '92),
-  piso 2 `FT STREET` (naranja/negro/gris), piso 3 `FT EXCLUSIVE` (dorado/negro, para
-  las exclusivas canjeables con FT$). Nombres/paletas editables en
-  `world/collections.js`; la geometría en `world/gallery.js`. Todo greybox/placeholder
-  hasta linkear TiendaNube (Fase 5): ahí cada colección se mapea a una categoría de TN
-  y aparecen los productos reales.
+El local es un **edificio de 5 pisos** (losas, paredes, escaleras alternadas) de
+**70 x 50 m por piso**. **El dueño dirige el diseño interior.** NO agregar muebles,
+decoración ni gráfica sin que él lo pida explícitamente. Distribución pedida y hecha:
+- **Piso 1 (planta baja):** lobby FOURTWENTY con **carteles de neón** con el nombre
+  de la marca (`world/signage.js`) — también hay un neón por piso.
+- **Piso 2 · ORIGEN** — 12 prendas, galería estilo showroom (foto de referencia).
+- **Piso 3 · HOOP SEASON** — 4 prendas de básquet (camisetas con número), media
+  cancha de madera pintada + aro con tablero.
+- **Piso 4 · BOB** — 42 prendas con la carita del mono, en dos paredes a dos filas,
+  + **estatua gigante de BOB** (el mismo bob.glb, 2.6 m) sobre pedestal.
+- **Piso 5 · CULTURA** — 1 prenda única en vitrina central con foco, mural graffiti
+  "CULTURA", alfombra negra y LEDs verticales (ambiente hip hop).
+Nombres/cantidades/paletas editables en `world/collections.js`; geometría en
+`world/gallery.js`. Las prendas son siluetas dibujadas (remera/buzo/camiseta),
+placeholders hasta linkear TiendaNube (Fase 5): cada colección se mapea a una
+categoría de TN y aparecen los productos reales con foto y precio.
 
 ## Estado de fases
 
@@ -84,8 +91,9 @@ core/input.js         input por acciones (WASD/flechas, Shift sprint, mouse, E) 
 core/camera.js        cámara GTA: inercia, auto-acomodo detrás al caminar, clamp al local
 world/textures.js     texturas procedurales 256px (piso blanco, pared blanca, escalera, ventanas)
 world/building.js     obra gruesa x5: 3 losas, paredes, 2 escaleras, colliders, sampleGround(x,z,y)
-world/collections.js  una colección por piso: nombre, paleta, títulos (editable)
-world/gallery.js      galería showroom reutilizable (greybox, pedido del dueño)
+world/collections.js  una colección por piso: nombre, cantidad, tema, paleta (editable)
+world/gallery.js      galería showroom por colección + ambientaciones temáticas
+world/signage.js      neones FOURTWENTY (lobby + uno por piso)
 player/bob3d.js       jugador ACTIVO: GLB + física GTA (aceleración, giro suave) + sombra blob
 player/bob.js         backup sprite 2D — NO TOCAR NI BORRAR
 ui/hud.js             HUD retro: título, indicador de piso, ayuda de controles
