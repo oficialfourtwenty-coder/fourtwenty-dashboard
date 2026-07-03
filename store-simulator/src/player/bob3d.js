@@ -13,7 +13,7 @@ import { sampleGround } from '../world/building.js';
 const HEIGHT = 1.7;       // alto objetivo del modelo en metros
 const RADIUS = 0.35;      // radio de colisión
 const WALK = 3.4;         // m/s caminando
-const RUN = 5.8;          // m/s corriendo (Shift)
+const RUN = 17.4;         // m/s corriendo (Shift) — x3 pedido por el dueño
 const ACCEL = 9;          // rampa de aceleración (~0.2s hasta velocidad)
 const DECEL = 11;         // frenada un poco más rápida
 const TURN = 10;          // velocidad de giro (rad/s aprox, suavizado)

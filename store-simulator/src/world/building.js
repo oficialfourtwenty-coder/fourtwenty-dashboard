@@ -5,8 +5,8 @@ import * as THREE from 'three';
 import { whiteFloor, whitePlaster, lightCeiling, stairConcrete, windowDaylight } from './textures.js';
 
 // Dimensiones (metros)
-export const W = 70;             // ancho (x: -35..35)
-export const D = 50;             // profundidad (z: -25..25)
+export const W = 35;             // ancho (x: -17.5..17.5) — antes 70, el dueño lo pidió a la mitad
+export const D = 25;             // profundidad (z: -12.5..12.5)
 export const NUM_FLOORS = 5;
 export const FLOOR_H = 4.0;      // altura entre pisos
 export const FLOOR_YS = Array.from({ length: NUM_FLOORS }, (_, i) => i * FLOOR_H);
@@ -95,7 +95,7 @@ for (let j = 1; j < NUM_FLOORS; j++) {
 }
 export function getColliders() { return colliders; }
 
-export const SPAWN = new THREE.Vector3(0, 0, -18);
+export const SPAWN = new THREE.Vector3(0, 0, -8);
 
 // ---- Construcción visual ---------------------------------------------------
 function box(w, h, d, x, y, z, mat) {
@@ -166,12 +166,12 @@ export function buildBuilding(scene) {
 
   // Aberturas del frente (planos "vidriera" con luz de día, cara interior)
   const front = -INTERIOR.z + 0.02;
-  const vidriera = new THREE.Mesh(new THREE.PlaneGeometry(30, 3.2), glowMat);
-  vidriera.position.set(0, 1.7, front);
+  const vidriera = new THREE.Mesh(new THREE.PlaneGeometry(16, 3.0), glowMat);
+  vidriera.position.set(0, 1.65, front);
   group.add(vidriera); // vidriera del local, planta baja
   for (let j = 1; j < NUM_FLOORS; j++) {
-    for (const wx of [-14, -7, 0, 7, 14]) {
-      const win = new THREE.Mesh(new THREE.PlaneGeometry(4, 1.9), glowMat);
+    for (const wx of [-10, -5, 0, 5, 10]) {
+      const win = new THREE.Mesh(new THREE.PlaneGeometry(3, 1.8), glowMat);
       win.position.set(wx, FLOOR_YS[j] + 2.0, front);
       group.add(win);
     }
@@ -206,8 +206,8 @@ export function buildLights(scene, { shadows = true } = {}) {
   scene.add(key);
   const WARM = 0xffc58f; // ~3200K
   for (const fy of FLOOR_YS) {
-    for (const [i, lx] of [-15, 15].entries()) {
-      const s = new THREE.SpotLight(WARM, 55, 26, 0.95, 0.55, 1.6);
+    for (const [i, lx] of [-8, 8].entries()) {
+      const s = new THREE.SpotLight(WARM, 36, 24, 0.95, 0.6, 1.6);
       s.position.set(lx, fy + FLOOR_H - 0.3, 0);
       s.target.position.set(lx * 0.6, fy, 0);
       scene.add(s, s.target);

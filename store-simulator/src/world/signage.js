@@ -63,7 +63,7 @@ export function buildSignage(scene) {
   main.position.set(0, 2.7, back);
   main.rotation.y = Math.PI;
   scene.add(main);
-  const glow = new THREE.PointLight(0x39ff6a, 30, 18, 2);
+  const glow = new THREE.PointLight(0x39ff6a, 12, 12, 2);
   glow.position.set(0, 2.7, back - 1.5);
   scene.add(glow);
 

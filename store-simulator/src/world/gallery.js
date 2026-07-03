@@ -38,7 +38,8 @@ function box(w, h, d, x, y, z, mat) {
 function css(color) { return `#${color.toString(16).padStart(6, '0')}`; }
 
 // Silueta de prenda: 'tee' | 'hoodie' | 'jersey'. Extras: number, monkeyFace.
-function garmentTexture(color, type, { number, monkeyFace } = {}) {
+// (la usa también fixtures.js para la ropa de los percheros)
+export function garmentTexture(color, type, { number, monkeyFace } = {}) {
   const [c, ctx] = hiCanvas(96, 112);
   const col = css(color);
   const dark = 'rgba(0,0,0,0.25)';
@@ -187,7 +188,7 @@ function pedestals(g, colliders, Y, count, colors, types) {
     const row = Math.floor(i / 4), col = i % 4;
     const h = heights[i];
     const px = WALL_W + 2.2 + row * 1.6;
-    const pz = -12 + col * 3.2 + row * 0.9;
+    const pz = -8 + col * 2.9 + row * 0.8;
     g.add(box(0.5, h, 0.5, px, Y + h / 2, pz, white));
     g.add(box(0.58, 0.06, 0.58, px, Y + 0.03, pz, white));       // zócalo
     g.add(box(0.55, 0.035, 0.55, px, Y + h - 0.017, pz, white)); // remate
@@ -202,7 +203,7 @@ function pedestals(g, colliders, Y, count, colors, types) {
 function ceilingLeds(g, Y) {
   for (let row = 0; row < 3; row++) {
     for (let k = 0; k < 4; k++) {
-      g.add(box(0.12, 0.04, 2.4, WALL_W + 1.2 + row * 2.0, Y + FLOOR_H - 0.12, -12.5 + k * 4.6, ledMat));
+      g.add(box(0.12, 0.04, 2.4, WALL_W + 1.2 + row * 2.0, Y + FLOOR_H - 0.12, -9 + k * 4.0, ledMat));
     }
   }
 }
@@ -225,7 +226,7 @@ export function buildGallery(scene, collection) {
     new THREE.PlaneGeometry(6.5, 0.85),
     new THREE.MeshBasicMaterial({ map: labelTexture(name, 512, 64, { title: true }) }),
   );
-  sign.position.set(WALL_W + 0.04, Y + 3.45, -4);
+  sign.position.set(WALL_W + 0.04, Y + 3.45, -3);
   sign.rotation.y = Math.PI / 2;
   g.add(sign);
 
@@ -233,7 +234,7 @@ export function buildGallery(scene, collection) {
   if (count === 1) {
     // pieza única: se exhibe en el centro (lo arma el theme hiphop)
   } else if (count <= 14) {
-    const z0 = -14, z1 = 6;
+    const z0 = -10, z1 = 4;
     const step = (z1 - z0) / (count - 1);
     for (let i = 0; i < count; i++) {
       const z = z0 + step * i;
@@ -253,7 +254,7 @@ export function buildGallery(scene, collection) {
       for (let row = 0; row < 2 && placed < count; row++) {
         const y = Y + (row === 0 ? 2.6 : 1.25);
         for (let i = 0; i < perRow && placed < count; i++) {
-          const z = -14 + i * (20 / (perRow - 1));
+          const z = -10 + i * (14 / (perRow - 1));
           hangGarment(g, side, z, y, texFor(placed));
           placed++;
         }
@@ -271,14 +272,14 @@ export function buildGallery(scene, collection) {
   if (theme === 'basket') {
     // media cancha: piso de madera pintado + aro con tablero
     const court = new THREE.Mesh(
-      new THREE.PlaneGeometry(13, 9),
+      new THREE.PlaneGeometry(10, 7),
       new THREE.MeshStandardMaterial({ map: courtTexture(), roughness: 0.9 }),
     );
     court.rotation.x = -Math.PI / 2;
-    court.position.set(WALL_W + 8.5, Y + 0.02, -3);
+    court.position.set(WALL_W + 5.5, Y + 0.02, -2);
     g.add(court);
     // aro completo: base + poste + brazo + tablero con marco + anillo + red
-    const px = WALL_W + 13.4, pz = -3;
+    const px = WALL_W + 10.2, pz = -2;
     const metal = new THREE.MeshStandardMaterial({ color: 0x3e3e44, roughness: 0.35, metalness: 0.75 });
     const boardMat = new THREE.MeshStandardMaterial({ color: 0xf5f2ea, roughness: 0.4 });
     g.add(box(0.7, 0.1, 0.7, px, Y + 0.05, pz, metal));                    // base
@@ -315,7 +316,7 @@ export function buildGallery(scene, collection) {
 
   if (theme === 'bob') {
     // estatua gigante de BOB en el centro de la sala, sobre pedestal
-    const sx = WALL_W + 6.5, sz = -4;
+    const sx = WALL_W + 5, sz = -3;
     const ped = box(1.6, 0.5, 1.6, sx, Y + 0.25, sz, white);
     g.add(ped);
     colliders.push({ minX: sx - 0.8, maxX: sx + 0.8, minY: Y, maxY: Y + 3.4, minZ: sz - 0.8, maxZ: sz + 0.8 });
@@ -336,21 +337,21 @@ export function buildGallery(scene, collection) {
   if (theme === 'hiphop') {
     // mural graffiti + alfombra oscura + pieza única bajo foco
     const mural = new THREE.Mesh(
-      new THREE.PlaneGeometry(10, 3.1),
+      new THREE.PlaneGeometry(8, 3.0),
       new THREE.MeshBasicMaterial({ map: muralTexture() }),
     );
-    mural.position.set(WALL_W + 0.05, Y + 2.0, -4);
+    mural.position.set(WALL_W + 0.05, Y + 2.0, -3);
     mural.rotation.y = Math.PI / 2;
     g.add(mural);
     const rug = new THREE.Mesh(
-      new THREE.PlaneGeometry(7, 7),
+      new THREE.PlaneGeometry(6, 6),
       new THREE.MeshStandardMaterial({ color: 0x1c1c20, roughness: 1 }),
     );
     rug.rotation.x = -Math.PI / 2;
-    rug.position.set(WALL_W + 6, Y + 0.02, -4);
+    rug.position.set(WALL_W + 4.5, Y + 0.02, -3);
     g.add(rug);
     // vitrina central: pedestal alto + prenda única + 4 LEDs verticales
-    const px = WALL_W + 6, pz = -4;
+    const px = WALL_W + 4.5, pz = -3;
     g.add(box(0.9, 1.0, 0.9, px, Y + 0.5, pz, white));
     colliders.push({ minX: px - 0.45, maxX: px + 0.45, minY: Y, maxY: Y + 1.0, minZ: pz - 0.45, maxZ: pz + 0.45 });
     const pieza = new THREE.Mesh(
@@ -370,8 +371,8 @@ export function buildGallery(scene, collection) {
   // spot cálido bañando la pared de prendas (contraste, no luz pareja)
   if (theme !== 'hiphop') {
     const spot = new THREE.SpotLight(0xffc58f, 32, 24, 1.05, 0.65, 1.6);
-    spot.position.set(WALL_W + 4.5, Y + FLOOR_H - 0.3, -4);
-    spot.target.position.set(WALL_W, Y + 1.6, -4);
+    spot.position.set(WALL_W + 4.5, Y + FLOOR_H - 0.3, -3);
+    spot.target.position.set(WALL_W, Y + 1.6, -3);
     scene.add(spot, spot.target);
   }
 

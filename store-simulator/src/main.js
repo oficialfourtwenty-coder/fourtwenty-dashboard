@@ -10,6 +10,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildBuilding, buildLights, getColliders, SPAWN, floorIndexAt, FLOOR_YS } from './world/building.js';
 import { buildGallery } from './world/gallery.js';
+import { buildFixtures } from './world/fixtures.js';
 import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
 import { Player } from './player/bob3d.js';
@@ -29,7 +30,7 @@ renderer.toneMappingExposure = 1.0;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xcfd2d6);
-scene.fog = new THREE.Fog(0xcfd2d6, 30, 90);
+scene.fog = new THREE.Fog(0xcfd2d6, 25, 75);
 
 // Reflejos de ambiente (RoomEnvironment): les da vida a los PBR sin HDR externo.
 const pmrem = new THREE.PMREMGenerator(renderer);
@@ -65,7 +66,7 @@ let composer = null;
 if (QUALITY === 'high') {
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.3, 0.45, 0.9);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.22, 0.4, 0.92);
   composer.addPass(bloom);
   composer.addPass(new ShaderPass(GradeShader));
   composer.addPass(new OutputPass());
@@ -87,6 +88,7 @@ buildSignage(scene);
 const colliders = [
   ...getColliders(),
   ...COLLECTIONS.flatMap((col) => buildGallery(scene, col)),
+  ...buildFixtures(scene),
 ];
 
 const bob = new Player(scene, SPAWN);
