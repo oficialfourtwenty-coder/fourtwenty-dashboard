@@ -52,29 +52,37 @@ store-simulator/    → el juego (Vite + Three.js)
 ## ⚠️ PIVOT DE ARQUITECTURA (pedido del dueño): la INTRO ahora es la calle real
 
 El juego YA NO arranca directo adentro del shopping de 5 pisos. Arranca **afuera**,
-en una recreación de la **vereda/galería real de Burela 2570** (dirección real del
-local, referencia: fotos de Street View + fotos del local real que mandó el dueño).
-Todo esto vive en `world/street.js`, con su propio sistema de coordenadas:
+en una recreación del **exterior real de Burela 2570** (Villa Urquiza), construida
+según el spec de art-direction del dueño en `design/SPEC_MAPA_BURELA.md` (medidas,
+paleta hex, materiales, todo). Todo esto vive en `world/street.js`, con su propio
+sistema de coordenadas del spec: **1u=1m, +Z hacia la calle, origen = pie de los
+escalones frente al local**.
 
-- **Vereda/plaza** con veredas pavimentadas, la torre de fondo (bandas crema/terracota,
-  balcones con baranda verde — solo decorado, sin colisión), techo de galería sobre
-  columnas, árboles y canteros de ladrillo.
-- **5 locales en fila**: 4 están CERRADOS (persiana metálica verde, dead-end, no se
-  puede entrar) y **el del medio es FOURTWENTY** — el único con la puerta de vidrio
-  abierta + cartel de neón. `FT_CENTER_X` en street.js marca cuál es.
-- **Local chico de FOURTWENTY** (adentro, `buildLocalInterior`): SOLO la estructura
-  (paredes/piso/techo) — **sin muebles todavía**, el dueño manda esos assets después
-  (ver `store-simulator/design/GUIA_DISENO.md` para el formato).
-- **Hueco atrás-derecha del local**: a propósito sin nada cargado — es donde va a ir
-  la carga de mapa hacia el shopping de 5 pisos (con escalera mecánica en vez de
-  escaleras, todavía sin convertir). Está documentado como nota grande al final de
-  `world/street.js`. Por ahora es solo un umbral abierto + un tope invisible un poco
-  más atrás (para no caminar al vacío) — no implementar el trigger sin que el dueño
-  lo pida.
-- **`core/camera.js` ya no depende de `world/building.js`**: los límites (`bounds`) y
-  el alto de techo (`ceilingHeight`) son parámetros — cada escena pasa los suyos.
-  `ui/hud.js` tiene un método `setZone(texto)` aparte de `setFloor(n, label)` para
-  escenas sin pisos numerados (la calle, el local chico).
+- **Ejes/alturas:** vereda y plaza a y=0; galería y local ELEVADOS a **y=0.45**
+  (`PLAT`). Se sube por **3 escalones** (contrahuella 0.15, huella 0.32) — el spec
+  marca esto como CRÍTICO. `streetSampleGround(x,z)` da la altura: rampa invisible a
+  ~26° sobre los escalones (los peldaños son visuales, la colisión es la rampa).
+- **Suelos:** calzada oscura (no caminable, más allá del cordón), vereda gris
+  (`veredaTile`), plaza de adoquín hexagonal "panal de abeja" (`hexPaver`).
+- **Galería porticada:** columnas cuadradas 0.40 verde salvia `#8C9A78` (eje 4.5m),
+  alero volado 1.5m. Frente de locales: persiana verde inglés (cerrados) menos el
+  vano central = **FOURTWENTY**, con vidriera de cuadrícula verde inglés `#2F5A3A`,
+  zócalo ciego, puerta abierta y neón.
+- **Torre de fondo** (bandas ladrillo `#A44E32` + crema `#E1DDC6` + balcones verdes),
+  torres vecinas y reja verde del patio — solo decorado.
+- **Local chico de FOURTWENTY** (adentro, `buildLocalInterior`, a y=0.45): SOLO la
+  estructura — **sin muebles todavía**, el dueño manda esos assets después (ver
+  `design/GUIA_DISENO.md`).
+- **Hueco atrás-derecha del local:** a propósito sin nada cargado — futuro acceso al
+  shopping de 5 pisos. Nota grande al final de `world/street.js`. No implementar el
+  trigger sin que el dueño lo pida.
+- **Movimiento:** el spec sugiere walk 2.2 / run 5 m/s, pero el dueño ya aprobó el
+  feel actual (WALK 3.4, sprint x3) — NO se tocó bob3d.js. El spec es art-direction
+  del mapa, no del movimiento.
+- **Refactors para soportar 2 mundos:** `player/bob3d.js` tiene `this.sampleGround`
+  reemplazable (la calle pasa la suya); `core/camera.js` recibe `bounds` +
+  `ceilingHeight` por parámetro (main.js los cambia según afuera/adentro);
+  `ui/hud.js` tiene `setZone(texto)` para escenas sin pisos numerados.
 
 ⚠️ **El shopping de 5 pisos NO se tocó ni se borró** — `world/building.js`,
 `retail.js`, `gallery.js`, `signage.js`, `collections.js`, `layout.js`,

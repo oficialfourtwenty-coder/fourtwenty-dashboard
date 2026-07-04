@@ -11,7 +11,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildStreet, SPAWN, isInsideLocal, STREET_BOUNDS, CEILING_H } from './world/street.js';
+import { buildStreet, SPAWN, isInsideLocal, streetSampleGround, STREET_BOUNDS, LOCAL_BOUNDS, CEILING_OUT, CEILING_IN } from './world/street.js';
 import { tickAmbient } from './world/anim.js';
 import { Player } from './player/bob3d.js';
 import { ThirdPersonCamera } from './core/camera.js';
@@ -117,6 +117,7 @@ function checkPerf(dt) {
 const colliders = buildStreet(scene);
 
 const bob = new Player(scene, SPAWN);
+bob.sampleGround = streetSampleGround; // la calle tiene escalones (no pisos)
 const tpCam = new ThirdPersonCamera(camera, STREET_BOUNDS);
 // BOB arranca mirando hacia el local (yaw=0 → W camina en -z); el default de
 // la clase (yaw=π) es para escenas donde el spawn mira hacia +z.
@@ -169,7 +170,10 @@ renderer.setAnimationLoop(() => {
     hud.showZoneTitle(zoneName); // cartel de zona estilo GTA V al cruzar la puerta
     lastZone = zoneName;
   }
-  tpCam.update(dt, mouse, bob.position, 0, bob.modelYaw, CEILING_H);
+  // adentro: cámara acotada al local, techo bajo; afuera: cielo abierto.
+  tpCam.bounds = inside ? LOCAL_BOUNDS : STREET_BOUNDS;
+  const floorY = streetSampleGround(bob.position.x, bob.position.z);
+  tpCam.update(dt, mouse, bob.position, floorY, bob.modelYaw, inside ? CEILING_IN : CEILING_OUT);
 
   if (composer) composer.render();
   else renderer.render(scene, camera);

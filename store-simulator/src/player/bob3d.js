@@ -11,6 +11,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { sampleGround } from '../world/building.js';
 import { normalizeGLTFHeight } from '../world/gltfUtils.js';
 
+// Cada escena provee su propia función de altura de piso (la calle tiene
+// escalones; el shopping tiene pisos). Se asigna a `bob.sampleGround` desde
+// main.js; por defecto usa la del shopping (building.js).
+
 const HEIGHT = 1.7;       // alto objetivo del modelo en metros
 const RADIUS = 0.35;      // radio de colisión
 const WALK = 3.4;         // m/s caminando
@@ -87,6 +91,7 @@ export class Player {
     this.actions = {};          // { idle, move } acciones del GLB si existen
     this.model = null;
     this._isBillboard = false;
+    this.sampleGround = sampleGround; // la escena activa puede reemplazarla
 
     new GLTFLoader().load(
       'assets/bob/bob.glb',
@@ -168,7 +173,7 @@ export class Player {
     else this.velocity.z = 0;
 
     // 4) Piso: subir escalones/rampas suave, caer con gravedad
-    const ground = sampleGround(this.position.x, this.position.z, this.position.y);
+    const ground = this.sampleGround(this.position.x, this.position.z, this.position.y);
     const diff = ground - this.position.y;
     if (diff > -0.05) {
       this.vy = 0;

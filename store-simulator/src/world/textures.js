@@ -167,23 +167,23 @@ export function windowDaylight() {
   return toTexture(c);
 }
 
-// Fachada de la torre (Burela 2570): bandas horizontales crema/terracota +
-// balcones con baranda verde, vista de lejos (nada de detalle real, solo
-// la silueta de colores para el fondo del local en la calle).
+// Fachada de la torre (Burela 2570, spec 04/05): bandas horizontales de
+// ladrillo rojo #A44E32 alternando revoque crema #E1DDC6 + balcones con
+// baranda verde reja #3E6B60. Vista de fondo, solo la silueta de colores.
 export function towerFacade(repeatX, repeatY) {
   const c = makeCanvas();
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#ece6da'; // crema/blanco
+  ctx.fillStyle = '#E1DDC6'; // revoque crema
   ctx.fillRect(0, 0, SIZE, SIZE);
   // bandas de ladrillo terracota
   const bands = [[0, 34], [70, 40], [150, 30], [210, 46]];
-  ctx.fillStyle = '#9c5a44';
+  ctx.fillStyle = '#A44E32';
   for (const [y, h] of bands) ctx.fillRect(0, y, SIZE, h);
   noise(ctx, 0, 0.05, 800);
   // balcones: baranda verde + sombra del hueco
   ctx.fillStyle = 'rgba(30,25,20,0.35)';
   for (let y = 8; y < SIZE; y += 32) ctx.fillRect(4, y, SIZE - 8, 14);
-  ctx.strokeStyle = '#5a7a52';
+  ctx.strokeStyle = '#3E6B60';
   ctx.lineWidth = 2;
   for (let y = 20; y < SIZE; y += 32) {
     ctx.beginPath(); ctx.moveTo(4, y); ctx.lineTo(SIZE - 4, y); ctx.stroke();
@@ -192,11 +192,11 @@ export function towerFacade(repeatX, repeatY) {
   return toTexture(c, repeatX, repeatY);
 }
 
-// Persiana metálica verde (locales cerrados de la galería).
+// Persiana/reja metálica verde inglés (locales cerrados de la galería).
 export function greenShutter(repeatX, repeatY) {
   const c = makeCanvas();
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#2f6b3a';
+  ctx.fillStyle = '#2F5A3A'; // verde inglés
   ctx.fillRect(0, 0, SIZE, SIZE);
   ctx.strokeStyle = 'rgba(0,0,0,0.28)';
   ctx.lineWidth = 3;
@@ -206,17 +206,54 @@ export function greenShutter(repeatX, repeatY) {
   return toTexture(c, repeatX, repeatY);
 }
 
-// Vereda/plaza pavimentada (baldosón gris con juntas).
-export function pavement(repeatX, repeatY) {
+// Vereda baldosa gris hormigón #B4AEA2, 0.40m cuadriculada (spec 04).
+export function veredaTile(repeatX, repeatY) {
   const c = makeCanvas();
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#b7b3aa';
+  ctx.fillStyle = '#B4AEA2';
   ctx.fillRect(0, 0, SIZE, SIZE);
-  noise(ctx, 0, 0.08, 1200);
+  noise(ctx, 0, 0.07, 1100);
   ctx.strokeStyle = '#8f8c82';
   ctx.lineWidth = 3;
   for (let x = 0; x <= SIZE; x += 64) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, SIZE); ctx.stroke(); }
   for (let y = 0; y <= SIZE; y += 64) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(SIZE, y); ctx.stroke(); }
+  // alguna baldosa manchada / "panza de sapo"
+  for (let i = 0; i < 5; i++) {
+    ctx.fillStyle = 'rgba(90,85,75,0.14)';
+    ctx.fillRect(Math.floor(Math.random() * 4) * 64, Math.floor(Math.random() * 4) * 64, 64, 64);
+  }
+  return toTexture(c, repeatX, repeatY);
+}
+
+// Piso de plaza seca: adoquín/pastilla HEXAGONAL "panal de abeja" tostado
+// #C3AC8E (spec 04), juntas oscuras, variación de tono pieza a pieza.
+export function hexPaver(repeatX, repeatY) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#8f7c60'; // junta oscura de fondo
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  const R = 20;                       // radio del hexágono
+  const w = Math.sqrt(3) * R;         // ancho (flat-top)
+  const h = 1.5 * R;                  // avance vertical entre filas
+  const hexPath = (cx, cy) => {
+    ctx.beginPath();
+    for (let k = 0; k < 6; k++) {
+      const a = Math.PI / 180 * (60 * k - 30);
+      const px = cx + R * Math.cos(a), py = cy + R * Math.sin(a);
+      k === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  };
+  for (let row = -1, y = 0; y < SIZE + R; row++, y = row * h) {
+    const xoff = (row % 2) * (w / 2);
+    for (let x = -w; x < SIZE + w; x += w) {
+      const t = (Math.random() - 0.5) * 18;
+      ctx.fillStyle = `rgb(${195 + t},${172 + t},${142 + t})`; // #C3AC8E ± jitter
+      hexPath(x + xoff, y);
+      ctx.fill();
+    }
+  }
+  noise(ctx, 0, 0.06, 900);
   return toTexture(c, repeatX, repeatY);
 }
 

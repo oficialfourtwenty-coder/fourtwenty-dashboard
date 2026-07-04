@@ -1,272 +1,299 @@
-// INTRO del simulador: la vereda/galería real de Burela 2570 (referencia del
-// dueño: fotos de Street View + fotos de su local real). Es una galería
-// comercial en la planta baja de una torre — columnas sosteniendo el piso de
-// arriba, locales cerrados con persiana verde a los costados, y el local de
-// FOURTWENTY (el único que se puede abrir) en el medio.
+// INTRO del simulador: exterior real del complejo de Burela 2570 (Villa
+// Urquiza), reconstruido según el spec de art-direction del dueño
+// (design/SPEC_MAPA_BURELA.md). El jugador spawnea en la vereda, camina hasta
+// los límites (paredes invisibles), sube los ESCALONES a la galería porticada
+// y entra al local FOURTWENTY (Torre 1, el del medio).
 //
-// Todo esto vive en SU PROPIO sistema de coordenadas, independiente del
-// "shopping" de 5 pisos (world/building.js y compañía) — ese queda desconectado
-// por ahora; se reengancha cuando hagamos la carga de mapa a la escalera
-// mecánica (ver comentario grande al final del archivo).
+// Ejes (spec): 1 unidad = 1 m · Y arriba · +Z hacia la calle · origen = pie de
+// los escalones, frente al local. O sea: la galería/local están en -Z, la
+// vereda y la calle en +Z.
+//
+// Este mundo es independiente del "shopping" de 5 pisos (world/building.js y
+// compañía), que queda construido pero desconectado hasta la carga de mapa
+// (ver nota al final del archivo).
 import * as THREE from 'three';
-import { towerFacade, plasterWall, pavement, greenShutter, whiteFloor, lightCeiling } from './textures.js';
-import { box, smoothTexture } from './gfxUtils.js';
+import { towerFacade, veredaTile, hexPaver, greenShutter, whiteFloor, lightCeiling } from './textures.js';
+import { box } from './gfxUtils.js';
 
-// ---- Medidas (metros) -------------------------------------------------------
-const ROW_HALF = 12;        // fachada de locales: x -12..12 (24m, 5 locales de 4.8m)
-const UNIT_W = 24 / 5;
-const FACADE_Z = 0;         // línea de vidrieras/persianas
-const PLAZA_DEPTH = 10;     // vereda/plaza hacia el frente (z: 0..10)
-const CANOPY_Z = 3.2;       // hasta dónde vuela el techo de la galería
-const CANOPY_Y = 3.4;       // altura del techo de la galería
-const DOOR_H = 2.6;         // alto de los locales (persiana/vidriera)
-const TOWER_Y0 = CANOPY_Y;  // la torre arranca arriba del techo de la galería
+// ---- Paleta del spec (albedo base) ------------------------------------------
+const SALVIA = 0x8C9A78;   // columnas / alero
+const INGLES = 0x2F5A3A;   // carpintería de vidriera
+const CREMA = 0xE1DDC6;    // revoque
+const HORMIGON = 0xB4AEA2; // escalones / vereda
+const MURETE = 0x96583F;   // jardineras
+const REJA = 0x3E6B60;     // barandas / reja patio
 
-// Local del medio (índice 2 de 5) = FOURTWENTY.
-const FT_INDEX = 2;
-const FT_X0 = -ROW_HALF + FT_INDEX * UNIT_W;
-const FT_X1 = FT_X0 + UNIT_W;
-export const FT_CENTER_X = (FT_X0 + FT_X1) / 2;
+const mat = (hex, rough = 0.85, metal = 0) =>
+  new THREE.MeshStandardMaterial({ color: hex, roughness: rough, metalness: metal });
 
-// Local chico de FOURTWENTY, detrás de la fachada (z negativo = adentro).
-const ROOM_W = 5, ROOM_D = 6, ROOM_H = 3;
-const ROOM_X0 = FT_CENTER_X - ROOM_W / 2, ROOM_X1 = FT_CENTER_X + ROOM_W / 2;
-const ROOM_Z0 = -ROOM_D, ROOM_Z1 = 0;
-// Hueco atrás-derecha: acá va a entrar la carga de mapa al shopping (Fase
-// futura). Por ahora queda abierto y vacío, con un tope más atrás para no
-// caminar al vacío.
-const GAP_X0 = FT_CENTER_X + 0.3, GAP_X1 = ROOM_X1;
-const GAP_STUB = 2; // cuánto piso "de más" hay antes del tope invisible
+// ---- Medidas (spec 09) ------------------------------------------------------
+const PLAT = 0.45;          // altura de la plataforma/galería sobre la vereda
+const STEP_RISE = 0.15, STEP_RUN = 0.32; // contrahuella / huella
+const GAL_DEPTH = 3.5;      // profundidad de la galería
+const H_LIBRE = 3.2;        // altura libre bajo el alero
+const EJE_COL = 4.5;        // eje a eje de columnas
+const COL = 0.4;            // sección de columna
+const ALERO_T = 0.35, ALERO_VUELO = 1.5;
+const FRENTE = 14;          // medio-frente jugable (x -14..14)
 
-export const SPAWN = new THREE.Vector3(0, 0, 6); // aparece en la plaza, mirando al local
+// Z clave (de la calle -de +Z- hacia el fondo -de -Z-)
+const Z_STREET = 8;         // arranca la calzada
+const Z_CURB = 7.4;         // cordón (límite: no se baja a la calle)
+const Z_STEP_FOOT = 0;      // pie de los escalones = ORIGEN
+const Z_STEP_TOP = -3 * STEP_RUN;      // -0.96: arriba del 3er escalón
+const Z_FACADE = -0.96 - GAL_DEPTH;    // -4.46: línea de vidrieras del fondo de la galería
+const Z_LOCAL_BACK = Z_FACADE - 6;     // -10.46: fondo del local
 
-// Límites de toda la escena (plaza + local chico) para el clamp de la cámara.
-export const STREET_BOUNDS = {
-  minX: -ROW_HALF - 2.8, maxX: ROW_HALF + 2.8,
-  minZ: ROOM_Z0 - GAP_STUB - 0.3, maxZ: PLAZA_DEPTH + 1.6,
-};
-export const CEILING_H = CANOPY_Y; // 3.4 — sirve tanto afuera (bajo el techo) como adentro
+// Local FOURTWENTY: centrado en x=0, vidriera de 5.5m.
+const VID_W = 5.5;
+const LOCAL_HALF = 3.0;     // medio-ancho del interior (x -3..3)
+export const SPAWN = new THREE.Vector3(0, 0, 6); // vereda, mirando a la galería (-Z)
 
-// ---- Ayudantes --------------------------------------------------------------
-function neonFT(scene, x, y, z, rotY) {
+// Hueco atrás-derecha del local: futuro acceso al shopping (ver nota final).
+const GAP_X0 = 0.4, GAP_X1 = LOCAL_HALF, GAP_STUB = 2;
+
+// Límites para el clamp de la cámara (afuera: toda la escena; adentro: el local).
+export const STREET_BOUNDS = { minX: -FRENTE - 0.5, maxX: FRENTE + 0.5, minZ: Z_LOCAL_BACK - GAP_STUB, maxZ: Z_CURB + 1 };
+export const LOCAL_BOUNDS = { minX: -LOCAL_HALF, maxX: LOCAL_HALF, minZ: Z_LOCAL_BACK, maxZ: Z_FACADE };
+export const CEILING_OUT = 6.0;   // afuera la cámara puede subir (cielo abierto)
+export const CEILING_IN = H_LIBRE; // adentro, bajo techo
+
+// ---- Altura del piso: la escena provee su propia sampleGround ---------------
+// Vereda/plaza a y=0; rampa invisible a ~26° sobre los 3 escalones (spec 02);
+// galería/local a y=PLAT.
+export function streetSampleGround(x, z) {
+  if (z >= Z_STEP_FOOT) return 0;              // vereda y plaza
+  if (z <= Z_STEP_TOP) return PLAT;            // galería y local
+  const t = (Z_STEP_FOOT - z) / (Z_STEP_FOOT - Z_STEP_TOP); // 0..1 sobre la rampa
+  return PLAT * t;
+}
+
+export function isInsideLocal(pos) {
+  return pos.z < Z_FACADE;
+}
+
+// ---- Ayudantes decorativos --------------------------------------------------
+function neonFT(scene, x, y, z) {
   const c = document.createElement('canvas');
   c.width = 1024; c.height = 160;
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#141416';
-  ctx.fillRect(0, 0, 1024, 160);
-  ctx.strokeStyle = '#2c2c30';
-  ctx.lineWidth = 6;
-  ctx.strokeRect(3, 3, 1018, 154);
-  ctx.font = 'bold 92px monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#141416'; ctx.fillRect(0, 0, 1024, 160);
+  ctx.strokeStyle = '#2c2c30'; ctx.lineWidth = 6; ctx.strokeRect(3, 3, 1018, 154);
+  ctx.font = 'bold 92px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.shadowColor = '#39ff6a';
-  for (const blur of [30, 16, 7]) {
-    ctx.shadowBlur = blur;
-    ctx.fillStyle = '#39ff6a';
-    ctx.fillText('FOURTWENTY', 512, 84);
-  }
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = '#eafff0';
-  ctx.fillText('FOURTWENTY', 512, 84);
-  const tex = smoothTexture(new THREE.CanvasTexture(c));
-
+  for (const blur of [30, 16, 7]) { ctx.shadowBlur = blur; ctx.fillStyle = '#39ff6a'; ctx.fillText('FOURTWENTY', 512, 84); }
+  ctx.shadowBlur = 0; ctx.fillStyle = '#eafff0'; ctx.fillText('FOURTWENTY', 512, 84);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
   const group = new THREE.Group();
-  const frame = box(5.2, 0.85, 0.15, 0, 0, -0.08, new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: 0.4, metalness: 0.6 }));
-  group.add(frame);
-  const face = new THREE.Mesh(new THREE.PlaneGeometry(5, 0.7), new THREE.MeshBasicMaterial({ map: tex }));
-  group.add(face);
-  group.position.set(x, y, z);
-  group.rotation.y = rotY;
+  group.add(box(5.2, 0.85, 0.15, 0, 0, -0.08, mat(0x1a1a1e, 0.4, 0.6)));
+  group.add(new THREE.Mesh(new THREE.PlaneGeometry(5, 0.7), new THREE.MeshBasicMaterial({ map: tex })));
+  group.position.set(x, y, z + 0.09);
   scene.add(group);
   const glow = new THREE.PointLight(0x39ff6a, 5, 5, 2);
-  glow.position.set(x, y, z + (rotY === 0 ? -0.6 : 0.6));
+  glow.position.set(x, y, z + 0.5);
   scene.add(glow);
 }
 
-function tree(scene, x, z) {
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.12, 0.16, 2.2, 8),
-    new THREE.MeshStandardMaterial({ color: 0x5a4230, roughness: 0.9 }),
-  );
-  trunk.position.set(x, 1.1, z);
-  trunk.castShadow = true;
-  scene.add(trunk);
-  const leafMat = new THREE.MeshStandardMaterial({ color: 0x4c7a3a, roughness: 0.85 });
-  for (const [dy, s] of [[0, 1.3], [0.5, 1.0], [-0.4, 1.05]]) {
+function tree(scene, x, z, pink = false) {
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 4.5, 8), mat(0x5a4230, 0.9));
+  trunk.position.set(x, 2.25, z); trunk.castShadow = true; scene.add(trunk);
+  const leafMat = mat(pink ? 0xe8b8cf : 0x4c7a3a, 0.85);
+  for (const [dx, dy, dz, s] of [[0, 4.6, 0, 1.6], [0.6, 4.2, 0.3, 1.2], [-0.5, 4.3, -0.4, 1.3], [0.2, 5.2, -0.2, 1.1]]) {
     const leaf = new THREE.Mesh(new THREE.IcosahedronGeometry(s, 0), leafMat);
-    leaf.position.set(x + (Math.random() - 0.5) * 0.4, 2.3 + dy, z + (Math.random() - 0.5) * 0.4);
-    leaf.castShadow = true;
-    scene.add(leaf);
+    leaf.position.set(x + dx, dy, z + dz); leaf.castShadow = true; scene.add(leaf);
   }
+  // alcorque cuadrado (spec 07)
+  scene.add(box(1.2, 0.05, 1.2, x, 0.025, z, mat(0x6b5a44, 1)));
 }
 
+// Cantero de ladrillo con vegetación (spec 07): murete #96583F, alto 0.50.
 function planter(scene, colliders, x, z, w, d) {
-  const brick = new THREE.MeshStandardMaterial({ color: 0x8a4a3a, roughness: 0.9 });
-  const dirt = new THREE.MeshStandardMaterial({ color: 0x3a2e22, roughness: 1 });
-  scene.add(box(w, 0.4, d, x, 0.2, z, brick));
-  scene.add(box(w - 0.15, 0.08, d - 0.15, x, 0.44, z, dirt));
-  colliders.push({ minX: x - w / 2, maxX: x + w / 2, minY: 0, maxY: 0.4, minZ: z - d / 2, maxZ: z + d / 2 });
+  const g = new THREE.Group();
+  g.add(box(w, 0.5, d, x, 0.25, z, mat(MURETE, 0.9)));
+  g.add(box(w - 0.15, 0.06, d - 0.15, x, 0.5, z, mat(0x3a2e22, 1))); // tierra
+  // matas: agapantos (tufts verdes acintados) + arbusto redondo
+  for (let i = 0; i < Math.floor(w * d); i++) {
+    const bx = x + (Math.random() - 0.5) * (w - 0.4);
+    const bz = z + (Math.random() - 0.5) * (d - 0.4);
+    const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(0.28 + Math.random() * 0.15, 0), mat(0x5c8a45, 0.9));
+    bush.position.set(bx, 0.7, bz); bush.castShadow = true; g.add(bush);
+  }
+  scene.add(g);
+  colliders.push({ minX: x - w / 2, maxX: x + w / 2, minY: 0, maxY: 0.5, minZ: z - d / 2, maxZ: z + d / 2 });
 }
 
-// ---- Construcción ------------------------------------------------------------
+// ---- Construcción principal -------------------------------------------------
 export function buildStreet(scene) {
   const colliders = [];
+  const g = new THREE.Group();
 
-  const paveMat = new THREE.MeshStandardMaterial({ map: pavement(12, 6), roughness: 0.95 });
-  const towerMat = new THREE.MeshStandardMaterial({ map: towerFacade(10, 4), roughness: 0.9 });
-  const fasciaMat = new THREE.MeshStandardMaterial({ color: 0xd8d2c4, roughness: 0.85 });
-  const colMat = new THREE.MeshStandardMaterial({ color: 0xe7e2d6, roughness: 0.7 });
+  const hexMat = new THREE.MeshStandardMaterial({ map: hexPaver(6, 3), roughness: 0.95 });
+  const veredaMat = new THREE.MeshStandardMaterial({ map: veredaTile(8, 4), roughness: 0.9 });
+  const hormigonMat = mat(HORMIGON, 0.9);
+  const salviaMat = mat(SALVIA, 0.8);
+  const cremaMat = mat(CREMA, 0.85);
+  const towerMat = new THREE.MeshStandardMaterial({ map: towerFacade(8, 6), roughness: 0.9 });
   const shutterMat = new THREE.MeshStandardMaterial({ map: greenShutter(2, 1), roughness: 0.6, metalness: 0.3 });
-  const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x203040, roughness: 0.1, metalness: 0.2, transparent: true, opacity: 0.55 });
+  const inglesMat = mat(INGLES, 0.5, 0.4);
+  const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x2a3a42, roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.4 });
 
-  // Vereda/plaza: piso pavimentado hasta el cordón, calle más allá.
-  const plaza = new THREE.Mesh(new THREE.PlaneGeometry(ROW_HALF * 2 + 6, PLAZA_DEPTH + 2), paveMat);
-  plaza.rotation.x = -Math.PI / 2;
-  plaza.position.set(0, 0, PLAZA_DEPTH / 2);
-  plaza.receiveShadow = true;
-  scene.add(plaza);
-  const street = new THREE.Mesh(
-    new THREE.PlaneGeometry(ROW_HALF * 2 + 20, 6),
-    new THREE.MeshStandardMaterial({ color: 0x3a3a3c, roughness: 0.95 }),
-  );
-  street.rotation.x = -Math.PI / 2;
-  street.position.set(0, -0.01, PLAZA_DEPTH + 3);
-  scene.add(street);
+  // ---- Suelos --------------------------------------------------------------
+  // calzada (adoquín oscuro), cordón, vereda gris, plaza hexagonal
+  const street = new THREE.Mesh(new THREE.PlaneGeometry(FRENTE * 2 + 20, 8), mat(0x3a3a3c, 0.95));
+  street.rotation.x = -Math.PI / 2; street.position.set(0, -0.05, Z_STREET + 2); scene.add(street);
+  g.add(box(FRENTE * 2 + 4, 0.15, 0.4, 0, 0.075, Z_CURB, mat(0x8a8880, 0.9))); // cordón granito
+  const vereda = new THREE.Mesh(new THREE.PlaneGeometry(FRENTE * 2, Z_CURB - 3.5), veredaMat);
+  vereda.rotation.x = -Math.PI / 2; vereda.position.set(0, 0, (Z_CURB + 3.5) / 2); vereda.receiveShadow = true; scene.add(vereda);
+  const plaza = new THREE.Mesh(new THREE.PlaneGeometry(FRENTE * 2, 3.5 - Z_STEP_FOOT), hexMat);
+  plaza.rotation.x = -Math.PI / 2; plaza.position.set(0, 0.001, 3.5 / 2); plaza.receiveShadow = true; scene.add(plaza);
 
-  // Torre de fondo (arriba del techo de la galería) — solo decorado, sin colisión.
-  scene.add(box(ROW_HALF * 2 + 6, 26, 0.4, 0, TOWER_Y0 + 13, -0.6, towerMat));
+  // ---- Escalones (spec 03, CRÍTICO): 3 pasos anchos y bajos ----------------
+  // 2 boxes escalonados + la plataforma de la galería (= 3er nivel).
+  const stepA = box(FRENTE * 2, STEP_RISE, STEP_RUN * 2, 0, STEP_RISE / 2, -STEP_RUN, hormigonMat);
+  const stepB = box(FRENTE * 2, STEP_RISE * 2, STEP_RUN, 0, STEP_RISE, -STEP_RUN * 2, hormigonMat);
+  for (const s of [stepA, stepB]) { s.castShadow = true; s.receiveShadow = true; g.add(s); }
 
-  // Techo de la galería (vuela sobre la vereda) + columnas.
-  const canopy = box(ROW_HALF * 2 + 1, 0.3, CANOPY_Z + 0.4, 0, CANOPY_Y + 0.15, CANOPY_Z / 2 - 0.2, fasciaMat);
-  canopy.castShadow = true;
-  scene.add(canopy);
-  for (let x = -ROW_HALF + 1; x <= ROW_HALF - 1 + 0.01; x += (ROW_HALF * 2 - 2) / 5) {
-    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, CANOPY_Y, 12), colMat);
-    col.position.set(x, CANOPY_Y / 2, CANOPY_Z - 0.15);
-    col.castShadow = true;
-    scene.add(col);
-    colliders.push({ minX: x - 0.24, maxX: x + 0.24, minY: 0, maxY: CANOPY_Y, minZ: CANOPY_Z - 0.4, maxZ: CANOPY_Z + 0.1 });
+  // ---- Plataforma/galería a y=PLAT -----------------------------------------
+  const galZc = (Z_STEP_TOP + Z_FACADE) / 2;
+  const plat = box(FRENTE * 2, PLAT, Z_STEP_TOP - Z_FACADE, 0, PLAT / 2, galZc, hormigonMat);
+  plat.receiveShadow = true; g.add(plat);
+
+  // Columnas verde salvia (sección cuadrada 0.40), ritmo eje 4.5m, en el borde
+  // delantero de la galería. Alero volado arriba.
+  for (let x = -FRENTE + 2; x <= FRENTE - 2 + 0.01; x += EJE_COL) {
+    const col = box(COL, H_LIBRE, COL, x, PLAT + H_LIBRE / 2, Z_STEP_TOP - 0.3, salviaMat);
+    col.castShadow = true; col.receiveShadow = true; g.add(col);
+    colliders.push({ minX: x - COL / 2 - 0.05, maxX: x + COL / 2 + 0.05, minY: 0, maxY: PLAT + H_LIBRE, minZ: Z_STEP_TOP - 0.3 - COL / 2, maxZ: Z_STEP_TOP - 0.3 + COL / 2 });
   }
+  // Alero/losa voladiza (canto verde salvia), vuela 1.5m sobre la vereda.
+  const aleroZ0 = Z_STEP_TOP + ALERO_VUELO, aleroZ1 = Z_FACADE;
+  const alero = box(FRENTE * 2 + 1, ALERO_T, aleroZ0 - aleroZ1, 0, PLAT + H_LIBRE + ALERO_T / 2, (aleroZ0 + aleroZ1) / 2, salviaMat);
+  alero.castShadow = true; g.add(alero);
 
-  // Locales: 5 unidades, pilastras entre ellas, el del medio (FOURTWENTY) abierto.
-  const pilasterMat = new THREE.MeshStandardMaterial({ color: 0xcfc9ba, roughness: 0.8 });
-  for (let i = 0; i <= 5; i++) {
-    const x = -ROW_HALF + i * UNIT_W;
-    const pilaster = box(0.22, DOOR_H, 0.3, x, DOOR_H / 2, FACADE_Z + 0.1, pilasterMat);
-    pilaster.castShadow = true;
-    scene.add(pilaster);
+  // ---- Frente de locales (línea Z_FACADE) ----------------------------------
+  // Todo el frente es persiana verde (locales cerrados) MENOS el vano central
+  // (FOURTWENTY), que lleva vidriera con puerta.
+  const facadeTop = PLAT + H_LIBRE;
+  // zócalo ciego verde continuo (0.9m) a lo largo del frente
+  g.add(box(FRENTE * 2, 0.9, 0.12, 0, PLAT + 0.45, Z_FACADE, inglesMat));
+  // persianas a los costados del vano de FOURTWENTY
+  for (const [x0, x1] of [[-FRENTE, -VID_W / 2], [VID_W / 2, FRENTE]]) {
+    const w = x1 - x0, cx = (x0 + x1) / 2;
+    const shutter = box(w, H_LIBRE - 0.9, 0.1, cx, PLAT + 0.9 + (H_LIBRE - 0.9) / 2, Z_FACADE, shutterMat);
+    shutter.castShadow = true; shutter.receiveShadow = true; g.add(shutter);
+    colliders.push({ minX: x0, maxX: x1, minY: 0, maxY: facadeTop, minZ: Z_FACADE - 0.1, maxZ: Z_FACADE + 0.1 });
   }
-  const signBand = box(ROW_HALF * 2, 0.7, 0.25, 0, DOOR_H + 0.35, FACADE_Z + 0.1, fasciaMat); // fascia arriba de las puertas
-  signBand.castShadow = true;
-  scene.add(signBand);
+  // dintel sobre el vano central + cartel-toldo plano para branding
+  g.add(box(VID_W + 0.4, 0.5, 0.14, 0, facadeTop - 0.25, Z_FACADE, cremaMat));
+  const toldo = box(VID_W + 0.2, 0.06, 0.9, 0, facadeTop - 0.5, Z_FACADE + 0.5, mat(0x1a1a1e, 0.5));
+  g.add(toldo);
+  neonFT(scene, 0, facadeTop - 0.55, Z_FACADE + 0.9);
 
-  for (let i = 0; i < 5; i++) {
-    const x0 = -ROW_HALF + i * UNIT_W, x1 = x0 + UNIT_W;
-    const cx = (x0 + x1) / 2, w = UNIT_W - 0.3;
-    if (i === FT_INDEX) {
-      // FOURTWENTY: puerta de vidrio abierta (sin persiana, sin collider) + neón
-      const glassX = cx - w * 0.27;
-      const glass = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.5, DOOR_H - 0.3), glassMat);
-      glass.position.set(glassX, (DOOR_H - 0.3) / 2, FACADE_Z + 0.08);
-      scene.add(glass);
-      // la hoja fija de vidrio bloquea; la otra mitad queda libre para entrar
-      colliders.push({ minX: glassX - w * 0.25, maxX: glassX + w * 0.25, minY: 0, maxY: DOOR_H - 0.3, minZ: FACADE_Z, maxZ: FACADE_Z + 0.2 });
-      neonFT(scene, cx, DOOR_H + 0.35, FACADE_Z + 0.09, 0);
-      continue;
-    }
-    const shutter = box(w, DOOR_H, 0.12, cx, DOOR_H / 2, FACADE_Z + 0.08, shutterMat);
-    shutter.castShadow = true;
-    shutter.receiveShadow = true;
-    scene.add(shutter);
-    colliders.push({ minX: x0 + 0.1, maxX: x1 - 0.1, minY: 0, maxY: DOOR_H, minZ: FACADE_Z, maxZ: FACADE_Z + 0.2 });
+  // ---- Vidriera FOURTWENTY (verde inglés, cuadrícula) con puerta -----------
+  buildStorefront(g, colliders, inglesMat, glassMat);
+
+  // ---- Interior del local (elevado a PLAT, sin muebles) --------------------
+  buildLocalInterior(scene, g, colliders);
+
+  // ---- Torres de fondo + reja del patio ------------------------------------
+  // Torre 1: sobre el alero, alto. Vecinas: slabs para dar profundidad.
+  g.add(box(FRENTE * 2 + 2, 24, 0.5, 0, facadeTop + ALERO_T + 12, Z_FACADE - 0.5, towerMat));
+  g.add(box(10, 20, 0.5, -FRENTE - 3, facadeTop + 10, Z_FACADE + 2, towerMat));
+  g.add(box(10, 20, 0.5, FRENTE + 3, facadeTop + 10, Z_FACADE + 2, towerMat));
+  // reja verde tubular del patio (a un costado, no caminable)
+  for (let x = FRENTE - 1; x <= FRENTE + 2; x += 0.4) {
+    g.add(box(0.05, 1.2, 0.05, x, 0.6, Z_STEP_TOP - 1, mat(REJA, 0.5, 0.5)));
   }
+  g.add(box(3.4, 0.08, 0.08, FRENTE + 0.5, 1.2, Z_STEP_TOP - 1, mat(REJA, 0.5, 0.5)));
 
-  // Límites de la plaza: paredes laterales y el cordón/calle al frente.
-  colliders.push({ minX: -ROW_HALF - 3.2, maxX: -ROW_HALF - 2.8, minY: 0, maxY: 3, minZ: -1, maxZ: PLAZA_DEPTH });
-  colliders.push({ minX: ROW_HALF + 2.8, maxX: ROW_HALF + 3.2, minY: 0, maxY: 3, minZ: -1, maxZ: PLAZA_DEPTH });
-  colliders.push({ minX: -ROW_HALF - 3, maxX: ROW_HALF + 3, minY: 0, maxY: 3, minZ: PLAZA_DEPTH + 1.6, maxZ: PLAZA_DEPTH + 2 });
+  // ---- Límites invisibles (spec 02): cordón + 2 extremos + fondo -----------
+  colliders.push({ minX: -FRENTE - 0.5, maxX: FRENTE + 0.5, minY: 0, maxY: 3, minZ: Z_CURB, maxZ: Z_CURB + 0.4 }); // cordón
+  colliders.push({ minX: -FRENTE - 0.5, maxX: -FRENTE - 0.1, minY: 0, maxY: 4, minZ: Z_LOCAL_BACK, maxZ: Z_CURB }); // izq
+  colliders.push({ minX: FRENTE + 0.1, maxX: FRENTE + 0.5, minY: 0, maxY: 4, minZ: Z_LOCAL_BACK, maxZ: Z_CURB });   // der
 
-  // Verde: un par de árboles y canteros de ladrillo, como en las fotos.
-  tree(scene, -6, 6.5);
-  tree(scene, 7.5, 7.5);
-  planter(scene, colliders, -6, 6.5, 2.2, 1.6);
-  planter(scene, colliders, 7.5, 7.5, 2.0, 1.5);
+  // ---- Vegetación y detalle ------------------------------------------------
+  tree(scene, -7, 5.5, true);   // ciruelo florecido rosa
+  tree(scene, 8, 6, false);     // hoja verde
+  planter(scene, colliders, -6, 2.4, 3.0, 1.6);
+  planter(scene, colliders, 6.5, 2.6, 2.6, 1.6);
 
-  // Luz general de calle (de día, pareja) + una cálida sobre la entrada.
-  scene.add(new THREE.HemisphereLight(0xdfe6ea, 0x9a9488, 1.1));
-  const sun = new THREE.DirectionalLight(0xfff4e0, 1.4);
-  sun.position.set(10, 20, 8);
+  // ---- Luz: sol de mediodía-invierno, cálido rasante, sombras largas -------
+  scene.add(new THREE.HemisphereLight(0xbfd6ea, 0x9a9488, 0.9)); // cielo celeste / suelo
+  const sun = new THREE.DirectionalLight(0xfff1d6, 2.2);
+  sun.position.set(14, 16, 10); // bajo → sombras largas
   sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
-  sun.shadow.camera.left = -20; sun.shadow.camera.right = 20;
-  sun.shadow.camera.top = 20; sun.shadow.camera.bottom = -20;
-  sun.shadow.camera.far = 40;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -FRENTE - 4; sun.shadow.camera.right = FRENTE + 4;
+  sun.shadow.camera.top = 24; sun.shadow.camera.bottom = -24;
+  sun.shadow.camera.near = 1; sun.shadow.camera.far = 70;
+  sun.shadow.bias = -0.0004;
   scene.add(sun);
 
-  buildLocalInterior(scene, colliders);
-
+  scene.add(g);
   return colliders;
 }
 
-// ---- Local de FOURTWENTY (adentro) ------------------------------------------
-// Solo la ESTRUCTURA (paredes/piso/techo) — sin muebles todavía, el dueño
-// manda esos assets después. El hueco atrás-derecha queda abierto: ahí va a
-// entrar la carga de mapa al "shopping" de 5 pisos (escalera mecánica) más
-// adelante; por ahora no hay nada cargado detrás, solo un poco de piso de
-// más y un tope invisible para no caminar al vacío.
-function buildLocalInterior(scene, colliders) {
-  const floorMat = new THREE.MeshStandardMaterial({ map: whiteFloor(ROOM_W / 2, ROOM_D / 2), roughness: 0.85 });
-  const wallMat = new THREE.MeshStandardMaterial({ map: plasterWall(ROOM_W / 2, 2), roughness: 1 });
-  const ceilMat = new THREE.MeshStandardMaterial({ map: lightCeiling(ROOM_W / 2, ROOM_D / 2), roughness: 1 });
-  const WALL_T = 0.2;
-
-  const roomFloor = box(ROOM_W, 0.1, ROOM_D + GAP_STUB, FT_CENTER_X, -0.05, (ROOM_Z0 + ROOM_Z1) / 2 - GAP_STUB / 2, floorMat);
-  const roomCeil = box(ROOM_W, WALL_T, ROOM_D, FT_CENTER_X, ROOM_H, (ROOM_Z0 + ROOM_Z1) / 2, ceilMat);
-  const wallLeft = box(WALL_T, ROOM_H, ROOM_D, ROOM_X0, ROOM_H / 2, (ROOM_Z0 + ROOM_Z1) / 2, wallMat);
-  const wallRight = box(WALL_T, ROOM_H, ROOM_D, ROOM_X1, ROOM_H / 2, (ROOM_Z0 + ROOM_Z1) / 2, wallMat);
-  colliders.push({ minX: ROOM_X0 - WALL_T, maxX: ROOM_X0, minY: 0, maxY: ROOM_H, minZ: ROOM_Z0, maxZ: ROOM_Z1 });
-  colliders.push({ minX: ROOM_X1, maxX: ROOM_X1 + WALL_T, minY: 0, maxY: ROOM_H, minZ: ROOM_Z0, maxZ: ROOM_Z1 });
-
-  // pared del fondo: SOLO la parte izquierda — la derecha queda como hueco
-  // (futuro acceso al shopping). GAP_X0..GAP_X1 no lleva pared.
-  const leftW = GAP_X0 - ROOM_X0;
-  const wallBack = box(leftW, ROOM_H, WALL_T, ROOM_X0 + leftW / 2, ROOM_H / 2, ROOM_Z0, wallMat);
-  colliders.push({ minX: ROOM_X0, maxX: GAP_X0, minY: 0, maxY: ROOM_H, minZ: ROOM_Z0 - WALL_T, maxZ: ROOM_Z0 });
-
-  // tope invisible más atrás del hueco (para no caminar al vacío sin cargar nada)
-  colliders.push({ minX: GAP_X0, maxX: GAP_X1, minY: 0, maxY: ROOM_H, minZ: ROOM_Z0 - GAP_STUB - 0.3, maxZ: ROOM_Z0 - GAP_STUB });
-
-  // sombra: que el sol de afuera NO entre a bañar el local — paredes/techo la
-  // proyectan y el piso la recibe, así se siente un interior de verdad.
-  for (const m of [roomFloor, roomCeil, wallLeft, wallRight, wallBack]) {
-    m.castShadow = true;
-    m.receiveShadow = true;
-    scene.add(m);
-  }
-
-  // sin luz ambiental propia (ya hay una global afuera — sumar otra lava la
-  // escena a blanco): solo un foco cálido puntual, suave.
-  const lamp = new THREE.PointLight(0xffe9c4, 3.5, 6, 2);
-  lamp.position.set(FT_CENTER_X, ROOM_H - 0.3, (ROOM_Z0 + ROOM_Z1) / 2);
-  scene.add(lamp);
+// Vidriera del local: marco de cuadrícula verde inglés + vidrio + puerta.
+function buildStorefront(g, colliders, frameMat, glassMat) {
+  const y0 = PLAT + 0.9;                 // arriba del zócalo ciego
+  const top = PLAT + H_LIBRE - 0.5;      // bajo el dintel
+  const cristalH = top - y0;
+  const x0 = -VID_W / 2, x1 = VID_W / 2;
+  // vidrio detrás de la cuadrícula
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(VID_W, cristalH), glassMat);
+  glass.position.set(0, (y0 + top) / 2, Z_FACADE + 0.02); g.add(glass);
+  // cuadrícula: montantes verticales + travesaños horizontales
+  for (let x = x0; x <= x1 + 0.01; x += VID_W / 4) g.add(box(0.06, cristalH, 0.08, x, (y0 + top) / 2, Z_FACADE, frameMat));
+  for (let y = y0; y <= top + 0.01; y += cristalH / 3) g.add(box(VID_W, 0.06, 0.08, 0, y, Z_FACADE, frameMat));
+  // rejas verticales sobre parte del vidrio (spec 04)
+  for (let x = x0 + 0.3; x < -0.9; x += 0.35) g.add(box(0.03, cristalH, 0.03, x, (y0 + top) / 2, Z_FACADE + 0.06, frameMat));
+  // PUERTA: vano libre a la derecha del vano central (sin vidrio, caminable).
+  // La mitad izquierda de la vidriera es fija (collider); la derecha se cruza.
+  colliders.push({ minX: x0, maxX: -0.4, minY: 0, maxY: top, minZ: Z_FACADE - 0.1, maxZ: Z_FACADE + 0.1 });
+  // marco de la puerta
+  g.add(box(0.08, cristalH + 0.4, 0.1, 1.5, PLAT + (cristalH + 0.4) / 2, Z_FACADE, frameMat));
 }
 
-// ---- Zona para el HUD --------------------------------------------------------
-// true si la posición está adentro del local (para mostrar "FOURTWENTY" en
-// vez de "CALLE BURELA" en el cartel de zona).
-export function isInsideLocal(pos) {
-  return pos.z < FACADE_Z - 0.3;
+// Local FOURTWENTY (adentro), elevado a PLAT. SOLO estructura — sin muebles
+// todavía (los assets del interior real los manda el dueño después). El hueco
+// atrás-derecha queda abierto: futuro acceso al shopping (ver nota final).
+function buildLocalInterior(scene, g, colliders) {
+  const floorMat = new THREE.MeshStandardMaterial({ map: whiteFloor(LOCAL_HALF, 3), roughness: 0.85 });
+  const wallMat = mat(CREMA, 1);
+  const ceilMat = new THREE.MeshStandardMaterial({ map: lightCeiling(LOCAL_HALF, 3), roughness: 1 });
+  const WT = 0.2, H = H_LIBRE;
+  const zc = (Z_FACADE + Z_LOCAL_BACK) / 2, depth = Z_FACADE - Z_LOCAL_BACK;
+
+  const floor = box(LOCAL_HALF * 2, 0.1, depth + GAP_STUB, 0, PLAT - 0.05, zc - GAP_STUB / 2, floorMat);
+  const ceil = box(LOCAL_HALF * 2, WT, depth, 0, PLAT + H, zc, ceilMat);
+  const wallL = box(WT, H, depth, -LOCAL_HALF, PLAT + H / 2, zc, wallMat);
+  const wallR = box(WT, H, depth, LOCAL_HALF, PLAT + H / 2, zc, wallMat);
+  colliders.push({ minX: -LOCAL_HALF - WT, maxX: -LOCAL_HALF, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK, maxZ: Z_FACADE });
+  colliders.push({ minX: LOCAL_HALF, maxX: LOCAL_HALF + WT, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK, maxZ: Z_FACADE });
+
+  // pared del fondo: SOLO la parte izquierda; la derecha (GAP) queda abierta.
+  const leftW = GAP_X0 - (-LOCAL_HALF);
+  const wallBack = box(leftW, H, WT, -LOCAL_HALF + leftW / 2, PLAT + H / 2, Z_LOCAL_BACK, wallMat);
+  colliders.push({ minX: -LOCAL_HALF, maxX: GAP_X0, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK - WT, maxZ: Z_LOCAL_BACK });
+  // tope invisible más atrás del hueco (para no caminar al vacío sin cargar nada)
+  colliders.push({ minX: GAP_X0, maxX: GAP_X1, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK - GAP_STUB - 0.3, maxZ: Z_LOCAL_BACK - GAP_STUB });
+
+  for (const m of [floor, ceil, wallL, wallR, wallBack]) { m.castShadow = true; m.receiveShadow = true; g.add(m); }
+
+  // luz cálida puntual adentro (sin ambiental propia: ya hay una global afuera)
+  const lamp = new THREE.PointLight(0xffe9c4, 4, 7, 2);
+  lamp.position.set(0, PLAT + H - 0.3, zc);
+  scene.add(lamp);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // NOTA PARA MÁS ADELANTE (no implementado todavía, a propósito):
-// El hueco atrás-derecha del local (GAP_X0..GAP_X1, detrás de ROOM_Z0) es
-// donde va a ir la carga de mapa hacia el "shopping" de 5 pisos que ya está
-// construido en world/building.js + retail.js + gallery.js + signage.js +
-// collections.js + layout.js (con escalera mecánica en vez de escaleras,
-// pendiente de convertir). Ese mundo no se toca ni se borra: main.js
-// simplemente no lo llama todavía. Cuando se implemente el trigger, lo
-// natural es: al pisar el hueco, hacer fade a negro, destruir/ocultar esta
-// escena y llamar a buildBuilding/buildRetail/etc. como la escena activa.
+// El hueco atrás-derecha del local (GAP_X0..GAP_X1, detrás de Z_LOCAL_BACK) es
+// donde va a ir la carga de mapa hacia el "shopping" de 5 pisos ya construido
+// en world/building.js + retail.js + gallery.js + signage.js + collections.js +
+// layout.js (con escalera mecánica en vez de escaleras, pendiente de convertir).
+// Ese mundo no se toca ni se borra: main.js simplemente no lo llama todavía.
+// Cuando se implemente el trigger: al pisar el hueco, fade a negro, ocultar
+// esta escena y montar buildBuilding/buildRetail/etc. como escena activa.
 // ═══════════════════════════════════════════════════════════════════════════
