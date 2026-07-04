@@ -12,31 +12,13 @@ import { registerSpinner } from './anim.js';
 import { LAYOUT } from './layout.js';
 import { COLLECTIONS } from './collections.js';
 import { placeModel } from './customModels.js';
+import { box, smoothTexture as smooth, hiCanvas, white, chrome, darkMetal } from './gfxUtils.js';
 
-const white = new THREE.MeshStandardMaterial({ color: 0xf6f5f2, roughness: 0.9 });
-const chrome = new THREE.MeshStandardMaterial({ color: 0xb9bcc2, roughness: 0.25, metalness: 0.9 });
-const darkMetal = new THREE.MeshStandardMaterial({ color: 0x2e2e33, roughness: 0.4, metalness: 0.7 });
 const woodTop = new THREE.MeshStandardMaterial({ color: 0x8a6a48, roughness: 0.6 });
-
-function box(w, h, d, x, y, z, mat) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-  m.position.set(x, y, z);
-  return m;
-}
-
-const smooth = (t) => {
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.magFilter = THREE.LinearFilter;
-  t.minFilter = THREE.LinearMipmapLinearFilter;
-  t.anisotropy = 8;
-  return t;
-};
 
 // ---- Texturas de props ------------------------------------------------------
 function shoeBoxTexture() {
-  const c = document.createElement('canvas');
-  c.width = 128; c.height = 128;
-  const ctx = c.getContext('2d');
+  const [c, ctx] = hiCanvas(128, 128);
   ctx.fillStyle = '#f4f2ee';
   ctx.fillRect(0, 0, 128, 128);
   ctx.fillStyle = 'rgba(0,0,0,0.18)';
@@ -47,9 +29,7 @@ function shoeBoxTexture() {
 }
 
 function foldedTexture() {
-  const c = document.createElement('canvas');
-  c.width = 128; c.height = 64;
-  const ctx = c.getContext('2d');
+  const [c, ctx] = hiCanvas(128, 64);
   ctx.fillStyle = '#f0eee9';
   ctx.fillRect(0, 0, 128, 64);
   ctx.fillStyle = 'rgba(0,0,0,0.12)';
@@ -58,9 +38,7 @@ function foldedTexture() {
 }
 
 function curtainTexture() {
-  const c = document.createElement('canvas');
-  c.width = 128; c.height = 128;
-  const ctx = c.getContext('2d');
+  const [c, ctx] = hiCanvas(128, 128);
   for (let x = 0; x < 128; x += 16) {
     ctx.fillStyle = (x / 16) % 2 ? '#1f4d2e' : '#e8dfc9';
     ctx.fillRect(x, 0, 16, 128);
@@ -71,9 +49,7 @@ function curtainTexture() {
 }
 
 function signTexture(text) {
-  const c = document.createElement('canvas');
-  c.width = 512; c.height = 128;
-  const ctx = c.getContext('2d');
+  const [c, ctx] = hiCanvas(512, 128);
   ctx.fillStyle = '#f6f5f2';
   ctx.fillRect(0, 0, 512, 128);
   ctx.strokeStyle = '#c9c7c0';
@@ -397,12 +373,11 @@ export function buildRetail(scene) {
         case 'display':
           spinDisplay(g, colliders, Y, it.x, it.z, garmentTexture(it.color ?? cs[0], it.ropa ?? 'hoodie'));
           break;
-        case 'modelo': {
-          placeModel(scene, { archivo: it.archivo, x: it.x, y: Y, z: it.z, rot: deg(it.rot ?? 0), alto: it.alto });
-          const r = it.radio ?? 0.4;
-          colliders.push({ minX: it.x - r, maxX: it.x + r, minY: Y, maxY: Y + (it.alto ?? 1.6), minZ: it.z - r, maxZ: it.z + r });
+        case 'modelo':
+          // el collider sale de la caja real del modelo una vez cargado
+          // (placeModel la empuja a `colliders` sola — nada que adivinar acá)
+          placeModel(scene, { archivo: it.archivo, x: it.x, y: Y, z: it.z, rot: deg(it.rot ?? 0), alto: it.alto }, colliders);
           break;
-        }
         default:
           console.warn(`layout.js: tipo de mueble desconocido "${it.tipo}" en piso ${piso}`);
       }

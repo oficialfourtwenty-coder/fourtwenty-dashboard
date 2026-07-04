@@ -3,6 +3,7 @@
 // Neón dibujado en canvas (unlit = brilla siempre) + luz puntual de acento.
 import * as THREE from 'three';
 import { FLOOR_YS, INTERIOR } from './building.js';
+import { smoothTexture } from './gfxUtils.js';
 
 function neonTexture(text, w = 1024, h = 128) {
   const c = document.createElement('canvas');
@@ -27,13 +28,7 @@ function neonTexture(text, w = 1024, h = 128) {
   ctx.shadowBlur = 0;
   ctx.fillStyle = '#eafff0';
   ctx.fillText(text, w / 2, h / 2 + 3);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.magFilter = THREE.LinearFilter;
-  t.minFilter = THREE.LinearMipmapLinearFilter;
-  t.generateMipmaps = true;
-  t.anisotropy = 8;
-  return t;
+  return smoothTexture(new THREE.CanvasTexture(c));
 }
 
 // Cartel físico: caja de marco oscuro + frente luminoso (el bloom del

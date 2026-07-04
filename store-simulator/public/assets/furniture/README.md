@@ -17,9 +17,9 @@ conversión imagen → 3D (la misma que usaste para el perchero y para BOB).
 4. Guardá. Con `npm run dev` corriendo, se actualiza solo. Ajustá `x`/`z`
    (posición) y `alto` (metros que mide) hasta que quede como querés.
 
-El mueble se escala y se apoya en el piso automáticamente — no hace falta
-calcular nada a mano. Ver los comentarios de `layout.js` para todas las
-opciones (`rot` para girarlo, `radio` para el espacio de colisión).
+El mueble se escala, se apoya en el piso y calcula su propio espacio de
+colisión automáticamente — no hace falta calcular nada a mano. Ver los
+comentarios de `layout.js` para todas las opciones (`rot` para girarlo).
 
 ## Reemplazando muebles placeholder
 

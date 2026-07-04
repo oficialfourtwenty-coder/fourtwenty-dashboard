@@ -25,14 +25,14 @@
 //   { tipo: 'cartel',     texto: '...', pared: 'frente'|'este', pos }
 //   { tipo: 'riel',       pared: 'frente'|'este', pos, largo }   (riel de luces)
 //   { tipo: 'display',    x, z, color: 0xRRGGBB, ropa }   (plataforma giratoria)
-//   { tipo: 'modelo',     x, z, rot, archivo: '<nombre>.glb', alto, radio }
+//   { tipo: 'modelo',     x, z, rot, archivo: '<nombre>.glb', alto }
 //       ⭐ TU PROPIO MUEBLE 3D. El archivo va en
 //       store-simulator/public/assets/furniture/<nombre>.glb — convertilo
 //       con tu herramienta y copialo ahí, después referencialo por nombre.
 //       Se escala y se para solo: `alto` es cuánto tiene que medir en
-//       metros (probá y ajustá si se ve grande/chico). `radio` es el
-//       espacio que ocupa para que Bob no lo atraviese caminando (metros,
-//       por defecto 0.4). `rot` en grados como todo lo demás.
+//       metros (probá y ajustá si se ve grande/chico). El espacio de
+//       colisión (para que Bob no lo atraviese) se calcula solo de la
+//       forma real del mueble apenas termina de cargar. `rot` en grados.
 //
 // COLORES: en formato 0xRRGGBB (como HTML pero con 0x). Ejemplos de la marca:
 //   verde cazador 0x1f4d2e · bordó 0x6d1f2c · crema 0xe8dfc9 · negro 0x1c1c1c
@@ -50,7 +50,7 @@ export const LAYOUT = {
     { tipo: 'caja', x: 3.6, z: -3.3 },
     { tipo: 'vendedor', x: 3.6, z: -3.9, remera: 0x1f4d2e },
     { tipo: 'display', x: 0, z: -0.8, color: 0x1f4d2e, ropa: 'hoodie' },
-    { tipo: 'modelo', x: -2.8, z: -0.3, archivo: 'perchero_remeras.glb', alto: 1.5, radio: 0.55 },
+    { tipo: 'modelo', x: -2.8, z: -0.3, archivo: 'perchero_remeras.glb', alto: 1.5 },
     { tipo: 'maniqui', x: -1.8, z: -3.7, rot: 0, remera: 0x1f4d2e, pantalon: 0xe8dfc9 },
     { tipo: 'maniqui', x: 1.6, z: -3.7, rot: 0, remera: 0x6d1f2c, pantalon: 0x1c1c1c },
     { tipo: 'espejo', x: -5.7, z: 0.8, rot: 90 },
@@ -65,8 +65,8 @@ export const LAYOUT = {
     { tipo: 'maniqui', x: 1.5, z: 1.5, rot: 180, remera: 0x1f4d2e, pantalon: 0xe8dfc9 },
     { tipo: 'riel', pared: 'frente', pos: 0.5, largo: 2.6 },
     // perchero real hecho por el dueño (reemplaza al perchero de prueba):
-    { tipo: 'modelo', x: -0.3, z: -1.6, archivo: 'perchero_remeras.glb', alto: 1.5, radio: 0.55 },
-    { tipo: 'modelo', x: 1.9, z: 0.4, archivo: 'perchero_remeras.glb', alto: 1.5, radio: 0.55 },
+    { tipo: 'modelo', x: -0.3, z: -1.6, archivo: 'perchero_remeras.glb', alto: 1.5 },
+    { tipo: 'modelo', x: 1.9, z: 0.4, archivo: 'perchero_remeras.glb', alto: 1.5 },
     { tipo: 'estanteria', pared: 'frente', pos: 0.4 },
     { tipo: 'estanteria', pared: 'este', pos: -3 },
     { tipo: 'cartel', texto: 'BASICS', pared: 'frente', pos: 0.4 },
@@ -81,7 +81,7 @@ export const LAYOUT = {
     { tipo: 'vendedor', x: 3.6, z: -3.9, remera: 0xd96b2f },
     { tipo: 'maniqui', x: -1.5, z: 1.5, rot: 180, remera: 0xd96b2f, pantalon: 0x1c1c1c },
     { tipo: 'riel', pared: 'frente', pos: 0.5, largo: 2.6 },
-    { tipo: 'modelo', x: 0.4, z: -1.6, archivo: 'perchero_remeras.glb', alto: 1.5, radio: 0.55 },
+    { tipo: 'modelo', x: 0.4, z: -1.6, archivo: 'perchero_remeras.glb', alto: 1.5 },
     { tipo: 'perchero', x: 2.2, z: 0.4, ropa: 'tee' },
     { tipo: 'estanteria', pared: 'frente', pos: 0.4 },
     { tipo: 'estanteria', pared: 'este', pos: -3 },
@@ -97,7 +97,7 @@ export const LAYOUT = {
     { tipo: 'vendedor', x: 3.6, z: -3.9, remera: 0xd96b2f },
     { tipo: 'maniqui', x: 1.5, z: 1.5, rot: 180, remera: 0xd96b2f, pantalon: 0x6b4a2f },
     { tipo: 'riel', pared: 'frente', pos: 0.5, largo: 2.6 },
-    { tipo: 'modelo', x: 0, z: -1.6, archivo: 'perchero_remeras.glb', alto: 1.5, radio: 0.55 },
+    { tipo: 'modelo', x: 0, z: -1.6, archivo: 'perchero_remeras.glb', alto: 1.5 },
     { tipo: 'perchero', x: 1.9, z: 0.4, ropa: 'bobTee' },
     { tipo: 'estanteria', pared: 'frente', pos: 0.4 },
     { tipo: 'cartel', texto: 'BOB SHOP', pared: 'frente', pos: 0.4 },
@@ -110,7 +110,7 @@ export const LAYOUT = {
     { tipo: 'espejo', x: 5.7, z: -0.8, rot: -90 },
     { tipo: 'caja', x: 3.6, z: -3.3 },
     { tipo: 'vendedor', x: 3.6, z: -3.9, remera: 0x141414 },
-    { tipo: 'modelo', x: 1.2, z: -0.8, archivo: 'perchero_remeras.glb', alto: 1.5, radio: 0.55 },
+    { tipo: 'modelo', x: 1.2, z: -0.8, archivo: 'perchero_remeras.glb', alto: 1.5 },
     { tipo: 'estanteria', pared: 'este', pos: -3 },
     { tipo: 'cartel', texto: 'ARCHIVE', pared: 'este', pos: -3 },
     { tipo: 'maniqui', x: -1.5, z: 1.5, rot: 180, remera: 0xd4af37, pantalon: 0x141414 },

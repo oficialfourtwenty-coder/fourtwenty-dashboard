@@ -3,6 +3,7 @@
 // Ambientación pedida por el dueño: piso blanco, luz blanca, look GTA SA.
 import * as THREE from 'three';
 import { whiteFloor, whitePlaster, lightCeiling, stairConcrete, windowDaylight } from './textures.js';
+import { box } from './gfxUtils.js';
 
 // Dimensiones (metros)
 export const W = 12;             // ancho (x: -6..6) — ÷3 pedido por el dueño: escala tienda real
@@ -98,11 +99,6 @@ export function getColliders() { return colliders; }
 export const SPAWN = new THREE.Vector3(0, 0, -2.2);
 
 // ---- Construcción visual ---------------------------------------------------
-function box(w, h, d, x, y, z, mat) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-  m.position.set(x, y, z);
-  return m;
-}
 
 function buildStair(group, f, stepMat) {
   const steps = 14;

@@ -7,6 +7,7 @@ export class Input {
     this.mouseDX = 0;
     this.mouseDY = 0;
     this._interactQueued = false;
+    this._mouseOut = { x: 0, y: 0 }; // reusado por consumeMouse(), no basura por cuadro
 
     window.addEventListener('keydown', (e) => {
       if (e.repeat) return;
@@ -47,10 +48,11 @@ export class Input {
 
   // Delta de mouse acumulado desde el último frame (lo consume la cámara).
   consumeMouse() {
-    const d = { x: this.mouseDX, y: this.mouseDY };
+    this._mouseOut.x = this.mouseDX;
+    this._mouseOut.y = this.mouseDY;
     this.mouseDX = 0;
     this.mouseDY = 0;
-    return d;
+    return this._mouseOut;
   }
 
   // true una sola vez por pulsación de E (para Fase 2: interactuar).

@@ -29,6 +29,9 @@ export class ThirdPersonCamera {
     this.sensitivity = 0.0022;
     this.focus = new THREE.Vector3();
     this._prev = new THREE.Vector3();
+    // vectores de trabajo reusados cada cuadro (no crear basura en el loop)
+    this._chest = new THREE.Vector3();
+    this._cp = new THREE.Vector3();
     this._first = true;
     this._mouseIdle = 999; // segundos desde el último movimiento de mouse
   }
@@ -63,7 +66,7 @@ export class ThirdPersonCamera {
     this.pitch += (this.targetPitch - this.pitch) * s;
 
     // 4) Punto que mira: el pecho de BOB, seguido con retardo.
-    const chest = new THREE.Vector3(targetPos.x, targetPos.y + FOCUS_HEIGHT, targetPos.z);
+    const chest = this._chest.set(targetPos.x, targetPos.y + FOCUS_HEIGHT, targetPos.z);
     if (this._first) {
       this.focus.copy(chest);
       this._first = false;
@@ -72,7 +75,7 @@ export class ThirdPersonCamera {
     }
 
     // 5) Posición orbital detrás del foco.
-    const cp = new THREE.Vector3(
+    const cp = this._cp.set(
       this.focus.x + Math.sin(this.yaw) * Math.cos(this.pitch) * DIST,
       this.focus.y + Math.sin(this.pitch) * DIST,
       this.focus.z + Math.cos(this.yaw) * Math.cos(this.pitch) * DIST,

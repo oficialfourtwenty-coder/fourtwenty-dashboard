@@ -11,6 +11,7 @@
 // hace falta calcular escalas a mano ni adivinar el pivote del archivo.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { normalizeGLTFHeight } from './gltfUtils.js';
 
 const loader = new GLTFLoader();
 const cache = new Map(); // evita cargar el mismo GLB dos veces si se repite
@@ -26,29 +27,33 @@ function loadOnce(path) {
 
 // Coloca un mueble GLB en (x, y, z) del mundo, rotado `rot` radianes.
 // `y` es la altura del piso (la pasa el llamador, ej. FLOOR_YS[piso-1]).
-export function placeModel(scene, { archivo, x, y = 0, z, rot = 0, alto = 1.6 }) {
+// Si se pasa `colliders`, empuja ahí la caja de colisión REAL del modelo
+// una vez que termina de cargar (no un radio adivinado a mano) — así Bob
+// no atraviesa el mueble sea cual sea su forma real.
+export function placeModel(scene, { archivo, x, y = 0, z, rot = 0, alto = 1.6 }, colliders) {
   loadOnce(`assets/furniture/${archivo}`)
     .then((gltf) => {
       const model = gltf.scene.clone(true);
-
-      // 1) escalar para que mida `alto` metros
-      const size = new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());
-      model.scale.setScalar(alto / (size.y || 1));
-
-      // 2) centrar en X/Z y apoyar la base en Y=0, DENTRO de un rig — así el
-      //    rig rota alrededor del centro real del mueble, no de una esquina
-      const box = new THREE.Box3().setFromObject(model);
-      const center = box.getCenter(new THREE.Vector3());
-      model.position.set(-center.x, -box.min.y, -center.z);
+      normalizeGLTFHeight(model, alto); // centrado en X/Z, apoyado en Y=0
 
       const rig = new THREE.Group();
       rig.add(model);
       rig.position.set(x, y, z);
       rig.rotation.y = rot;
+      rig.updateMatrixWorld(true);
       rig.traverse((m) => {
         if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; }
       });
       scene.add(rig);
+
+      if (colliders) {
+        const box = new THREE.Box3().setFromObject(rig);
+        colliders.push({
+          minX: box.min.x, maxX: box.max.x,
+          minY: box.min.y, maxY: box.max.y,
+          minZ: box.min.z, maxZ: box.max.z,
+        });
+      }
     })
     .catch(() => {
       console.warn(`No se pudo cargar el mueble "${archivo}" (¿está en public/assets/furniture/?)`);

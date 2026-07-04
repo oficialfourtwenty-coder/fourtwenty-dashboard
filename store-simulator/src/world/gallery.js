@@ -7,39 +7,17 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FLOOR_YS, FLOOR_H, INTERIOR } from './building.js';
 import { registerSpinner } from './anim.js';
+import { normalizeGLTFHeight } from './gltfUtils.js';
+import { box, smoothTexture as smooth, hiCanvas, white } from './gfxUtils.js';
 
 const WALL_W = -INTERIOR.x + 0.03; // cara interna pared oeste
 const WALL_E = INTERIOR.x - 0.03;  // cara interna pared este
-
-const smooth = (t) => {
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.magFilter = THREE.LinearFilter;
-  t.minFilter = THREE.LinearMipmapLinearFilter;
-  t.generateMipmaps = true;
-  t.anisotropy = 8;
-  return t;
-};
-
-// Canvas a mayor resolución dibujando con las mismas coordenadas.
-function hiCanvas(w, h, scale = 2) {
-  const c = document.createElement('canvas');
-  c.width = w * scale; c.height = h * scale;
-  const ctx = c.getContext('2d');
-  ctx.scale(scale, scale);
-  return [c, ctx];
-}
-
-function box(w, h, d, x, y, z, mat) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-  m.position.set(x, y, z);
-  return m;
-}
 
 // ---- Texturas dibujadas ----------------------------------------------------
 function css(color) { return `#${color.toString(16).padStart(6, '0')}`; }
 
 // Silueta de prenda: 'tee' | 'hoodie' | 'jersey'. Extras: number, monkeyFace.
-// (la usa también fixtures.js para la ropa de los percheros)
+// (la usa también retail.js para la ropa de los percheros)
 export function garmentTexture(color, type, { number, monkeyFace } = {}) {
   const [c, ctx] = hiCanvas(96, 112, 4); // x4: siluetas suaves, nada pixelado
   const col = css(color);
@@ -162,7 +140,6 @@ function muralTexture() {
 }
 
 // ---- Piezas ---------------------------------------------------------------
-const white = new THREE.MeshStandardMaterial({ color: 0xf6f5f2, roughness: 0.9 });
 const ledMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
 // Prenda colgada en una pared (side: 'w' | 'e'), con gancho.
@@ -341,12 +318,10 @@ export function buildGallery(scene, collection) {
     colliders.push({ minX: sx - 0.6, maxX: sx + 0.6, minY: Y, maxY: Y + 2.6, minZ: sz - 0.6, maxZ: sz + 0.6 });
     new GLTFLoader().load('assets/bob/bob.glb', (gltf) => {
       const statue = gltf.scene;
-      const bbox = new THREE.Box3().setFromObject(statue);
-      const size = bbox.getSize(new THREE.Vector3());
-      statue.scale.setScalar(2.0 / (size.y || 1));
-      const b2 = new THREE.Box3().setFromObject(statue);
-      const ctr = b2.getCenter(new THREE.Vector3());
-      statue.position.set(sx - ctr.x, Y + 0.45 - b2.min.y, sz - ctr.z);
+      normalizeGLTFHeight(statue, 2.0); // centrado en X/Z, apoyado en Y=0
+      statue.position.x += sx;
+      statue.position.y += Y + 0.45; // altura del pedestal
+      statue.position.z += sz;
       statue.rotation.y = 0; // frente del GLB es +x → mira al centro de la sala
       statue.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
       scene.add(statue);

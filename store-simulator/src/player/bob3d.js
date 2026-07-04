@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { sampleGround } from '../world/building.js';
+import { normalizeGLTFHeight } from '../world/gltfUtils.js';
 
 const HEIGHT = 1.7;       // alto objetivo del modelo en metros
 const RADIUS = 0.35;      // radio de colisión
@@ -20,6 +21,7 @@ const TURN = 10;          // velocidad de giro (rad/s aprox, suavizado)
 const GRAVITY = 14;
 
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+const UP = new THREE.Vector3(0, 1, 0);
 
 // Sombra blob (así se hacía en PS2: un círculo oscuro, nada de shadow maps).
 function makeBlobShadow() {
@@ -72,6 +74,10 @@ export class Player {
     scene.add(this.shadow);
 
     this.velocity = new THREE.Vector3();
+    // vectores de trabajo reusados cada cuadro (no crear basura en el loop)
+    this._fwd = new THREE.Vector3();
+    this._right = new THREE.Vector3();
+    this._wish = new THREE.Vector3();
     this.modelYaw = 0;          // hacia dónde mira el cuerpo
     this._prevYawRate = 0;
     this.vy = 0;
@@ -102,15 +108,7 @@ export class Player {
     // mire hacia +z (la convención del rig; esto arregla el "se ve de costado")
     model.rotation.y = -Math.PI / 2;
     // normalizar: que mida HEIGHT metros y apoye los pies en y=0
-    const box = new THREE.Box3().setFromObject(model);
-    const size = box.getSize(new THREE.Vector3());
-    const s = HEIGHT / (size.y || 1);
-    model.scale.setScalar(s);
-    const box2 = new THREE.Box3().setFromObject(model);
-    model.position.y -= box2.min.y;
-    const center = box2.getCenter(new THREE.Vector3());
-    model.position.x -= center.x;
-    model.position.z -= center.z;
+    normalizeGLTFHeight(model, HEIGHT);
 
     this.model = model;
     this.rig.add(model);
@@ -133,12 +131,22 @@ export class Player {
     }
   }
 
+  // Círculo (radio RADIUS) vs AABB, con banda de altura — sin closures nuevas
+  // por cuadro; colliders y la posición de prueba se pasan como parámetros.
+  _isFree(nx, nz, y, colliders) {
+    return !colliders.some((c) =>
+      nx > c.minX - RADIUS && nx < c.maxX + RADIUS &&
+      nz > c.minZ - RADIUS && nz < c.maxZ + RADIUS &&
+      y + 1.4 > c.minY && y + 0.2 < c.maxY,
+    );
+  }
+
   update(dt, input, camYaw, colliders, camPos) {
     // 1) Dirección deseada relativa a la cámara
     const { x: ax, z: az } = input.axes();
-    const fwd = new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw));
-    const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0));
-    const wish = new THREE.Vector3().addScaledVector(fwd, az).addScaledVector(right, ax);
+    const fwd = this._fwd.set(-Math.sin(camYaw), 0, -Math.cos(camYaw));
+    const right = this._right.crossVectors(fwd, UP);
+    const wish = this._wish.set(0, 0, 0).addScaledVector(fwd, az).addScaledVector(right, ax);
     const moving = wish.lengthSq() > 0;
     const topSpeed = input.sprinting() ? RUN : WALK;
     if (moving) wish.normalize().multiplyScalar(topSpeed);
@@ -154,14 +162,9 @@ export class Player {
     const y = this.position.y;
     const stepX = this.velocity.x * dt;
     const stepZ = this.velocity.z * dt;
-    const free = (nx, nz) => !colliders.some((c) =>
-      nx > c.minX - RADIUS && nx < c.maxX + RADIUS &&
-      nz > c.minZ - RADIUS && nz < c.maxZ + RADIUS &&
-      y + 1.4 > c.minY && y + 0.2 < c.maxY,
-    );
-    if (free(this.position.x + stepX, this.position.z)) this.position.x += stepX;
+    if (this._isFree(this.position.x + stepX, this.position.z, y, colliders)) this.position.x += stepX;
     else this.velocity.x = 0;
-    if (free(this.position.x, this.position.z + stepZ)) this.position.z += stepZ;
+    if (this._isFree(this.position.x, this.position.z + stepZ, y, colliders)) this.position.z += stepZ;
     else this.velocity.z = 0;
 
     // 4) Piso: subir escalones/rampas suave, caer con gravedad
