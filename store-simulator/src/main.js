@@ -75,14 +75,15 @@ if (QUALITY === 'high') {
 }
 
 // Tope de píxeles: en pantallas Retina/4K renderizar a DPR completo funde la
-// GPU (sobre todo en pantalla completa). Limitamos el total de píxeles y el
-// look no cambia a la vista.
-const MAX_PIXELS = QUALITY === 'high' ? 1.9e6 : 1.1e6;
+// GPU (sobre todo en pantalla completa). Piso más alto que antes (0.85, no
+// 0.7) para que no se vea borroso/cuadriculado en pantallas grandes.
+const MAX_PIXELS = QUALITY === 'high' ? 2.6e6 : 1.3e6;
+const MIN_RATIO = 0.85;
 
 function resize() {
   const w = window.innerWidth, h = window.innerHeight;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const ratio = Math.max(0.7, Math.min(dpr, Math.sqrt(MAX_PIXELS / (w * h))));
+  const ratio = Math.max(MIN_RATIO, Math.min(dpr, Math.sqrt(MAX_PIXELS / (w * h))));
   renderer.setPixelRatio(ratio);
   renderer.setSize(w, h, false);
   if (composer) {
@@ -96,6 +97,23 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 resize();
+
+// Auto-downgrade: si la máquina no da abasto (notebooks flojas, integradas),
+// el juego se da cuenta solo a los pocos segundos y apaga sombras + post-
+// processing — sin recargar la página ni tocar ?q=low. Una sola vez.
+let perfSamples = 0, perfSlow = 0, downgraded = false;
+function checkPerf(dt) {
+  if (downgraded || QUALITY !== 'high') return;
+  perfSamples++;
+  if (perfSamples < 90) return; // ~1.5s de gracia (carga inicial no cuenta)
+  if (dt > 1 / 24) perfSlow++; else perfSlow = Math.max(0, perfSlow - 1);
+  if (perfSlow > 40) { // ~40 cuadros lentos acumulados
+    downgraded = true;
+    renderer.shadowMap.enabled = false;
+    composer = null; // vuelve a renderer.render directo, sin bloom/grade
+    console.info('FOURTWENTY: rendimiento bajo detectado — sombras y post-processing apagados automáticamente.');
+  }
+}
 
 buildBuilding(scene);
 buildLights(scene, { shadows: QUALITY === 'high' });
@@ -134,7 +152,9 @@ const timer = new THREE.Timer();
 let lastFloor = 0;
 renderer.setAnimationLoop(() => {
   timer.update();
-  const dt = Math.min(timer.getDelta(), 0.05);
+  const rawDt = timer.getDelta();
+  checkPerf(rawDt);
+  const dt = Math.min(rawDt, 0.05);
   elapsed += dt;
   if (shadowRefreshAt.length && elapsed > shadowRefreshAt[0]) {
     renderer.shadowMap.needsUpdate = true;
