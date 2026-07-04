@@ -1,4 +1,7 @@
-// FOURTWENTY Store Simulator — local 5 pisos, BOB 3D, pase visual GTA V.
+// FOURTWENTY Store Simulator — INTRO: calle de Burela 2570 + local chico.
+// El "shopping" de 5 pisos (world/building.js y compañía) queda construido
+// pero DESCONECTADO por ahora: se reengancha cuando se implemente la carga
+// de mapa hacia la escalera mecánica (ver nota al final de world/street.js).
 // Calidad: por defecto 'high' (sombras + post-processing). En celulares o
 // máquinas flojas abrir con ?q=low (sin sombras ni post, misma jugabilidad).
 import * as THREE from 'three';
@@ -8,12 +11,8 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { buildBuilding, buildLights, getColliders, SPAWN, floorIndexAt, FLOOR_YS } from './world/building.js';
-import { buildGallery } from './world/gallery.js';
-import { buildRetail } from './world/retail.js';
+import { buildStreet, SPAWN, isInsideLocal, STREET_BOUNDS, CEILING_H } from './world/street.js';
 import { tickAmbient } from './world/anim.js';
-import { buildSignage } from './world/signage.js';
-import { COLLECTIONS } from './world/collections.js';
 import { Player } from './player/bob3d.js';
 import { ThirdPersonCamera } from './core/camera.js';
 import { Input } from './core/input.js';
@@ -115,17 +114,14 @@ function checkPerf(dt) {
   }
 }
 
-buildBuilding(scene);
-buildLights(scene, { shadows: QUALITY === 'high' });
-buildSignage(scene);
-const colliders = [
-  ...getColliders(),
-  ...COLLECTIONS.flatMap((col) => buildGallery(scene, col)),
-  ...buildRetail(scene), // mobiliario retail de los 5 pisos
-];
+const colliders = buildStreet(scene);
 
 const bob = new Player(scene, SPAWN);
-const tpCam = new ThirdPersonCamera(camera);
+const tpCam = new ThirdPersonCamera(camera, STREET_BOUNDS);
+// BOB arranca mirando hacia el local (yaw=0 → W camina en -z); el default de
+// la clase (yaw=π) es para escenas donde el spawn mira hacia +z.
+tpCam.yaw = 0;
+tpCam.targetYaw = 0;
 const input = new Input(canvas);
 const hud = new Hud();
 
@@ -149,7 +145,7 @@ const shadowRefreshAt = [1.5, 4, 8]; // segundos
 let elapsed = 0;
 
 const timer = new THREE.Timer();
-let lastFloor = 0;
+let lastZone = null;
 renderer.setAnimationLoop(() => {
   timer.update();
   const rawDt = timer.getDelta();
@@ -166,14 +162,14 @@ renderer.setAnimationLoop(() => {
   input.consumeInteract(); // E: reservado para Fase 2 (prendas)
   tickAmbient(dt);         // displays giratorios
 
-  const floorIdx = floorIndexAt(bob.position.y);
-  const zoneName = COLLECTIONS.find((c) => c.piso === floorIdx)?.name ?? 'FOURTWENTY';
-  hud.setFloor(floorIdx, zoneName);
-  if (floorIdx !== lastFloor) {
-    hud.showZoneTitle(zoneName); // cartel de zona estilo GTA V al cambiar de piso
-    lastFloor = floorIdx;
+  const inside = isInsideLocal(bob.position);
+  const zoneName = inside ? 'FOURTWENTY' : 'CALLE BURELA';
+  hud.setZone(zoneName);
+  if (zoneName !== lastZone) {
+    hud.showZoneTitle(zoneName); // cartel de zona estilo GTA V al cruzar la puerta
+    lastZone = zoneName;
   }
-  tpCam.update(dt, mouse, bob.position, FLOOR_YS[floorIdx - 1], bob.modelYaw);
+  tpCam.update(dt, mouse, bob.position, 0, bob.modelYaw, CEILING_H);
 
   if (composer) composer.render();
   else renderer.render(scene, camera);

@@ -12,6 +12,13 @@ export class Hud {
     this.floorEl.textContent = label ? `PISO ${n} · ${label}` : `PISO ${n}`;
   }
 
+  // Para escenas sin "pisos" (la calle, el local chico): un texto plano.
+  setZone(text) {
+    if (text === this._lastZone) return;
+    this._lastZone = text;
+    this.floorEl.textContent = text;
+  }
+
   showOverlay(show) {
     this.overlay.style.display = show ? 'flex' : 'none';
   }

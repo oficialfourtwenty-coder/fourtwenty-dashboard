@@ -167,6 +167,59 @@ export function windowDaylight() {
   return toTexture(c);
 }
 
+// Fachada de la torre (Burela 2570): bandas horizontales crema/terracota +
+// balcones con baranda verde, vista de lejos (nada de detalle real, solo
+// la silueta de colores para el fondo del local en la calle).
+export function towerFacade(repeatX, repeatY) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#ece6da'; // crema/blanco
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  // bandas de ladrillo terracota
+  const bands = [[0, 34], [70, 40], [150, 30], [210, 46]];
+  ctx.fillStyle = '#9c5a44';
+  for (const [y, h] of bands) ctx.fillRect(0, y, SIZE, h);
+  noise(ctx, 0, 0.05, 800);
+  // balcones: baranda verde + sombra del hueco
+  ctx.fillStyle = 'rgba(30,25,20,0.35)';
+  for (let y = 8; y < SIZE; y += 32) ctx.fillRect(4, y, SIZE - 8, 14);
+  ctx.strokeStyle = '#5a7a52';
+  ctx.lineWidth = 2;
+  for (let y = 20; y < SIZE; y += 32) {
+    ctx.beginPath(); ctx.moveTo(4, y); ctx.lineTo(SIZE - 4, y); ctx.stroke();
+    for (let x = 8; x < SIZE; x += 14) { ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x, y); ctx.stroke(); }
+  }
+  return toTexture(c, repeatX, repeatY);
+}
+
+// Persiana metálica verde (locales cerrados de la galería).
+export function greenShutter(repeatX, repeatY) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#2f6b3a';
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  ctx.strokeStyle = 'rgba(0,0,0,0.28)';
+  ctx.lineWidth = 3;
+  for (let y = 0; y < SIZE; y += 14) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(SIZE, y); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  for (let y = 4; y < SIZE; y += 14) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(SIZE, y); ctx.stroke(); }
+  return toTexture(c, repeatX, repeatY);
+}
+
+// Vereda/plaza pavimentada (baldosón gris con juntas).
+export function pavement(repeatX, repeatY) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#b7b3aa';
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  noise(ctx, 0, 0.08, 1200);
+  ctx.strokeStyle = '#8f8c82';
+  ctx.lineWidth = 3;
+  for (let x = 0; x <= SIZE; x += 64) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, SIZE); ctx.stroke(); }
+  for (let y = 0; y <= SIZE; y += 64) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(SIZE, y); ctx.stroke(); }
+  return toTexture(c, repeatX, repeatY);
+}
+
 // Vidriera / ventana: cielo cálido de atardecer (unlit, da luz "falsa" PS2).
 export function windowGlow() {
   const c = makeCanvas();

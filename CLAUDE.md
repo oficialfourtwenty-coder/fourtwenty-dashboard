@@ -49,7 +49,40 @@ store-simulator/    → el juego (Vite + Three.js)
   guardan en `store-simulator/public/assets/`. El código no dibuja arte final — los
   placeholders procedurales existen solo hasta que llegue el asset real.
 
-## ⚠️ Regla de diseño (pedido explícito del dueño)
+## ⚠️ PIVOT DE ARQUITECTURA (pedido del dueño): la INTRO ahora es la calle real
+
+El juego YA NO arranca directo adentro del shopping de 5 pisos. Arranca **afuera**,
+en una recreación de la **vereda/galería real de Burela 2570** (dirección real del
+local, referencia: fotos de Street View + fotos del local real que mandó el dueño).
+Todo esto vive en `world/street.js`, con su propio sistema de coordenadas:
+
+- **Vereda/plaza** con veredas pavimentadas, la torre de fondo (bandas crema/terracota,
+  balcones con baranda verde — solo decorado, sin colisión), techo de galería sobre
+  columnas, árboles y canteros de ladrillo.
+- **5 locales en fila**: 4 están CERRADOS (persiana metálica verde, dead-end, no se
+  puede entrar) y **el del medio es FOURTWENTY** — el único con la puerta de vidrio
+  abierta + cartel de neón. `FT_CENTER_X` en street.js marca cuál es.
+- **Local chico de FOURTWENTY** (adentro, `buildLocalInterior`): SOLO la estructura
+  (paredes/piso/techo) — **sin muebles todavía**, el dueño manda esos assets después
+  (ver `store-simulator/design/GUIA_DISENO.md` para el formato).
+- **Hueco atrás-derecha del local**: a propósito sin nada cargado — es donde va a ir
+  la carga de mapa hacia el shopping de 5 pisos (con escalera mecánica en vez de
+  escaleras, todavía sin convertir). Está documentado como nota grande al final de
+  `world/street.js`. Por ahora es solo un umbral abierto + un tope invisible un poco
+  más atrás (para no caminar al vacío) — no implementar el trigger sin que el dueño
+  lo pida.
+- **`core/camera.js` ya no depende de `world/building.js`**: los límites (`bounds`) y
+  el alto de techo (`ceilingHeight`) son parámetros — cada escena pasa los suyos.
+  `ui/hud.js` tiene un método `setZone(texto)` aparte de `setFloor(n, label)` para
+  escenas sin pisos numerados (la calle, el local chico).
+
+⚠️ **El shopping de 5 pisos NO se tocó ni se borró** — `world/building.js`,
+`retail.js`, `gallery.js`, `signage.js`, `collections.js`, `layout.js`,
+`customModels.js` siguen intactos y funcionando, solo que `main.js` no los llama
+por ahora (están "en espera" hasta la carga de mapa). Toda la regla de diseño de
+abajo (pisos, colecciones) sigue vigente PARA CUANDO SE RECONECTE ese mundo.
+
+## Regla de diseño del shopping de 5 pisos (en espera, ver arriba)
 
 El local es un **edificio de 5 pisos** (losas, paredes, escaleras alternadas) de
 **12 x 9 m por piso** (÷3 pedido por el dueño: escala de tienda real GTA V, techos
@@ -93,9 +126,14 @@ npm run build    # produce dist/
 ## Estructura del juego (`store-simulator/src/`)
 
 ```
-main.js               bootstrap: renderer pixelado, loop, wiring de módulos
+main.js               bootstrap: renderer pixelado, loop, wiring de módulos.
+                       ESCENA ACTIVA hoy: world/street.js (calle + local chico).
+                       El shopping de 5 pisos está en espera (ver pivot arriba).
 core/input.js         input por acciones (WASD/flechas, Shift sprint, mouse, E) — Fase 6 suma touch
-core/camera.js        cámara GTA: inercia, auto-acomodo detrás (caminando y parado), clamp al local
+core/camera.js        cámara GTA: inercia, auto-acomodo detrás (caminando y parado); bounds
+                       y ceilingHeight son parámetro, cada escena pasa los suyos
+world/street.js       ⭐ ESCENA ACTIVA: vereda/galería real de Burela 2570 + local chico
+                       de FOURTWENTY (sin muebles todavía). Ver pivot de arquitectura arriba.
 world/anim.js         displays giratorios (vitrina CULTURA, plataforma del lobby)
 world/textures.js     texturas procedurales 256px (piso blanco, pared blanca, escalera, ventanas)
 world/building.js     obra gruesa x5: 3 losas, paredes, 2 escaleras, colliders, sampleGround(x,z,y)

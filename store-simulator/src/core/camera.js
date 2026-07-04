@@ -3,9 +3,10 @@
 // - el mouse mueve un "objetivo" y la cámara lo persigue con inercia (nada de 1:1)
 // - si BOB camina y no tocás el mouse, la cámara se acomoda sola detrás de él
 // - rango de pitch acotado: pegada al personaje, no free-cam tipo Minecraft
+// - los límites (paredes/techo) son un parámetro, no vienen atados a ningún
+//   mapa en particular: cada escena (calle, local, shopping) pasa los suyos.
 // (la versión anterior quedó en camera.backup.js)
 import * as THREE from 'three';
-import { INTERIOR, FLOOR_H } from '../world/building.js';
 
 const DIST = 3.0;          // distancia al personaje (local chico, cámara íntima)
 const FOCUS_HEIGHT = 1.15; // mira al pecho, no a la cabeza → cámara más baja
@@ -20,8 +21,12 @@ const IDLE_DELAY = 1.2;    // segundos sin tocar el mouse antes de auto-acomodar
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
 export class ThirdPersonCamera {
-  constructor(camera) {
+  // bounds: { minX, maxX, minZ, maxZ } — hasta dónde puede llegar la cámara
+  // en el plano horizontal. Con escenas grandes (calle) o chicas (local) da
+  // igual: cada una pasa lo suyo. Por defecto, bien amplio (no clampea nada).
+  constructor(camera, bounds = { minX: -1000, maxX: 1000, minZ: -1000, maxZ: 1000 }) {
     this.camera = camera;
+    this.bounds = bounds;
     this.yaw = Math.PI;        // arranca mirando al fondo del local
     this.pitch = 0.18;
     this.targetYaw = this.yaw;
@@ -36,7 +41,7 @@ export class ThirdPersonCamera {
     this._mouseIdle = 999; // segundos desde el último movimiento de mouse
   }
 
-  update(dt, mouse, targetPos, floorY, facingYaw = null) {
+  update(dt, mouse, targetPos, floorY, facingYaw = null, ceilingHeight = 3.4) {
     // 1) El mouse mueve el objetivo de la cámara…
     this.targetYaw -= mouse.x * this.sensitivity;
     this.targetPitch = THREE.MathUtils.clamp(
@@ -81,10 +86,10 @@ export class ThirdPersonCamera {
       this.focus.z + Math.cos(this.yaw) * Math.cos(this.pitch) * DIST,
     );
 
-    // 6) Clamp al interior del local (paredes) y al piso/techo del nivel actual.
-    cp.x = THREE.MathUtils.clamp(cp.x, -(INTERIOR.x - 0.35), INTERIOR.x - 0.35);
-    cp.z = THREE.MathUtils.clamp(cp.z, -(INTERIOR.z - 0.35), INTERIOR.z - 0.35);
-    cp.y = THREE.MathUtils.clamp(cp.y, floorY + 0.3, floorY + FLOOR_H - 0.4);
+    // 6) Clamp a los límites de la escena actual (paredes) y al piso/techo.
+    cp.x = THREE.MathUtils.clamp(cp.x, this.bounds.minX + 0.35, this.bounds.maxX - 0.35);
+    cp.z = THREE.MathUtils.clamp(cp.z, this.bounds.minZ + 0.35, this.bounds.maxZ - 0.35);
+    cp.y = THREE.MathUtils.clamp(cp.y, floorY + 0.3, floorY + ceilingHeight - 0.4);
 
     this.camera.position.copy(cp);
     this.camera.lookAt(this.focus);
