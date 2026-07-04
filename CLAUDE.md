@@ -99,7 +99,10 @@ core/camera.js        cámara GTA: inercia, auto-acomodo detrás (caminando y pa
 world/anim.js         displays giratorios (vitrina CULTURA, plataforma del lobby)
 world/textures.js     texturas procedurales 256px (piso blanco, pared blanca, escalera, ventanas)
 world/building.js     obra gruesa x5: 3 losas, paredes, 2 escaleras, colliders, sampleGround(x,z,y)
-world/collections.js  una colección por piso: nombre, cantidad, tema, paleta (editable)
+world/layout.js       ⭐ PLANO EDITABLE: el dueño mueve/agrega/quita muebles y elige
+                      colores acá (coordenadas + tipos documentados en el archivo)
+world/collections.js  una colección por piso: nombre, cantidad, tema, paleta, y
+                      `fotos` (PNG reales de prendas en public/assets/prendas/)
 world/gallery.js      galería showroom por colección + ambientaciones temáticas
 world/signage.js      neones FOURTWENTY (lobby + uno por piso)
 world/retail.js       mobiliario retail de los 5 pisos (patrón aprobado por el dueño):

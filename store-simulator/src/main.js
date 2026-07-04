@@ -64,19 +64,33 @@ const GradeShader = {
 };
 
 let composer = null;
+let bloomPass = null;
 if (QUALITY === 'high') {
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.22, 0.4, 0.92);
-  composer.addPass(bloom);
+  bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.22, 0.4, 0.92);
+  composer.addPass(bloomPass);
   composer.addPass(new ShaderPass(GradeShader));
   composer.addPass(new OutputPass());
 }
 
+// Tope de píxeles: en pantallas Retina/4K renderizar a DPR completo funde la
+// GPU (sobre todo en pantalla completa). Limitamos el total de píxeles y el
+// look no cambia a la vista.
+const MAX_PIXELS = QUALITY === 'high' ? 1.9e6 : 1.1e6;
+
 function resize() {
   const w = window.innerWidth, h = window.innerHeight;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const ratio = Math.max(0.7, Math.min(dpr, Math.sqrt(MAX_PIXELS / (w * h))));
+  renderer.setPixelRatio(ratio);
   renderer.setSize(w, h, false);
-  composer?.setSize(w, h);
+  if (composer) {
+    composer.setPixelRatio(ratio);
+    composer.setSize(w, h);
+    // el bloom trabaja a media resolución: mismo halo, mitad de costo
+    bloomPass.setSize((w * ratio) / 2, (h * ratio) / 2);
+  }
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
 }
@@ -108,11 +122,24 @@ document.addEventListener('pointerlockchange', () => {
 window.__bob = bob; // hooks de debug/testeo
 window.__cam = tpCam;
 
+// Sombras congeladas: todo lo que proyecta sombra es estático (BOB usa sombra
+// blob), así que las shadow maps se calculan UNA vez en lugar de 60 por segundo.
+// Se refrescan un par de veces al inicio para capturar el GLB que carga async.
+renderer.shadowMap.autoUpdate = false;
+renderer.shadowMap.needsUpdate = true;
+const shadowRefreshAt = [1.5, 4, 8]; // segundos
+let elapsed = 0;
+
 const timer = new THREE.Timer();
 let lastFloor = 0;
 renderer.setAnimationLoop(() => {
   timer.update();
   const dt = Math.min(timer.getDelta(), 0.05);
+  elapsed += dt;
+  if (shadowRefreshAt.length && elapsed > shadowRefreshAt[0]) {
+    renderer.shadowMap.needsUpdate = true;
+    shadowRefreshAt.shift();
+  }
   const mouse = input.consumeMouse();
 
   bob.update(dt, input, tpCam.yaw, colliders, camera.position);

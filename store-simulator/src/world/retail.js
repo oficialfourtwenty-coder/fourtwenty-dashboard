@@ -9,6 +9,8 @@ import * as THREE from 'three';
 import { FLOOR_YS, INTERIOR } from './building.js';
 import { garmentTexture } from './gallery.js';
 import { registerSpinner } from './anim.js';
+import { LAYOUT } from './layout.js';
+import { COLLECTIONS } from './collections.js';
 
 const white = new THREE.MeshStandardMaterial({ color: 0xf6f5f2, roughness: 0.9 });
 const chrome = new THREE.MeshStandardMaterial({ color: 0xb9bcc2, roughness: 0.25, metalness: 0.9 });
@@ -342,85 +344,62 @@ function spinDisplay(g, colliders, Y, x, z, tex) {
   colliders.push({ minX: x - 0.65, maxX: x + 0.65, minY: Y, maxY: Y + 0.8, minZ: z - 0.65, maxZ: z + 0.65 });
 }
 
-// Set estándar de piso de colección: probador + espejos + caja con vendedor.
-// arrival: 'west' | 'east' (de qué lado llega la escalera, para el maniquí).
-function floorBasics(g, colliders, Y, arrival, teeColor, shortColor) {
-  fittingRoom(g, colliders, Y, 0.3, 2.1);
-  sectionSign(g, 'PROBADOR', INTERIOR.x - 0.08, Y + 2.4, 1.2, -Math.PI / 2, 1.2, 0.32);
-  mirrorAt(g, colliders, Y, INTERIOR.x - 0.15, -0.8, -Math.PI / 2);
-  counterAt(g, colliders, Y, 3.6, -3.3);
-  shopkeeper(g, Y, 3.6, -3.9, teeColor);
-  const mx = arrival === 'west' ? 1.5 : -1.5;
-  mannequin(g, colliders, Y, mx, 1.5, Math.PI, teeColor, shortColor);
-  lightRail(g, Y, true, 0.5, 2.6);
-}
+const deg = (d) => (d * Math.PI) / 180;
 
-// ---- Vestido por piso --------------------------------------------------------
+// ---- Vestido por piso: lee el plano editable de layout.js -------------------
 export function buildRetail(scene) {
   const g = new THREE.Group();
   const colliders = [];
   const pools = makePools();
+  const LOBBY_COLORS = [0x1f4d2e, 0x6d1f2c, 0xe8dfc9, 0x1c1c1c, 0xd96b2f];
 
-  // Lobby FOURTWENTY (planta baja): caja, vidriera con maniquíes y display giratorio
-  {
-    const Y = 0, colors = [0x1f4d2e, 0x6d1f2c, 0xe8dfc9, 0x1c1c1c, 0xd96b2f];
-    counterAt(g, colliders, Y, 3.6, -3.3);
-    shopkeeper(g, Y, 3.6, -3.9, 0x1f4d2e);
-    spinDisplay(g, colliders, Y, 0, -0.8, garmentTexture(0x1f4d2e, 'hoodie'));
-    roundRack(g, colliders, pools, Y, -2.8, -0.3, colors, 'tee');
-    mannequin(g, colliders, Y, -1.8, -3.7, 0, 0x1f4d2e, 0xe8dfc9); // vidriera
-    mannequin(g, colliders, Y, 1.6, -3.7, 0, 0x6d1f2c, 0x1c1c1c);  // vidriera
-    mirrorAt(g, colliders, Y, -INTERIOR.x + 0.15, 0.8, Math.PI / 2);
-  }
+  for (const [pisoStr, items] of Object.entries(LAYOUT)) {
+    const piso = Number(pisoStr);
+    const Y = FLOOR_YS[piso - 1];
+    const colors = COLLECTIONS.find((c) => c.piso === piso)?.colors ?? LOBBY_COLORS;
 
-  // Piso 2 · ORIGEN (paleta '92, básicos doblados)
-  {
-    const Y = FLOOR_YS[1], colors = [0x1f4d2e, 0x6d1f2c, 0xe8dfc9, 0x6b4a2f, 0x1c1c1c];
-    floorBasics(g, colliders, Y, 'west', 0x1f4d2e, 0xe8dfc9);
-    roundRack(g, colliders, pools, Y, -0.3, -1.6, colors, 'tee');
-    roundRack(g, colliders, pools, Y, 1.9, 0.4, colors, 'hoodie');
-    wallShelving(g, colliders, pools, Y, { side: 'front', at: 0.4 }, colors);
-    wallShelving(g, colliders, pools, Y, { side: 'east', at: -3 }, colors);
-    sectionSign(g, 'BASICS', 0.4, Y + 2.4, -INTERIOR.z + 0.08, 0, 1.4, 0.36);
-    lightRail(g, Y, false, -3, 1.8);
-  }
-
-  // Piso 3 · HOOP SEASON (cancha al oeste, sneakers al frente)
-  {
-    const Y = FLOOR_YS[2], colors = [0xd96b2f, 0x1c1c1c, 0xf5f2ea, 0x4b2e83, 0xd4af37, 0x9aa0a3];
-    floorBasics(g, colliders, Y, 'east', 0xd96b2f, 0x1c1c1c);
-    roundRack(g, colliders, pools, Y, 0.4, -1.6, colors, 'jersey');
-    roundRack(g, colliders, pools, Y, 2.2, 0.4, colors, 'tee');
-    wallShelving(g, colliders, pools, Y, { side: 'front', at: 0.4 }, colors);
-    wallShelving(g, colliders, pools, Y, { side: 'east', at: -3 }, colors);
-    sectionSign(g, 'SNEAKERS', 0.4, Y + 2.4, -INTERIOR.z + 0.08, 0, 1.4, 0.36);
-    lightRail(g, Y, false, -3, 1.8);
-  }
-
-  // Piso 4 · BOB (todo con la carita del mono, alrededor de la estatua)
-  {
-    const Y = FLOOR_YS[3], colors = [0x6b4a2f, 0xd96b2f, 0xe8dfc9, 0x1f4d2e, 0x3a2a1c];
-    floorBasics(g, colliders, Y, 'west', 0xd96b2f, 0x6b4a2f);
-    roundRack(g, colliders, pools, Y, 0, -1.6, colors, 'bobTee');
-    roundRack(g, colliders, pools, Y, 1.9, 0.4, colors, 'bobTee');
-    wallShelving(g, colliders, pools, Y, { side: 'front', at: 0.4 }, colors);
-    sectionSign(g, 'BOB SHOP', 0.4, Y + 2.4, -INTERIOR.z + 0.08, 0, 1.4, 0.36);
-    lightRail(g, Y, false, -3, 1.8);
-  }
-
-  // Piso 5 · CULTURA (boutique: poco mueble, la vitrina única es la estrella)
-  {
-    const Y = FLOOR_YS[4], colors = [0x141414, 0xd4af37, 0x2e2a24, 0xf5f2ea];
-    fittingRoom(g, colliders, Y, 0.3, 2.1);
-    sectionSign(g, 'PROBADOR', INTERIOR.x - 0.08, Y + 2.4, 1.2, -Math.PI / 2, 1.2, 0.32);
-    mirrorAt(g, colliders, Y, INTERIOR.x - 0.15, -0.8, -Math.PI / 2);
-    counterAt(g, colliders, Y, 3.6, -3.3);
-    shopkeeper(g, Y, 3.6, -3.9, 0x141414);
-    roundRack(g, colliders, pools, Y, 1.2, -0.8, colors, 'hoodie');
-    wallShelving(g, colliders, pools, Y, { side: 'east', at: -3 }, colors);
-    sectionSign(g, 'ARCHIVE', INTERIOR.x - 0.08, Y + 2.4, -3, -Math.PI / 2, 1.2, 0.32);
-    mannequin(g, colliders, Y, -1.5, 1.5, Math.PI, 0xd4af37, 0x141414); // recibe de la escalera
-    lightRail(g, Y, false, -3, 1.8);
+    for (const it of items) {
+      const cs = it.colores ?? colors;
+      switch (it.tipo) {
+        case 'perchero':
+          roundRack(g, colliders, pools, Y, it.x, it.z, cs, it.ropa ?? 'tee');
+          break;
+        case 'estanteria':
+          wallShelving(g, colliders, pools, Y, { side: it.pared === 'este' ? 'east' : 'front', at: it.pos }, cs);
+          break;
+        case 'mesa':
+          tableAt(g, colliders, pools, Y, it.x, it.z, cs);
+          break;
+        case 'maniqui':
+          mannequin(g, colliders, Y, it.x, it.z, deg(it.rot ?? 0), it.remera ?? cs[0], it.pantalon ?? cs[1]);
+          break;
+        case 'espejo':
+          mirrorAt(g, colliders, Y, it.x, it.z, deg(it.rot ?? 0));
+          break;
+        case 'probador':
+          fittingRoom(g, colliders, Y, it.z0, it.z1);
+          sectionSign(g, 'PROBADOR', INTERIOR.x - 0.08, Y + 2.4, (it.z0 + it.z1) / 2, -Math.PI / 2, 1.2, 0.32);
+          break;
+        case 'caja':
+          counterAt(g, colliders, Y, it.x, it.z);
+          break;
+        case 'vendedor':
+          shopkeeper(g, Y, it.x, it.z, it.remera ?? cs[0]);
+          break;
+        case 'cartel':
+          if (it.pared === 'este') sectionSign(g, it.texto, INTERIOR.x - 0.08, Y + 2.4, it.pos, -Math.PI / 2, 1.4, 0.36);
+          else sectionSign(g, it.texto, it.pos, Y + 2.4, -INTERIOR.z + 0.08, 0, 1.4, 0.36);
+          break;
+        case 'riel':
+          lightRail(g, Y, it.pared !== 'este', it.pos, it.largo ?? 2.2);
+          break;
+        case 'display':
+          spinDisplay(g, colliders, Y, it.x, it.z, garmentTexture(it.color ?? cs[0], it.ropa ?? 'hoodie'));
+          break;
+        default:
+          console.warn(`layout.js: tipo de mueble desconocido "${it.tipo}" en piso ${piso}`);
+      }
+    }
   }
 
   g.traverse((m) => {

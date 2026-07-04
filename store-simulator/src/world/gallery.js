@@ -20,12 +20,12 @@ const smooth = (t) => {
   return t;
 };
 
-// Canvas al doble de resolución dibujando con las mismas coordenadas.
-function hiCanvas(w, h) {
+// Canvas a mayor resolución dibujando con las mismas coordenadas.
+function hiCanvas(w, h, scale = 2) {
   const c = document.createElement('canvas');
-  c.width = w * 2; c.height = h * 2;
+  c.width = w * scale; c.height = h * scale;
   const ctx = c.getContext('2d');
-  ctx.scale(2, 2);
+  ctx.scale(scale, scale);
   return [c, ctx];
 }
 
@@ -41,29 +41,34 @@ function css(color) { return `#${color.toString(16).padStart(6, '0')}`; }
 // Silueta de prenda: 'tee' | 'hoodie' | 'jersey'. Extras: number, monkeyFace.
 // (la usa también fixtures.js para la ropa de los percheros)
 export function garmentTexture(color, type, { number, monkeyFace } = {}) {
-  const [c, ctx] = hiCanvas(96, 112);
+  const [c, ctx] = hiCanvas(96, 112, 4); // x4: siluetas suaves, nada pixelado
   const col = css(color);
   const dark = 'rgba(0,0,0,0.25)';
+  const rr = (x, y, w, h, r) => {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+    ctx.fill();
+  };
   ctx.fillStyle = col;
   if (type === 'jersey') {
-    ctx.fillRect(28, 22, 40, 74);            // cuerpo
-    ctx.fillRect(24, 22, 8, 26); ctx.fillRect(64, 22, 8, 26); // tiras
+    rr(28, 22, 40, 74, 7);                   // cuerpo
+    rr(24, 22, 8, 26, 3); rr(64, 22, 8, 26, 3); // tiras
   } else {
-    ctx.fillRect(24, 24, 48, 66);            // cuerpo
-    ctx.fillRect(8, 26, 18, type === 'hoodie' ? 44 : 24);   // manga izq
-    ctx.fillRect(70, 26, 18, type === 'hoodie' ? 44 : 24);  // manga der
+    rr(24, 24, 48, 66, 8);                   // cuerpo
+    rr(8, 26, 18, type === 'hoodie' ? 44 : 24, 6);   // manga izq
+    rr(70, 26, 18, type === 'hoodie' ? 44 : 24, 6);  // manga der
     if (type === 'hoodie') {
       ctx.beginPath(); ctx.arc(48, 26, 18, Math.PI, 0); ctx.fill(); // capucha
       ctx.fillStyle = dark;
-      ctx.fillRect(34, 70, 28, 16);          // bolsillo canguro
+      rr(34, 70, 28, 16, 5);                 // bolsillo canguro
       ctx.fillStyle = col;
     }
   }
   // cuello
   ctx.fillStyle = dark;
-  if (type !== 'jersey') ctx.fillRect(40, 22, 16, 5);
+  if (type !== 'jersey') rr(40, 22, 16, 5, 2);
   // sombra lateral
-  ctx.fillRect(type === 'jersey' ? 62 : 66, 24, 6, type === 'jersey' ? 70 : 64);
+  rr(type === 'jersey' ? 62 : 66, 24, 6, type === 'jersey' ? 70 : 64, 3);
   // gráfica
   if (number != null) {
     ctx.fillStyle = 'rgba(255,255,255,0.92)';
@@ -216,11 +221,21 @@ export function buildGallery(scene, collection) {
   const g = new THREE.Group();
   const colliders = [];
   const types = theme === 'basket' ? ['jersey'] : ['tee', 'hoodie', 'tee', 'hoodie'];
-  const texFor = (i) => garmentTexture(
-    colors[i % colors.length],
-    types[i % types.length],
-    theme === 'basket' ? { number: (i + 1) * 7 } : theme === 'bob' ? { monkeyFace: true } : {},
-  );
+  // Si la colección tiene fotos reales (collections.js → fotos: [...]), se usan;
+  // si no, silueta dibujada de placeholder. Las fotos van en
+  // public/assets/prendas/ como PNG con fondo transparente.
+  const photoLoader = new THREE.TextureLoader();
+  const texFor = (i) => {
+    const foto = collection.fotos?.[i];
+    if (foto) {
+      return smooth(photoLoader.load(`assets/prendas/${foto}`));
+    }
+    return garmentTexture(
+      colors[i % colors.length],
+      types[i % types.length],
+      theme === 'basket' ? { number: (i + 1) * 7 } : theme === 'bob' ? { monkeyFace: true } : {},
+    );
+  };
 
   // Cartel de colección sobre la pared oeste
   const sign = new THREE.Mesh(
