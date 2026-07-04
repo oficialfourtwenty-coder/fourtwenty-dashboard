@@ -101,6 +101,10 @@ world/textures.js     texturas procedurales 256px (piso blanco, pared blanca, es
 world/building.js     obra gruesa x5: 3 losas, paredes, 2 escaleras, colliders, sampleGround(x,z,y)
 world/layout.js       ⭐ PLANO EDITABLE: el dueño mueve/agrega/quita muebles y elige
                       colores acá (coordenadas + tipos documentados en el archivo)
+world/customModels.js carga muebles GLB propios del dueño (herramienta imagen→3D):
+                      normaliza escala/pivote solo — ver public/assets/furniture/README.md
+                      (ya en uso: `perchero_remeras.glb`, un perchero real con remeras
+                      reales del dueño, uno por piso — reemplaza al perchero de prueba)
 world/collections.js  una colección por piso: nombre, cantidad, tema, paleta, y
                       `fotos` (PNG reales de prendas en public/assets/prendas/)
 world/gallery.js      galería showroom por colección + ambientaciones temáticas

@@ -11,6 +11,7 @@ import { garmentTexture } from './gallery.js';
 import { registerSpinner } from './anim.js';
 import { LAYOUT } from './layout.js';
 import { COLLECTIONS } from './collections.js';
+import { placeModel } from './customModels.js';
 
 const white = new THREE.MeshStandardMaterial({ color: 0xf6f5f2, roughness: 0.9 });
 const chrome = new THREE.MeshStandardMaterial({ color: 0xb9bcc2, roughness: 0.25, metalness: 0.9 });
@@ -396,6 +397,12 @@ export function buildRetail(scene) {
         case 'display':
           spinDisplay(g, colliders, Y, it.x, it.z, garmentTexture(it.color ?? cs[0], it.ropa ?? 'hoodie'));
           break;
+        case 'modelo': {
+          placeModel(scene, { archivo: it.archivo, x: it.x, y: Y, z: it.z, rot: deg(it.rot ?? 0), alto: it.alto });
+          const r = it.radio ?? 0.4;
+          colliders.push({ minX: it.x - r, maxX: it.x + r, minY: Y, maxY: Y + (it.alto ?? 1.6), minZ: it.z - r, maxZ: it.z + r });
+          break;
+        }
         default:
           console.warn(`layout.js: tipo de mueble desconocido "${it.tipo}" en piso ${piso}`);
       }
