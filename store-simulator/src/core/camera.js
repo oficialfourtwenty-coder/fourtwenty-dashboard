@@ -7,13 +7,15 @@
 import * as THREE from 'three';
 import { INTERIOR, FLOOR_H } from '../world/building.js';
 
-const DIST = 3.4;          // distancia al personaje
+const DIST = 3.0;          // distancia al personaje (local chico, cámara íntima)
 const FOCUS_HEIGHT = 1.15; // mira al pecho, no a la cabeza → cámara más baja
 const PITCH_MIN = -0.32;   // no se puede mirar tan al piso…
 const PITCH_MAX = 0.72;    // …ni tan al cielo (antes 1.15)
 const CAM_LAG = 8;         // qué tan pesada es la inercia del mouse (menos = más pesada)
 const FOLLOW_LAG = 7;      // qué tan pesado es el seguimiento de posición
-const AUTO_ALIGN = 1.3;    // fuerza con la que se acomoda detrás al caminar
+const AUTO_ALIGN = 2.2;    // fuerza con la que se acomoda detrás al caminar
+const IDLE_ALIGN = 0.9;    // parado: vuelve suave a la espalda de BOB
+const IDLE_DELAY = 1.2;    // segundos sin tocar el mouse antes de auto-acomodarse
 
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
@@ -28,22 +30,29 @@ export class ThirdPersonCamera {
     this.focus = new THREE.Vector3();
     this._prev = new THREE.Vector3();
     this._first = true;
+    this._mouseIdle = 999; // segundos desde el último movimiento de mouse
   }
 
-  update(dt, mouse, targetPos, floorY) {
+  update(dt, mouse, targetPos, floorY, facingYaw = null) {
     // 1) El mouse mueve el objetivo de la cámara…
     this.targetYaw -= mouse.x * this.sensitivity;
     this.targetPitch = THREE.MathUtils.clamp(
       this.targetPitch + mouse.y * this.sensitivity, PITCH_MIN, PITCH_MAX,
     );
+    if (Math.abs(mouse.x) + Math.abs(mouse.y) > 2) this._mouseIdle = 0;
+    else this._mouseIdle += dt;
 
-    // 2) …y si BOB camina con el mouse quieto, el objetivo se acomoda detrás de él.
-    if (!this._first && Math.abs(mouse.x) < 2) {
+    // 2) …y con el mouse quieto la cámara vuelve sola DETRÁS de BOB:
+    //    caminando se alinea con la dirección de marcha; parado, con su espalda.
+    if (!this._first && this._mouseIdle > 0.15) {
       const vx = targetPos.x - this._prev.x;
       const vz = targetPos.z - this._prev.z;
       if (vx * vx + vz * vz > 1e-6) {
         const behind = Math.atan2(vx, vz) + Math.PI; // yaw que deja la cámara a la espalda
         this.targetYaw += wrap(behind - this.targetYaw) * Math.min(1, AUTO_ALIGN * dt);
+      } else if (facingYaw !== null && this._mouseIdle > IDLE_DELAY) {
+        const behind = facingYaw + Math.PI;
+        this.targetYaw += wrap(behind - this.targetYaw) * Math.min(1, IDLE_ALIGN * dt);
       }
     }
     this._prev.copy(targetPos);
@@ -72,7 +81,7 @@ export class ThirdPersonCamera {
     // 6) Clamp al interior del local (paredes) y al piso/techo del nivel actual.
     cp.x = THREE.MathUtils.clamp(cp.x, -(INTERIOR.x - 0.35), INTERIOR.x - 0.35);
     cp.z = THREE.MathUtils.clamp(cp.z, -(INTERIOR.z - 0.35), INTERIOR.z - 0.35);
-    cp.y = THREE.MathUtils.clamp(cp.y, floorY + 0.3, floorY + FLOOR_H - 0.5);
+    cp.y = THREE.MathUtils.clamp(cp.y, floorY + 0.3, floorY + FLOOR_H - 0.4);
 
     this.camera.position.copy(cp);
     this.camera.lookAt(this.focus);

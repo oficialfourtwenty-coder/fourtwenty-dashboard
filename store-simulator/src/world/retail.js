@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import { FLOOR_YS, INTERIOR } from './building.js';
 import { garmentTexture } from './gallery.js';
+import { registerSpinner } from './anim.js';
 
 const white = new THREE.MeshStandardMaterial({ color: 0xf6f5f2, roughness: 0.9 });
 const chrome = new THREE.MeshStandardMaterial({ color: 0xb9bcc2, roughness: 0.25, metalness: 0.9 });
@@ -159,7 +160,7 @@ function roundRack(g, colliders, pools, Y, x, z, colors, type) {
 }
 
 function wallShelving(g, colliders, pools, Y, { side, at }, colors) {
-  const WIDTH = 3, DEPTH = 0.4, HEIGHT = 2.2;
+  const WIDTH = 2.2, DEPTH = 0.4, HEIGHT = 2.0;
   const isFront = side === 'front';
   const wall = isFront ? -INTERIOR.z + DEPTH / 2 + 0.02 : INTERIOR.x - DEPTH / 2 - 0.02;
   const cx = isFront ? at : wall;
@@ -169,7 +170,7 @@ function wallShelving(g, colliders, pools, Y, { side, at }, colors) {
   unit.add(box(0.05, HEIGHT, DEPTH, -WIDTH / 2, HEIGHT / 2, 0, white));
   unit.add(box(0.05, HEIGHT, DEPTH, WIDTH / 2, HEIGHT / 2, 0, white));
   unit.add(box(WIDTH, 0.05, DEPTH, 0, HEIGHT, 0, white));
-  for (const sy of [0.35, 0.95, 1.55]) unit.add(box(WIDTH - 0.1, 0.04, DEPTH, 0, sy, 0, white));
+  for (const sy of [0.35, 0.9, 1.45]) unit.add(box(WIDTH - 0.1, 0.04, DEPTH, 0, sy, 0, white));
   unit.position.set(cx, Y, cz);
   unit.rotation.y = rot;
   g.add(unit);
@@ -178,13 +179,13 @@ function wallShelving(g, colliders, pools, Y, { side, at }, colors) {
     const wz = isFront ? cz : cz + dx;
     pools[item].add(new THREE.Vector3(wx, Y + sy, wz), rot, color);
   };
-  for (let i = 0; i < 6; i++) {
-    const dx = -1.25 + i * 0.5;
+  for (let i = 0; i < 5; i++) {
+    const dx = -0.8 + i * 0.4;
     place(dx, 0.44, 'shoeBox', 0xf4f2ee);
     place(dx, 0.57, 'shoeBox', colors[i % colors.length]);
-    place(dx, 1.0, 'folded', colors[(i + 1) % colors.length]);
-    place(dx, 1.05, 'folded', colors[(i + 3) % colors.length]);
-    place(dx, 1.6, 'folded', colors[(i + 2) % colors.length]);
+    place(dx, 0.95, 'folded', colors[(i + 1) % colors.length]);
+    place(dx, 1.0, 'folded', colors[(i + 3) % colors.length]);
+    place(dx, 1.5, 'folded', colors[(i + 2) % colors.length]);
   }
   const hw = isFront ? WIDTH / 2 : DEPTH / 2;
   const hd = isFront ? DEPTH / 2 : WIDTH / 2;
@@ -213,7 +214,7 @@ function mannequin(g, colliders, Y, x, z, rotY, teeColor, shortColor) {
 }
 
 function fittingRoom(g, colliders, Y, z0, z1) {
-  const xIn = INTERIOR.x - 1.3;
+  const xIn = INTERIOR.x - 1.0;
   const cx = (INTERIOR.x + xIn) / 2;
   for (const z of [z0, z1]) {
     g.add(box(INTERIOR.x - xIn, 2.3, 0.06, cx, Y + 1.15, z, white));
@@ -245,7 +246,7 @@ function sectionSign(g, text, x, y, z, rotY, w = 1.7, h = 0.45) {
 }
 
 function lightRail(g, Y, isFront, at, len) {
-  const y = Y + 3.6;
+  const y = Y + 2.95;
   const rail = isFront
     ? box(len, 0.06, 0.06, at, y, -INTERIOR.z + 0.6, darkMetal)
     : box(0.06, 0.06, len, INTERIOR.x - 0.6, y, at, darkMetal);
@@ -269,8 +270,8 @@ function counterAt(g, colliders, Y, x, z) {
   g.add(box(2.3, 0.06, 0.85, x, Y + 1.03, z, woodTop));
   g.add(box(0.18, 0.12, 0.14, x - 0.6, Y + 1.12, z, darkMetal)); // posnet
   colliders.push({ minX: x - 1.15, maxX: x + 1.15, minY: Y, maxY: Y + 1.1, minZ: z - 0.45, maxZ: z + 0.45 });
-  for (const dx of [-0.8, 0.8]) g.add(box(0.02, 1.0, 0.02, x + dx, Y + 3.1, z, darkMetal));
-  sectionSign(g, 'CAJA', x, Y + 2.6, z, 0, 1.3, 0.4);
+  for (const dx of [-0.6, 0.6]) g.add(box(0.02, 0.8, 0.02, x + dx, Y + 3.0, z, darkMetal));
+  sectionSign(g, 'CAJA', x, Y + 2.45, z, 0, 1.1, 0.32);
 }
 
 function tableAt(g, colliders, pools, Y, x, z, colors) {
@@ -301,17 +302,57 @@ function mirrorAt(g, colliders, Y, x, z, rotY) {
   colliders.push({ minX: x - 0.5, maxX: x + 0.5, minY: Y, maxY: Y + 2.1, minZ: z - 0.15, maxZ: z + 0.15 });
 }
 
-// Set estándar de piso de colección: probador + espejos + caja + rieles.
+// Vendedor detrás de la caja (NPC estático low-poly con gorra FT).
+function shopkeeper(g, Y, x, z, teeColor) {
+  const m = new THREE.Group();
+  const skin = new THREE.MeshStandardMaterial({ color: 0xc98d5f, roughness: 0.7 });
+  const legs = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.17, 0.75, 10), new THREE.MeshStandardMaterial({ color: 0x26262a, roughness: 0.95 }));
+  legs.position.y = 0.375; m.add(legs);
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.15, 0.55, 10), new THREE.MeshStandardMaterial({ color: teeColor, roughness: 0.95 }));
+  torso.position.y = 1.02; m.add(torso);
+  for (const s of [-1, 1]) {
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.5, 8), skin);
+    arm.position.set(s * 0.24, 1.02, 0);
+    arm.rotation.z = s * 0.1;
+    m.add(arm);
+  }
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10), skin);
+  head.position.y = 1.44; m.add(head);
+  const capMat = new THREE.MeshStandardMaterial({ color: 0x1f4d2e, roughness: 0.9 });
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.125, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), capMat);
+  cap.position.y = 1.48; m.add(cap);
+  const brim = box(0.16, 0.02, 0.12, 0, 1.5, 0.14, capMat);
+  m.add(brim); // visera hacia el local
+  m.position.set(x, Y, z);
+  g.add(m);
+}
+
+// Plataforma giratoria con prenda destacada (display de vidriera GTA V).
+function spinDisplay(g, colliders, Y, x, z, tex) {
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.66, 0.14, 18), white);
+  base.position.set(x, Y + 0.07, z);
+  g.add(base);
+  const garment = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.85, 1.0),
+    new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.4, roughness: 0.95, side: THREE.DoubleSide }),
+  );
+  garment.position.set(x, Y + 0.75, z);
+  g.add(garment);
+  registerSpinner(garment);
+  colliders.push({ minX: x - 0.65, maxX: x + 0.65, minY: Y, maxY: Y + 0.8, minZ: z - 0.65, maxZ: z + 0.65 });
+}
+
+// Set estándar de piso de colección: probador + espejos + caja con vendedor.
 // arrival: 'west' | 'east' (de qué lado llega la escalera, para el maniquí).
 function floorBasics(g, colliders, Y, arrival, teeColor, shortColor) {
-  fittingRoom(g, colliders, Y, 2.5, 5.5);
-  sectionSign(g, 'PROBADOR', INTERIOR.x - 0.08, Y + 2.75, 4, -Math.PI / 2, 1.5, 0.4);
-  mirrorAt(g, colliders, Y, INTERIOR.x - 0.15, 0.8, -Math.PI / 2);
-  mirrorAt(g, colliders, Y, -8, -INTERIOR.z + 0.15, 0);
-  counterAt(g, colliders, Y, 9, 6.5);
-  const mx = arrival === 'west' ? -4 : 3;
-  mannequin(g, colliders, Y, mx, 8, Math.PI, teeColor, shortColor);
-  lightRail(g, Y, true, 4.8, 6.5);
+  fittingRoom(g, colliders, Y, 0.3, 2.1);
+  sectionSign(g, 'PROBADOR', INTERIOR.x - 0.08, Y + 2.4, 1.2, -Math.PI / 2, 1.2, 0.32);
+  mirrorAt(g, colliders, Y, INTERIOR.x - 0.15, -0.8, -Math.PI / 2);
+  counterAt(g, colliders, Y, 3.6, -3.3);
+  shopkeeper(g, Y, 3.6, -3.9, teeColor);
+  const mx = arrival === 'west' ? 1.5 : -1.5;
+  mannequin(g, colliders, Y, mx, 1.5, Math.PI, teeColor, shortColor);
+  lightRail(g, Y, true, 0.5, 2.6);
 }
 
 // ---- Vestido por piso --------------------------------------------------------
@@ -320,81 +361,66 @@ export function buildRetail(scene) {
   const colliders = [];
   const pools = makePools();
 
-  // Lobby FOURTWENTY (planta baja): caja principal, maniquíes en vidriera
+  // Lobby FOURTWENTY (planta baja): caja, vidriera con maniquíes y display giratorio
   {
     const Y = 0, colors = [0x1f4d2e, 0x6d1f2c, 0xe8dfc9, 0x1c1c1c, 0xd96b2f];
-    counterAt(g, colliders, Y, 11, -6);
-    tableAt(g, colliders, pools, Y, 0, -2, colors);
-    roundRack(g, colliders, pools, Y, -7, -3, colors, 'tee');
-    roundRack(g, colliders, pools, Y, -7, 3, colors, 'hoodie');
-    mannequin(g, colliders, Y, -4, -10.5, 0, 0x1f4d2e, 0xe8dfc9); // vidriera
-    mannequin(g, colliders, Y, 4, -10.5, 0, 0x6d1f2c, 0x1c1c1c);  // vidriera
-    mirrorAt(g, colliders, Y, -11, 6, Math.PI / 4);
+    counterAt(g, colliders, Y, 3.6, -3.3);
+    shopkeeper(g, Y, 3.6, -3.9, 0x1f4d2e);
+    spinDisplay(g, colliders, Y, 0, -0.8, garmentTexture(0x1f4d2e, 'hoodie'));
+    roundRack(g, colliders, pools, Y, -2.8, -0.3, colors, 'tee');
+    mannequin(g, colliders, Y, -1.8, -3.7, 0, 0x1f4d2e, 0xe8dfc9); // vidriera
+    mannequin(g, colliders, Y, 1.6, -3.7, 0, 0x6d1f2c, 0x1c1c1c);  // vidriera
+    mirrorAt(g, colliders, Y, -INTERIOR.x + 0.15, 0.8, Math.PI / 2);
   }
 
   // Piso 2 · ORIGEN (paleta '92, básicos doblados)
   {
     const Y = FLOOR_YS[1], colors = [0x1f4d2e, 0x6d1f2c, 0xe8dfc9, 0x6b4a2f, 0x1c1c1c];
     floorBasics(g, colliders, Y, 'west', 0x1f4d2e, 0xe8dfc9);
-    roundRack(g, colliders, pools, Y, 0, -4, colors, 'tee');
-    roundRack(g, colliders, pools, Y, 4, 0.5, colors, 'hoodie');
-    roundRack(g, colliders, pools, Y, 0, 5, colors, 'hoodie');
-    wallShelving(g, colliders, pools, Y, { side: 'front', at: 1 }, colors);
-    wallShelving(g, colliders, pools, Y, { side: 'front', at: 4.5 }, colors);
-    wallShelving(g, colliders, pools, Y, { side: 'east', at: -5 }, colors);
-    sectionSign(g, 'BASICS', 2.75, Y + 2.75, -INTERIOR.z + 0.08, 0);
-    tableAt(g, colliders, pools, Y, 10, -4, colors);
-    mannequin(g, colliders, Y, 12.5, -10, -Math.PI / 4, 0x6d1f2c, 0x1f4d2e);
-    lightRail(g, Y, false, -5, 3.5);
+    roundRack(g, colliders, pools, Y, -0.3, -1.6, colors, 'tee');
+    roundRack(g, colliders, pools, Y, 1.9, 0.4, colors, 'hoodie');
+    wallShelving(g, colliders, pools, Y, { side: 'front', at: 0.4 }, colors);
+    wallShelving(g, colliders, pools, Y, { side: 'east', at: -3 }, colors);
+    sectionSign(g, 'BASICS', 0.4, Y + 2.4, -INTERIOR.z + 0.08, 0, 1.4, 0.36);
+    lightRail(g, Y, false, -3, 1.8);
   }
 
-  // Piso 3 · HOOP SEASON (piloto aprobado: cancha al oeste, sneakers al frente)
+  // Piso 3 · HOOP SEASON (cancha al oeste, sneakers al frente)
   {
     const Y = FLOOR_YS[2], colors = [0xd96b2f, 0x1c1c1c, 0xf5f2ea, 0x4b2e83, 0xd4af37, 0x9aa0a3];
     floorBasics(g, colliders, Y, 'east', 0xd96b2f, 0x1c1c1c);
-    roundRack(g, colliders, pools, Y, -1, -5, colors, 'jersey');
-    roundRack(g, colliders, pools, Y, 3.5, -0.5, colors, 'jersey');
-    roundRack(g, colliders, pools, Y, -1, 4.5, colors, 'tee');
-    roundRack(g, colliders, pools, Y, 7.5, -5.5, colors, 'tee');
-    wallShelving(g, colliders, pools, Y, { side: 'front', at: 3 }, colors);
-    wallShelving(g, colliders, pools, Y, { side: 'front', at: 6.6 }, colors);
-    wallShelving(g, colliders, pools, Y, { side: 'east', at: -7 }, colors);
-    sectionSign(g, 'SNEAKERS', 4.8, Y + 2.75, -INTERIOR.z + 0.08, 0);
-    mannequin(g, colliders, Y, -5.8, 2.6, Math.PI / 3, 0x4b2e83, 0xf5f2ea);  // borde cancha
-    mannequin(g, colliders, Y, 12.5, -10, -Math.PI / 4, 0x1c1c1c, 0xd96b2f);
-    lightRail(g, Y, false, -7, 3.5);
+    roundRack(g, colliders, pools, Y, 0.4, -1.6, colors, 'jersey');
+    roundRack(g, colliders, pools, Y, 2.2, 0.4, colors, 'tee');
+    wallShelving(g, colliders, pools, Y, { side: 'front', at: 0.4 }, colors);
+    wallShelving(g, colliders, pools, Y, { side: 'east', at: -3 }, colors);
+    sectionSign(g, 'SNEAKERS', 0.4, Y + 2.4, -INTERIOR.z + 0.08, 0, 1.4, 0.36);
+    lightRail(g, Y, false, -3, 1.8);
   }
 
   // Piso 4 · BOB (todo con la carita del mono, alrededor de la estatua)
   {
     const Y = FLOOR_YS[3], colors = [0x6b4a2f, 0xd96b2f, 0xe8dfc9, 0x1f4d2e, 0x3a2a1c];
     floorBasics(g, colliders, Y, 'west', 0xd96b2f, 0x6b4a2f);
-    roundRack(g, colliders, pools, Y, 0, -4, colors, 'bobTee');
-    roundRack(g, colliders, pools, Y, 4, 0.5, colors, 'bobTee');
-    roundRack(g, colliders, pools, Y, 0, 5, colors, 'bobTee');
-    roundRack(g, colliders, pools, Y, 8, -5, colors, 'hoodie');
-    wallShelving(g, colliders, pools, Y, { side: 'front', at: 1 }, colors);
-    wallShelving(g, colliders, pools, Y, { side: 'front', at: 4.5 }, colors);
-    wallShelving(g, colliders, pools, Y, { side: 'east', at: -5 }, colors);
-    sectionSign(g, 'BOB SHOP', 2.75, Y + 2.75, -INTERIOR.z + 0.08, 0);
-    mannequin(g, colliders, Y, -9.5, -0.5, Math.PI / 2, 0xd96b2f, 0xe8dfc9); // mira a la estatua
-    tableAt(g, colliders, pools, Y, 10, -4, colors);
-    lightRail(g, Y, false, -5, 3.5);
+    roundRack(g, colliders, pools, Y, 0, -1.6, colors, 'bobTee');
+    roundRack(g, colliders, pools, Y, 1.9, 0.4, colors, 'bobTee');
+    wallShelving(g, colliders, pools, Y, { side: 'front', at: 0.4 }, colors);
+    sectionSign(g, 'BOB SHOP', 0.4, Y + 2.4, -INTERIOR.z + 0.08, 0, 1.4, 0.36);
+    lightRail(g, Y, false, -3, 1.8);
   }
 
   // Piso 5 · CULTURA (boutique: poco mueble, la vitrina única es la estrella)
   {
     const Y = FLOOR_YS[4], colors = [0x141414, 0xd4af37, 0x2e2a24, 0xf5f2ea];
-    fittingRoom(g, colliders, Y, 2.5, 5.5);
-    sectionSign(g, 'PROBADOR', INTERIOR.x - 0.08, Y + 2.75, 4, -Math.PI / 2, 1.5, 0.4);
-    mirrorAt(g, colliders, Y, INTERIOR.x - 0.15, 0.8, -Math.PI / 2);
-    counterAt(g, colliders, Y, 9, 6.5);
-    roundRack(g, colliders, pools, Y, 2, -3, colors, 'hoodie');
-    roundRack(g, colliders, pools, Y, 6, 2, colors, 'tee');
-    wallShelving(g, colliders, pools, Y, { side: 'east', at: -5 }, colors);
-    sectionSign(g, 'ARCHIVE', INTERIOR.x - 0.08, Y + 2.75, -5, -Math.PI / 2, 1.5, 0.4);
-    mannequin(g, colliders, Y, 3, 8, Math.PI, 0xd4af37, 0x141414); // recibe de la escalera
-    lightRail(g, Y, false, -5, 3.5);
+    fittingRoom(g, colliders, Y, 0.3, 2.1);
+    sectionSign(g, 'PROBADOR', INTERIOR.x - 0.08, Y + 2.4, 1.2, -Math.PI / 2, 1.2, 0.32);
+    mirrorAt(g, colliders, Y, INTERIOR.x - 0.15, -0.8, -Math.PI / 2);
+    counterAt(g, colliders, Y, 3.6, -3.3);
+    shopkeeper(g, Y, 3.6, -3.9, 0x141414);
+    roundRack(g, colliders, pools, Y, 1.2, -0.8, colors, 'hoodie');
+    wallShelving(g, colliders, pools, Y, { side: 'east', at: -3 }, colors);
+    sectionSign(g, 'ARCHIVE', INTERIOR.x - 0.08, Y + 2.4, -3, -Math.PI / 2, 1.2, 0.32);
+    mannequin(g, colliders, Y, -1.5, 1.5, Math.PI, 0xd4af37, 0x141414); // recibe de la escalera
+    lightRail(g, Y, false, -3, 1.8);
   }
 
   g.traverse((m) => {

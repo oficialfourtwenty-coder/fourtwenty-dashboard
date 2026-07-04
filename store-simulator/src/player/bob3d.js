@@ -98,6 +98,9 @@ export class Player {
 
   _setupModel(gltf) {
     const model = gltf.scene;
+    // el GLB de Tripo viene con el frente hacia +x → lo giramos para que
+    // mire hacia +z (la convención del rig; esto arregla el "se ve de costado")
+    model.rotation.y = -Math.PI / 2;
     // normalizar: que mida HEIGHT metros y apoye los pies en y=0
     const box = new THREE.Box3().setFromObject(model);
     const size = box.getSize(new THREE.Vector3());

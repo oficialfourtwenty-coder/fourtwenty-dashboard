@@ -5,10 +5,10 @@ import * as THREE from 'three';
 import { whiteFloor, whitePlaster, lightCeiling, stairConcrete, windowDaylight } from './textures.js';
 
 // Dimensiones (metros)
-export const W = 35;             // ancho (x: -17.5..17.5) — antes 70, el dueño lo pidió a la mitad
-export const D = 25;             // profundidad (z: -12.5..12.5)
+export const W = 12;             // ancho (x: -6..6) — ÷3 pedido por el dueño: escala tienda real
+export const D = 9;              // profundidad (z: -4.5..4.5)
 export const NUM_FLOORS = 5;
-export const FLOOR_H = 4.0;      // altura entre pisos
+export const FLOOR_H = 3.4;      // altura entre pisos (retail real)
 export const FLOOR_YS = Array.from({ length: NUM_FLOORS }, (_, i) => i * FLOOR_H);
 const HX = W / 2, HZ = D / 2;
 const SLAB = 0.3;                // espesor de losa
@@ -17,9 +17,9 @@ const TOP = NUM_FLOORS * FLOOR_H; // 20: cara superior interior
 export const INTERIOR = { x: HX - WALL_T / 2, z: HZ - WALL_T / 2 }; // caras internas
 
 // Banda de escaleras contra la pared del fondo (z+)
-export const ST_Z0 = HZ - 3.0;   // 22.0
+export const ST_Z0 = HZ - 2.2;   // 2.3: arranque de la banda de escaleras
 const ST_Z1 = HZ - WALL_T / 2;   // 24.85
-const RUN = 11;                  // largo de cada tramo
+const RUN = 7;                   // largo de cada tramo
 
 // Tramos alternados: impar sube por el oeste (hacia +x), par por el este (hacia -x)
 const flights = [];
@@ -27,9 +27,9 @@ for (let i = 0; i < NUM_FLOORS - 1; i++) {
   const west = i % 2 === 0;
   const y0 = FLOOR_YS[i], y1 = FLOOR_YS[i + 1];
   if (west) {
-    flights.push({ x0: -HX + 1, x1: -HX + 1 + RUN, y0, y1, hole: { minX: -INTERIOR.x, maxX: -HX + 1 + RUN } });
+    flights.push({ x0: -HX + 0.8, x1: -HX + 0.8 + RUN, y0, y1, hole: { minX: -INTERIOR.x, maxX: -HX + 0.8 + RUN } });
   } else {
-    flights.push({ x0: HX - 1, x1: HX - 1 - RUN, y0, y1, hole: { minX: HX - 1 - RUN, maxX: INTERIOR.x } });
+    flights.push({ x0: HX - 0.8, x1: HX - 0.8 - RUN, y0, y1, hole: { minX: HX - 0.8 - RUN, maxX: INTERIOR.x } });
   }
 }
 
@@ -95,7 +95,7 @@ for (let j = 1; j < NUM_FLOORS; j++) {
 }
 export function getColliders() { return colliders; }
 
-export const SPAWN = new THREE.Vector3(0, 0, -8);
+export const SPAWN = new THREE.Vector3(0, 0, -2.2);
 
 // ---- Construcción visual ---------------------------------------------------
 function box(w, h, d, x, y, z, mat) {
@@ -105,7 +105,7 @@ function box(w, h, d, x, y, z, mat) {
 }
 
 function buildStair(group, f, stepMat) {
-  const steps = 16;
+  const steps = 14;
   const stepRise = (f.y1 - f.y0) / steps;
   const run = (f.x1 - f.x0) / steps; // con signo
   const width = ST_Z1 - ST_Z0;
@@ -166,13 +166,13 @@ export function buildBuilding(scene) {
 
   // Aberturas del frente (planos "vidriera" con luz de día, cara interior)
   const front = -INTERIOR.z + 0.02;
-  const vidriera = new THREE.Mesh(new THREE.PlaneGeometry(16, 3.0), glowMat);
-  vidriera.position.set(0, 1.65, front);
+  const vidriera = new THREE.Mesh(new THREE.PlaneGeometry(7, 2.2), glowMat);
+  vidriera.position.set(0, 1.25, front);
   group.add(vidriera); // vidriera del local, planta baja
   for (let j = 1; j < NUM_FLOORS; j++) {
-    for (const wx of [-10, -5, 0, 5, 10]) {
-      const win = new THREE.Mesh(new THREE.PlaneGeometry(3, 1.8), glowMat);
-      win.position.set(wx, FLOOR_YS[j] + 2.0, front);
+    for (const wx of [-3.5, 0, 3.5]) {
+      const win = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.3), glowMat);
+      win.position.set(wx, FLOOR_YS[j] + 1.9, front);
       group.add(win);
     }
   }
@@ -206,16 +206,16 @@ export function buildLights(scene, { shadows = true } = {}) {
   scene.add(key);
   const WARM = 0xffc58f; // ~3200K
   for (const fy of FLOOR_YS) {
-    for (const [i, lx] of [-8, 8].entries()) {
-      const s = new THREE.SpotLight(WARM, 36, 24, 0.95, 0.6, 1.6);
-      s.position.set(lx, fy + FLOOR_H - 0.3, 0);
-      s.target.position.set(lx * 0.6, fy, 0);
+    for (const [i, lx] of [-3, 3].entries()) {
+      const s = new THREE.SpotLight(WARM, 12, 11, 1.0, 0.65, 1.6);
+      s.position.set(lx, fy + FLOOR_H - 0.25, 0);
+      s.target.position.set(lx * 0.5, fy, 0);
       scene.add(s, s.target);
       if (shadows && i === 0) { // una sombra real por piso (perf)
         s.castShadow = true;
         s.shadow.mapSize.set(1024, 1024);
-        s.shadow.camera.near = 0.5;
-        s.shadow.camera.far = 22;
+        s.shadow.camera.near = 0.4;
+        s.shadow.camera.far = 10;
         s.shadow.bias = -0.0004;
       }
     }

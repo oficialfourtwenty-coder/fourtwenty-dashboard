@@ -11,6 +11,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildBuilding, buildLights, getColliders, SPAWN, floorIndexAt, FLOOR_YS } from './world/building.js';
 import { buildGallery } from './world/gallery.js';
 import { buildRetail } from './world/retail.js';
+import { tickAmbient } from './world/anim.js';
 import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
 import { Player } from './player/bob3d.js';
@@ -30,7 +31,7 @@ renderer.toneMappingExposure = 1.0;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xcfd2d6);
-scene.fog = new THREE.Fog(0xcfd2d6, 25, 75);
+scene.fog = new THREE.Fog(0xcfd2d6, 12, 40);
 
 // Reflejos de ambiente (RoomEnvironment): les da vida a los PBR sin HDR externo.
 const pmrem = new THREE.PMREMGenerator(renderer);
@@ -108,6 +109,7 @@ window.__bob = bob; // hooks de debug/testeo
 window.__cam = tpCam;
 
 const timer = new THREE.Timer();
+let lastFloor = 0;
 renderer.setAnimationLoop(() => {
   timer.update();
   const dt = Math.min(timer.getDelta(), 0.05);
@@ -115,10 +117,16 @@ renderer.setAnimationLoop(() => {
 
   bob.update(dt, input, tpCam.yaw, colliders, camera.position);
   input.consumeInteract(); // E: reservado para Fase 2 (prendas)
+  tickAmbient(dt);         // displays giratorios
 
   const floorIdx = floorIndexAt(bob.position.y);
-  hud.setFloor(floorIdx, COLLECTIONS.find((c) => c.piso === floorIdx)?.name ?? 'FOURTWENTY');
-  tpCam.update(dt, mouse, bob.position, FLOOR_YS[floorIdx - 1]);
+  const zoneName = COLLECTIONS.find((c) => c.piso === floorIdx)?.name ?? 'FOURTWENTY';
+  hud.setFloor(floorIdx, zoneName);
+  if (floorIdx !== lastFloor) {
+    hud.showZoneTitle(zoneName); // cartel de zona estilo GTA V al cambiar de piso
+    lastFloor = floorIdx;
+  }
+  tpCam.update(dt, mouse, bob.position, FLOOR_YS[floorIdx - 1], bob.modelYaw);
 
   if (composer) composer.render();
   else renderer.render(scene, camera);

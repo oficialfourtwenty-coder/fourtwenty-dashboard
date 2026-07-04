@@ -27,7 +27,8 @@ store-simulator/    → el juego (Vite + Three.js)
   Movimiento con peso: aceleración/frenada en rampa, giro suave, sprint con Shift.
 - **BOB (actualizado por el dueño):** modelo 3D (mono, generado con Tripo) en
   `public/assets/bob/bob.glb`, cargado por `src/player/bob3d.js` (escala y pies se
-  normalizan solos; sombra blob estilo PS2; el frente del modelo es +z, sin offset).
+  normalizan solos; sombra blob estilo PS2; ⚠️ el frente del GLB de Tripo es **+x**,
+  bob3d.js lo rota -90° al cargar — la estatua del piso 4 también lo asume).
   El GLB está optimizado: 465k → 22.5k triángulos, 15.5 MB → 2.6 MB (gltf-transform).
   **Sin skeleton ni animation clips** → animación procedural (bounce/lean). Mejora
   pendiente: conseguir versión riggeada con clips idle/walk (Mixamo o rig de Tripo)
@@ -51,7 +52,8 @@ store-simulator/    → el juego (Vite + Three.js)
 ## ⚠️ Regla de diseño (pedido explícito del dueño)
 
 El local es un **edificio de 5 pisos** (losas, paredes, escaleras alternadas) de
-**70 x 50 m por piso**. **El dueño dirige el diseño interior.** NO agregar muebles,
+**12 x 9 m por piso** (÷3 pedido por el dueño: escala de tienda real GTA V, techos
+3.4 m). **El dueño dirige el diseño interior.** NO agregar muebles,
 decoración ni gráfica sin que él lo pida explícitamente. Distribución pedida y hecha:
 - **Piso 1 (planta baja):** lobby FOURTWENTY con **carteles de neón** con el nombre
   de la marca (`world/signage.js`) — también hay un neón por piso.
@@ -93,7 +95,8 @@ npm run build    # produce dist/
 ```
 main.js               bootstrap: renderer pixelado, loop, wiring de módulos
 core/input.js         input por acciones (WASD/flechas, Shift sprint, mouse, E) — Fase 6 suma touch
-core/camera.js        cámara GTA: inercia, auto-acomodo detrás al caminar, clamp al local
+core/camera.js        cámara GTA: inercia, auto-acomodo detrás (caminando y parado), clamp al local
+world/anim.js         displays giratorios (vitrina CULTURA, plataforma del lobby)
 world/textures.js     texturas procedurales 256px (piso blanco, pared blanca, escalera, ventanas)
 world/building.js     obra gruesa x5: 3 losas, paredes, 2 escaleras, colliders, sampleGround(x,z,y)
 world/collections.js  una colección por piso: nombre, cantidad, tema, paleta (editable)

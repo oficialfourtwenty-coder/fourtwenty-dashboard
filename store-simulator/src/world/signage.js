@@ -59,24 +59,25 @@ export function buildSignage(scene) {
   const back = INTERIOR.z - 0.03;   // cara interna pared fondo (mira a -z)
 
   // Planta baja: cartelón principal sobre la pared del fondo
-  const main = neonSign('FOURTWENTY', 16, 2.0);
-  main.position.set(0, 2.7, back);
+  // corrido a la izquierda para que la escalera no lo tape
+  const main = neonSign('FOURTWENTY', 5.5, 0.85);
+  main.position.set(-2.6, 2.45, back);
   main.rotation.y = Math.PI;
   scene.add(main);
-  const glow = new THREE.PointLight(0x39ff6a, 12, 12, 2);
-  glow.position.set(0, 2.7, back - 1.5);
+  const glow = new THREE.PointLight(0x39ff6a, 6, 6, 2);
+  glow.position.set(-2.6, 2.45, back - 1.0);
   scene.add(glow);
 
   // Un cartel por piso superior (te recibe al subir la escalera)
   for (let j = 1; j < FLOOR_YS.length; j++) {
-    const s = neonSign('FOURTWENTY', 9, 1.1);
-    s.position.set(0, FLOOR_YS[j] + 3.2, back);
+    const s = neonSign('FOURTWENTY', 4.2, 0.6);
+    s.position.set(0, FLOOR_YS[j] + 2.85, back);
     s.rotation.y = Math.PI;
     scene.add(s);
   }
 
   // Frente, arriba de la vidriera, mirando adentro
-  const frente = neonSign('FOURTWENTY', 10, 1.2);
-  frente.position.set(0, 3.4, -INTERIOR.z + 0.03);
+  const frente = neonSign('FOURTWENTY', 4.5, 0.7);
+  frente.position.set(0, 2.85, -INTERIOR.z + 0.03);
   scene.add(frente);
 }
