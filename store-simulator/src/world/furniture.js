@@ -1,46 +1,108 @@
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { registerEditableObject, unregisterEditableObject } from './editor/editableRegistry.js';
+import { loadInitialLayout } from './editor/layoutStore.js';
 
 const loader = new GLTFLoader();
+const modelCache = new Map();
 
-const TEST_FURNITURE = {
-  file: '/assets/models/furniture/IA7Pbl7bauApRPBmpMDWo.glb',
-  position: { x: 2, y: 0, z: -2 },
-  rotation: { x: 0, y: Math.PI / 2, z: 0 },
-  scale: { x: 1, y: 1, z: 1 },
-};
-
-function mergeTransform(overrides = {}) {
-  return {
-    ...TEST_FURNITURE,
-    ...overrides,
-    position: { ...TEST_FURNITURE.position, ...overrides.position },
-    rotation: { ...TEST_FURNITURE.rotation, ...overrides.rotation },
-    scale: { ...TEST_FURNITURE.scale, ...overrides.scale },
-  };
+function vec3(value, fallback) {
+  return Array.isArray(value) && value.length >= 3 ? value.slice(0, 3).map(Number) : fallback.slice();
 }
 
-export function addFurniture(scene, overrides = {}) {
-  const config = mergeTransform(overrides);
+function loadModel(path) {
+  if (!modelCache.has(path)) {
+    modelCache.set(path, new Promise((resolve, reject) => {
+      loader.load(path, resolve, undefined, reject);
+    }));
+  }
+  return modelCache.get(path);
+}
 
-  loader.load(
-    config.file,
-    (gltf) => {
-      // Test FurniMesh furniture asset — removable/provisional.
-      const model = gltf.scene;
-      model.position.set(config.position.x, config.position.y, config.position.z);
-      model.rotation.set(config.rotation.x, config.rotation.y, config.rotation.z);
-      model.scale.set(config.scale.x, config.scale.y, config.scale.z);
-      model.traverse((node) => {
-        if (node.isMesh) {
-          node.castShadow = true;
-          node.receiveShadow = true;
-        }
-      });
-      scene.add(model);
-    },
-    undefined,
-    (error) => {
-      console.warn(`No se pudo cargar el mueble FurniMesh "${config.file}". La escena sigue funcionando.`, error);
-    },
-  );
+function meshStats(root) {
+  let meshes = 0;
+  let triangles = 0;
+  root.traverse((child) => {
+    if (!child.isMesh) return;
+    meshes++;
+    const geometry = child.geometry;
+    if (geometry?.index) triangles += geometry.index.count / 3;
+    else if (geometry?.attributes?.position) triangles += geometry.attributes.position.count / 3;
+  });
+  return { meshes, triangles: Math.round(triangles) };
+}
+
+function applyLayoutToObject(object, item) {
+  const position = vec3(item.position, [0, 0, 0]);
+  const rotation = vec3(item.rotation, [0, 0, 0]);
+  const scale = vec3(item.scale, [1, 1, 1]);
+  object.position.fromArray(position);
+  object.rotation.set(rotation[0], rotation[1], rotation[2]);
+  object.scale.fromArray(scale);
+  object.visible = item.visible !== false;
+}
+
+function applyShadows(object, item) {
+  const castShadow = item.castShadow !== false;
+  const receiveShadow = item.receiveShadow !== false;
+  object.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = castShadow;
+      child.receiveShadow = receiveShadow;
+    }
+  });
+}
+
+async function addFurnitureItem(scene, item) {
+  if (!item?.id || !item.model) {
+    console.warn('addFurniture: item invalido, faltan id/model.', item);
+    return null;
+  }
+
+  unregisterEditableObject(item.id);
+
+  try {
+    const gltf = await loadModel(item.model);
+    // Test FurniMesh furniture asset — removable/provisional.
+    const object = gltf.scene.clone(true);
+    object.name = item.name ?? item.id;
+    applyLayoutToObject(object, item);
+    applyShadows(object, item);
+    object.updateMatrixWorld(true);
+    scene.add(object);
+
+    const stats = meshStats(object);
+    if (stats.triangles > 200000) {
+      console.warn(`Mueble GLB pesado "${item.id}": ${stats.meshes} mesh(es), ~${stats.triangles} triangulos. Conviene optimizar antes de sumar muchos.`);
+    }
+
+    registerEditableObject({
+      ...item,
+      object3D: object,
+      position: vec3(item.position, [0, 0, 0]),
+      rotation: vec3(item.rotation, [0, 0, 0]),
+      scale: vec3(item.scale, [1, 1, 1]),
+      castShadow: item.castShadow !== false,
+      receiveShadow: item.receiveShadow !== false,
+      locked: item.locked === true,
+      visible: item.visible !== false,
+    });
+    return object;
+  } catch (error) {
+    console.warn(`No se pudo cargar el mueble "${item.model}" (${item.id}). La escena sigue funcionando.`, error);
+    return null;
+  }
+}
+
+export async function addFurniture(scene) {
+  const layout = await loadInitialLayout();
+  const furniture = layout.filter((item) => item.type === 'furniture');
+  if (!furniture.length) {
+    console.warn('addFurniture: layout sin muebles editables.');
+    return [];
+  }
+
+  const results = await Promise.allSettled(furniture.map((item) => addFurnitureItem(scene, item)));
+  return results
+    .filter((result) => result.status === 'fulfilled' && result.value)
+    .map((result) => result.value);
 }

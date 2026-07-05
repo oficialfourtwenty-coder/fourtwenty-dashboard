@@ -17,6 +17,7 @@ import { buildBuilding, buildLights, getColliders, sampleGround as shopSampleGro
 import { buildGallery } from './world/gallery.js';
 import { buildRetail } from './world/retail.js';
 import { addFurniture } from './world/furniture.js';
+import { initWorldEditor } from './world/editor/worldEditor.js';
 import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
 import { tickAmbient } from './world/anim.js';
@@ -140,12 +141,14 @@ tpCam.yaw = 0;          // cámara detrás de él (del lado de la calle)
 tpCam.targetYaw = 0;
 const input = new Input(canvas);
 const hud = new Hud();
+const worldEditor = initWorldEditor({ scene, camera, renderer, input, player: bob });
 
 // SIN pointer lock: el overlay de inicio solo se cierra con el primer click.
 hud.onStart(() => hud.showOverlay(false));
 
 window.__bob = bob; // hooks de debug/testeo
 window.__cam = tpCam;
+window.__worldEditor = worldEditor;
 
 // ---- Selector de colecciones (remeras del stock): hover + click + E --------
 const raycaster = new THREE.Raycaster();
@@ -198,9 +201,7 @@ canvas.addEventListener('click', () => {
 
 function updateHover() {
   if (loading || world !== 'street' || !isInsideLocal(bob.position)) {
-    if (hovered) { hovered.scale.setScalar(1); hovered = null; }
-    canvas.style.cursor = 'default';
-    shirtTip.style.display = 'none';
+    clearShirtHover();
     return;
   }
   raycaster.setFromCamera(pointerNdc, camera);
@@ -215,6 +216,15 @@ function updateHover() {
     canvas.style.cursor = hovered ? 'pointer' : 'default';
     shirtTip.style.display = hovered ? 'block' : 'none';
   }
+}
+
+function clearShirtHover() {
+  if (hovered) {
+    hovered.scale.setScalar(1);
+    hovered = null;
+  }
+  canvas.style.cursor = 'default';
+  shirtTip.style.display = 'none';
 }
 
 // E = interactuar con la remera más cercana (a menos de 3m)
@@ -361,7 +371,9 @@ function buildShopping() {
   buildBuilding(s);
   buildLights(s, { shadows: QUALITY === 'high' && !downgraded });
   buildSignage(s);
-  addFurniture(s);
+  addFurniture(s).then(() => {
+    renderer.shadowMap.needsUpdate = true;
+  });
   const cols = [
     ...getColliders(),
     ...COLLECTIONS.flatMap((c) => buildGallery(s, c)),
@@ -383,6 +395,7 @@ function enterShopping({ scene: s, colliders: cols }, piso) {
   tpCam.focus.set(0, FLOOR_YS[piso - 1] + 1.15, -2);
   activeScene = s;
   if (renderPass) renderPass.scene = s;
+  worldEditor.setScene(s);
   colliders = cols;
   world = 'shopping';
   lastZone = null; // dispara el cartel de zona del piso al entrar
@@ -412,9 +425,12 @@ renderer.setAnimationLoop(() => {
     shadowRefreshAt.shift();
   }
 
-  if (!loading) bob.update(dt, input, tpCam.yaw, colliders, camera.position);
-  if (input.consumeInteract()) interactNearest(); // E = remera más cercana
-  updateHover();           // resaltado de remeras bajo el mouse
+  const editorActive = worldEditor.isEnabled();
+  if (!loading && !editorActive) bob.update(dt, input, tpCam.yaw, colliders, camera.position);
+  if (editorActive) input.consumeInteract();
+  else if (input.consumeInteract()) interactNearest(); // E = remera más cercana
+  if (editorActive) clearShirtHover();
+  else updateHover();      // resaltado de remeras bajo el mouse
   tickAmbient(dt);         // displays giratorios
 
   let floorY, ceiling, zoneName;
@@ -437,7 +453,7 @@ renderer.setAnimationLoop(() => {
     hud.showZoneTitle(zoneName); // cartel de zona estilo GTA V
     lastZone = zoneName;
   }
-  tpCam.update(dt, bob.position, floorY, bob.modelYaw, ceiling);
+  if (!editorActive) tpCam.update(dt, bob.position, floorY, bob.modelYaw, ceiling);
 
   if (composer) composer.render();
   else renderer.render(activeScene, camera);
