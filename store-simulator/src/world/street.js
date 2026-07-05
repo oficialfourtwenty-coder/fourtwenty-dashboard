@@ -123,6 +123,51 @@ function planter(scene, colliders, x, z, w, d) {
   colliders.push({ minX: x - w / 2, maxX: x + w / 2, minY: 0, maxY: 0.5, minZ: z - d / 2, maxZ: z + d / 2 });
 }
 
+// Planta cannábica estilizada (ref: plano del dueño, marca FOURTWENTY): hoja
+// de abanico dibujada en canvas sobre planos cruzados (truco de follaje, barato
+// y reconocible). Textura compartida entre todas las plantas.
+let _cannaTex = null;
+function cannabisLeafTexture() {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.translate(64, 122);
+  ctx.fillStyle = '#3f7a2c';
+  const angs = [-1.1, -0.72, -0.36, 0, 0.36, 0.72, 1.1];
+  const lens = [52, 78, 100, 114, 100, 78, 52];
+  angs.forEach((a, i) => {
+    ctx.save(); ctx.rotate(a);
+    ctx.beginPath(); ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(11, -lens[i] * 0.5, 0, -lens[i]);
+    ctx.quadraticCurveTo(-11, -lens[i] * 0.5, 0, 0);
+    ctx.fill(); ctx.restore();
+  });
+  ctx.fillStyle = '#2f5a22'; ctx.fillRect(-2, 0, 4, 6);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return t;
+}
+function cannabisPlant(scene, x, z, y = 0) {
+  if (!_cannaTex) _cannaTex = cannabisLeafTexture();
+  const g = new THREE.Group();
+  g.add(box(0.03, 0.35, 0.03, 0, 0.17, 0, mat(0x2f5a22, 0.9))); // tallo
+  const geo = new THREE.PlaneGeometry(0.55, 0.6); geo.translate(0, 0.32, 0);
+  const m = new THREE.MeshStandardMaterial({ map: _cannaTex, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.9 });
+  for (const r of [0, Math.PI / 3, -Math.PI / 3]) { const p = new THREE.Mesh(geo, m); p.rotation.y = r; p.castShadow = true; g.add(p); }
+  g.position.set(x, y, z); scene.add(g);
+}
+
+// Torre de fondo: volumen ÚNICO con su propia textura de fachada a escala
+// (bandas ladrillo/crema sin estirar). Separadas entre sí dejan cielo en medio,
+// así el fondo NO se ve como una tira repetida. Solo decoración (sin colisión).
+function towerBlock(scene, x, z, w, d, h, baseY) {
+  const rx = Math.max(2, Math.round(w / 2.4));
+  const ry = Math.max(4, Math.round(h / 2.4));
+  const m = new THREE.MeshStandardMaterial({ map: towerFacade(rx, ry), roughness: 0.9 });
+  const t = box(w, h, d, x, baseY + h / 2, z, m);
+  t.castShadow = true;
+  scene.add(t);
+}
+
 // ---- Construcción principal -------------------------------------------------
 export function buildStreet(scene) {
   const colliders = [];
@@ -133,7 +178,6 @@ export function buildStreet(scene) {
   const hormigonMat = mat(HORMIGON, 0.9);
   const salviaMat = mat(SALVIA, 0.8);
   const cremaMat = mat(CREMA, 0.85);
-  const towerMat = new THREE.MeshStandardMaterial({ map: towerFacade(8, 6), roughness: 0.9 });
   const shutterMat = new THREE.MeshStandardMaterial({ map: greenShutter(2, 1), roughness: 0.6, metalness: 0.3 });
   const inglesMat = mat(INGLES, 0.5, 0.4);
   const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x2a3a42, roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.4 });
@@ -196,12 +240,15 @@ export function buildStreet(scene) {
   // ---- Interior del local (elevado a PLAT, sin muebles) --------------------
   buildLocalInterior(scene, g, colliders);
 
-  // ---- Torres de fondo + reja del patio ------------------------------------
-  // Torre 1: sobre el alero, alto. Vecinas: slabs para dar profundidad.
-  g.add(box(FRENTE * 2 + 2, 24, 0.5, 0, facadeTop + ALERO_T + 12, Z_FACADE - 0.5, towerMat));
-  g.add(box(10, 20, 0.5, -FRENTE - 3, facadeTop + 10, Z_FACADE + 2, towerMat));
-  g.add(box(10, 20, 0.5, FRENTE + 3, facadeTop + 10, Z_FACADE + 2, towerMat));
-  // reja verde tubular del patio (a un costado, no caminable)
+  // ---- Torres de fondo: volúmenes SEPARADOS (no una tira repetida) ----------
+  // Suben desde la línea del alero, set-back en Z, con cielo entre ellas.
+  const baseY = facadeTop + ALERO_T;
+  towerBlock(scene, 0, -11, 15, 12, 30, baseY);    // Torre 1 (la del local)
+  towerBlock(scene, -20, -15, 13, 11, 26, baseY);  // vecina izquierda (más atrás)
+  towerBlock(scene, 21, -14, 13, 11, 28, baseY);   // vecina derecha
+  towerBlock(scene, 5, -26, 16, 10, 34, 0);        // torre lejana de fondo
+
+  // reja verde mínima a un costado (el lado derecho completo va en Pass C)
   for (let x = FRENTE - 1; x <= FRENTE + 2; x += 0.4) {
     g.add(box(0.05, 1.2, 0.05, x, 0.6, Z_STEP_TOP - 1, mat(REJA, 0.5, 0.5)));
   }
@@ -212,11 +259,16 @@ export function buildStreet(scene) {
   colliders.push({ minX: -FRENTE - 0.5, maxX: -FRENTE - 0.1, minY: 0, maxY: 4, minZ: Z_LOCAL_BACK, maxZ: Z_CURB }); // izq
   colliders.push({ minX: FRENTE + 0.1, maxX: FRENTE + 0.5, minY: 0, maxY: 4, minZ: Z_LOCAL_BACK, maxZ: Z_CURB });   // der
 
-  // ---- Vegetación y detalle ------------------------------------------------
-  tree(scene, -7, 5.5, true);   // ciruelo florecido rosa
-  tree(scene, 8, 6, false);     // hoja verde
-  planter(scene, colliders, -6, 2.4, 3.0, 1.6);
-  planter(scene, colliders, 6.5, 2.6, 2.6, 1.6);
+  // ---- Vegetación PUNTUAL (ref: plano del dueño) ---------------------------
+  // Cantero principal centro-izquierda: árbol + plantas cannábicas (marca).
+  planter(scene, colliders, -4, 2.6, 5.5, 1.4);
+  tree(scene, -5.5, 2.6, true);
+  for (const cx of [-5, -4, -3, -2.2]) cannabisPlant(scene, cx, 2.7, 0.5);
+  // Cantero chico a la derecha.
+  planter(scene, colliders, 5, 2.8, 3, 1.3);
+  cannabisPlant(scene, 4.4, 2.9, 0.5); cannabisPlant(scene, 5.5, 2.7, 0.5);
+  // Árboles lejanos SOLO de fondo (fuera de la zona caminable, enmarcan).
+  tree(scene, -22, 4, false); tree(scene, 23, 4.5, true); tree(scene, 15, -10, false);
 
   // ---- Luz: sol de mediodía-invierno, cálido rasante, sombras largas -------
   scene.add(new THREE.HemisphereLight(0xbfd6ea, 0x9a9488, 0.9)); // cielo celeste / suelo
@@ -272,12 +324,13 @@ function buildLocalInterior(scene, g, colliders) {
   colliders.push({ minX: -LOCAL_HALF - WT, maxX: -LOCAL_HALF, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK, maxZ: Z_FACADE });
   colliders.push({ minX: LOCAL_HALF, maxX: LOCAL_HALF + WT, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK, maxZ: Z_FACADE });
 
-  // pared del fondo: SOLO la parte izquierda; la derecha (GAP) queda abierta.
+  // Fondo del local: muro visible a la izquierda; a la derecha queda el HUECO
+  // del stock VISIBLE (se ve el pocket atrás) pero BLOQUEADO físicamente con una
+  // pared invisible a lo ancho de TODO el fondo, para que BOB no se meta y se
+  // trabe/gire en el pasillo angosto. Se reabre más adelante con cámara fija.
   const leftW = GAP_X0 - (-LOCAL_HALF);
   const wallBack = box(leftW, H, WT, -LOCAL_HALF + leftW / 2, PLAT + H / 2, Z_LOCAL_BACK, wallMat);
-  colliders.push({ minX: -LOCAL_HALF, maxX: GAP_X0, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK - WT, maxZ: Z_LOCAL_BACK });
-  // tope invisible más atrás del hueco (para no caminar al vacío sin cargar nada)
-  colliders.push({ minX: GAP_X0, maxX: GAP_X1, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK - GAP_STUB - 0.3, maxZ: Z_LOCAL_BACK - GAP_STUB });
+  colliders.push({ minX: -LOCAL_HALF, maxX: LOCAL_HALF, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK - WT, maxZ: Z_LOCAL_BACK });
 
   for (const m of [floor, ceil, wallL, wallR, wallBack]) { m.castShadow = true; m.receiveShadow = true; g.add(m); }
 

@@ -29,8 +29,10 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xcfd2d6);
-scene.fog = new THREE.Fog(0xcfd2d6, 12, 40);
+// cielo celeste de día despejado (spec); niebla lejana para ampliar el campo
+// visual sin que se recorte el mapa (las torres de fondo se ven).
+scene.background = new THREE.Color(0x9fc4e8);
+scene.fog = new THREE.Fog(0xb9d3ec, 30, 110);
 
 // Reflejos de ambiente (RoomEnvironment): les da vida a los PBR sin HDR externo.
 const pmrem = new THREE.PMREMGenerator(renderer);
