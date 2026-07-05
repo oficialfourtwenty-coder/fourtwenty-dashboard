@@ -12,8 +12,9 @@
 // compañía), que queda construido pero desconectado hasta la carga de mapa
 // (ver nota al final del archivo).
 import * as THREE from 'three';
-import { towerFacade, veredaTile, hexPaver, greenShutter, whiteFloor, lightCeiling } from './textures.js';
+import { towerFacade, veredaTile, hexPaver, greenShutter, whiteFloor, lightWood } from './textures.js';
 import { box } from './gfxUtils.js';
+import { garmentTexture } from './gallery.js';
 
 // ---- Paleta del spec (albedo base) ------------------------------------------
 const SALVIA = 0x8C9A78;   // columnas / alero
@@ -238,7 +239,7 @@ export function buildStreet(scene) {
   buildStorefront(g, colliders, inglesMat, glassMat);
 
   // ---- Interior del local (elevado a PLAT, sin muebles) --------------------
-  buildLocalInterior(scene, g, colliders);
+  const selectors = buildLocalInterior(scene, g, colliders);
 
   // ---- Torres de fondo: volúmenes SEPARADOS (no una tira repetida) ----------
   // Suben desde la línea del alero, set-back en Z, con cielo entre ellas.
@@ -283,7 +284,7 @@ export function buildStreet(scene) {
   scene.add(sun);
 
   scene.add(g);
-  return colliders;
+  return { colliders, selectors };
 }
 
 // Vidriera del local: marco de cuadrícula verde inglés + vidrio + puerta.
@@ -311,9 +312,10 @@ function buildStorefront(g, colliders, frameMat, glassMat) {
 // todavía (los assets del interior real los manda el dueño después). El hueco
 // atrás-derecha queda abierto: futuro acceso al shopping (ver nota final).
 function buildLocalInterior(scene, g, colliders) {
-  const floorMat = new THREE.MeshStandardMaterial({ map: whiteFloor(LOCAL_HALF, 3), roughness: 0.85 });
-  const wallMat = mat(CREMA, 1);
-  const ceilMat = new THREE.MeshStandardMaterial({ map: lightCeiling(LOCAL_HALF, 3), roughness: 1 });
+  // Piso del local real: porcelanato beige de placa grande (foto del dueño).
+  const floorMat = new THREE.MeshStandardMaterial({ map: whiteFloor(LOCAL_HALF, 3), color: 0xd6ccbb, roughness: 0.55 });
+  const wallMat = mat(0xf2f0ec, 0.95); // paredes blancas
+  const ceilMat = mat(0xf2f0ec, 0.95); // techo blanco liso
   const WT = 0.2, H = H_LIBRE;
   const zc = (Z_FACADE + Z_LOCAL_BACK) / 2, depth = Z_FACADE - Z_LOCAL_BACK;
 
@@ -334,10 +336,219 @@ function buildLocalInterior(scene, g, colliders) {
 
   for (const m of [floor, ceil, wallL, wallR, wallBack]) { m.castShadow = true; m.receiveShadow = true; g.add(m); }
 
-  // luz cálida puntual adentro (sin ambiental propia: ya hay una global afuera)
-  const lamp = new THREE.PointLight(0xffe9c4, 4, 7, 2);
-  lamp.position.set(0, PLAT + H - 0.3, zc);
-  scene.add(lamp);
+  buildRealInterior(scene, g, colliders, H);
+  return buildStockSelector(scene, g);
+}
+
+// ---- Interior REAL del local (réplica de la foto del dueño) -----------------
+// Piso beige, vigas blancas con rieles de spots, panel de madera con neón
+// (hoja verde + WE ROLL DIFFERENT), escritorio de madera con banquetas negras,
+// barral izquierdo con remeras + estante, jean blanco en exhibidor, divisor de
+// madera a la derecha con banqueta roja y corcho, extintor y aire acondicionado.
+function buildRealInterior(scene, g, colliders, H) {
+  const wood = new THREE.MeshStandardMaterial({ map: lightWood(2, 2), roughness: 0.65 });
+  const black = mat(0x1c1c1e, 0.6);
+  const chrome = mat(0xb9bcc2, 0.3, 0.9);
+  const white = mat(0xf2f0ec, 0.9);
+
+  // — Vigas blancas transversales + rieles con spots circulares —
+  for (const bz of [-6.4, -8.4]) {
+    g.add(box(LOCAL_HALF * 2, 0.2, 0.18, 0, PLAT + H - 0.1, bz, white));
+  }
+  for (const tx of [-1.1, 1.1]) {
+    g.add(box(0.05, 0.05, 4.6, tx, PLAT + H - 0.22, -7.4, black));
+    for (let i = 0; i < 4; i++) {
+      const sz = -5.6 - i * 1.2;
+      const can = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.075, 0.09, 10),
+        new THREE.MeshBasicMaterial({ color: 0xfff6e6 }));
+      can.position.set(tx, PLAT + H - 0.3, sz);
+      g.add(can);
+    }
+    const spot = new THREE.SpotLight(0xfff2e0, 9, 8, 0.95, 0.55, 1.6);
+    spot.position.set(tx, PLAT + H - 0.3, -7.4);
+    spot.target.position.set(tx, PLAT, -7.4);
+    scene.add(spot, spot.target);
+  }
+
+  // — Panel de madera del fondo + NEÓN (hoja verde + WE ROLL DIFFERENT) —
+  g.add(box(3.4, H, 0.08, -1.3, PLAT + H / 2, Z_LOCAL_BACK + 0.06, wood));
+  const neon = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 1.5), new THREE.MeshBasicMaterial({ map: rollDifferentNeon(), transparent: true }));
+  neon.position.set(-1.3, PLAT + 1.9, Z_LOCAL_BACK + 0.12);
+  g.add(neon);
+  const glowG = new THREE.PointLight(0x39ff6a, 2.5, 3.5, 2);
+  glowG.position.set(-1.3, PLAT + 2.1, Z_LOCAL_BACK + 0.6);
+  scene.add(glowG);
+
+  // — Escritorio/mostrador central de madera + 2 banquetas negras —
+  g.add(box(1.7, 0.95, 0.62, -0.6, PLAT + 0.475, -9.15, wood));
+  g.add(box(1.78, 0.05, 0.7, -0.6, PLAT + 0.975, -9.15, wood)); // tapa
+  for (const dx of [-1.05, -0.6, -0.15]) g.add(box(0.28, 0.02, 0.02, dx, PLAT + 0.78, -8.82, black)); // tiradores
+  colliders.push({ minX: -1.5, maxX: 0.3, minY: 0, maxY: PLAT + 1, minZ: -9.5, maxZ: -8.8 });
+  for (const sx of [-1.0, -0.2]) {
+    const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.05, 12), black);
+    seat.position.set(sx, PLAT + 0.72, -9.75); g.add(seat);
+    g.add(box(0.04, 0.68, 0.04, sx, PLAT + 0.36, -9.75, black));
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.015, 6, 16), black);
+    ring.rotation.x = Math.PI / 2; ring.position.set(sx, PLAT + 0.22, -9.75); g.add(ring);
+  }
+
+  // — Pared izquierda: estante flotante + barral con remeras —
+  g.add(box(1.3, 0.05, 0.28, -2.8, PLAT + 2.15, -6.2, wood));
+  g.add(box(0.24, 0.14, 0.2, -3.05 + 0.4, PLAT + 2.25, -6.5, black)); // deco
+  const rail2 = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.6, 8), chrome);
+  rail2.rotation.x = Math.PI / 2; rail2.position.set(-2.78, PLAT + 1.95, -6.2); g.add(rail2);
+  const shirtDefs = [
+    { color: 0x141414, tipo: 'tee' }, { color: 0xf5f2ea, tipo: 'tee' },
+    { color: 0xf5f2ea, tipo: 'tee' }, { color: 0x2a3550, tipo: 'hoodie' },
+  ];
+  shirtDefs.forEach((d, i) => {
+    const s = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.62),
+      new THREE.MeshStandardMaterial({ map: garmentTexture(d.color, d.tipo), transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide }));
+    s.position.set(-2.72 + i * 0.02, PLAT + 1.58, -6.85 + i * 0.42);
+    s.rotation.y = Math.PI / 2;
+    g.add(s);
+  });
+
+  // — Exhibidor del jean blanco (adelante-izquierda, como la foto) —
+  const px = -2.2, pz = -5.3;
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.03, 14), black);
+  base.position.set(px, PLAT + 0.015, pz); g.add(base);
+  g.add(box(0.13, 0.85, 0.15, px - 0.07, PLAT + 0.45, pz, white));
+  g.add(box(0.13, 0.85, 0.15, px + 0.07, PLAT + 0.45, pz, white));
+  g.add(box(0.3, 0.16, 0.17, px, PLAT + 0.95, pz, white));
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.04, 14), black);
+  top.position.set(px, PLAT + 1.12, pz); g.add(top);
+  colliders.push({ minX: px - 0.25, maxX: px + 0.25, minY: 0, maxY: PLAT + 1.2, minZ: pz - 0.25, maxZ: pz + 0.25 });
+
+  // — Derecha: divisor de madera + banqueta roja + corcho —
+  g.add(box(0.45, 1.05, 2.2, 2.72, PLAT + 0.525, -5.8, wood));
+  colliders.push({ minX: 2.5, maxX: 2.95, minY: 0, maxY: PLAT + 1.1, minZ: -6.9, maxZ: -4.7 });
+  const rSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.05, 12), mat(0xc22a1f, 0.6));
+  rSeat.position.set(2.35, PLAT + 0.85, -7.5); g.add(rSeat);
+  for (const [lx, lz] of [[-0.1, -0.1], [0.1, -0.1], [0, 0.12]]) {
+    const leg = box(0.03, 0.85, 0.03, 2.35 + lx, PLAT + 0.42, -7.5 + lz, mat(0xc22a1f, 0.6));
+    g.add(leg);
+  }
+  colliders.push({ minX: 2.15, maxX: 2.55, minY: 0, maxY: PLAT + 0.9, minZ: -7.7, maxZ: -7.3 });
+  const cork = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.75), corkTexturePlane());
+  cork.position.set(LOCAL_HALF - 0.11, PLAT + 1.5, -6.8);
+  cork.rotation.y = -Math.PI / 2;
+  g.add(cork);
+
+  // — Detalles: extintor + aire acondicionado —
+  const ext = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.34, 10), mat(0xc22a1f, 0.5));
+  ext.position.set(0.28, PLAT + 1.15, Z_LOCAL_BACK + 0.14); g.add(ext);
+  g.add(box(0.85, 0.28, 0.22, 0.8, PLAT + 2.72, Z_FACADE - 0.16, white)); // split AC
+
+  // luz de relleno cálida general
+  const fill = new THREE.PointLight(0xfff0dd, 3, 8, 2);
+  fill.position.set(0, PLAT + H - 0.4, -7.2);
+  scene.add(fill);
+}
+
+// Neón de la foto: hoja de cannabis verde + "WE ROLL DIFFERENT" cálido.
+function rollDifferentNeon() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 336;
+  const ctx = c.getContext('2d');
+  // hoja (glow verde)
+  ctx.save();
+  ctx.translate(256, 128);
+  ctx.strokeStyle = '#39ff6a'; ctx.lineWidth = 5;
+  ctx.shadowColor = '#39ff6a'; ctx.shadowBlur = 18;
+  const angs = [-1.1, -0.72, -0.36, 0, 0.36, 0.72, 1.1];
+  const lens = [46, 68, 88, 100, 88, 68, 46];
+  angs.forEach((a, i) => {
+    ctx.save(); ctx.rotate(a);
+    ctx.beginPath(); ctx.moveTo(0, 10);
+    ctx.quadraticCurveTo(10, -lens[i] * 0.5 + 10, 0, -lens[i] + 10);
+    ctx.quadraticCurveTo(-10, -lens[i] * 0.5 + 10, 0, 10);
+    ctx.stroke(); ctx.restore();
+  });
+  ctx.restore();
+  // texto cálido
+  ctx.font = 'bold 44px monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.shadowColor = '#ffd27a'; ctx.strokeStyle = '#ffd27a'; ctx.lineWidth = 2;
+  for (const blur of [22, 10]) { ctx.shadowBlur = blur; ctx.strokeText('WE ROLL DIFFERENT', 256, 268); }
+  ctx.shadowBlur = 0; ctx.fillStyle = '#fff3d6'; ctx.fillText('WE ROLL DIFFERENT', 256, 268);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return t;
+}
+
+// Corcho con papelitos (pared derecha de la foto).
+function corkTexturePlane() {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 176;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#b98d5e'; ctx.fillRect(0, 0, 256, 176);
+  ctx.strokeStyle = '#8a6a44'; ctx.lineWidth = 8; ctx.strokeRect(4, 4, 248, 168);
+  for (let i = 0; i < 8; i++) {
+    ctx.fillStyle = ['#ffffff', '#fdf6c9', '#d9ecf5'][i % 3];
+    ctx.fillRect(18 + (i % 4) * 58, 22 + Math.floor(i / 4) * 72, 42, 54);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.MeshStandardMaterial({ map: t, roughness: 0.95 });
+}
+
+// ---- Sector stock = SELECTOR DE COLECCIONES ---------------------------------
+// En el hueco del fondo (visible pero bloqueado físicamente) cuelgan 5 remeras,
+// una por colección/piso de BOBILONIA. Se seleccionan con click o E — al elegir
+// una, main.js muestra la pantalla de carga y monta el shopping en ese piso.
+function buildStockSelector(scene, g) {
+  const zBack = Z_LOCAL_BACK - GAP_STUB + 0.15; // panel al fondo del pocket
+  const zShirt = Z_LOCAL_BACK - 0.9;            // remeras a la vista desde el local
+  const cx = (GAP_X0 + GAP_X1) / 2;
+  const W = GAP_X1 - GAP_X0;
+
+  // vestir el pocket: panel oscuro de fondo + laterales + barral cromado
+  const dark = mat(0x24241f, 0.95);
+  g.add(box(W, H_LIBRE, 0.1, cx, PLAT + H_LIBRE / 2, zBack, dark));
+  g.add(box(0.08, H_LIBRE, GAP_STUB, GAP_X0, PLAT + H_LIBRE / 2, Z_LOCAL_BACK - GAP_STUB / 2, dark));
+  g.add(box(0.08, H_LIBRE, GAP_STUB, GAP_X1, PLAT + H_LIBRE / 2, Z_LOCAL_BACK - GAP_STUB / 2, dark));
+  const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, W - 0.3, 8), mat(0xb9bcc2, 0.25, 0.9));
+  rail.rotation.z = Math.PI / 2;
+  rail.position.set(cx, PLAT + 2.05, zShirt);
+  g.add(rail);
+  // foco puntual para que las remeras se lean bien
+  const spot = new THREE.PointLight(0xfff3dd, 5, 4.5, 2);
+  spot.position.set(cx, PLAT + 2.6, Z_LOCAL_BACK - 0.5);
+  scene.add(spot);
+
+  // las 5 remeras (color + tipo + destino). Textura placeholder de silueta;
+  // cuando estén las fotos reales se cambian acá mismo.
+  const defs = [
+    { piso: 1, label: 'PISO 1 · ARCHIVE', color: 0x1c1c1c, tipo: 'tee' },
+    { piso: 2, label: 'PISO 2 · ORIGEN', color: 0xe8dfc9, tipo: 'tee' },
+    { piso: 3, label: 'PISO 3 · HOOP SEASON', color: 0xd96b2f, tipo: 'jersey' },
+    { piso: 4, label: 'PISO 4 · BOB', color: 0x1f4d2e, tipo: 'tee', cara: true },
+    { piso: 5, label: 'PISO 5 · CULTURA', color: 0x6d1f2c, tipo: 'hoodie' },
+  ];
+  const selectors = [];
+  defs.forEach((d, i) => {
+    const x = GAP_X0 + 0.32 + i * ((W - 0.64) / (defs.length - 1));
+    const tex = garmentTexture(d.color, d.tipo, d.cara ? { monkeyFace: true } : {});
+    const shirt = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.46, 0.55),
+      new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide, emissive: 0x111111 }),
+    );
+    shirt.position.set(x, PLAT + 1.72, zShirt);
+    shirt.userData = { piso: d.piso, label: d.label, baseScale: 1 };
+    g.add(shirt);
+    selectors.push(shirt);
+    // etiqueta chica bajo cada remera
+    const c = document.createElement('canvas'); c.width = 256; c.height = 48;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#f6f5f2'; ctx.fillRect(0, 0, 256, 48);
+    ctx.fillStyle = '#17171a'; ctx.font = 'bold 22px monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(d.label, 128, 26);
+    const lt = new THREE.CanvasTexture(c); lt.colorSpace = THREE.SRGBColorSpace; lt.anisotropy = 4;
+    const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 0.082), new THREE.MeshBasicMaterial({ map: lt }));
+    tag.position.set(x, PLAT + 1.32, zShirt);
+    g.add(tag);
+  });
+  return selectors;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

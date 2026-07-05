@@ -12,6 +12,12 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildStreet, SPAWN, isInsideLocal, streetSampleGround, STREET_BOUNDS, LOCAL_BOUNDS, CEILING_OUT, CEILING_IN } from './world/street.js';
+// BOBILONIA: el shopping de 5 pisos ya construido, se monta al elegir remera
+import { buildBuilding, buildLights, getColliders, sampleGround as shopSampleGround, floorIndexAt, FLOOR_YS, FLOOR_H, INTERIOR } from './world/building.js';
+import { buildGallery } from './world/gallery.js';
+import { buildRetail } from './world/retail.js';
+import { buildSignage } from './world/signage.js';
+import { COLLECTIONS } from './world/collections.js';
 import { tickAmbient } from './world/anim.js';
 import { Player } from './player/bob3d.js';
 import { ThirdPersonCamera } from './core/camera.js';
@@ -36,8 +42,11 @@ scene.fog = new THREE.Fog(0xb9d3ec, 30, 110);
 
 // Reflejos de ambiente (RoomEnvironment): les da vida a los PBR sin HDR externo.
 const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environment = envTex;
 scene.environmentIntensity = 0.22;
+
+let activeScene = scene; // se cambia al montar BOBILONIA
 
 const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 140);
 
@@ -66,9 +75,11 @@ const GradeShader = {
 
 let composer = null;
 let bloomPass = null;
+let renderPass = null;
 if (QUALITY === 'high') {
   composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, camera));
+  renderPass = new RenderPass(scene, camera);
+  composer.addPass(renderPass);
   bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.22, 0.4, 0.92);
   composer.addPass(bloomPass);
   composer.addPass(new ShaderPass(GradeShader));
@@ -116,28 +127,144 @@ function checkPerf(dt) {
   }
 }
 
-const colliders = buildStreet(scene);
+const { colliders: streetColliders, selectors } = buildStreet(scene);
+let colliders = streetColliders;
+let world = 'street'; // 'street' | 'shopping'
 
 const bob = new Player(scene, SPAWN);
 bob.sampleGround = streetSampleGround; // la calle tiene escalones (no pisos)
+bob.modelYaw = Math.PI; // BOB arranca mirando hacia el local (-z)
 const tpCam = new ThirdPersonCamera(camera, STREET_BOUNDS);
-// BOB arranca mirando hacia el local (yaw=0 → W camina en -z); el default de
-// la clase (yaw=π) es para escenas donde el spawn mira hacia +z.
-tpCam.yaw = 0;
+tpCam.yaw = 0;          // cámara detrás de él (del lado de la calle)
 tpCam.targetYaw = 0;
 const input = new Input(canvas);
 const hud = new Hud();
 
-hud.onStart(() => {
-  input.lockPointer();
-  hud.showOverlay(false);
-});
-document.addEventListener('pointerlockchange', () => {
-  hud.showOverlay(!input.locked);
-});
+// SIN pointer lock: el overlay de inicio solo se cierra con el primer click.
+hud.onStart(() => hud.showOverlay(false));
 
 window.__bob = bob; // hooks de debug/testeo
 window.__cam = tpCam;
+
+// ---- Selector de colecciones (remeras del stock): hover + click + E --------
+const raycaster = new THREE.Raycaster();
+const pointerNdc = new THREE.Vector2(-2, -2); // fuera de pantalla hasta que se mueva
+let hovered = null;
+let loading = false;
+const loadingEl = document.getElementById('loading-screen');
+const loadingCount = document.getElementById('loading-count');
+const loadingDest = document.getElementById('loading-dest');
+const shirtTip = document.getElementById('shirt-tip');
+
+// si el dueño sube public/assets/ui/bobilonia.jpg, se usa como fondo de carga
+const bgProbe = new Image();
+bgProbe.onload = () => { loadingEl.style.backgroundImage = `url(${bgProbe.src})`; };
+bgProbe.src = 'assets/ui/bobilonia.jpg';
+
+canvas.addEventListener('pointermove', (e) => {
+  pointerNdc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+});
+canvas.addEventListener('click', () => {
+  if (loading || world !== 'street' || !hovered) return;
+  if (!isInsideLocal(bob.position)) return; // hay que estar adentro del local
+  startLoading(hovered.userData.piso, hovered.userData.label);
+});
+
+function updateHover() {
+  if (loading || world !== 'street' || !isInsideLocal(bob.position)) {
+    if (hovered) { hovered.scale.setScalar(1); hovered = null; }
+    canvas.style.cursor = 'default';
+    shirtTip.style.display = 'none';
+    return;
+  }
+  raycaster.setFromCamera(pointerNdc, camera);
+  const hit = raycaster.intersectObjects(selectors, false)[0]?.object ?? null;
+  if (hit !== hovered) {
+    if (hovered) hovered.scale.setScalar(1);
+    hovered = hit;
+    if (hovered) {
+      hovered.scale.setScalar(1.18); // feedback: se agranda al pasar el mouse
+      shirtTip.textContent = `${hovered.userData.label} — CLICK PARA VIAJAR`;
+    }
+    canvas.style.cursor = hovered ? 'pointer' : 'default';
+    shirtTip.style.display = hovered ? 'block' : 'none';
+  }
+}
+
+// E = interactuar con la remera más cercana (a menos de 3m)
+function interactNearest() {
+  if (loading || world !== 'street' || !isInsideLocal(bob.position)) return;
+  let best = null, bestD = 3;
+  for (const s of selectors) {
+    const d = Math.hypot(s.position.x - bob.position.x, s.position.z - bob.position.z);
+    if (d < bestD) { bestD = d; best = s; }
+  }
+  if (best) startLoading(best.userData.piso, best.userData.label);
+}
+
+// ---- Pantalla de carga BOBILONIA + montaje del shopping ---------------------
+const SHOP_BOUNDS = {
+  minX: -INTERIOR.x, maxX: INTERIOR.x,
+  minZ: -INTERIOR.z, maxZ: INTERIOR.z,
+};
+
+function startLoading(piso, label) {
+  loading = true;
+  shirtTip.style.display = 'none';
+  canvas.style.cursor = 'default';
+  loadingDest.textContent = label;
+  loadingCount.textContent = '3';
+  loadingEl.classList.add('show');
+  // el mundo se construye ya (la cuenta regresiva tapa el trabajo)
+  const ready = buildShopping();
+  let n = 3;
+  const tick = setInterval(() => {
+    n -= 1;
+    if (n > 0) { loadingCount.textContent = String(n); return; }
+    clearInterval(tick);
+    enterShopping(ready, piso);
+    loadingEl.classList.remove('show');
+    loading = false;
+  }, 1000);
+}
+
+function buildShopping() {
+  const s = new THREE.Scene();
+  s.background = new THREE.Color(0xcfd2d6);
+  s.fog = new THREE.Fog(0xcfd2d6, 12, 40);
+  s.environment = envTex;
+  s.environmentIntensity = 0.22;
+  buildBuilding(s);
+  buildLights(s, { shadows: QUALITY === 'high' && !downgraded });
+  buildSignage(s);
+  const cols = [
+    ...getColliders(),
+    ...COLLECTIONS.flatMap((c) => buildGallery(s, c)),
+    ...buildRetail(s),
+  ];
+  return { scene: s, colliders: cols };
+}
+
+function enterShopping({ scene: s, colliders: cols }, piso) {
+  // mover a BOB (rig + sombra) a la escena nueva y ubicarlo en su piso
+  s.add(bob.rig);
+  s.add(bob.shadow);
+  bob.sampleGround = shopSampleGround;
+  bob.velocity.set(0, 0, 0);
+  bob.position.set(0, FLOOR_YS[piso - 1] + 0.02, -2);
+  bob.modelYaw = Math.PI; // mirando al frente del piso
+  tpCam.bounds = SHOP_BOUNDS;
+  tpCam.yaw = Math.PI; tpCam.targetYaw = Math.PI;
+  tpCam.focus.set(0, FLOOR_YS[piso - 1] + 1.15, -2);
+  activeScene = s;
+  if (renderPass) renderPass.scene = s;
+  colliders = cols;
+  world = 'shopping';
+  lastZone = null; // dispara el cartel de zona del piso al entrar
+  // recalcular las sombras congeladas para el mundo nuevo
+  renderer.shadowMap.needsUpdate = true;
+  shadowRefreshAt.push(elapsed + 1.5, elapsed + 4);
+}
 
 // Sombras congeladas: todo lo que proyecta sombra es estático (BOB usa sombra
 // blob), así que las shadow maps se calculan UNA vez en lugar de 60 por segundo.
@@ -159,24 +286,34 @@ renderer.setAnimationLoop(() => {
     renderer.shadowMap.needsUpdate = true;
     shadowRefreshAt.shift();
   }
-  const mouse = input.consumeMouse();
 
-  bob.update(dt, input, tpCam.yaw, colliders, camera.position);
-  input.consumeInteract(); // E: reservado para Fase 2 (prendas)
+  if (!loading) bob.update(dt, input, tpCam.yaw, colliders, camera.position);
+  if (input.consumeInteract()) interactNearest(); // E = remera más cercana
+  updateHover();           // resaltado de remeras bajo el mouse
   tickAmbient(dt);         // displays giratorios
 
-  const inside = isInsideLocal(bob.position);
-  const zoneName = inside ? 'FOURTWENTY' : 'CALLE BURELA';
-  hud.setZone(zoneName);
+  let floorY, ceiling, zoneName;
+  if (world === 'street') {
+    const inside = isInsideLocal(bob.position);
+    zoneName = inside ? 'FOURTWENTY' : 'CALLE BURELA';
+    // adentro: cámara acotada al local, techo bajo; afuera: cielo abierto.
+    tpCam.bounds = inside ? LOCAL_BOUNDS : STREET_BOUNDS;
+    floorY = streetSampleGround(bob.position.x, bob.position.z);
+    ceiling = inside ? CEILING_IN : CEILING_OUT;
+    hud.setZone(zoneName);
+  } else {
+    const idx = floorIndexAt(bob.position.y);
+    zoneName = COLLECTIONS.find((c) => c.piso === idx)?.name ?? 'FOURTWENTY';
+    floorY = FLOOR_YS[idx - 1];
+    ceiling = FLOOR_H;
+    hud.setFloor(idx, zoneName);
+  }
   if (zoneName !== lastZone) {
-    hud.showZoneTitle(zoneName); // cartel de zona estilo GTA V al cruzar la puerta
+    hud.showZoneTitle(zoneName); // cartel de zona estilo GTA V
     lastZone = zoneName;
   }
-  // adentro: cámara acotada al local, techo bajo; afuera: cielo abierto.
-  tpCam.bounds = inside ? LOCAL_BOUNDS : STREET_BOUNDS;
-  const floorY = streetSampleGround(bob.position.x, bob.position.z);
-  tpCam.update(dt, mouse, bob.position, floorY, bob.modelYaw, inside ? CEILING_IN : CEILING_OUT);
+  tpCam.update(dt, bob.position, floorY, bob.modelYaw, ceiling);
 
   if (composer) composer.render();
-  else renderer.render(scene, camera);
+  else renderer.render(activeScene, camera);
 });

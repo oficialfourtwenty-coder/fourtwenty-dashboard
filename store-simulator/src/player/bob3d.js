@@ -21,7 +21,7 @@ const WALK = 3.4;         // m/s caminando
 const RUN = 5.8;          // m/s corriendo (Shift) — ritmo real, no "corre solo"
 const ACCEL = 9;          // rampa de aceleración (~0.2s hasta velocidad)
 const DECEL = 11;         // frenada un poco más rápida
-const TURN = 10;          // velocidad de giro (rad/s aprox, suavizado)
+const TURN_SPIN = 2.6;    // velocidad de giro con A/D (rad/s)
 const GRAVITY = 14;
 
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -147,14 +147,16 @@ export class Player {
   }
 
   update(dt, input, camYaw, colliders, camPos) {
-    // 1) Dirección deseada relativa a la cámara
-    const { x: ax, z: az } = input.axes();
-    const fwd = this._fwd.set(-Math.sin(camYaw), 0, -Math.cos(camYaw));
-    const right = this._right.crossVectors(fwd, UP);
-    const wish = this._wish.set(0, 0, 0).addScaledVector(fwd, az).addScaledVector(right, ax);
-    const moving = wish.lengthSq() > 0;
+    // 1) Control tipo GTA clásico (mouse libre para interactuar):
+    //    A/D GIRAN a BOB sobre su eje, W avanza, S retrocede (más lento).
+    //    La cámara se acomoda sola detrás de él, así girando "mirás" el lugar.
+    const { x: turnInput, z: fwdInput } = input.axes();
+    if (!this._isBillboard) this.modelYaw -= turnInput * TURN_SPIN * dt;
     const topSpeed = input.sprinting() ? RUN : WALK;
-    if (moving) wish.normalize().multiplyScalar(topSpeed);
+    const speedMul = fwdInput < 0 ? 0.6 : 1; // marcha atrás más lenta
+    const wish = this._wish.set(Math.sin(this.modelYaw), 0, Math.cos(this.modelYaw))
+      .multiplyScalar(fwdInput * topSpeed * speedMul);
+    const moving = fwdInput !== 0;
 
     // 2) Rampa de aceleración/frenada (peso GTA: nada arranca ni frena de golpe)
     const rate = moving ? ACCEL : DECEL;
@@ -183,17 +185,14 @@ export class Player {
       this.position.y = Math.max(ground, this.position.y - this.vy * dt);
     }
 
-    // 5) Rotación del cuerpo: gira suave hacia donde camina (sin snap)
+    // 5) Rotación del cuerpo: la controla A/D directamente (giro en el lugar
+    //    o caminando). El lean procedural usa la velocidad de giro real.
     let yawRate = 0;
     if (this._isBillboard) {
       // el sprite de respaldo siempre mira a cámara
       this.rig.rotation.y = Math.atan2(camPos.x - this.position.x, camPos.z - this.position.z);
-    } else if (speed > 0.3) {
-      const heading = Math.atan2(this.velocity.x, this.velocity.z);
-      const d = wrap(heading - this.modelYaw);
-      const turn = d * Math.min(1, TURN * dt);
-      this.modelYaw += turn;
-      yawRate = turn / Math.max(dt, 1e-4);
+    } else {
+      yawRate = -turnInput * TURN_SPIN;
       this.rig.rotation.y = this.modelYaw;
     }
 

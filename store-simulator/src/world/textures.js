@@ -257,6 +257,25 @@ export function hexPaver(repeatX, repeatY) {
   return toTexture(c, repeatX, repeatY);
 }
 
+// Madera clara (roble/paraíso) para el mobiliario del local real: panel del
+// neón, escritorio, estante, divisor — veta vertical suave.
+export function lightWood(repeatX, repeatY) {
+  const c = makeCanvas();
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#cfc0a4';
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  for (let x = 0; x < SIZE; x += 6 + Math.random() * 10) {
+    ctx.strokeStyle = `rgba(120,95,60,${0.06 + Math.random() * 0.1})`;
+    ctx.lineWidth = 1 + Math.random() * 2;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.bezierCurveTo(x + 4, SIZE * 0.3, x - 4, SIZE * 0.7, x + 2, SIZE);
+    ctx.stroke();
+  }
+  noise(ctx, 0, 0.04, 500);
+  return toTexture(c, repeatX, repeatY);
+}
+
 // Vidriera / ventana: cielo cálido de atardecer (unlit, da luz "falsa" PS2).
 export function windowGlow() {
   const c = makeCanvas();

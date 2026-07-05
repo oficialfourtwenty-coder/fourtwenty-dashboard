@@ -1,13 +1,11 @@
-// Input por acciones (teclado + mouse con pointer lock).
+// Input por acciones (teclado). SIN pointer lock: el mouse queda visible y
+// libre para clickear productos — la cámara ya no se mueve con el mouse.
 // Fase 6 agrega acá el joystick táctil sin tocar el resto del juego.
 export class Input {
   constructor(domElement) {
     this.dom = domElement;
     this.keys = new Set();
-    this.mouseDX = 0;
-    this.mouseDY = 0;
     this._interactQueued = false;
-    this._mouseOut = { x: 0, y: 0 }; // reusado por consumeMouse(), no basura por cuadro
 
     window.addEventListener('keydown', (e) => {
       if (e.repeat) return;
@@ -16,21 +14,6 @@ export class Input {
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
     window.addEventListener('blur', () => this.keys.clear());
-
-    document.addEventListener('mousemove', (e) => {
-      if (document.pointerLockElement === this.dom) {
-        this.mouseDX += e.movementX;
-        this.mouseDY += e.movementY;
-      }
-    });
-  }
-
-  lockPointer() {
-    this.dom.requestPointerLock();
-  }
-
-  get locked() {
-    return document.pointerLockElement === this.dom;
   }
 
   // Ejes de movimiento (-1..1): x = strafe, z = adelante/atrás
@@ -46,16 +29,7 @@ export class Input {
     return this.keys.has('ShiftLeft') || this.keys.has('ShiftRight');
   }
 
-  // Delta de mouse acumulado desde el último frame (lo consume la cámara).
-  consumeMouse() {
-    this._mouseOut.x = this.mouseDX;
-    this._mouseOut.y = this.mouseDY;
-    this.mouseDX = 0;
-    this.mouseDY = 0;
-    return this._mouseOut;
-  }
-
-  // true una sola vez por pulsación de E (para Fase 2: interactuar).
+  // true una sola vez por pulsación de E (interactuar con lo más cercano).
   consumeInteract() {
     const q = this._interactQueued;
     this._interactQueued = false;

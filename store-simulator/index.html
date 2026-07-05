@@ -46,6 +46,34 @@
   #start-overlay p  { font-size: 12px; letter-spacing: 2px; margin: 0; color: #d4af37; }
   #start-overlay .blink { animation: blink 1.1s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
+  /* Pantalla de carga BOBILONIA (selector de colecciones del stock).
+     Si aparece public/assets/ui/bobilonia.jpg se usa como fondo automático. */
+  #loading-screen {
+    position: fixed; inset: 0; display: none; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px; z-index: 30;
+    background: radial-gradient(ellipse at center, #143020 0%, #0a1810 55%, #050c08 100%);
+    background-size: cover; background-position: center;
+    color: #eafff0; font-family: 'Courier New', monospace; text-align: center;
+  }
+  #loading-screen.show { display: flex; }
+  #loading-screen h1 {
+    margin: 0; font-family: 'Arial Black', 'Arial', sans-serif; font-style: italic;
+    font-size: 56px; letter-spacing: 4px; color: #39ff6a;
+    text-shadow: 0 0 22px #39ff6a66, 3px 3px 0 #000000cc;
+  }
+  #loading-screen .dest { font-size: 14px; letter-spacing: 3px; color: #d4af37; }
+  #loading-count {
+    font-size: 84px; font-weight: bold; color: #f2e8c9; line-height: 1;
+    text-shadow: 3px 3px 0 #00000099;
+  }
+  #loading-screen .tip { font-size: 11px; letter-spacing: 2px; color: #eafff088; }
+  #shirt-tip {
+    position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%);
+    padding: 6px 14px; border-radius: 6px; display: none; z-index: 20;
+    background: #0a1810dd; border: 1px solid #39ff6a55;
+    color: #eafff0; font-family: 'Courier New', monospace;
+    font-size: 13px; letter-spacing: 2px; pointer-events: none;
+  }
 </style>
 </head>
 <body>
@@ -53,7 +81,7 @@
 <div id="hud">
   <div class="hud-title">FOURTWENTY</div>
   <div class="hud-floor" id="hud-floor">PISO 1</div>
-  <div class="hud-help">WASD MOVER &nbsp;·&nbsp; SHIFT CORRER &nbsp;·&nbsp; MOUSE CÁMARA &nbsp;·&nbsp; ESC SOLTAR MOUSE</div>
+  <div class="hud-help">W/S AVANZAR &nbsp;·&nbsp; A/D GIRAR &nbsp;·&nbsp; SHIFT CORRER &nbsp;·&nbsp; CLICK / E INTERACTUAR</div>
   <div id="zone-title"><span id="zone-name"></span><span class="sub">FOURTWENTY STORE</span></div>
 </div>
 <div id="start-overlay">
@@ -61,6 +89,13 @@
   <p>STORE SIMULATOR — LOCAL EN OBRA</p>
   <p class="blink">CLICK PARA ENTRAR</p>
 </div>
+<div id="loading-screen">
+  <h1>BOBILONIA</h1>
+  <div class="dest" id="loading-dest"></div>
+  <div id="loading-count">3</div>
+  <div class="tip">CARGANDO EL MUNDO FOURTWENTY…</div>
+</div>
+<div id="shirt-tip"></div>
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>
