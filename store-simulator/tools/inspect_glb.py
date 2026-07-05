@@ -34,12 +34,8 @@ def main(path):
 
     skins = gltf.get('skins', [])
     if skins:
-        nodes = gltf.get('nodes', [])
         for s in skins:
-            joints = s.get('joints', [])
-            print(f"skeleton: SÍ — {len(joints)} huesos ({s.get('name', 'sin nombre')})")
-            names = [nodes[j].get('name', f'nodo{j}') for j in joints if j < len(nodes)]
-            print('  nombres:', ', '.join(names))
+            print(f"skeleton: SÍ — {len(s.get('joints', []))} huesos ({s.get('name', 'sin nombre')})")
     else:
         print('skeleton: NO')
 
