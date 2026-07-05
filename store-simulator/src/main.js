@@ -162,6 +162,21 @@ const bobLoadingBarFill = document.getElementById('bob-loading-bar-fill');
 const loadingMessage = document.getElementById('loading-message');
 const shirtTip = document.getElementById('shirt-tip');
 
+function finishLoadingUi() {
+  loadingEl.classList.remove('show');
+  requestAnimationFrame(() => {
+    loadingEl.classList.remove('hoop-season', 'bob-collection');
+    bobLoadingVideo.pause();
+    bobLoadingVideo.onended = null;
+    bobLoadingVideo.onerror = null;
+    bobLoadingVideo.onstalled = null;
+    bobLoadingVideo.onabort = null;
+    try { bobLoadingVideo.currentTime = 0; } catch {}
+    bobLoadingBarFill.style.width = '0%';
+  });
+  loading = false;
+}
+
 // si el dueño sube public/assets/ui/bobilonia.jpg, se usa como fondo de carga
 const bgProbe = new Image();
 bgProbe.onload = () => {
@@ -228,6 +243,8 @@ function startLoading(piso, label) {
   loadingEl.classList.toggle('hoop-season', isHoopSeason);
   loadingEl.classList.toggle('bob-collection', isBobCollection);
   bobLoadingVideo.pause();
+  bobLoadingVideo.muted = false;
+  bobLoadingVideo.volume = 1;
   bobLoadingBarFill.style.width = '0%';
 
   if (isBobCollection) {
@@ -272,8 +289,7 @@ function startLoading(piso, label) {
       return;
     }
     enterShopping(ready, piso);
-    loadingEl.classList.remove('show');
-    loading = false;
+    finishLoadingUi();
   };
   requestAnimationFrame(tick);
 }
@@ -289,11 +305,12 @@ function playBobLoading(ready, piso) {
     cancelAnimationFrame(raf);
     bobLoadingVideo.onended = null;
     bobLoadingVideo.onerror = null;
+    bobLoadingVideo.onstalled = null;
+    bobLoadingVideo.onabort = null;
     bobLoadingBarFill.style.width = '100%';
     bobLoadingVideo.pause();
     enterShopping(ready, piso);
-    loadingEl.classList.remove('show');
-    loading = false;
+    finishLoadingUi();
   };
 
   const trackVideo = () => {
@@ -326,6 +343,8 @@ function playBobLoading(ready, piso) {
 
   bobLoadingVideo.onended = finish;
   bobLoadingVideo.onerror = fallbackTimed;
+  bobLoadingVideo.onstalled = fallbackTimed;
+  bobLoadingVideo.onabort = fallbackTimed;
   try { bobLoadingVideo.currentTime = 0; } catch {}
   const playPromise = bobLoadingVideo.play();
   raf = requestAnimationFrame(trackVideo);

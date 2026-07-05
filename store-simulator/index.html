@@ -174,25 +174,26 @@
     object-fit: cover; background: #030303;
   }
   #loading-screen.bob-collection .bob-loading-ui {
-    display: block; position: absolute; left: clamp(24px, 6vw, 96px);
-    right: clamp(24px, 6vw, 96px); bottom: clamp(20px, 4vh, 48px); z-index: 2;
+    display: block; position: absolute; left: clamp(20px, 5vw, 82px);
+    right: clamp(20px, 5vw, 82px); bottom: clamp(28px, 5vh, 68px); z-index: 2;
   }
   .bob-loading-bar {
-    height: 9px; padding: 2px; box-sizing: border-box;
-    border: 1px solid rgba(255,255,255,0.62);
+    height: 18px; padding: 3px; box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,0.92);
     background:
-      repeating-linear-gradient(90deg, rgba(255,255,255,0.20) 0 16px, transparent 16px 24px),
-      rgba(0,0,0,0.42);
-    box-shadow: 0 0 22px rgba(255,255,255,0.14);
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.30) 0 18px, transparent 18px 28px),
+      rgba(0,0,0,0.62);
+    box-shadow: 0 0 28px rgba(255,255,255,0.24);
   }
   #bob-loading-bar-fill {
-    width: 0%; height: 100%; background: rgba(245,245,238,0.92);
-    box-shadow: 0 0 18px rgba(255,255,255,0.38);
+    width: 0%; height: 100%; background: rgba(245,245,238,1);
+    box-shadow: 0 0 24px rgba(255,255,255,0.56);
     transition: width 70ms linear;
   }
   .bob-loading-caption {
-    margin-top: 9px; color: rgba(255,255,255,0.70); font-size: 11px;
-    letter-spacing: 4px; text-align: center;
+    margin-top: 12px; color: rgba(255,255,255,0.92); font-size: 15px;
+    font-weight: 700; letter-spacing: 6px; text-align: center;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.85);
   }
   #loading-screen:not(.hoop-season) .loading-brand,
   #loading-screen:not(.hoop-season) .loading-420 {
@@ -238,7 +239,7 @@
   <p class="blink">CLICK PARA ENTRAR</p>
 </div>
 <div id="loading-screen">
-  <video id="bob-loading-video" class="loading-video" muted playsinline preload="auto">
+  <video id="bob-loading-video" class="loading-video" playsinline preload="auto">
     <source src="/assets/ui/bob-loading.mp4" type="video/mp4">
   </video>
   <div class="bob-loading-ui">

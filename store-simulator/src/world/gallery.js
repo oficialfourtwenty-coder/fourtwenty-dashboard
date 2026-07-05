@@ -16,9 +16,15 @@ const WALL_E = INTERIOR.x - 0.03;  // cara interna pared este
 // ---- Texturas dibujadas ----------------------------------------------------
 function css(color) { return `#${color.toString(16).padStart(6, '0')}`; }
 
+const garmentTextureCache = new Map();
+
 // Silueta de prenda: 'tee' | 'hoodie' | 'jersey'. Extras: number, monkeyFace.
 // (la usa también retail.js para la ropa de los percheros)
 export function garmentTexture(color, type, { number, monkeyFace } = {}) {
+  const cacheKey = `${color}:${type}:${number ?? ''}:${monkeyFace ? 1 : 0}`;
+  const cached = garmentTextureCache.get(cacheKey);
+  if (cached) return cached;
+
   const [c, ctx] = hiCanvas(96, 112, 4); // x4: siluetas suaves, nada pixelado
   const col = css(color);
   const dark = 'rgba(0,0,0,0.25)';
@@ -68,7 +74,9 @@ export function garmentTexture(color, type, { number, monkeyFace } = {}) {
     ctx.textAlign = 'center';
     ctx.fillText('FT', 48, 58);
   }
-  return smooth(new THREE.CanvasTexture(c));
+  const texture = smooth(new THREE.CanvasTexture(c));
+  garmentTextureCache.set(cacheKey, texture);
+  return texture;
 }
 
 function labelTexture(text, w, h, { title = false } = {}) {
