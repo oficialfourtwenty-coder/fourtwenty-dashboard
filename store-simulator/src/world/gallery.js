@@ -232,7 +232,9 @@ export function buildGallery(scene, collection) {
   g.add(sign);
 
   // Distribución de prendas según cantidad (local 12x9: pared útil z -3.5..1.5)
-  if (count === 1) {
+  if (count <= 0) {
+    // colección vacía a propósito: espera fotos reales antes de exhibir prendas.
+  } else if (count === 1) {
     // pieza única: se exhibe en el centro (lo arma el theme hiphop)
   } else if (count <= 6) {
     const z0 = -3, z1 = 1.5;

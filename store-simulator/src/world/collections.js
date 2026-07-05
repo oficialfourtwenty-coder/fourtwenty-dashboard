@@ -32,7 +32,7 @@ export const COLLECTIONS = [
   {
     piso: 4,
     name: 'BOB',
-    count: 42,
+    count: 0, // sin placeholders: se completa cuando subamos las fotos reales
     theme: 'bob',
     // paleta del mono: marrones, naranja, crema, verde gorra
     colors: [0x6b4a2f, 0xd96b2f, 0xe8dfc9, 0x1f4d2e, 0x3a2a1c],
