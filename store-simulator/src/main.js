@@ -157,13 +157,15 @@ const loadingDest = document.getElementById('loading-dest');
 const loadingTitleMain = document.getElementById('loading-title-main');
 const loadingTitleSub = document.getElementById('loading-title-sub');
 const loadingBarFill = document.getElementById('loading-bar-fill');
+const bobLoadingVideo = document.getElementById('bob-loading-video');
+const bobLoadingBarFill = document.getElementById('bob-loading-bar-fill');
 const loadingMessage = document.getElementById('loading-message');
 const shirtTip = document.getElementById('shirt-tip');
 
 // si el dueño sube public/assets/ui/bobilonia.jpg, se usa como fondo de carga
 const bgProbe = new Image();
 bgProbe.onload = () => {
-  if (!loadingEl.classList.contains('hoop-season')) {
+  if (!loadingEl.classList.contains('hoop-season') && !loadingEl.classList.contains('bob-collection')) {
     loadingEl.style.backgroundImage = `url(${bgProbe.src})`;
   }
 };
@@ -222,8 +224,15 @@ function startLoading(piso, label) {
   canvas.style.cursor = 'default';
 
   const isHoopSeason = piso === 3;
+  const isBobCollection = piso === 4;
   loadingEl.classList.toggle('hoop-season', isHoopSeason);
-  if (isHoopSeason) {
+  loadingEl.classList.toggle('bob-collection', isBobCollection);
+  bobLoadingVideo.pause();
+  bobLoadingBarFill.style.width = '0%';
+
+  if (isBobCollection) {
+    loadingEl.style.backgroundImage = '';
+  } else if (isHoopSeason) {
     loadingEl.style.backgroundImage = '';
     loadingDest.textContent = 'HOOP SEASON';
     loadingTitleMain.textContent = 'HOOP';
@@ -245,6 +254,11 @@ function startLoading(piso, label) {
 
   // el mundo se construye ya (la cuenta regresiva tapa el trabajo)
   const ready = buildShopping();
+  if (isBobCollection) {
+    playBobLoading(ready, piso);
+    return;
+  }
+
   const startedAt = performance.now();
   const durationMs = 3000;
 
@@ -262,6 +276,60 @@ function startLoading(piso, label) {
     loading = false;
   };
   requestAnimationFrame(tick);
+}
+
+function playBobLoading(ready, piso) {
+  let done = false;
+  let raf = 0;
+  let fallback = false;
+
+  const finish = () => {
+    if (done) return;
+    done = true;
+    cancelAnimationFrame(raf);
+    bobLoadingVideo.onended = null;
+    bobLoadingVideo.onerror = null;
+    bobLoadingBarFill.style.width = '100%';
+    bobLoadingVideo.pause();
+    enterShopping(ready, piso);
+    loadingEl.classList.remove('show');
+    loading = false;
+  };
+
+  const trackVideo = () => {
+    if (done || fallback) return;
+    const duration = Number.isFinite(bobLoadingVideo.duration) && bobLoadingVideo.duration > 0
+      ? bobLoadingVideo.duration
+      : 0;
+    const pct = duration ? Math.min(100, (bobLoadingVideo.currentTime / duration) * 100) : 0;
+    bobLoadingBarFill.style.width = `${pct}%`;
+    raf = requestAnimationFrame(trackVideo);
+  };
+
+  const fallbackTimed = () => {
+    if (done || fallback) return;
+    fallback = true;
+    const startedAt = performance.now();
+    const durationMs = 3000;
+    const tick = (now) => {
+      if (done) return;
+      const t = Math.min(1, (now - startedAt) / durationMs);
+      bobLoadingBarFill.style.width = `${Math.round(t * 100)}%`;
+      if (t < 1) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+      finish();
+    };
+    raf = requestAnimationFrame(tick);
+  };
+
+  bobLoadingVideo.onended = finish;
+  bobLoadingVideo.onerror = fallbackTimed;
+  try { bobLoadingVideo.currentTime = 0; } catch {}
+  const playPromise = bobLoadingVideo.play();
+  raf = requestAnimationFrame(trackVideo);
+  if (playPromise?.catch) playPromise.catch(fallbackTimed);
 }
 
 function buildShopping() {

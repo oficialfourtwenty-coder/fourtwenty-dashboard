@@ -69,6 +69,10 @@
     border: 1px solid rgba(255, 79, 0, 0.42);
     box-shadow: inset 0 0 0 1px rgba(0,0,0,0.55), 0 0 24px rgba(255,79,0,0.10);
   }
+  .loading-video,
+  .bob-loading-ui {
+    display: none;
+  }
   .loading-hud {
     position: relative; z-index: 1; width: 100%; min-height: 100%;
     box-sizing: border-box; padding: 34px 42px 28px;
@@ -157,6 +161,39 @@
       linear-gradient(0deg, rgba(0,0,0,0.58), rgba(0,0,0,0.08) 42%, rgba(0,0,0,0.72)),
       url('/assets/ui/hoop-season-loading.png');
   }
+  #loading-screen.bob-collection {
+    background: #030303;
+  }
+  #loading-screen.bob-collection::before,
+  #loading-screen.bob-collection::after,
+  #loading-screen.bob-collection .loading-hud {
+    display: none;
+  }
+  #loading-screen.bob-collection .loading-video {
+    display: block; position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; background: #030303;
+  }
+  #loading-screen.bob-collection .bob-loading-ui {
+    display: block; position: absolute; left: clamp(24px, 6vw, 96px);
+    right: clamp(24px, 6vw, 96px); bottom: clamp(20px, 4vh, 48px); z-index: 2;
+  }
+  .bob-loading-bar {
+    height: 9px; padding: 2px; box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,0.62);
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.20) 0 16px, transparent 16px 24px),
+      rgba(0,0,0,0.42);
+    box-shadow: 0 0 22px rgba(255,255,255,0.14);
+  }
+  #bob-loading-bar-fill {
+    width: 0%; height: 100%; background: rgba(245,245,238,0.92);
+    box-shadow: 0 0 18px rgba(255,255,255,0.38);
+    transition: width 70ms linear;
+  }
+  .bob-loading-caption {
+    margin-top: 9px; color: rgba(255,255,255,0.70); font-size: 11px;
+    letter-spacing: 4px; text-align: center;
+  }
   #loading-screen:not(.hoop-season) .loading-brand,
   #loading-screen:not(.hoop-season) .loading-420 {
     display: none;
@@ -201,6 +238,13 @@
   <p class="blink">CLICK PARA ENTRAR</p>
 </div>
 <div id="loading-screen">
+  <video id="bob-loading-video" class="loading-video" muted playsinline preload="auto">
+    <source src="/assets/ui/bob-loading.mp4" type="video/mp4">
+  </video>
+  <div class="bob-loading-ui">
+    <div class="bob-loading-bar"><div id="bob-loading-bar-fill"></div></div>
+    <div class="bob-loading-caption">Bobilonia</div>
+  </div>
   <div class="loading-hud">
     <div class="loading-top">
       <span>FOURTWENTY</span>
