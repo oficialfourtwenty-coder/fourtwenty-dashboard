@@ -16,6 +16,7 @@ import { buildStreet, SPAWN, isInsideLocal, streetSampleGround, STREET_BOUNDS, L
 import { buildBuilding, buildLights, getColliders, sampleGround as shopSampleGround, floorIndexAt, FLOOR_YS, FLOOR_H, INTERIOR } from './world/building.js';
 import { buildGallery } from './world/gallery.js';
 import { buildRetail } from './world/retail.js';
+import { addFurniture } from './world/furniture.js';
 import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
 import { tickAmbient } from './world/anim.js';
@@ -360,6 +361,7 @@ function buildShopping() {
   buildBuilding(s);
   buildLights(s, { shadows: QUALITY === 'high' && !downgraded });
   buildSignage(s);
+  addFurniture(s);
   const cols = [
     ...getColliders(),
     ...COLLECTIONS.flatMap((c) => buildGallery(s, c)),
