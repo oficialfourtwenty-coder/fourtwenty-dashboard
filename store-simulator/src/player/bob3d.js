@@ -90,6 +90,7 @@ export class Player {
     this.mixer = null;
     this.actions = {};          // { idle, move } acciones del GLB si existen
     this.model = null;
+    this.bones = null;          // huesos animables si el GLB viene riggeado sin clips
     this._isBillboard = false;
     this.sampleGround = sampleGround; // la escena activa puede reemplazarla
 
@@ -131,9 +132,63 @@ export class Player {
       this.actions.move.play();
       this.actions.move.weight = 0;
       console.info(`bob.glb: ${clips.length} clips (idle="${idle.name}", move="${move.name}")`);
+    } else if (this._setupBones(model)) {
+      // GLB riggeado pero SIN clips: animación programática sobre los huesos
+      // (respiración parado, brazos/piernas al caminar). Sutil y estable.
+      console.info('bob.glb riggeado sin clips — animación por huesos activada');
     } else {
-      console.info('bob.glb sin animation clips — animación procedural activada');
+      console.info('bob.glb sin clips ni huesos reconocibles — animación procedural');
     }
+  }
+
+  // Busca huesos con nombres reconocibles (spine/arm/leg, left/right) y guarda
+  // su pose de descanso. Si el rig no tiene nombres útiles → false y el juego
+  // sigue con la animación procedural de siempre (no se rompe nada).
+  _setupBones(model) {
+    const bones = [];
+    model.traverse((o) => { if (o.isBone) bones.push(o); });
+    if (!bones.length) return false;
+
+    const isLeft = (n) => /left|(^|[^a-z])l([^a-z]|$)|_l\b|\.l\b|l_/i.test(n);
+    const isRight = (n) => /right|(^|[^a-z])r([^a-z]|$)|_r\b|\.r\b|r_/i.test(n);
+    const pick = (re, side = null) => bones.find((b) => {
+      if (!re.test(b.name)) return false;
+      if (side === 'L') return isLeft(b.name) && !isRight(b.name);
+      if (side === 'R') return isRight(b.name) && !isLeft(b.name);
+      return true;
+    }) ?? null;
+
+    const found = {
+      spine: pick(/spine|chest|torso|body/i),
+      head: pick(/head|neck/i),
+      armL: pick(/shoulder|upper.?arm|arm/i, 'L'),
+      armR: pick(/shoulder|upper.?arm|arm/i, 'R'),
+      legL: pick(/thigh|up.?leg|upper.?leg|leg|hip(?!s)/i, 'L'),
+      legR: pick(/thigh|up.?leg|upper.?leg|leg|hip(?!s)/i, 'R'),
+    };
+    const parts = Object.values(found).filter(Boolean).length;
+    // alcanza con torso o un par de extremidades; si no, mejor no tocar nada
+    if (!(found.spine || (found.armL && found.armR) || (found.legL && found.legR))) {
+      console.info(`bob.glb: ${bones.length} huesos pero sin nombres reconocibles (${bones.slice(0, 6).map((b) => b.name).join(', ')}…)`);
+      return false;
+    }
+    for (const b of Object.values(found)) {
+      if (b) b.userData.restQ = b.quaternion.clone();
+    }
+    this.bones = found;
+    this._animTime = 0;
+    this._boneEuler = new THREE.Euler();
+    this._boneQ = new THREE.Quaternion();
+    console.info(`bob.glb: huesos animables ${parts}/6 →`, Object.entries(found).filter(([, v]) => v).map(([k, v]) => `${k}=${v.name}`).join(' · '));
+    return true;
+  }
+
+  // Rota un hueso sumando una rotación chica sobre su pose de descanso.
+  _poseBone(bone, rx, rz = 0) {
+    if (!bone) return;
+    this._boneEuler.set(rx, 0, rz);
+    this._boneQ.setFromEuler(this._boneEuler);
+    bone.quaternion.copy(bone.userData.restQ).multiply(this._boneQ);
   }
 
   // Círculo (radio RADIUS) vs AABB, con banda de altura — sin closures nuevas
@@ -210,6 +265,22 @@ export class Player {
       const bounce = Math.abs(Math.sin(this.walkPhase)) * 0.05 * Math.min(1, speed / WALK);
       this.model.position.y += (bounce - (this._lastBounce || 0));
       this._lastBounce = bounce;
+
+      // capa de HUESOS (si el rig lo permite): respiración parado + brazos y
+      // piernas al caminar. Amplitudes chicas a propósito: sutil y estable.
+      if (this.bones) {
+        this._animTime += dt;
+        const walkAmt = Math.min(1, speed / WALK);
+        const idleAmt = 1 - Math.min(1, speed / 1.2);
+        const swing = Math.sin(this.walkPhase) * walkAmt;
+        const breath = Math.sin(this._animTime * 2.2) * idleAmt;
+        this._poseBone(this.bones.legL, swing * 0.45);
+        this._poseBone(this.bones.legR, -swing * 0.45);
+        this._poseBone(this.bones.armL, -swing * 0.3 + breath * 0.03);
+        this._poseBone(this.bones.armR, swing * 0.3 + breath * 0.03);
+        this._poseBone(this.bones.spine, breath * 0.035 + walkAmt * 0.05);
+        this._poseBone(this.bones.head, -breath * 0.02 - walkAmt * 0.03);
+      }
       const lean = THREE.MathUtils.clamp(-yawRate * 0.025, -0.13, 0.13);
       const tilt = THREE.MathUtils.clamp(speed / RUN, 0, 1) * 0.06;
       this.model.rotation.z += (lean - this.model.rotation.z) * Math.min(1, 8 * dt);
