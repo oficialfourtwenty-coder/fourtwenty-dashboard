@@ -154,11 +154,19 @@ let loading = false;
 const loadingEl = document.getElementById('loading-screen');
 const loadingCount = document.getElementById('loading-count');
 const loadingDest = document.getElementById('loading-dest');
+const loadingTitleMain = document.getElementById('loading-title-main');
+const loadingTitleSub = document.getElementById('loading-title-sub');
+const loadingBarFill = document.getElementById('loading-bar-fill');
+const loadingMessage = document.getElementById('loading-message');
 const shirtTip = document.getElementById('shirt-tip');
 
 // si el dueño sube public/assets/ui/bobilonia.jpg, se usa como fondo de carga
 const bgProbe = new Image();
-bgProbe.onload = () => { loadingEl.style.backgroundImage = `url(${bgProbe.src})`; };
+bgProbe.onload = () => {
+  if (!loadingEl.classList.contains('hoop-season')) {
+    loadingEl.style.backgroundImage = `url(${bgProbe.src})`;
+  }
+};
 bgProbe.src = 'assets/ui/bobilonia.jpg';
 
 canvas.addEventListener('pointermove', (e) => {
@@ -212,20 +220,48 @@ function startLoading(piso, label) {
   loading = true;
   shirtTip.style.display = 'none';
   canvas.style.cursor = 'default';
-  loadingDest.textContent = label;
-  loadingCount.textContent = '3';
+
+  const isHoopSeason = piso === 3;
+  loadingEl.classList.toggle('hoop-season', isHoopSeason);
+  if (isHoopSeason) {
+    loadingEl.style.backgroundImage = '';
+    loadingDest.textContent = 'HOOP SEASON';
+    loadingTitleMain.textContent = 'HOOP';
+    loadingTitleSub.textContent = 'SEASON';
+    loadingMessage.innerHTML = 'SUBIENDO AL PISO DE <strong>"HOOP SEASON"</strong> PARA DISFRUTAR LA LINEA DEPORTIVA DE BASKET DE <strong>FOURTWENTY</strong>';
+  } else {
+    if (bgProbe.complete && bgProbe.naturalWidth > 0) {
+      loadingEl.style.backgroundImage = `url(${bgProbe.src})`;
+    }
+    loadingDest.textContent = label;
+    loadingTitleMain.textContent = 'BOBILONIA';
+    loadingTitleSub.textContent = '';
+    loadingMessage.textContent = `CARGANDO ${label}`;
+  }
+
+  loadingCount.textContent = '0%';
+  loadingBarFill.style.width = '0%';
   loadingEl.classList.add('show');
+
   // el mundo se construye ya (la cuenta regresiva tapa el trabajo)
   const ready = buildShopping();
-  let n = 3;
-  const tick = setInterval(() => {
-    n -= 1;
-    if (n > 0) { loadingCount.textContent = String(n); return; }
-    clearInterval(tick);
+  const startedAt = performance.now();
+  const durationMs = 3000;
+
+  const tick = (now) => {
+    const t = Math.min(1, (now - startedAt) / durationMs);
+    const pct = Math.round(t * 100);
+    loadingCount.textContent = `${pct}%`;
+    loadingBarFill.style.width = `${pct}%`;
+    if (t < 1) {
+      requestAnimationFrame(tick);
+      return;
+    }
     enterShopping(ready, piso);
     loadingEl.classList.remove('show');
     loading = false;
-  }, 1000);
+  };
+  requestAnimationFrame(tick);
 }
 
 function buildShopping() {

@@ -46,27 +46,138 @@
   #start-overlay p  { font-size: 12px; letter-spacing: 2px; margin: 0; color: #d4af37; }
   #start-overlay .blink { animation: blink 1.1s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
-  /* Pantalla de carga BOBILONIA (selector de colecciones del stock).
-     Si aparece public/assets/ui/bobilonia.jpg se usa como fondo automático. */
+  /* Pantalla de carga BOBILONIA (selector de colecciones del stock). */
   #loading-screen {
-    position: fixed; inset: 0; display: none; flex-direction: column;
-    align-items: center; justify-content: center; gap: 10px; z-index: 30;
-    background: radial-gradient(ellipse at center, #143020 0%, #0a1810 55%, #050c08 100%);
+    position: fixed; inset: 0; display: none; z-index: 30;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,0.82), rgba(0,0,0,0.34) 45%, rgba(0,0,0,0.72)),
+      radial-gradient(ellipse at center, #143020 0%, #0a1810 55%, #050c08 100%);
     background-size: cover; background-position: center;
-    color: #eafff0; font-family: 'Courier New', monospace; text-align: center;
+    color: #eafff0; font-family: 'Courier New', monospace; overflow: hidden;
   }
   #loading-screen.show { display: flex; }
-  #loading-screen h1 {
-    margin: 0; font-family: 'Arial Black', 'Arial', sans-serif; font-style: italic;
-    font-size: 56px; letter-spacing: 4px; color: #39ff6a;
+  #loading-screen::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.45;
+  }
+  #loading-screen::after {
+    content: ""; position: absolute; inset: 16px; pointer-events: none;
+    border: 1px solid rgba(255, 79, 0, 0.42);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.55), 0 0 24px rgba(255,79,0,0.10);
+  }
+  .loading-hud {
+    position: relative; z-index: 1; width: 100%; min-height: 100%;
+    box-sizing: border-box; padding: 34px 42px 28px;
+    display: grid; grid-template-rows: auto 1fr auto; gap: 20px;
+  }
+  .loading-top {
+    display: flex; justify-content: flex-end; align-items: center; gap: 18px;
+    color: rgba(255,255,255,0.86); font-size: 13px; letter-spacing: 2px;
+  }
+  .loading-top b { color: #ff4b00; font-weight: 900; }
+  .loading-top .slashes { color: #ff4b00; letter-spacing: 3px; font-weight: 900; }
+  .loading-main {
+    display: flex; flex-direction: column; justify-content: space-between;
+    align-items: flex-start; max-width: 58vw; padding-top: 8px;
+  }
+  .loading-title {
+    display: flex; flex-direction: column; gap: 2px;
+    font-family: Impact, 'Arial Black', 'Arial Narrow', sans-serif;
+    font-style: normal; line-height: 0.78; letter-spacing: 2px;
+    color: #ff4b00; text-transform: uppercase;
+    text-shadow: 4px 4px 0 #050505, 0 0 18px rgba(255,75,0,0.25);
+  }
+  #loading-title-main { font-size: clamp(84px, 18vw, 252px); }
+  #loading-title-sub {
+    font-size: clamp(42px, 8vw, 112px); color: rgba(255,255,255,0.92);
+    letter-spacing: clamp(10px, 2.7vw, 38px); margin-left: 6px;
+  }
+  .loading-brand {
+    margin-top: 24px; color: #ff4b00; font-size: 18px; font-weight: 900;
+    letter-spacing: 8px; text-transform: uppercase;
+  }
+  .loading-brand span {
+    display: block; margin-top: 7px; color: rgba(255,255,255,0.70);
+    font-size: 12px; font-weight: 400; letter-spacing: 6px;
+  }
+  .loading-progress {
+    width: min(720px, 58vw); margin-top: 34px;
+  }
+  .loading-progress .label {
+    color: rgba(255,255,255,0.82); font-size: 13px; letter-spacing: 9px;
+  }
+  #loading-count {
+    margin-top: 10px; font-family: Impact, 'Arial Black', sans-serif;
+    font-size: clamp(60px, 7vw, 104px); line-height: 0.9; color: #ff4b00;
+    text-shadow: 3px 3px 0 #050505, 0 0 18px rgba(255,75,0,0.42);
+  }
+  .loading-bar {
+    position: relative; margin-top: 14px; height: 24px; width: 100%;
+    border: 1px solid rgba(255, 75, 0, 0.75); background: rgba(0,0,0,0.64);
+    box-shadow: inset 0 0 12px rgba(0,0,0,0.85), 0 0 18px rgba(255,75,0,0.18);
+    overflow: hidden;
+  }
+  #loading-bar-fill {
+    position: absolute; inset: 3px auto 3px 3px; width: 0%;
+    background:
+      repeating-linear-gradient(120deg, #ff4b00 0 10px, #c33100 10px 14px, #ff6a1a 14px 22px);
+    box-shadow: 0 0 18px rgba(255, 75, 0, 0.72);
+    transition: width 80ms linear;
+  }
+  .loading-progress .micro {
+    margin-top: 11px; color: rgba(255,255,255,0.48); font-size: 11px; letter-spacing: 9px;
+  }
+  .loading-bottom {
+    position: relative; min-height: 86px; display: flex; align-items: center; gap: 22px;
+    padding: 18px 24px; border: 1px solid rgba(255,75,0,0.35);
+    background: rgba(3,3,4,0.76); box-shadow: 0 -8px 40px rgba(255,75,0,0.10);
+  }
+  #loading-message {
+    flex: 1; color: rgba(255,255,255,0.92); font-family: Impact, 'Arial Narrow', sans-serif;
+    font-size: clamp(18px, 2.2vw, 34px); font-style: italic; letter-spacing: 2px;
+    text-transform: uppercase; text-shadow: 2px 2px 0 #000;
+  }
+  #loading-message strong { color: #ff4b00; font-weight: 900; }
+  .loading-420 {
+    min-width: 140px; text-align: right; color: rgba(255,255,255,0.40);
+    font-family: Impact, 'Arial Black', sans-serif; font-size: 54px; line-height: 0.9;
+    text-shadow: 2px 2px 0 #000;
+  }
+  .loading-420 span {
+    display: block; margin-top: 8px; color: #ff4b00; font-family: 'Courier New', monospace;
+    font-size: 11px; letter-spacing: 3px;
+  }
+  #loading-screen.hoop-season {
+    background-image:
+      linear-gradient(90deg, rgba(0,0,0,0.83), rgba(0,0,0,0.22) 48%, rgba(0,0,0,0.74)),
+      linear-gradient(0deg, rgba(0,0,0,0.58), rgba(0,0,0,0.08) 42%, rgba(0,0,0,0.72)),
+      url('/assets/ui/hoop-season-loading.png');
+  }
+  #loading-screen:not(.hoop-season) .loading-brand,
+  #loading-screen:not(.hoop-season) .loading-420 {
+    display: none;
+  }
+  #loading-screen:not(.hoop-season) .loading-title {
+    color: #39ff6a;
     text-shadow: 0 0 22px #39ff6a66, 3px 3px 0 #000000cc;
   }
-  #loading-screen .dest { font-size: 14px; letter-spacing: 3px; color: #d4af37; }
-  #loading-count {
-    font-size: 84px; font-weight: bold; color: #f2e8c9; line-height: 1;
-    text-shadow: 3px 3px 0 #00000099;
+  #loading-screen:not(.hoop-season) #loading-title-main {
+    font-size: clamp(64px, 10vw, 136px);
   }
-  #loading-screen .tip { font-size: 11px; letter-spacing: 2px; color: #eafff088; }
+  #loading-screen:not(.hoop-season) #loading-title-sub {
+    display: none;
+  }
+  @media (max-width: 760px) {
+    .loading-hud { padding: 22px 18px 18px; }
+    .loading-main { max-width: 92vw; }
+    .loading-progress { width: 86vw; }
+    .loading-bottom { min-height: 74px; padding: 14px; }
+    .loading-420 { display: none; }
+  }
   #shirt-tip {
     position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%);
     padding: 6px 14px; border-radius: 6px; display: none; z-index: 20;
@@ -90,10 +201,32 @@
   <p class="blink">CLICK PARA ENTRAR</p>
 </div>
 <div id="loading-screen">
-  <h1>BOBILONIA</h1>
-  <div class="dest" id="loading-dest"></div>
-  <div id="loading-count">3</div>
-  <div class="tip">CARGANDO EL MUNDO FOURTWENTY…</div>
+  <div class="loading-hud">
+    <div class="loading-top">
+      <span>FOURTWENTY</span>
+      <b id="loading-dest">BOBILONIA</b>
+      <span class="slashes">///////</span>
+    </div>
+    <div class="loading-main">
+      <div>
+        <div class="loading-title">
+          <span id="loading-title-main">BOBILONIA</span>
+          <span id="loading-title-sub"></span>
+        </div>
+        <div class="loading-brand">FOURTWENTY<span>BASKET COLLECTION</span></div>
+      </div>
+      <div class="loading-progress">
+        <div class="label">LOADING</div>
+        <div id="loading-count">0%</div>
+        <div class="loading-bar"><div id="loading-bar-fill"></div></div>
+        <div class="micro">PREPARANDO LA EXPERIENCIA</div>
+      </div>
+    </div>
+    <div class="loading-bottom">
+      <div id="loading-message">CARGANDO EL MUNDO FOURTWENTY</div>
+      <div class="loading-420">420<span>BASKET CULTURE</span></div>
+    </div>
+  </div>
 </div>
 <div id="shirt-tip"></div>
 <script type="module" src="./src/main.js"></script>
