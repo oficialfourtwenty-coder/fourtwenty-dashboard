@@ -1,5 +1,5 @@
 const BASE_LAYOUT_URL = '/assets/layouts/furniture-layout.json';
-const LOCAL_STORAGE_KEY = 'fourtwenty-editor-layout';
+const LOCAL_STORAGE_KEY = 'fourtwenty-editor-layout-burela-retro';
 
 function isLayout(value) {
   return Array.isArray(value);
@@ -46,9 +46,9 @@ export function getLocalLayout() {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!raw) return null;
-    return parseLayoutJSON(raw, 'fourtwenty-editor-layout localStorage');
+    return parseLayoutJSON(raw, `${LOCAL_STORAGE_KEY} localStorage`);
   } catch (error) {
-    console.warn('No se pudo leer fourtwenty-editor-layout desde localStorage.', error);
+    console.warn(`No se pudo leer ${LOCAL_STORAGE_KEY} desde localStorage.`, error);
     return null;
   }
 }
@@ -62,7 +62,7 @@ export async function loadInitialLayout() {
 export function saveLocalLayout(layout) {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, formatLayoutJSON(layout));
-    console.info('FOURTWENTY editor: layout guardado en localStorage. Para fijarlo en repo, exporta el JSON y reemplaza public/assets/layouts/furniture-layout.json.');
+    console.info(`FOURTWENTY editor: layout guardado en ${LOCAL_STORAGE_KEY}. Para fijarlo en repo, exporta el JSON y reemplaza public/assets/layouts/furniture-layout.json.`);
     return true;
   } catch (error) {
     console.warn('No se pudo guardar el layout en localStorage.', error);

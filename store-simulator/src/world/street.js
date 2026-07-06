@@ -161,18 +161,6 @@ function cannabisPlant(scene, x, z, y = 0) {
   g.position.set(x, y, z); scene.add(g);
 }
 
-// Torre de fondo: volumen ÚNICO con su propia textura de fachada a escala
-// (bandas ladrillo/crema sin estirar). Separadas entre sí dejan cielo en medio,
-// así el fondo NO se ve como una tira repetida. Solo decoración (sin colisión).
-function towerBlock(scene, x, z, w, d, h, baseY) {
-  const rx = Math.max(2, Math.round(w / 2.4));
-  const ry = Math.max(4, Math.round(h / 2.4));
-  const m = new THREE.MeshStandardMaterial({ map: towerFacade(rx, ry), roughness: 0.9 });
-  const t = box(w, h, d, x, baseY + h / 2, z, m);
-  t.castShadow = true;
-  scene.add(t);
-}
-
 // ---- Construcción principal -------------------------------------------------
 export function buildStreet(scene) {
   const colliders = [];
@@ -186,6 +174,7 @@ export function buildStreet(scene) {
   const shutterMat = new THREE.MeshStandardMaterial({ map: greenShutter(2, 1), roughness: 0.6, metalness: 0.3 });
   const inglesMat = mat(INGLES, 0.5, 0.4);
   const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x2a3a42, roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.4 });
+  const towerMat = new THREE.MeshStandardMaterial({ map: towerFacade(8, 6), roughness: 0.9 });
 
   // ---- Suelos --------------------------------------------------------------
   // calzada (adoquín oscuro), cordón, vereda gris, plaza hexagonal
@@ -249,13 +238,18 @@ export function buildStreet(scene) {
   // ---- Interior del local (elevado a PLAT, sin muebles) --------------------
   const selectors = buildLocalInterior(scene, g, colliders);
 
-  // ---- Torres de fondo: volúmenes SEPARADOS (no una tira repetida) ----------
-  // Suben desde la línea del alero, set-back en Z, con cielo entre ellas.
+  // ---- Fondo visual viejo: edificios paralelos a la calle ------------------
+  // Recupera la version donde el fondo se leia como una tira de edificios de
+  // enfrente, paralela al local/calle. Es decorativo, sin colision.
   const baseY = facadeTop + ALERO_T;
-  towerBlock(scene, 0, -11, 15, 12, 30, baseY);    // Torre 1 (la del local)
-  towerBlock(scene, -20, -15, 13, 11, 26, baseY);  // vecina izquierda (más atrás)
-  towerBlock(scene, 21, -14, 13, 11, 28, baseY);   // vecina derecha
-  towerBlock(scene, 5, -26, 16, 10, 34, 0);        // torre lejana de fondo
+  const rearStrip = box(FRENTE * 2 + 2, 24, 0.5, 0, baseY + 12, Z_FACADE - 0.5, towerMat);
+  const rearLeft = box(10, 20, 0.5, -FRENTE - 3, facadeTop + 10, Z_FACADE + 2, towerMat);
+  const rearRight = box(10, 20, 0.5, FRENTE + 3, facadeTop + 10, Z_FACADE + 2, towerMat);
+  for (const b of [rearStrip, rearLeft, rearRight]) {
+    b.castShadow = true;
+    b.receiveShadow = true;
+    scene.add(b);
+  }
 
   // reja verde mínima a un costado (el lado derecho completo va en Pass C)
   for (let x = FRENTE - 1; x <= FRENTE + 2; x += 0.4) {
