@@ -1,12 +1,18 @@
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { createEditorPanel } from './editorPanel.js';
 import {
   applyLayout,
+  duplicateEditable,
   findEditableRoot,
   getEditableById,
   getEditableObjects,
+  getParentEditableId,
+  isObjectInScene,
+  removeEditable,
   serializeEditableObjects,
+  setEditableVisible,
 } from './editableRegistry.js';
 import {
   clearLocalLayout,
@@ -40,7 +46,7 @@ function serializeCurrentLayout() {
   return serializeEditableObjects();
 }
 
-export function initWorldEditor({ scene, camera, renderer, input } = {}) {
+export function initWorldEditor({ scene, camera, renderer, input, player } = {}) {
   const params = new URLSearchParams(location.search);
   const allowed = import.meta.env.DEV || params.get('editor') === '1';
   if (!allowed) return noopEditor();
@@ -52,6 +58,8 @@ export function initWorldEditor({ scene, camera, renderer, input } = {}) {
   let currentScene = scene;
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
+  const orbitDir = new THREE.Vector3();
+  let clipboardId = null; // Ctrl+C guarda el id del objeto; Ctrl+V lo pega
   const state = {
     enabled: false,
     selectedId: null,
@@ -64,11 +72,19 @@ export function initWorldEditor({ scene, camera, renderer, input } = {}) {
   const transformControls = new TransformControls(camera, renderer.domElement);
   const transformHelper = transformControls.getHelper();
   transformHelper.visible = false;
+  transformHelper.userData.editorHelper = true; // que el auto-registro los ignore
   currentScene.add(transformHelper);
 
   const boxHelper = new THREE.BoxHelper(new THREE.Object3D(), 0xff6d18);
   boxHelper.visible = false;
+  boxHelper.userData.editorHelper = true;
   currentScene.add(boxHelper);
+
+  // Cámara libre en modo editor (la cámara del juego queda pausada): órbita
+  // con click izquierdo, pan con click derecho, zoom con rueda.
+  const orbit = new OrbitControls(camera, renderer.domElement);
+  orbit.enabled = false;
+  orbit.maxDistance = 80;
 
   let saveTimer = 0;
   const panel = createEditorPanel({
@@ -84,11 +100,28 @@ export function initWorldEditor({ scene, camera, renderer, input } = {}) {
     onReset: resetFromFile,
     onClear: clearLocal,
     onImportFile: importJSONFile,
+    onDuplicate: duplicateSelected,
+    onDelete: deleteSelected,
+    onSelectParent: selectParent,
+    onToggleVisible: toggleSelectedVisible,
   });
+
+  function isInCurrentScene(object) {
+    return isObjectInScene(object, currentScene);
+  }
 
   function refreshPanel() {
     panel.setState(state);
-    panel.setObjects(getEditableObjects(), state.selectedId);
+    // la lista muestra solo la escena activa (calle o BOBILONIA)
+    panel.setObjects(
+      getEditableObjects().filter((entry) => entry.object3D && isInCurrentScene(entry.object3D)),
+      state.selectedId,
+    );
+    panel.setSelected(state.selectedId ? getEditableById(state.selectedId) : null);
+  }
+
+  // refresco liviano (mientras se arrastra el gizmo): no reconstruye la lista
+  function refreshSelected() {
     panel.setSelected(state.selectedId ? getEditableById(state.selectedId) : null);
   }
 
@@ -113,10 +146,21 @@ export function initWorldEditor({ scene, camera, renderer, input } = {}) {
     if (enabled) {
       document.exitPointerLock?.();
       renderer.domElement.style.cursor = 'default';
+      // órbita centrada en BOB (o en lo que mira la cámara si no hay player)
+      if (player?.position) {
+        orbit.target.copy(player.position);
+        orbit.target.y += 1;
+      } else {
+        camera.getWorldDirection(orbitDir);
+        orbit.target.copy(camera.position).addScaledVector(orbitDir, 4);
+      }
+      orbit.enabled = true;
+      orbit.update();
       panel.show();
-      setStatus('Edit Mode activo.');
+      setStatus('Edit Mode activo. Click izq: orbitar / seleccionar · click der: pan · rueda: zoom.');
     } else {
       deselect();
+      orbit.enabled = false;
       panel.hide();
       setStatus('');
     }
@@ -266,6 +310,69 @@ export function initWorldEditor({ scene, camera, renderer, input } = {}) {
     }
   }
 
+  // ---- copiar / pegar / duplicar / borrar / jerarquía -----------------------
+
+  function copySelected() {
+    if (!state.selectedId) {
+      setStatus('Selecciona un objeto para copiar (o usa el boton Copy JSON).');
+      return;
+    }
+    clipboardId = state.selectedId;
+    setStatus(`Copiado: ${getEditableById(clipboardId)?.name ?? clipboardId}. Ctrl+V pega.`);
+  }
+
+  function pasteClipboard() {
+    if (!clipboardId || !getEditableById(clipboardId)) {
+      setStatus('Nada copiado: Ctrl+C sobre un objeto primero.');
+      return;
+    }
+    const entry = duplicateEditable(clipboardId);
+    if (!entry) {
+      setStatus('No se pudo pegar ese objeto.');
+      return;
+    }
+    selectId(entry.id);
+    saveNow(`Pegado: ${entry.name}.`);
+  }
+
+  function duplicateSelected() {
+    if (!state.selectedId) {
+      setStatus('Selecciona un objeto para duplicar.');
+      return;
+    }
+    const entry = duplicateEditable(state.selectedId);
+    if (!entry) {
+      setStatus('No se pudo duplicar ese objeto.');
+      return;
+    }
+    selectId(entry.id);
+    saveNow(`Duplicado: ${entry.name}.`);
+  }
+
+  function deleteSelected() {
+    if (!state.selectedId) return;
+    const entry = getEditableById(state.selectedId);
+    const result = removeEditable(state.selectedId);
+    deselect();
+    if (result === 'removed') saveNow(`${entry.name} borrado.`);
+    else if (result === 'hidden') saveNow(`${entry.name} oculto (en la lista podes volver a mostrarlo).`);
+  }
+
+  function toggleSelectedVisible() {
+    if (!state.selectedId) return;
+    const entry = getEditableById(state.selectedId);
+    const visible = setEditableVisible(state.selectedId, entry.visible === false);
+    updateHelper();
+    saveNow(visible ? `${entry.name} visible.` : `${entry.name} oculto.`);
+  }
+
+  function selectParent() {
+    if (!state.selectedId) return;
+    const parentId = getParentEditableId(state.selectedId);
+    if (parentId) selectId(parentId);
+    else setStatus('Ese objeto no tiene grupo padre editable.');
+  }
+
   function onPointerDown(event) {
     if (!state.enabled) return;
     if (transformControls.dragging || transformControls.axis) return;
@@ -279,8 +386,9 @@ export function initWorldEditor({ scene, camera, renderer, input } = {}) {
     );
 
     const roots = getEditableObjects()
-      .filter((entry) => entry.visible !== false && entry.object3D?.visible !== false)
+      .filter((entry) => entry.visible !== false && entry.object3D?.visible !== false && isInCurrentScene(entry.object3D))
       .map((entry) => entry.object3D);
+    raycaster.setFromCamera(pointer, camera);
 
     // Performance: raycast only on editor clicks and only against registered editable roots.
     const hit = raycaster.intersectObjects(roots, true)[0]?.object;
@@ -295,7 +403,8 @@ export function initWorldEditor({ scene, camera, renderer, input } = {}) {
 
   function onKeyDown(event) {
     const typing = isTypingTarget(event.target);
-    if (event.code === 'Tab' && !typing) {
+    // T (pedido del dueño) o Tab: entrar/salir del modo editor
+    if ((event.code === 'KeyT' || event.code === 'Tab') && !typing && !event.metaKey && !event.ctrlKey) {
       event.preventDefault();
       event.stopPropagation();
       toggleEnabled();
@@ -311,13 +420,23 @@ export function initWorldEditor({ scene, camera, renderer, input } = {}) {
       } else if (event.code === 'KeyC' && !typing) {
         event.preventDefault();
         event.stopPropagation();
-        copyJSON();
+        // con objeto seleccionado copia el objeto; sin selección copia el JSON
+        if (state.selectedId) copySelected();
+        else copyJSON();
+      } else if (event.code === 'KeyV' && !typing) {
+        event.preventDefault();
+        event.stopPropagation();
+        pasteClipboard();
+      } else if (event.code === 'KeyD' && !typing) {
+        event.preventDefault();
+        event.stopPropagation();
+        duplicateSelected();
       }
       return;
     }
 
     if (typing) return;
-    const handled = ['Escape', 'Digit1', 'Digit2', 'Digit3', 'KeyQ', 'KeyG', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyE', 'ShiftLeft', 'ShiftRight'].includes(event.code);
+    const handled = ['Escape', 'Digit1', 'Digit2', 'Digit3', 'KeyQ', 'KeyG', 'KeyP', 'Delete', 'Backspace', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyE', 'ShiftLeft', 'ShiftRight'].includes(event.code);
     if (handled) {
       event.preventDefault();
       event.stopPropagation();
@@ -328,15 +447,19 @@ export function initWorldEditor({ scene, camera, renderer, input } = {}) {
     if (event.code === 'Digit3') setMode('scale');
     if (event.code === 'KeyQ') toggleSpace();
     if (event.code === 'KeyG') toggleSnap();
+    if (event.code === 'KeyP') selectParent();
+    if (event.code === 'Delete' || event.code === 'Backspace') deleteSelected();
   }
 
   transformControls.addEventListener('dragging-changed', (event) => {
     input?.keys?.clear?.();
+    // mientras se arrastra el gizmo, la órbita no debe pelear por el mouse
+    orbit.enabled = state.enabled && !event.value;
     if (!event.value && state.selectedObject) saveNow('Layout local guardado.');
   });
   transformControls.addEventListener('objectChange', () => {
     updateHelper();
-    refreshPanel();
+    refreshSelected(); // liviano: no reconstruye la lista en cada frame de drag
     scheduleSave();
   });
 
@@ -345,7 +468,7 @@ export function initWorldEditor({ scene, camera, renderer, input } = {}) {
   window.addEventListener('fourtwenty:editable-registry-change', refreshPanel);
 
   refreshPanel();
-  console.info('FOURTWENTY World Editor listo. Tab activa/desactiva el modo editor en desarrollo; en build usar ?editor=1.');
+  console.info('FOURTWENTY World Editor listo. T (o Tab) activa/desactiva el modo editor; en build usar ?editor=1.');
 
   return {
     isEnabled: () => state.enabled,
@@ -358,6 +481,7 @@ export function initWorldEditor({ scene, camera, renderer, input } = {}) {
       window.removeEventListener('fourtwenty:editable-registry-change', refreshPanel);
       transformControls.detach();
       transformControls.dispose?.();
+      orbit.dispose();
       transformHelper.parent?.remove(transformHelper);
       boxHelper.parent?.remove(boxHelper);
       panel.dispose();

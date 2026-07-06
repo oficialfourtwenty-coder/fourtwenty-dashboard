@@ -40,7 +40,7 @@ function injectStyles() {
       border: 1px solid rgba(255,255,255,0.16); font: inherit;
     }
     #${PANEL_ID} input:focus { outline: 1px solid #ff6d18; border-color: #ff6d18; }
-    #${PANEL_ID} .we-object-list { display: grid; gap: 5px; max-height: 138px; overflow: auto; }
+    #${PANEL_ID} .we-object-list { display: grid; gap: 5px; max-height: 200px; overflow: auto; margin-top: 6px; }
     #${PANEL_ID} .we-object {
       width: 100%; text-align: left; text-transform: none; letter-spacing: 0;
       display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -80,7 +80,8 @@ export function createEditorPanel(callbacks = {}) {
   root.innerHTML = `
     <div class="we-head">
       <div class="we-title">FOURTWENTY WORLD EDITOR</div>
-      <div class="we-sub">Tab ON/OFF · 1 move · 2 rotate · 3 scale · Q space · G snap</div>
+      <div class="we-sub">T/Tab ON-OFF · 1 move · 2 rotate · 3 scale · Q space · G snap<br>
+      Ctrl+C copiar · Ctrl+V pegar · Ctrl+D duplicar · Supr borrar · P grupo padre</div>
     </div>
     <div class="we-body">
       <div class="we-row"><span>Estado</span><span class="we-pill" data-field="enabled">OFF</span></div>
@@ -91,7 +92,8 @@ export function createEditorPanel(callbacks = {}) {
       <div class="we-selected" data-field="selected">Sin objeto seleccionado</div>
 
       <div class="we-section">
-        <div class="we-label">Objects</div>
+        <div class="we-label">Objects <span data-field="objectCount"></span></div>
+        <input type="text" data-field="filter" placeholder="filtrar por nombre o id…" autocomplete="off" spellcheck="false">
         <div class="we-object-list" data-field="objectList"></div>
       </div>
 
@@ -104,6 +106,10 @@ export function createEditorPanel(callbacks = {}) {
           ${button('World/Local', 'space')}
           ${button('Snap', 'snap')}
           ${button('Deselect', 'deselect')}
+          ${button('Duplicate', 'duplicate')}
+          ${button('Delete', 'delete')}
+          ${button('Parent', 'parent')}
+          ${button('Show/Hide', 'visible')}
         </div>
       </div>
 
@@ -149,9 +155,34 @@ export function createEditorPanel(callbacks = {}) {
     snapping: root.querySelector('[data-field="snapping"]'),
     selected: root.querySelector('[data-field="selected"]'),
     objectList: root.querySelector('[data-field="objectList"]'),
+    objectCount: root.querySelector('[data-field="objectCount"]'),
+    filter: root.querySelector('[data-field="filter"]'),
     status: root.querySelector('[data-field="status"]'),
     fileInput: root.querySelector('[data-field="fileInput"]'),
   };
+
+  // lista con filtro: con TODO el mundo registrado son cientos de objetos
+  const MAX_LIST = 400;
+  let lastObjects = [];
+  let lastSelectedId = null;
+
+  function renderObjectList() {
+    const text = fields.filter.value.trim().toLowerCase();
+    const filtered = text
+      ? lastObjects.filter((obj) => `${obj.name} ${obj.id} ${obj.type}`.toLowerCase().includes(text))
+      : lastObjects;
+    fields.objectCount.textContent = `(${filtered.length}/${lastObjects.length})`;
+    const shown = filtered.slice(0, MAX_LIST);
+    fields.objectList.innerHTML = shown.length
+      ? shown.map((obj) => `
+        <button type="button" class="we-object ${obj.id === lastSelectedId ? 'is-active' : ''}" data-object-id="${obj.id}">
+          ${obj.name}${obj.visible === false || obj.object3D?.visible === false ? ' · <small>OCULTO</small>' : ''}<br><small>${obj.id} · ${obj.type}</small>
+        </button>
+      `).join('') + (filtered.length > MAX_LIST ? `<div class="we-status">…y ${filtered.length - MAX_LIST} más (usá el filtro)</div>` : '')
+      : '<div class="we-status">No hay objetos editables cargados.</div>';
+  }
+
+  fields.filter.addEventListener('input', renderObjectList);
 
   root.addEventListener('click', (event) => {
     const objectButton = event.target.closest('[data-object-id]');
@@ -167,6 +198,10 @@ export function createEditorPanel(callbacks = {}) {
     else if (action === 'space') callbacks.onToggleSpace?.();
     else if (action === 'snap') callbacks.onToggleSnap?.();
     else if (action === 'deselect') callbacks.onDeselect?.();
+    else if (action === 'duplicate') callbacks.onDuplicate?.();
+    else if (action === 'delete') callbacks.onDelete?.();
+    else if (action === 'parent') callbacks.onSelectParent?.();
+    else if (action === 'visible') callbacks.onToggleVisible?.();
     else if (action === 'save') callbacks.onSave?.();
     else if (action === 'copy') callbacks.onCopy?.();
     else if (action === 'download') callbacks.onDownload?.();
@@ -207,13 +242,9 @@ export function createEditorPanel(callbacks = {}) {
       setButtons(state);
     },
     setObjects(objects, selectedId) {
-      fields.objectList.innerHTML = objects.length
-        ? objects.map((obj) => `
-          <button type="button" class="we-object ${obj.id === selectedId ? 'is-active' : ''}" data-object-id="${obj.id}">
-            ${obj.name}<br><small>${obj.id} · ${obj.type}</small>
-          </button>
-        `).join('')
-        : '<div class="we-status">No hay objetos editables cargados.</div>';
+      lastObjects = objects;
+      lastSelectedId = selectedId;
+      renderObjectList();
     },
     setSelected(entry) {
       if (!entry) {

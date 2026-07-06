@@ -18,6 +18,8 @@ import { buildGallery } from './world/gallery.js';
 import { buildRetail } from './world/retail.js';
 import { addFurniture } from './world/furniture.js';
 import { initWorldEditor } from './world/editor/worldEditor.js';
+import { autoRegisterScene, applyLayout, restoreClones } from './world/editor/editableRegistry.js';
+import { loadInitialLayout } from './world/editor/layoutStore.js';
 import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
 import { tickAmbient } from './world/anim.js';
@@ -149,6 +151,16 @@ hud.onStart(() => hud.showOverlay(false));
 window.__bob = bob; // hooks de debug/testeo
 window.__cam = tpCam;
 window.__worldEditor = worldEditor;
+window.__startLoading = (piso, label) => startLoading(piso, label ?? `PISO ${piso}`);
+
+// EDITOR: todo lo que hay en la calle queda registrado como editable (tecla T).
+// Si el dueño ya movió/ocultó/duplicó cosas (localStorage o layout base), se
+// re-aplica acá. Los muebles GLB se registran solos en addFurniture.
+autoRegisterScene(scene, { prefix: 'calle', skip: [bob.rig, bob.shadow] });
+loadInitialLayout().then((layout) => {
+  applyLayout(layout);
+  restoreClones(layout);
+});
 
 // ---- Selector de colecciones (remeras del stock): hover + click + E --------
 const raycaster = new THREE.Raycaster();
@@ -379,6 +391,13 @@ function buildShopping() {
     ...COLLECTIONS.flatMap((c) => buildGallery(s, c)),
     ...buildRetail(s),
   ];
+  // EDITOR: BOBILONIA entera también es editable; se re-aplica lo guardado.
+  // OJO: los colliders son cajas fijas, mover una pared no mueve su colisión.
+  autoRegisterScene(s, { prefix: 'bobilonia' });
+  loadInitialLayout().then((layout) => {
+    applyLayout(layout);
+    restoreClones(layout);
+  });
   return { scene: s, colliders: cols };
 }
 

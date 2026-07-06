@@ -160,6 +160,20 @@ world/retail.js       mobiliario retail de los 5 pisos (patrón aprobado por el 
                       probador con cortina, caja con posnet, espejos, carteles físicos
                       y rieles de luz. Props repetidos via InstancedMesh (un mesh por
                       tipo para todo el edificio). Cada piso respeta su colección.
+world/editor/         ⭐ WORLD EDITOR interno (tecla T o Tab; en build ?editor=1):
+                      worldEditor.js (gizmo TransformControls + órbita libre de cámara +
+                      atajos), editableRegistry.js (registro de TODO el mundo: auto-registro
+                      recursivo con ids determinísticos calle:N.N / bobilonia:N.N, duplicar,
+                      borrar/ocultar, clones persistentes), editorPanel.js (panel DOM con
+                      lista + filtro + inputs XYZ), layoutStore.js (localStorage +
+                      public/assets/layouts/furniture-layout.json como base del repo).
+                      Atajos: T/Tab editor · click o lista selecciona · 1/2/3 mover/rotar/
+                      escalar (escala por eje = estirar) · Q world/local · G snap ·
+                      Ctrl+C/V copiar-pegar objeto · Ctrl+D duplicar · Supr borrar (originales
+                      se OCULTAN, copias se borran) · P selecciona el grupo padre · Esc
+                      deselecciona · Ctrl+S guardar. En modo editor la cámara es libre
+                      (orbitar/pan/zoom con mouse) y BOB queda pausado. ⚠️ Los colliders son
+                      cajas fijas: mover una pared con el editor NO mueve su colisión.
 player/bob3d.js       jugador ACTIVO: GLB + física GTA (aceleración, giro suave) + sombra blob
 player/bob.js         backup sprite 2D — NO TOCAR NI BORRAR
 ui/hud.js             HUD retro: título, indicador de piso, ayuda de controles
