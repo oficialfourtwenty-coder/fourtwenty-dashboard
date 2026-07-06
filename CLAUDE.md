@@ -179,7 +179,12 @@ world/editor/         ⭐ WORLD EDITOR interno (tecla T o Tab; en build ?editor=
                       teletransportar/escalar/rotar en vivo pero NUNCA queda en el
                       layout (el spawn no se rompe); duplicarlo crea una estatua que
                       sí persiste. ⚠️ Los colliders son cajas fijas: mover una pared
-                      con el editor NO mueve su colisión.
+                      con el editor NO mueve su colisión. Excepción: los objetos BAJOS
+                      (alto propio ≤ 0.42m, sin importar cómo estén rotados/inclinados)
+                      son "escalones" — no bloquean, se pisan, y su altura real se mide
+                      con un raycast que sí sigue su rotación (main.js: STEP_MAX_HEIGHT,
+                      sampleStepHeight). Así, un escalón/rampa duplicado con el editor y
+                      rotado en diagonal o inclinado sigue siendo subible.
 player/bob3d.js       jugador ACTIVO: GLB + física GTA (aceleración, giro suave) + sombra blob
 player/bob.js         backup sprite 2D — NO TOCAR NI BORRAR
 ui/hud.js             HUD retro: título, indicador de piso, ayuda de controles

@@ -56,6 +56,58 @@ const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 140);
 const editableColliderBox = new THREE.Box3();
 const editableColliderSize = new THREE.Vector3();
 const streetRuntimeColliders = [];
+const streetRuntimeSteppables = [];
+
+// ---- Step-offset genérico (consciente de rotación) -------------------------
+// Un objeto "pared" bloquea con una caja alineada a los ejes del mundo — eso
+// rompe apenas se lo inclina/rota: la caja se agranda con la inclinación y un
+// escalón fino pasa a leerse como pared sólida (ver STEP_MAX_HEIGHT abajo).
+// En vez de eso, los objetos lo bastante bajos EN SU PROPIO EJE (sin importar
+// cómo estén rotados en el editor) no bloquean: se pisan, y su altura real se
+// mide con un raycast vertical contra la malla — el raycast ya respeta la
+// rotación/escala completas del objeto, así que un escalón/rampa rotado o
+// inclinado se sube igual que uno derecho, sin necesidad de tagear cada caso.
+const STEP_MAX_HEIGHT = 0.42;  // alto local máx. para contar como "escalón" (no pared)
+const STEP_UP_ALLOWANCE = 0.5; // cuánto puede subir BOB de golpe sobre un escalón
+const localHeightCache = new WeakMap();
+const stepRaycaster = new THREE.Raycaster();
+const stepOrigin = new THREE.Vector3();
+const STEP_DOWN = new THREE.Vector3(0, -1, 0);
+
+function localHeightOf(object) {
+  if (localHeightCache.has(object)) return localHeightCache.get(object);
+  // Mesh simple con geometría propia (el patrón de TODO el kit vía gfxUtils.box()):
+  // geometry.boundingBox ya está en espacio LOCAL, sin la rotación/posición del
+  // objeto — por eso da el alto real del objeto, no el de su sombra en el mundo.
+  let height = Infinity; // grupos: no sabemos su forma local sin recorrer hijos;
+  if (object.isMesh && object.geometry) {                    // se los deja como pared (comportamiento previo, sin cambios).
+    if (!object.geometry.boundingBox) object.geometry.computeBoundingBox();
+    const bb = object.geometry.boundingBox;
+    height = (bb.max.y - bb.min.y) * object.scale.y;
+  }
+  localHeightCache.set(object, height);
+  return height;
+}
+
+function isSteppable(object) {
+  return object.userData?.walkStep === true || localHeightOf(object) <= STEP_MAX_HEIGHT;
+}
+
+// Altura de piso agregada de los "escalones" bajo (x,z): el más alto que esté
+// a una subida razonable de donde está parado BOB ahora mismo.
+function sampleStepHeight(x, z, footY, steppables) {
+  let best = -Infinity;
+  stepOrigin.set(x, footY + 3, z);
+  stepRaycaster.set(stepOrigin, STEP_DOWN);
+  stepRaycaster.far = 6;
+  for (const object of steppables) {
+    const hits = stepRaycaster.intersectObject(object, false);
+    if (!hits.length) continue;
+    const y = hits[0].point.y;
+    if (y > best && y <= footY + STEP_UP_ALLOWANCE) best = y;
+  }
+  return best;
+}
 
 // ---- Post-processing (bloom sutil + grade cálido + viñeta, estilo GTA V) ----
 const GradeShader = {
@@ -139,7 +191,7 @@ let colliders = streetColliders;
 let world = 'street'; // 'street' | 'shopping'
 
 const bob = new Player(scene, SPAWN);
-bob.sampleGround = streetSampleGround; // la calle tiene escalones (no pisos)
+bob.sampleGround = streetSampleGroundWithSteps; // rampa fija + escalones editables (rotados o no)
 bob.modelYaw = Math.PI; // BOB arranca mirando hacia el local (-z)
 const tpCam = new ThirdPersonCamera(camera, STREET_BOUNDS);
 tpCam.yaw = 0;          // cámara detrás de él (del lado de la calle)
@@ -176,20 +228,30 @@ loadInitialLayout().then((layout) => {
   restoreClones(layout);
 });
 
-function appendEditableColliders(target) {
+function appendEditableColliders(targetColliders, targetSteppables) {
   for (const entry of getEditableObjects()) {
     const object = entry.object3D;
     if (!object || entry.transient || entry.visible === false || object.visible === false) continue;
     if (!entry.id.startsWith('calle-kit:') && entry.type !== 'furniture') continue;
-    if (object.userData?.editorCollider !== true && entry.type !== 'furniture') continue;
+    const wantsCollider = object.userData?.editorCollider === true || entry.type === 'furniture';
+    if (!wantsCollider && object.userData?.walkStep !== true) continue;
 
     object.updateWorldMatrix(true, true);
+
+    // Bajo (en SU propio eje) → escalón: se pisa, no bloquea. Se mide con
+    // raycast (ver sampleStepHeight), así que rotarlo/inclinarlo en el editor
+    // no lo convierte en pared — sigue siendo subible igual que derecho.
+    if (isSteppable(object)) {
+      targetSteppables.push(object);
+      continue;
+    }
+
     editableColliderBox.setFromObject(object);
     if (editableColliderBox.isEmpty()) continue;
     editableColliderBox.getSize(editableColliderSize);
     if (editableColliderSize.y < 0.2) continue;
 
-    target.push({
+    targetColliders.push({
       minX: editableColliderBox.min.x,
       maxX: editableColliderBox.max.x,
       minY: editableColliderBox.min.y,
@@ -204,8 +266,20 @@ function currentPlayerColliders() {
   if (world !== 'street') return colliders;
   streetRuntimeColliders.length = 0;
   streetRuntimeColliders.push(...streetColliders);
-  appendEditableColliders(streetRuntimeColliders);
+  streetRuntimeSteppables.length = 0;
+  appendEditableColliders(streetRuntimeColliders, streetRuntimeSteppables);
   return streetRuntimeColliders;
+}
+
+// Rampa fija de la entrada (streetSampleGround) + lo más alto que haya bajo
+// los pies entre los escalones/rampas editables (rotados o no). Math.max no
+// pisa nada de lo que ya funcionaba: solo suma altura cuando hay un escalón
+// real debajo, nunca resta.
+function streetSampleGroundWithSteps(x, z) {
+  const base = streetSampleGround(x, z);
+  if (world !== 'street' || !streetRuntimeSteppables.length) return base;
+  const stepped = sampleStepHeight(x, z, bob.position.y, streetRuntimeSteppables);
+  return Math.max(base, stepped);
 }
 
 // ---- Selector de colecciones (remeras del stock): hover + click + E --------
@@ -504,7 +578,7 @@ renderer.setAnimationLoop(() => {
     zoneName = inside ? 'FOURTWENTY' : 'CALLE BURELA';
     // adentro: cámara acotada al local, techo bajo; afuera: cielo abierto.
     tpCam.bounds = inside ? LOCAL_BOUNDS : STREET_BOUNDS;
-    floorY = streetSampleGround(bob.position.x, bob.position.z);
+    floorY = streetSampleGroundWithSteps(bob.position.x, bob.position.z);
     ceiling = inside ? CEILING_IN : CEILING_OUT;
     hud.setZone(zoneName);
   } else {
