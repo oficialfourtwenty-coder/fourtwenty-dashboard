@@ -260,6 +260,46 @@ function kitCannabisPlant() {
   return kitGroup('Planta FOURTWENTY', [stem, ...leaves]);
 }
 
+function kitCornerWall() {
+  const wall = mat(CREMA, 0.85);
+  return kitGroup('Esquina pared L', [
+    box(4, 3, 0.18, 0, 1.5, 0, wall),
+    box(0.18, 3, 4, -1.91, 1.5, -1.91, wall),
+  ]);
+}
+
+function kitDoorWall() {
+  const wall = mat(CREMA, 0.85);
+  const frame = mat(INGLES, 0.5, 0.4);
+  return kitGroup('Pared con puerta', [
+    box(1.25, 3, 0.18, -1.375, 1.5, 0, wall),
+    box(1.25, 3, 0.18, 1.375, 1.5, 0, wall),
+    box(1.25, 0.65, 0.18, 0, 2.675, 0, wall),
+    box(0.08, 2.35, 0.24, -0.65, 1.175, 0.02, frame),
+    box(0.08, 2.35, 0.24, 0.65, 1.175, 0.02, frame),
+    box(1.38, 0.08, 0.24, 0, 2.35, 0.02, frame),
+  ]);
+}
+
+function kitCrosswalk() {
+  const white = mat(0xf0eee8, 0.75);
+  const stripes = [];
+  for (let x = -2.5; x <= 2.5; x += 1) {
+    stripes.push(box(0.55, 0.035, 3.8, x, 0.0175, 0, white));
+  }
+  return kitGroup('Senda peatonal', stripes);
+}
+
+function kitRoadSegment() {
+  const asphalt = mat(0x343436, 0.96);
+  const yellow = mat(0xe5b82e, 0.65);
+  return kitGroup('Calle asfalto', [
+    box(8, 0.05, 5, 0, 0.025, 0, asphalt),
+    box(0.08, 0.06, 4.6, -0.35, 0.06, 0, yellow),
+    box(0.08, 0.06, 4.6, 0.35, 0.06, 0, yellow),
+  ]);
+}
+
 function addCityKit(scene) {
   const wood = new THREE.MeshStandardMaterial({ map: lightWood(2, 2), roughness: 0.65 });
   const shutterMat = new THREE.MeshStandardMaterial({ map: greenShutter(2, 1), roughness: 0.6, metalness: 0.3 });
@@ -270,7 +310,19 @@ function addCityKit(scene) {
   const templates = [
     kitMesh('Piso piedra extra', new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshStandardMaterial({ map: hexPaver(4, 4), roughness: 0.95 }))),
     kitMesh('Piso vereda gris', new THREE.Mesh(new THREE.PlaneGeometry(8, 4), new THREE.MeshStandardMaterial({ map: veredaTile(5, 3), roughness: 0.9 }))),
+    kitRoadSegment(),
+    kitMesh('Cordón calle', box(8, 0.16, 0.34, 0, 0.08, 0, mat(0x8a8880, 0.9))),
+    kitCrosswalk(),
+    kitMesh('Linea calle amarilla', box(0.1, 0.035, 5, 0, 0.0175, 0, mat(0xe5b82e, 0.65))),
     kitMesh('Muro crema', box(4, 3, 0.18, 0, 1.5, 0, mat(CREMA, 0.85))),
+    kitMesh('Pared larga crema', box(8, 3, 0.18, 0, 1.5, 0, mat(CREMA, 0.85))),
+    kitMesh('Pared corta crema', box(2, 3, 0.18, 0, 1.5, 0, mat(CREMA, 0.85))),
+    kitMesh('Pared baja ladrillo', box(4, 1.05, 0.22, 0, 0.525, 0, mat(MURETE, 0.9))),
+    kitMesh('Medianera alta', box(7, 5.2, 0.22, 0, 2.6, 0, mat(0xb8ad9a, 0.92))),
+    kitMesh('Divisor blanco interior', box(0.18, 2.8, 3.2, 0, 1.4, 0, mat(0xf2f0ec, 0.95))),
+    kitMesh('Techo losa blanca', box(5, 0.18, 4, 0, 0.09, 0, mat(0xf2f0ec, 0.95))),
+    kitCornerWall(),
+    kitDoorWall(),
     kitMesh('Persiana verde local', box(3.2, 2.4, 0.12, 0, 1.2, 0, shutterMat)),
     kitGroup('Vidriera verde', [
       box(3.2, 2.2, 0.08, 0, 1.1, -0.02, glassMat),
