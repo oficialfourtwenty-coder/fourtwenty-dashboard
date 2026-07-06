@@ -218,9 +218,10 @@ export function autoRegisterScene(root, { prefix = 'mundo', skip = [] } = {}) {
       if (!hasRenderableDescendant(child)) continue;
       const childPath = [...path, i];
       const id = `${prefix}:${childPath.join('.')}`;
+      const label = labelFor(child);
       const entry = registerEditableObject({
         id,
-        name: `${labelFor(child)} ${childPath.join('.')}`,
+        name: child.name ? label : `${label} ${childPath.join('.')}`,
         type: prefix,
         object3D: child,
         manageShadows: false,

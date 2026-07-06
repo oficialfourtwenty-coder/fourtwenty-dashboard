@@ -183,9 +183,9 @@ function markKitTemplate(object, name) {
 }
 
 function kitGroup(name, children) {
-  const group = markKitTemplate(new THREE.Group(), name);
+  const group = new THREE.Group();
   for (const child of children) group.add(child);
-  return group;
+  return markKitTemplate(group, name);
 }
 
 function kitMesh(name, mesh) {

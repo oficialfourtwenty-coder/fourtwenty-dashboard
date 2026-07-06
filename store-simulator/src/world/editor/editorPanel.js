@@ -93,7 +93,7 @@ export function createEditorPanel(callbacks = {}) {
 
       <div class="we-section">
         <div class="we-label">Objects <span data-field="objectCount"></span></div>
-        <input type="text" data-field="filter" placeholder="filtrar por nombre o id…" autocomplete="off" spellcheck="false">
+        <input type="text" data-field="filter" placeholder="filtrar por nombre…" autocomplete="off" spellcheck="false">
         <div class="we-object-list" data-field="objectList"></div>
       </div>
 
@@ -179,7 +179,7 @@ export function createEditorPanel(callbacks = {}) {
     const terms = searchableText(fields.filter.value).split(/\s+/).filter(Boolean);
     const filtered = terms.length
       ? lastObjects.filter((obj) => {
-        const haystack = searchableText(`${obj.name} ${obj.id} ${obj.type}`);
+        const haystack = searchableText(obj.name);
         return terms.every((term) => haystack.includes(term));
       })
       : lastObjects;
@@ -188,7 +188,7 @@ export function createEditorPanel(callbacks = {}) {
     fields.objectList.innerHTML = shown.length
       ? shown.map((obj) => `
         <button type="button" class="we-object ${obj.id === lastSelectedId ? 'is-active' : ''}" data-object-id="${obj.id}">
-          ${obj.name}${obj.visible === false || obj.object3D?.visible === false ? ' · <small>OCULTO</small>' : ''}<br><small>${obj.id} · ${obj.type}</small>
+          ${obj.name}${obj.visible === false || obj.object3D?.visible === false ? ' · <small>OCULTO</small>' : ''}<br><small>${obj.cloneOf ? 'copia editable' : 'pieza editable'}</small>
         </button>
       `).join('') + (filtered.length > MAX_LIST ? `<div class="we-status">…y ${filtered.length - MAX_LIST} más (usá el filtro)</div>` : '')
       : '<div class="we-status">No hay objetos editables cargados.</div>';
