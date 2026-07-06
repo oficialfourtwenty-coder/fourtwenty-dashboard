@@ -76,9 +76,11 @@ escalones frente al local**.
 - **Hueco atrás-derecha del local:** a propósito sin nada cargado — futuro acceso al
   shopping de 5 pisos. Nota grande al final de `world/street.js`. No implementar el
   trigger sin que el dueño lo pida.
-- **Movimiento:** el spec sugiere walk 2.2 / run 5 m/s, pero el dueño ya aprobó el
-  feel actual (WALK 3.4, sprint x3) — NO se tocó bob3d.js. El spec es art-direction
-  del mapa, no del movimiento.
+- **Movimiento (actualizado por el dueño):** WASD marca el RUMBO relativo a la
+  cámara, estilo GTA a pie: A/D mueven a los costados (BOB gira suave hacia ese
+  rumbo y la cámara fija lo sigue sola; mantener A/D = correr en círculo, como
+  GTA con teclado). S retrocede SIN darse vuelta (0.6x, A/D dirigen tipo tanque).
+  Velocidades aprobadas: WALK 3.4 / RUN 5.8, giro TURN_SPIN 2.6 rad/s.
 - **Refactors para soportar 2 mundos:** `player/bob3d.js` tiene `this.sampleGround`
   reemplazable (la calle pasa la suya); `core/camera.js` recibe `bounds` +
   `ceilingHeight` por parámetro (main.js los cambia según afuera/adentro);
@@ -172,8 +174,12 @@ world/editor/         ⭐ WORLD EDITOR interno (tecla T o Tab; en build ?editor=
                       Ctrl+C/V copiar-pegar objeto · Ctrl+D duplicar · Supr borrar (originales
                       se OCULTAN, copias se borran) · P selecciona el grupo padre · Esc
                       deselecciona · Ctrl+S guardar. En modo editor la cámara es libre
-                      (orbitar/pan/zoom con mouse) y BOB queda pausado. ⚠️ Los colliders son
-                      cajas fijas: mover una pared con el editor NO mueve su colisión.
+                      (orbitar/pan/zoom con mouse) y BOB queda pausado. BOB está
+                      registrado como editable "transient" (id `bob`): se puede
+                      teletransportar/escalar/rotar en vivo pero NUNCA queda en el
+                      layout (el spawn no se rompe); duplicarlo crea una estatua que
+                      sí persiste. ⚠️ Los colliders son cajas fijas: mover una pared
+                      con el editor NO mueve su colisión.
 player/bob3d.js       jugador ACTIVO: GLB + física GTA (aceleración, giro suave) + sombra blob
 player/bob.js         backup sprite 2D — NO TOCAR NI BORRAR
 ui/hud.js             HUD retro: título, indicador de piso, ayuda de controles

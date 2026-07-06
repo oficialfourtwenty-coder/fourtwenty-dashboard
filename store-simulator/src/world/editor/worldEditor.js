@@ -378,6 +378,9 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
 
   function onPointerDown(event) {
     if (!state.enabled) return;
+    // preventDefault impide que el click saque el foco de los inputs del panel;
+    // lo hacemos a mano para que T/atajos vuelvan a funcionar tras editar números.
+    if (isTypingTarget(document.activeElement)) document.activeElement.blur();
     if (transformControls.dragging || transformControls.axis) return;
     event.preventDefault();
     event.stopPropagation();

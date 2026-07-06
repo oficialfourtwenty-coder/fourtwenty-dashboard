@@ -162,6 +162,7 @@ window.__startLoading = (piso, label) => startLoading(piso, label ?? `PISO ${pis
 autoRegisterScene(scene, { prefix: 'calle-kit', skip: [bob.rig, bob.shadow] });
 // BOB es editable en vivo (teletransportar, rotar, escalar) pero transient:
 // nunca se guarda en el layout para que el juego conserve su spawn normal.
+// Duplicarlo crea una "estatua" que sí persiste.
 registerEditableObject({
   id: 'bob',
   name: 'BOB (jugador)',
