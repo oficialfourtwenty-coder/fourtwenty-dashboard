@@ -15,7 +15,7 @@ import * as THREE from 'three';
 import { towerFacade, veredaTile, hexPaver, greenShutter, whiteFloor, lightWood } from './textures.js';
 import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
-import { addBurelaTowers } from './burelaTowers.js';
+import { addBurelaBuildingModel } from './burelaBuildingModel.js';
 
 // ---- Paleta del spec (albedo base) ------------------------------------------
 const SALVIA = 0x8C9A78;   // columnas / alero
@@ -371,7 +371,7 @@ export function buildStreet(scene) {
   floor.receiveShadow = true;
   scene.add(floor);
 
-  addBurelaTowers(scene);
+  addBurelaBuildingModel(scene);
   addCityKit(scene);
 
   // Limites invisibles de la mesa de trabajo. Los objetos del kit son visuales:
