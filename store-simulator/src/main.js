@@ -18,7 +18,7 @@ import { buildGallery } from './world/gallery.js';
 import { buildRetail } from './world/retail.js';
 import { addFurniture } from './world/furniture.js';
 import { initWorldEditor } from './world/editor/worldEditor.js';
-import { autoRegisterScene, applyLayout, restoreClones } from './world/editor/editableRegistry.js';
+import { autoRegisterScene, applyLayout, registerEditableObject, restoreClones } from './world/editor/editableRegistry.js';
 import { loadInitialLayout } from './world/editor/layoutStore.js';
 import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
@@ -157,6 +157,16 @@ window.__startLoading = (piso, label) => startLoading(piso, label ?? `PISO ${pis
 // Si el dueño ya movió/ocultó/duplicó cosas (localStorage o layout base), se
 // re-aplica acá. Los muebles GLB se registran solos en addFurniture.
 autoRegisterScene(scene, { prefix: 'calle', skip: [bob.rig, bob.shadow] });
+// BOB es editable en vivo (teletransportar, rotar, escalar) pero transient:
+// nunca se guarda en el layout para que el juego conserve su spawn normal.
+registerEditableObject({
+  id: 'bob',
+  name: 'BOB (jugador)',
+  type: 'player',
+  object3D: bob.rig,
+  manageShadows: false,
+  transient: true,
+});
 loadInitialLayout().then((layout) => {
   applyLayout(layout);
   restoreClones(layout);

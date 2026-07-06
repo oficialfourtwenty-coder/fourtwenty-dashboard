@@ -94,6 +94,9 @@ export function registerEditableObject(config, { silent = false } = {}) {
     // les pisa las flags de sombra (cada mesh conserva la suya del build).
     manageShadows: config.manageShadows !== false,
     cloneOf: config.cloneOf ?? null,
+    // transient=true: editable en vivo pero nunca se guarda ni se restaura
+    // desde layout. Sirve para BOB jugador: el juego maneja su spawn.
+    transient: config.transient === true,
   };
 
   entry.object3D.visible = entry.visible;
@@ -132,7 +135,7 @@ export function findEditableRoot(object) {
 }
 
 export function serializeEditableObjects() {
-  return getEditableObjects().map(serializeEntry);
+  return getEditableObjects().filter((entry) => !entry.transient).map(serializeEntry);
 }
 
 export function applyLayout(layout) {
@@ -146,6 +149,7 @@ export function applyLayout(layout) {
     // sin warning: el layout guarda TODO (calle + BOBILONIA + muebles) y cada
     // escena aplica solo lo suyo; el resto se aplica cuando esa escena carga.
     if (!entry?.object3D) continue;
+    if (entry.transient) continue;
 
     const position = toArray3(item.position, entry.position);
     const rotation = toArray3(item.rotation, entry.rotation);

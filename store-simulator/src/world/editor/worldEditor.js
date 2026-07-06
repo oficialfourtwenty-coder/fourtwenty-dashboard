@@ -161,6 +161,9 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     } else {
       deselect();
       orbit.enabled = false;
+      if (player?.rig && typeof player.modelYaw === 'number') {
+        player.modelYaw = player.rig.rotation.y;
+      }
       panel.hide();
       setStatus('');
     }
