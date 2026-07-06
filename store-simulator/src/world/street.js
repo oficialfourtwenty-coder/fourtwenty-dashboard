@@ -69,11 +69,14 @@ export const CEILING_IN = H_LIBRE; // adentro, bajo techo
 // Vereda/plaza a y=0; rampa invisible a ~26° sobre los 3 escalones (spec 02);
 // galería/local a y=PLAT.
 export function streetSampleGround(x, z) {
-  return 0;
+  if (z >= Z_STEP_FOOT) return 0;              // vereda y plaza
+  if (z <= Z_STEP_TOP) return PLAT;            // galería y local
+  const t = (Z_STEP_FOOT - z) / (Z_STEP_FOOT - Z_STEP_TOP); // 0..1 sobre la rampa
+  return PLAT * t;
 }
 
 export function isInsideLocal(pos) {
-  return false;
+  return pos.z < Z_FACADE;
 }
 
 // ---- Ayudantes decorativos --------------------------------------------------
