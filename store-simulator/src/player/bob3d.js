@@ -147,43 +147,22 @@ export class Player {
   }
 
   update(dt, input, camYaw, colliders, camPos) {
-    // 1) Control tipo GTA a pie (mouse libre para interactuar):
-    //    WASD marca el RUMBO relativo a la cámara — A/D mueven a los costados:
-    //    BOB gira suave hacia ese rumbo y avanza (la cámara lo sigue sola).
-    //    S retrocede sin darse vuelta (más lento), con A/D dirigiendo el paso.
-    const { x: sideInput, z: fwdInput } = input.axes();
+    // 1) Control tipo GTA clásico (mouse libre para interactuar):
+    //    A/D giran a BOB sobre su eje; W avanza; S retrocede más lento.
+    //    Girar quieto no debe empujar ni desplazar al avatar.
+    const { x: turnInput, z: fwdInput } = input.axes();
     const topSpeed = input.sprinting() ? RUN : WALK;
-    let wishSpeed = 0;
     let yawRate = 0;
-
-    if (fwdInput < 0) {
-      // marcha atrás: mantiene la mirada, A/D giran tipo tanque
-      if (!this._isBillboard) {
-        this.modelYaw -= sideInput * TURN_SPIN * dt;
-        yawRate = -sideInput * TURN_SPIN;
-      }
-      wishSpeed = fwdInput * topSpeed * 0.6; // negativo → retrocede
-    } else if (sideInput !== 0 || fwdInput !== 0) {
-      // rumbo deseado en mundo, relativo a la cámara (W = alejarse de cámara,
-      // D = derecha de pantalla, A = izquierda). BOB dobla hacia ahí.
-      const targetYaw = Math.atan2(
-        fwdInput * -Math.sin(camYaw) + sideInput * Math.cos(camYaw),
-        fwdInput * -Math.cos(camYaw) - sideInput * Math.sin(camYaw),
-      );
-      if (this._isBillboard) {
-        this.modelYaw = targetYaw;
-      } else {
-        const delta = ((targetYaw - this.modelYaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-        const step = THREE.MathUtils.clamp(delta, -TURN_SPIN * dt, TURN_SPIN * dt);
-        this.modelYaw += step;
-        yawRate = step / Math.max(dt, 1e-5);
-      }
-      wishSpeed = Math.min(1, Math.hypot(sideInput, fwdInput)) * topSpeed;
+    if (!this._isBillboard) {
+      this.modelYaw -= turnInput * TURN_SPIN * dt;
+      yawRate = -turnInput * TURN_SPIN;
     }
 
+    const speedMul = fwdInput < 0 ? 0.6 : 1;
+    const wishSpeed = fwdInput * topSpeed * speedMul;
     const wish = this._wish.set(Math.sin(this.modelYaw), 0, Math.cos(this.modelYaw))
       .multiplyScalar(wishSpeed);
-    const moving = wishSpeed !== 0;
+    const moving = fwdInput !== 0;
 
     // 2) Rampa de aceleración/frenada (peso GTA: nada arranca ni frena de golpe)
     const rate = moving ? ACCEL : DECEL;
