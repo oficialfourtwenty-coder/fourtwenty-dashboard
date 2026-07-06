@@ -18,7 +18,7 @@ import { buildGallery } from './world/gallery.js';
 import { buildRetail } from './world/retail.js';
 import { addFurniture } from './world/furniture.js';
 import { initWorldEditor } from './world/editor/worldEditor.js';
-import { autoRegisterScene, applyLayout, registerEditableObject, restoreClones } from './world/editor/editableRegistry.js';
+import { autoRegisterScene, applyLayout, getEditableObjects, registerEditableObject, restoreClones } from './world/editor/editableRegistry.js';
 import { loadInitialLayout } from './world/editor/layoutStore.js';
 import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
@@ -53,6 +53,9 @@ scene.environmentIntensity = 0.22;
 let activeScene = scene; // se cambia al montar BOBILONIA
 
 const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 140);
+const editableColliderBox = new THREE.Box3();
+const editableColliderSize = new THREE.Vector3();
+const streetRuntimeColliders = [];
 
 // ---- Post-processing (bloom sutil + grade cálido + viñeta, estilo GTA V) ----
 const GradeShader = {
@@ -171,6 +174,38 @@ loadInitialLayout().then((layout) => {
   applyLayout(layout);
   restoreClones(layout);
 });
+
+function appendEditableColliders(target) {
+  for (const entry of getEditableObjects()) {
+    const object = entry.object3D;
+    if (!object || entry.transient || entry.visible === false || object.visible === false) continue;
+    if (!entry.id.startsWith('calle-kit:') && entry.type !== 'furniture') continue;
+    if (object.userData?.editorCollider !== true && entry.type !== 'furniture') continue;
+
+    object.updateWorldMatrix(true, true);
+    editableColliderBox.setFromObject(object);
+    if (editableColliderBox.isEmpty()) continue;
+    editableColliderBox.getSize(editableColliderSize);
+    if (editableColliderSize.y < 0.2) continue;
+
+    target.push({
+      minX: editableColliderBox.min.x,
+      maxX: editableColliderBox.max.x,
+      minY: editableColliderBox.min.y,
+      maxY: editableColliderBox.max.y,
+      minZ: editableColliderBox.min.z,
+      maxZ: editableColliderBox.max.z,
+    });
+  }
+}
+
+function currentPlayerColliders() {
+  if (world !== 'street') return colliders;
+  streetRuntimeColliders.length = 0;
+  streetRuntimeColliders.push(...streetColliders);
+  appendEditableColliders(streetRuntimeColliders);
+  return streetRuntimeColliders;
+}
 
 // ---- Selector de colecciones (remeras del stock): hover + click + E --------
 const raycaster = new THREE.Raycaster();
@@ -455,7 +490,7 @@ renderer.setAnimationLoop(() => {
   }
 
   const editorActive = worldEditor.isEnabled();
-  if (!loading && !editorActive) bob.update(dt, input, tpCam.yaw, colliders, camera.position);
+  if (!loading && !editorActive) bob.update(dt, input, tpCam.yaw, currentPlayerColliders(), camera.position);
   if (editorActive) input.consumeInteract();
   else if (input.consumeInteract()) interactNearest(); // E = remera más cercana
   if (editorActive) clearShirtHover();

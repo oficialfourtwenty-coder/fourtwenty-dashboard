@@ -172,26 +172,28 @@ function towerBlock(scene, x, z, w, d, h, baseY) {
   scene.add(t);
 }
 
-function markKitTemplate(object, name) {
+function markKitTemplate(object, name, { collider = true } = {}) {
   object.name = `KIT · ${name}`;
   object.visible = false;
   object.userData.cityKit = true;
+  object.userData.editorCollider = collider;
   object.traverse?.((child) => {
     if (child !== object) child.userData.editorHelper = true;
   });
   return object;
 }
 
-function kitGroup(name, children) {
+function kitGroup(name, children, options) {
   const group = new THREE.Group();
   for (const child of children) group.add(child);
-  return markKitTemplate(group, name);
+  return markKitTemplate(group, name, options);
 }
 
-function kitMesh(name, mesh) {
+function kitMesh(name, mesh, options) {
   mesh.name = `KIT · ${name}`;
   mesh.visible = false;
   mesh.userData.cityKit = true;
+  mesh.userData.editorCollider = options?.collider !== false;
   return mesh;
 }
 
@@ -287,7 +289,7 @@ function kitCrosswalk() {
   for (let x = -2.5; x <= 2.5; x += 1) {
     stripes.push(box(0.55, 0.035, 3.8, x, 0.0175, 0, white));
   }
-  return kitGroup('Senda peatonal', stripes);
+  return kitGroup('Senda peatonal', stripes, { collider: false });
 }
 
 function kitRoadSegment() {
@@ -297,7 +299,7 @@ function kitRoadSegment() {
     box(8, 0.05, 5, 0, 0.025, 0, asphalt),
     box(0.08, 0.06, 4.6, -0.35, 0.06, 0, yellow),
     box(0.08, 0.06, 4.6, 0.35, 0.06, 0, yellow),
-  ]);
+  ], { collider: false });
 }
 
 function addCityKit(scene) {
@@ -308,12 +310,12 @@ function addCityKit(scene) {
   const shirtMat = new THREE.MeshStandardMaterial({ map: garmentTexture(0x1c1c1c, 'tee'), transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide });
 
   const templates = [
-    kitMesh('Piso piedra extra', new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshStandardMaterial({ map: hexPaver(4, 4), roughness: 0.95 }))),
-    kitMesh('Piso vereda gris', new THREE.Mesh(new THREE.PlaneGeometry(8, 4), new THREE.MeshStandardMaterial({ map: veredaTile(5, 3), roughness: 0.9 }))),
+    kitMesh('Piso piedra extra', new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshStandardMaterial({ map: hexPaver(4, 4), roughness: 0.95 })), { collider: false }),
+    kitMesh('Piso vereda gris', new THREE.Mesh(new THREE.PlaneGeometry(8, 4), new THREE.MeshStandardMaterial({ map: veredaTile(5, 3), roughness: 0.9 })), { collider: false }),
     kitRoadSegment(),
-    kitMesh('Cordón calle', box(8, 0.16, 0.34, 0, 0.08, 0, mat(0x8a8880, 0.9))),
+    kitMesh('Cordón calle', box(8, 0.16, 0.34, 0, 0.08, 0, mat(0x8a8880, 0.9)), { collider: false }),
     kitCrosswalk(),
-    kitMesh('Linea calle amarilla', box(0.1, 0.035, 5, 0, 0.0175, 0, mat(0xe5b82e, 0.65))),
+    kitMesh('Linea calle amarilla', box(0.1, 0.035, 5, 0, 0.0175, 0, mat(0xe5b82e, 0.65)), { collider: false }),
     kitMesh('Muro crema', box(4, 3, 0.18, 0, 1.5, 0, mat(CREMA, 0.85))),
     kitMesh('Pared larga crema', box(8, 3, 0.18, 0, 1.5, 0, mat(CREMA, 0.85))),
     kitMesh('Pared corta crema', box(2, 3, 0.18, 0, 1.5, 0, mat(CREMA, 0.85))),
