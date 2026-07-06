@@ -166,10 +166,22 @@ export function createEditorPanel(callbacks = {}) {
   let lastObjects = [];
   let lastSelectedId = null;
 
+  function searchableText(value) {
+    return String(value ?? '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
   function renderObjectList() {
-    const text = fields.filter.value.trim().toLowerCase();
-    const filtered = text
-      ? lastObjects.filter((obj) => `${obj.name} ${obj.id} ${obj.type}`.toLowerCase().includes(text))
+    const terms = searchableText(fields.filter.value).split(/\s+/).filter(Boolean);
+    const filtered = terms.length
+      ? lastObjects.filter((obj) => {
+        const haystack = searchableText(`${obj.name} ${obj.id} ${obj.type}`);
+        return terms.every((term) => haystack.includes(term));
+      })
       : lastObjects;
     fields.objectCount.textContent = `(${filtered.length}/${lastObjects.length})`;
     const shown = filtered.slice(0, MAX_LIST);
