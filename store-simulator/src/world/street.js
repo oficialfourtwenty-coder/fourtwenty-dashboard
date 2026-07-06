@@ -35,7 +35,7 @@ const H_LIBRE = 3.2;        // altura libre bajo el alero
 const EJE_COL = 4.5;        // eje a eje de columnas
 const COL = 0.4;            // sección de columna
 const ALERO_T = 0.35, ALERO_VUELO = 1.5;
-const FRENTE = 14;          // medio-frente jugable (x -14..14)
+const FRENTE = 14;          // medio-frente base usado para proporciones del kit
 
 // Z clave (de la calle -de +Z- hacia el fondo -de -Z-)
 const Z_STREET = 8;         // arranca la calzada
@@ -44,6 +44,12 @@ const Z_STEP_FOOT = 0;      // pie de los escalones = ORIGEN
 const Z_STEP_TOP = -3 * STEP_RUN;      // -0.96: arriba del 3er escalón
 const Z_FACADE = -0.96 - GAL_DEPTH;    // -4.46: línea de vidrieras del fondo de la galería
 const Z_LOCAL_BACK = Z_FACADE - 6;     // -10.46: fondo del local
+
+// Área caminable de la mesa de trabajo: x2 respecto del mapa inicial.
+const MAP_SCALE = 2;
+const MAP_HALF_X = FRENTE * MAP_SCALE;
+const MAP_MIN_Z = Z_LOCAL_BACK * MAP_SCALE;
+const MAP_MAX_Z = Z_CURB * MAP_SCALE;
 
 // Local FOURTWENTY: centrado en x=0, vidriera de 5.5m.
 const VID_W = 5.5;
@@ -54,7 +60,7 @@ export const SPAWN = new THREE.Vector3(0, 0, 6); // vereda, mirando a la galerí
 const GAP_X0 = 0.4, GAP_X1 = LOCAL_HALF, GAP_STUB = 2;
 
 // Límites para el clamp de la cámara (afuera: toda la escena; adentro: el local).
-export const STREET_BOUNDS = { minX: -FRENTE - 0.5, maxX: FRENTE + 0.5, minZ: Z_LOCAL_BACK - GAP_STUB, maxZ: Z_CURB + 1 };
+export const STREET_BOUNDS = { minX: -MAP_HALF_X - 0.5, maxX: MAP_HALF_X + 0.5, minZ: MAP_MIN_Z, maxZ: MAP_MAX_Z };
 export const LOCAL_BOUNDS = { minX: -LOCAL_HALF, maxX: LOCAL_HALF, minZ: Z_LOCAL_BACK, maxZ: Z_FACADE };
 export const CEILING_OUT = 6.0;   // afuera la cámara puede subir (cielo abierto)
 export const CEILING_IN = H_LIBRE; // adentro, bajo techo
@@ -63,14 +69,11 @@ export const CEILING_IN = H_LIBRE; // adentro, bajo techo
 // Vereda/plaza a y=0; rampa invisible a ~26° sobre los 3 escalones (spec 02);
 // galería/local a y=PLAT.
 export function streetSampleGround(x, z) {
-  if (z >= Z_STEP_FOOT) return 0;              // vereda y plaza
-  if (z <= Z_STEP_TOP) return PLAT;            // galería y local
-  const t = (Z_STEP_FOOT - z) / (Z_STEP_FOOT - Z_STEP_TOP); // 0..1 sobre la rampa
-  return PLAT * t;
+  return 0;
 }
 
 export function isInsideLocal(pos) {
-  return pos.z < Z_FACADE;
+  return false;
 }
 
 // ---- Ayudantes decorativos --------------------------------------------------
@@ -169,122 +172,168 @@ function towerBlock(scene, x, z, w, d, h, baseY) {
   scene.add(t);
 }
 
+function markKitTemplate(object, name) {
+  object.name = `KIT · ${name}`;
+  object.visible = false;
+  object.userData.cityKit = true;
+  object.traverse?.((child) => {
+    if (child !== object) child.userData.editorHelper = true;
+  });
+  return object;
+}
+
+function kitGroup(name, children) {
+  const group = markKitTemplate(new THREE.Group(), name);
+  for (const child of children) group.add(child);
+  return group;
+}
+
+function kitMesh(name, mesh) {
+  mesh.name = `KIT · ${name}`;
+  mesh.visible = false;
+  mesh.userData.cityKit = true;
+  return mesh;
+}
+
+function kitNeonSign() {
+  const c = document.createElement('canvas');
+  c.width = 1024;
+  c.height = 220;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#151518';
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.strokeStyle = '#ff6d18';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(10, 10, c.width - 20, c.height - 20);
+  ctx.font = '900 108px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = '#39ff6a';
+  for (const blur of [34, 18, 8]) {
+    ctx.shadowBlur = blur;
+    ctx.fillStyle = '#39ff6a';
+    ctx.fillText('FOURTWENTY', 512, 112);
+  }
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#f4fff2';
+  ctx.fillText('FOURTWENTY', 512, 112);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+
+  return kitGroup('Cartel neon FOURTWENTY', [
+    box(5.4, 1.1, 0.12, 0, 0.55, -0.05, mat(0x151518, 0.45, 0.3)),
+    new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.02), new THREE.MeshBasicMaterial({ map: tex })),
+  ]);
+}
+
+function kitTree(name = 'Arbol') {
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.22, 3.7, 8), mat(0x5a4230, 0.9));
+  trunk.position.set(0, 1.85, 0);
+  const leafMat = mat(0x4f7c3d, 0.88);
+  const leaves = [[0, 3.9, 0, 1.35], [0.55, 3.55, 0.2, 1.05], [-0.5, 3.6, -0.25, 1.1], [0.1, 4.35, -0.15, 0.95]]
+    .map(([x, y, z, s]) => {
+      const leaf = new THREE.Mesh(new THREE.IcosahedronGeometry(s, 0), leafMat);
+      leaf.position.set(x, y, z);
+      return leaf;
+    });
+  return kitGroup(name, [trunk, ...leaves]);
+}
+
+function kitCannabisPlant() {
+  if (!_cannaTex) _cannaTex = cannabisLeafTexture();
+  const stem = box(0.04, 0.45, 0.04, 0, 0.225, 0, mat(0x2f5a22, 0.9));
+  const geo = new THREE.PlaneGeometry(0.65, 0.72);
+  geo.translate(0, 0.36, 0);
+  const leafMat = new THREE.MeshStandardMaterial({
+    map: _cannaTex,
+    transparent: true,
+    alphaTest: 0.4,
+    side: THREE.DoubleSide,
+    roughness: 0.9,
+  });
+  const leaves = [0, Math.PI / 3, -Math.PI / 3].map((rot) => {
+    const leaf = new THREE.Mesh(geo, leafMat);
+    leaf.rotation.y = rot;
+    return leaf;
+  });
+  return kitGroup('Planta FOURTWENTY', [stem, ...leaves]);
+}
+
+function addCityKit(scene) {
+  const wood = new THREE.MeshStandardMaterial({ map: lightWood(2, 2), roughness: 0.65 });
+  const shutterMat = new THREE.MeshStandardMaterial({ map: greenShutter(2, 1), roughness: 0.6, metalness: 0.3 });
+  const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x2a3a42, roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.42 });
+  const towerMat = new THREE.MeshStandardMaterial({ map: towerFacade(5, 12), roughness: 0.9 });
+  const shirtMat = new THREE.MeshStandardMaterial({ map: garmentTexture(0x1c1c1c, 'tee'), transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide });
+
+  const templates = [
+    kitMesh('Piso piedra extra', new THREE.Mesh(new THREE.PlaneGeometry(8, 8), new THREE.MeshStandardMaterial({ map: hexPaver(4, 4), roughness: 0.95 }))),
+    kitMesh('Piso vereda gris', new THREE.Mesh(new THREE.PlaneGeometry(8, 4), new THREE.MeshStandardMaterial({ map: veredaTile(5, 3), roughness: 0.9 }))),
+    kitMesh('Muro crema', box(4, 3, 0.18, 0, 1.5, 0, mat(CREMA, 0.85))),
+    kitMesh('Persiana verde local', box(3.2, 2.4, 0.12, 0, 1.2, 0, shutterMat)),
+    kitGroup('Vidriera verde', [
+      box(3.2, 2.2, 0.08, 0, 1.1, -0.02, glassMat),
+      box(3.35, 0.08, 0.12, 0, 2.2, 0, mat(INGLES, 0.5, 0.4)),
+      box(3.35, 0.08, 0.12, 0, 0, 0, mat(INGLES, 0.5, 0.4)),
+      box(0.08, 2.25, 0.12, -1.65, 1.1, 0, mat(INGLES, 0.5, 0.4)),
+      box(0.08, 2.25, 0.12, 1.65, 1.1, 0, mat(INGLES, 0.5, 0.4)),
+      box(0.05, 2.25, 0.12, 0, 1.1, 0, mat(INGLES, 0.5, 0.4)),
+    ]),
+    kitMesh('Columna salvia', box(COL, H_LIBRE, COL, 0, H_LIBRE / 2, 0, mat(SALVIA, 0.8))),
+    kitMesh('Alero techo salvia', box(5, ALERO_T, 2.2, 0, ALERO_T / 2, 0, mat(SALVIA, 0.8))),
+    kitMesh('Escalon piedra', box(4, STEP_RISE, STEP_RUN * 2, 0, STEP_RISE / 2, 0, mat(HORMIGON, 0.9))),
+    kitMesh('Cantero ladrillo', box(3.2, 0.5, 1.1, 0, 0.25, 0, mat(MURETE, 0.9))),
+    kitTree('Arbol verde'),
+    kitCannabisPlant(),
+    kitMesh('Reja verde', box(0.08, 1.25, 2.6, 0, 0.625, 0, mat(REJA, 0.5, 0.5))),
+    kitNeonSign(),
+    kitMesh('Torre edificio', box(5, 18, 5, 0, 9, 0, towerMat)),
+    kitMesh('Mostrador madera', box(1.8, 0.95, 0.7, 0, 0.475, 0, wood)),
+    kitMesh('Panel madera', box(3.4, 2.8, 0.12, 0, 1.4, 0, wood)),
+    kitMesh('Remera colgada', new THREE.Mesh(new THREE.PlaneGeometry(0.58, 0.68), shirtMat)),
+  ];
+
+  for (const template of templates) {
+    if (template.geometry?.type === 'PlaneGeometry') template.rotation.x = -Math.PI / 2;
+    scene.add(template);
+  }
+}
+
 // ---- Construcción principal -------------------------------------------------
 export function buildStreet(scene) {
   const colliders = [];
-  const g = new THREE.Group();
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(MAP_HALF_X * 2 + 2, MAP_MAX_Z - MAP_MIN_Z + 1),
+    new THREE.MeshStandardMaterial({ map: hexPaver(8, 5), roughness: 0.95 }),
+  );
+  floor.name = 'Piso piedra base';
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(0, 0, (MAP_MAX_Z + MAP_MIN_Z) / 2);
+  floor.receiveShadow = true;
+  scene.add(floor);
 
-  const hexMat = new THREE.MeshStandardMaterial({ map: hexPaver(6, 3), roughness: 0.95 });
-  const veredaMat = new THREE.MeshStandardMaterial({ map: veredaTile(8, 4), roughness: 0.9 });
-  const hormigonMat = mat(HORMIGON, 0.9);
-  const salviaMat = mat(SALVIA, 0.8);
-  const cremaMat = mat(CREMA, 0.85);
-  const shutterMat = new THREE.MeshStandardMaterial({ map: greenShutter(2, 1), roughness: 0.6, metalness: 0.3 });
-  const inglesMat = mat(INGLES, 0.5, 0.4);
-  const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x2a3a42, roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.4 });
+  addCityKit(scene);
 
-  // ---- Suelos --------------------------------------------------------------
-  // calzada (adoquín oscuro), cordón, vereda gris, plaza hexagonal
-  const street = new THREE.Mesh(new THREE.PlaneGeometry(FRENTE * 2 + 20, 8), mat(0x3a3a3c, 0.95));
-  street.rotation.x = -Math.PI / 2; street.position.set(0, -0.05, Z_STREET + 2); scene.add(street);
-  g.add(box(FRENTE * 2 + 4, 0.15, 0.4, 0, 0.075, Z_CURB, mat(0x8a8880, 0.9))); // cordón granito
-  const vereda = new THREE.Mesh(new THREE.PlaneGeometry(FRENTE * 2, Z_CURB - 3.5), veredaMat);
-  vereda.rotation.x = -Math.PI / 2; vereda.position.set(0, 0, (Z_CURB + 3.5) / 2); vereda.receiveShadow = true; scene.add(vereda);
-  const plaza = new THREE.Mesh(new THREE.PlaneGeometry(FRENTE * 2, 3.5 - Z_STEP_FOOT), hexMat);
-  plaza.rotation.x = -Math.PI / 2; plaza.position.set(0, 0.001, 3.5 / 2); plaza.receiveShadow = true; scene.add(plaza);
+  // Limites invisibles de la mesa de trabajo. Los objetos del kit son visuales:
+  // se duplican y acomodan con T, sin agregar colisiones para no trabar a BOB.
+  colliders.push({ minX: -MAP_HALF_X - 0.5, maxX: MAP_HALF_X + 0.5, minY: 0, maxY: 3, minZ: MAP_MAX_Z, maxZ: MAP_MAX_Z + 0.4 });
+  colliders.push({ minX: -MAP_HALF_X - 0.5, maxX: -MAP_HALF_X - 0.1, minY: 0, maxY: 4, minZ: MAP_MIN_Z, maxZ: MAP_MAX_Z });
+  colliders.push({ minX: MAP_HALF_X + 0.1, maxX: MAP_HALF_X + 0.5, minY: 0, maxY: 4, minZ: MAP_MIN_Z, maxZ: MAP_MAX_Z });
+  colliders.push({ minX: -MAP_HALF_X - 0.5, maxX: MAP_HALF_X + 0.5, minY: 0, maxY: 4, minZ: MAP_MIN_Z - 0.4, maxZ: MAP_MIN_Z });
 
-  // ---- Escalones (spec 03, CRÍTICO): 3 pasos anchos y bajos ----------------
-  // 2 boxes escalonados + la plataforma de la galería (= 3er nivel).
-  const stepA = box(FRENTE * 2, STEP_RISE, STEP_RUN * 2, 0, STEP_RISE / 2, -STEP_RUN, hormigonMat);
-  const stepB = box(FRENTE * 2, STEP_RISE * 2, STEP_RUN, 0, STEP_RISE, -STEP_RUN * 2, hormigonMat);
-  for (const s of [stepA, stepB]) { s.castShadow = true; s.receiveShadow = true; g.add(s); }
-
-  // ---- Plataforma/galería a y=PLAT -----------------------------------------
-  const galZc = (Z_STEP_TOP + Z_FACADE) / 2;
-  const plat = box(FRENTE * 2, PLAT, Z_STEP_TOP - Z_FACADE, 0, PLAT / 2, galZc, hormigonMat);
-  plat.receiveShadow = true; g.add(plat);
-
-  // Columnas verde salvia (sección cuadrada 0.40), ritmo eje 4.5m, en el borde
-  // delantero de la galería. Alero volado arriba.
-  for (let x = -FRENTE + 2; x <= FRENTE - 2 + 0.01; x += EJE_COL) {
-    const col = box(COL, H_LIBRE, COL, x, PLAT + H_LIBRE / 2, Z_STEP_TOP - 0.3, salviaMat);
-    col.castShadow = true; col.receiveShadow = true; g.add(col);
-    colliders.push({ minX: x - COL / 2 - 0.05, maxX: x + COL / 2 + 0.05, minY: 0, maxY: PLAT + H_LIBRE, minZ: Z_STEP_TOP - 0.3 - COL / 2, maxZ: Z_STEP_TOP - 0.3 + COL / 2 });
-  }
-  // Alero/losa voladiza (canto verde salvia), vuela 1.5m sobre la vereda.
-  const aleroZ0 = Z_STEP_TOP + ALERO_VUELO, aleroZ1 = Z_FACADE;
-  const alero = box(FRENTE * 2 + 1, ALERO_T, aleroZ0 - aleroZ1, 0, PLAT + H_LIBRE + ALERO_T / 2, (aleroZ0 + aleroZ1) / 2, salviaMat);
-  alero.castShadow = true; g.add(alero);
-
-  // ---- Frente de locales (línea Z_FACADE) ----------------------------------
-  // Todo el frente es persiana verde (locales cerrados) MENOS el vano central
-  // (FOURTWENTY), que lleva vidriera con puerta.
-  const facadeTop = PLAT + H_LIBRE;
-  // zócalo ciego verde continuo (0.9m) a lo largo del frente
-  g.add(box(FRENTE * 2, 0.9, 0.12, 0, PLAT + 0.45, Z_FACADE, inglesMat));
-  // persianas a los costados del vano de FOURTWENTY
-  for (const [x0, x1] of [[-FRENTE, -VID_W / 2], [VID_W / 2, FRENTE]]) {
-    const w = x1 - x0, cx = (x0 + x1) / 2;
-    const shutter = box(w, H_LIBRE - 0.9, 0.1, cx, PLAT + 0.9 + (H_LIBRE - 0.9) / 2, Z_FACADE, shutterMat);
-    shutter.castShadow = true; shutter.receiveShadow = true; g.add(shutter);
-    colliders.push({ minX: x0, maxX: x1, minY: 0, maxY: facadeTop, minZ: Z_FACADE - 0.1, maxZ: Z_FACADE + 0.1 });
-  }
-  // dintel sobre el vano central + cartel-toldo plano para branding
-  g.add(box(VID_W + 0.4, 0.5, 0.14, 0, facadeTop - 0.25, Z_FACADE, cremaMat));
-  const toldo = box(VID_W + 0.2, 0.06, 0.9, 0, facadeTop - 0.5, Z_FACADE + 0.5, mat(0x1a1a1e, 0.5));
-  g.add(toldo);
-  neonFT(scene, 0, facadeTop - 0.55, Z_FACADE + 0.9);
-
-  // ---- Vidriera FOURTWENTY (verde inglés, cuadrícula) con puerta -----------
-  buildStorefront(g, colliders, inglesMat, glassMat);
-
-  // ---- Interior del local (elevado a PLAT, sin muebles) --------------------
-  const selectors = buildLocalInterior(scene, g, colliders);
-
-  // ---- Torres de fondo: volúmenes SEPARADOS (no una tira repetida) ----------
-  // Suben desde la línea del alero, set-back en Z, con cielo entre ellas.
-  const baseY = facadeTop + ALERO_T;
-  towerBlock(scene, 0, -11, 15, 12, 30, baseY);    // Torre 1 (la del local)
-  towerBlock(scene, -20, -15, 13, 11, 26, baseY);  // vecina izquierda (más atrás)
-  towerBlock(scene, 21, -14, 13, 11, 28, baseY);   // vecina derecha
-  towerBlock(scene, 5, -26, 16, 10, 34, 0);        // torre lejana de fondo
-
-  // reja verde mínima a un costado (el lado derecho completo va en Pass C)
-  for (let x = FRENTE - 1; x <= FRENTE + 2; x += 0.4) {
-    g.add(box(0.05, 1.2, 0.05, x, 0.6, Z_STEP_TOP - 1, mat(REJA, 0.5, 0.5)));
-  }
-  g.add(box(3.4, 0.08, 0.08, FRENTE + 0.5, 1.2, Z_STEP_TOP - 1, mat(REJA, 0.5, 0.5)));
-
-  // ---- Límites invisibles (spec 02): cordón + 2 extremos + fondo -----------
-  colliders.push({ minX: -FRENTE - 0.5, maxX: FRENTE + 0.5, minY: 0, maxY: 3, minZ: Z_CURB, maxZ: Z_CURB + 0.4 }); // cordón
-  colliders.push({ minX: -FRENTE - 0.5, maxX: -FRENTE - 0.1, minY: 0, maxY: 4, minZ: Z_LOCAL_BACK, maxZ: Z_CURB }); // izq
-  colliders.push({ minX: FRENTE + 0.1, maxX: FRENTE + 0.5, minY: 0, maxY: 4, minZ: Z_LOCAL_BACK, maxZ: Z_CURB });   // der
-
-  // ---- Vegetación PUNTUAL (ref: plano del dueño) ---------------------------
-  // Cantero principal centro-izquierda: árbol + plantas cannábicas (marca).
-  planter(scene, colliders, -4, 2.6, 5.5, 1.4);
-  tree(scene, -5.5, 2.6, true);
-  for (const cx of [-5, -4, -3, -2.2]) cannabisPlant(scene, cx, 2.7, 0.5);
-  // Cantero chico a la derecha.
-  planter(scene, colliders, 5, 2.8, 3, 1.3);
-  cannabisPlant(scene, 4.4, 2.9, 0.5); cannabisPlant(scene, 5.5, 2.7, 0.5);
-  // Árboles lejanos SOLO de fondo (fuera de la zona caminable, enmarcan).
-  tree(scene, -22, 4, false); tree(scene, 23, 4.5, true); tree(scene, 15, -10, false);
-
-  // ---- Luz: sol de mediodía-invierno, cálido rasante, sombras largas -------
-  scene.add(new THREE.HemisphereLight(0xbfd6ea, 0x9a9488, 0.9)); // cielo celeste / suelo
+  scene.add(new THREE.HemisphereLight(0xbfd6ea, 0x9a9488, 0.9));
   const sun = new THREE.DirectionalLight(0xfff1d6, 2.2);
-  sun.position.set(14, 16, 10); // bajo → sombras largas
+  sun.position.set(14, 16, 10);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.left = -FRENTE - 4; sun.shadow.camera.right = FRENTE + 4;
-  sun.shadow.camera.top = 24; sun.shadow.camera.bottom = -24;
-  sun.shadow.camera.near = 1; sun.shadow.camera.far = 70;
+  sun.shadow.camera.left = -MAP_HALF_X - 4; sun.shadow.camera.right = MAP_HALF_X + 4;
+  sun.shadow.camera.top = 36; sun.shadow.camera.bottom = -36;
+  sun.shadow.camera.near = 1; sun.shadow.camera.far = 120;
   sun.shadow.bias = -0.0004;
   scene.add(sun);
 
-  scene.add(g);
-  return { colliders, selectors };
+  return { colliders, selectors: [] };
 }
 
 // Vidriera del local: marco de cuadrícula verde inglés + vidrio + puerta.

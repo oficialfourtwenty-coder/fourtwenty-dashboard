@@ -89,7 +89,7 @@ export function registerEditableObject(config, { silent = false } = {}) {
     castShadow: config.castShadow !== false,
     receiveShadow: config.receiveShadow !== false,
     locked: config.locked === true,
-    visible: config.visible !== false,
+    visible: config.visible ?? (config.object3D.visible !== false),
     // manageShadows=false: objetos auto-registrados de la escena; el editor no
     // les pisa las flags de sombra (cada mesh conserva la suya del build).
     manageShadows: config.manageShadows !== false,
@@ -265,6 +265,7 @@ export function duplicateEditable(id, { offset = [0.6, 0, 0], transform = null, 
   }
 
   source.parent.add(clone);
+  if (source.visible === false) clone.visible = true;
   if (transform) {
     clone.position.fromArray(toArray3(transform.position, source.position.toArray()));
     const rot = toArray3(transform.rotation, [source.rotation.x, source.rotation.y, source.rotation.z]);

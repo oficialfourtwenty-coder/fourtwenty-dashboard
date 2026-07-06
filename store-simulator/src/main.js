@@ -156,7 +156,7 @@ window.__startLoading = (piso, label) => startLoading(piso, label ?? `PISO ${pis
 // EDITOR: todo lo que hay en la calle queda registrado como editable (tecla T).
 // Si el dueño ya movió/ocultó/duplicó cosas (localStorage o layout base), se
 // re-aplica acá. Los muebles GLB se registran solos en addFurniture.
-autoRegisterScene(scene, { prefix: 'calle', skip: [bob.rig, bob.shadow] });
+autoRegisterScene(scene, { prefix: 'calle-kit', skip: [bob.rig, bob.shadow] });
 // BOB es editable en vivo (teletransportar, rotar, escalar) pero transient:
 // nunca se guarda en el layout para que el juego conserve su spawn normal.
 registerEditableObject({
