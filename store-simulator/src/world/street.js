@@ -483,6 +483,7 @@ function buildRealInterior(scene, g, colliders, H) {
     const s = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.62),
       new THREE.MeshStandardMaterial({ map: garmentTexture(d.color, d.tipo), transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide }));
     s.name = `Interior local · prenda colgada izquierda ${i + 1}`;
+    s.userData.productSlot = { piso: 'local', index: i }; // clickeable como producto
     s.position.set(-2.72 + i * 0.02, PLAT + 1.58, -6.85 + i * 0.42);
     s.rotation.y = Math.PI / 2;
     g.add(s);
@@ -493,6 +494,7 @@ function buildRealInterior(scene, g, colliders, H) {
   const jean = new THREE.Group();
   jean.name = 'Interior local · exhibidor jean completo';
   jean.userData.editorCollider = true;
+  jean.userData.productSlot = { piso: 'local', index: 4 }; // clickeable como producto
   const base = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.03, 14), black);
   base.name = 'Interior local · exhibidor jean base';
   base.position.set(px, PLAT + 0.015, pz); jean.add(base);

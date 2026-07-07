@@ -27,6 +27,8 @@ import { Player } from './player/bob3d.js';
 import { ThirdPersonCamera } from './core/camera.js';
 import { Input } from './core/input.js';
 import { Hud } from './ui/hud.js';
+import { loadProductos } from './data/productosStore.js';
+import { initProductClicks } from './interact/productClicks.js';
 
 const QUALITY = new URLSearchParams(location.search).get('q') === 'low' ? 'low' : 'high';
 
@@ -203,9 +205,20 @@ const worldEditor = initWorldEditor({ scene, camera, renderer, input, player: bo
 // SIN pointer lock: el overlay de inicio solo se cierra con el primer click.
 hud.onStart(() => hud.showOverlay(false));
 
+// PRODUCTOS: catálogo (productos.json / panel admin) + click en prendas.
+// Capa aislada: raycaster propio contra meshes tageados userData.productSlot.
+loadProductos();
+const productClicks = initProductClicks({
+  canvas,
+  camera,
+  getScene: () => activeScene,
+  isBlocked: () => loading || worldEditor.isEnabled(),
+});
+
 window.__bob = bob; // hooks de debug/testeo
 window.__cam = tpCam;
 window.__worldEditor = worldEditor;
+window.__productClicks = productClicks;
 window.__startLoading = (piso, label) => startLoading(piso, label ?? `PISO ${piso}`);
 
 // EDITOR: todo lo que hay en la calle queda registrado como editable (tecla T).

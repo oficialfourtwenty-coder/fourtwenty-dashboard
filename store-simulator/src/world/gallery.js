@@ -150,8 +150,9 @@ function muralTexture() {
 // ---- Piezas ---------------------------------------------------------------
 const ledMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
-// Prenda colgada en una pared (side: 'w' | 'e'), con gancho.
-function hangGarment(g, side, z, y, tex, scale = 1) {
+// Prenda colgada en una pared (side: 'w' | 'e'), con gancho. `slot` la vuelve
+// clickeable como producto (src/interact/productClicks.js): { piso, index }.
+function hangGarment(g, side, z, y, tex, scale = 1, slot = null) {
   const x = side === 'w' ? WALL_W : WALL_E;
   const rotY = side === 'w' ? Math.PI / 2 : -Math.PI / 2;
   const garment = new THREE.Mesh(
@@ -160,6 +161,7 @@ function hangGarment(g, side, z, y, tex, scale = 1) {
   );
   garment.position.set(x + (side === 'w' ? 0.06 : -0.06), y, z);
   garment.rotation.y = rotY;
+  if (slot) garment.userData.productSlot = slot;
   g.add(garment);
   g.add(box(0.03, 0.2 * scale, 0.03, x + (side === 'w' ? 0.05 : -0.05), y + 0.66 * scale, z, white));
 }
@@ -241,7 +243,7 @@ export function buildGallery(scene, collection) {
     const step = (z1 - z0) / (count - 1);
     for (let i = 0; i < count; i++) {
       const z = z0 + step * i;
-      hangGarment(g, 'w', z, Y + 1.75, texFor(i));
+      hangGarment(g, 'w', z, Y + 1.75, texFor(i), 1, { piso: collection.piso, index: i });
       plaque(g, 'w', z, Y + 2.5, labelTexture(`${name} ${String(i + 1).padStart(2, '0')}`, 128, 64));
     }
   } else if (count <= 14) {
@@ -251,7 +253,7 @@ export function buildGallery(scene, collection) {
     for (let row = 0; row < 2 && placed < count; row++) {
       const y = Y + (row === 0 ? 2.3 : 1.1);
       for (let i = 0; i < perRow && placed < count; i++) {
-        hangGarment(g, 'w', -3.5 + i * (5 / (perRow - 1)), y, texFor(placed), 0.85);
+        hangGarment(g, 'w', -3.5 + i * (5 / (perRow - 1)), y, texFor(placed), 0.85, { piso: collection.piso, index: placed });
         placed++;
       }
     }
@@ -262,7 +264,7 @@ export function buildGallery(scene, collection) {
       for (let row = 0; row < 3 && placed < count; row++) {
         const y = Y + [2.55, 1.65, 0.75][row];
         for (let i = 0; i < 7 && placed < count; i++) {
-          hangGarment(g, side, -3.5 + i * (5 / 6), y, texFor(placed), 0.72);
+          hangGarment(g, side, -3.5 + i * (5 / 6), y, texFor(placed), 0.72, { piso: collection.piso, index: placed });
           placed++;
         }
       }
@@ -363,6 +365,7 @@ export function buildGallery(scene, collection) {
       new THREE.MeshStandardMaterial({ map: texFor(0), transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide }),
     );
     pieza.position.set(px, Y + 1.45, pz);
+    pieza.userData.productSlot = { piso: collection.piso, index: 0 }; // clickeable
     g.add(pieza);
     registerSpinner(pieza); // gira lento, vidriera GTA V
     for (const [dx, dz] of [[-1.1, -1.1], [1.1, -1.1], [-1.1, 1.1], [1.1, 1.1]]) {
