@@ -27,6 +27,12 @@ const REJA = 0x3E6B60;     // barandas / reja patio
 const mat = (hex, rough = 0.85, metal = 0) =>
   new THREE.MeshStandardMaterial({ color: hex, roughness: rough, metalness: metal });
 
+function named(object, name, { collider = null } = {}) {
+  object.name = name;
+  if (collider !== null) object.userData.editorCollider = collider;
+  return object;
+}
+
 // ---- Medidas (spec 09) ------------------------------------------------------
 const PLAT = 0.45;          // altura de la plataforma/galería sobre la vereda
 const STEP_RISE = 0.15, STEP_RUN = 0.32; // contrahuella / huella
@@ -91,8 +97,9 @@ function neonFT(scene, x, y, z) {
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
   const group = new THREE.Group();
-  group.add(box(5.2, 0.85, 0.15, 0, 0, -0.08, mat(0x1a1a1e, 0.4, 0.6)));
-  group.add(new THREE.Mesh(new THREE.PlaneGeometry(5, 0.7), new THREE.MeshBasicMaterial({ map: tex })));
+  group.name = 'Cartel neon FOURTWENTY';
+  group.add(named(box(5.2, 0.85, 0.15, 0, 0, -0.08, mat(0x1a1a1e, 0.4, 0.6)), 'Cartel neon FOURTWENTY · base'));
+  group.add(named(new THREE.Mesh(new THREE.PlaneGeometry(5, 0.7), new THREE.MeshBasicMaterial({ map: tex })), 'Cartel neon FOURTWENTY · texto'));
   group.position.set(x, y, z + 0.09);
   scene.add(group);
   const glow = new THREE.PointLight(0x39ff6a, 5, 5, 2);
@@ -100,28 +107,32 @@ function neonFT(scene, x, y, z) {
   scene.add(glow);
 }
 
-function tree(scene, x, z, pink = false) {
+function tree(scene, x, z, pink = false, name = 'Arbol') {
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 4.5, 8), mat(0x5a4230, 0.9));
+  trunk.name = `${name} · tronco`;
   trunk.position.set(x, 2.25, z); trunk.castShadow = true; scene.add(trunk);
   const leafMat = mat(pink ? 0xe8b8cf : 0x4c7a3a, 0.85);
-  for (const [dx, dy, dz, s] of [[0, 4.6, 0, 1.6], [0.6, 4.2, 0.3, 1.2], [-0.5, 4.3, -0.4, 1.3], [0.2, 5.2, -0.2, 1.1]]) {
+  [[0, 4.6, 0, 1.6], [0.6, 4.2, 0.3, 1.2], [-0.5, 4.3, -0.4, 1.3], [0.2, 5.2, -0.2, 1.1]].forEach(([dx, dy, dz, s], i) => {
     const leaf = new THREE.Mesh(new THREE.IcosahedronGeometry(s, 0), leafMat);
+    leaf.name = `${name} · copa ${i + 1}`;
     leaf.position.set(x + dx, dy, z + dz); leaf.castShadow = true; scene.add(leaf);
-  }
+  });
   // alcorque cuadrado (spec 07)
-  scene.add(box(1.2, 0.05, 1.2, x, 0.025, z, mat(0x6b5a44, 1)));
+  scene.add(named(box(1.2, 0.05, 1.2, x, 0.025, z, mat(0x6b5a44, 1)), `${name} · alcorque`, { collider: false }));
 }
 
 // Cantero de ladrillo con vegetación (spec 07): murete #96583F, alto 0.50.
-function planter(scene, colliders, x, z, w, d) {
+function planter(scene, colliders, x, z, w, d, name = 'Cantero') {
   const g = new THREE.Group();
-  g.add(box(w, 0.5, d, x, 0.25, z, mat(MURETE, 0.9)));
-  g.add(box(w - 0.15, 0.06, d - 0.15, x, 0.5, z, mat(0x3a2e22, 1))); // tierra
+  g.name = name;
+  g.add(named(box(w, 0.5, d, x, 0.25, z, mat(MURETE, 0.9)), `${name} · ladrillo`));
+  g.add(named(box(w - 0.15, 0.06, d - 0.15, x, 0.5, z, mat(0x3a2e22, 1)), `${name} · tierra`, { collider: false }));
   // matas: agapantos (tufts verdes acintados) + arbusto redondo
   for (let i = 0; i < Math.floor(w * d); i++) {
     const bx = x + (Math.random() - 0.5) * (w - 0.4);
     const bz = z + (Math.random() - 0.5) * (d - 0.4);
     const bush = new THREE.Mesh(new THREE.IcosahedronGeometry(0.28 + Math.random() * 0.15, 0), mat(0x5c8a45, 0.9));
+    bush.name = `${name} · arbusto ${i + 1}`;
     bush.position.set(bx, 0.7, bz); bush.castShadow = true; g.add(bush);
   }
   scene.add(g);
@@ -151,13 +162,18 @@ function cannabisLeafTexture() {
   t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
   return t;
 }
-function cannabisPlant(scene, x, z, y = 0) {
+function cannabisPlant(scene, x, z, y = 0, name = 'Planta FOURTWENTY') {
   if (!_cannaTex) _cannaTex = cannabisLeafTexture();
   const g = new THREE.Group();
-  g.add(box(0.03, 0.35, 0.03, 0, 0.17, 0, mat(0x2f5a22, 0.9))); // tallo
+  g.name = name;
+  g.add(named(box(0.03, 0.35, 0.03, 0, 0.17, 0, mat(0x2f5a22, 0.9)), `${name} · tallo`));
   const geo = new THREE.PlaneGeometry(0.55, 0.6); geo.translate(0, 0.32, 0);
   const m = new THREE.MeshStandardMaterial({ map: _cannaTex, transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.9 });
-  for (const r of [0, Math.PI / 3, -Math.PI / 3]) { const p = new THREE.Mesh(geo, m); p.rotation.y = r; p.castShadow = true; g.add(p); }
+  [0, Math.PI / 3, -Math.PI / 3].forEach((r, i) => {
+    const p = new THREE.Mesh(geo, m);
+    p.name = `${name} · hoja ${i + 1}`;
+    p.rotation.y = r; p.castShadow = true; g.add(p);
+  });
   g.position.set(x, y, z); scene.add(g);
 }
 
@@ -165,6 +181,7 @@ function cannabisPlant(scene, x, z, y = 0) {
 export function buildStreet(scene) {
   const colliders = [];
   const g = new THREE.Group();
+  g.name = 'Burela 2570 · local y galeria';
 
   const hexMat = new THREE.MeshStandardMaterial({ map: hexPaver(6, 3), roughness: 0.95 });
   const veredaMat = new THREE.MeshStandardMaterial({ map: veredaTile(8, 4), roughness: 0.9 });
@@ -179,22 +196,28 @@ export function buildStreet(scene) {
   // ---- Suelos --------------------------------------------------------------
   // calzada (adoquín oscuro), cordón, vereda gris, plaza hexagonal
   const street = new THREE.Mesh(new THREE.PlaneGeometry(MAP_HALF_X * 2 + 20, 8), mat(0x3a3a3c, 0.95));
+  street.name = 'Calle Burela · asfalto';
   street.rotation.x = -Math.PI / 2; street.position.set(0, -0.05, Z_STREET + 2); scene.add(street);
-  g.add(box(MAP_HALF_X * 2 + 4, 0.15, 0.4, 0, 0.075, Z_CURB, mat(0x8a8880, 0.9))); // cordón granito
+  g.add(named(box(MAP_HALF_X * 2 + 4, 0.15, 0.4, 0, 0.075, Z_CURB, mat(0x8a8880, 0.9)), 'Cordon calle Burela'));
   const vereda = new THREE.Mesh(new THREE.PlaneGeometry(MAP_HALF_X * 2, Z_CURB - 3.5), veredaMat);
+  vereda.name = 'Vereda gris frente al local';
   vereda.rotation.x = -Math.PI / 2; vereda.position.set(0, 0, (Z_CURB + 3.5) / 2); vereda.receiveShadow = true; scene.add(vereda);
   const plaza = new THREE.Mesh(new THREE.PlaneGeometry(MAP_HALF_X * 2, 3.5 - Z_STEP_FOOT), hexMat);
+  plaza.name = 'Piso piedra hexagonal zona Burela';
   plaza.rotation.x = -Math.PI / 2; plaza.position.set(0, 0.001, 3.5 / 2); plaza.receiveShadow = true; scene.add(plaza);
 
   // ---- Escalones (spec 03, CRÍTICO): 3 pasos anchos y bajos ----------------
   // 2 boxes escalonados + la plataforma de la galería (= 3er nivel).
   const stepA = box(MAP_HALF_X * 2, STEP_RISE, STEP_RUN * 2, 0, STEP_RISE / 2, -STEP_RUN, hormigonMat);
   const stepB = box(MAP_HALF_X * 2, STEP_RISE * 2, STEP_RUN, 0, STEP_RISE, -STEP_RUN * 2, hormigonMat);
+  stepA.name = 'Escalon Burela bajo';
+  stepB.name = 'Escalon Burela alto';
   for (const s of [stepA, stepB]) { s.castShadow = true; s.receiveShadow = true; g.add(s); }
 
   // ---- Plataforma/galería a y=PLAT -----------------------------------------
   const galZc = (Z_STEP_TOP + Z_FACADE) / 2;
   const plat = box(MAP_HALF_X * 2, PLAT, Z_STEP_TOP - Z_FACADE, 0, PLAT / 2, galZc, hormigonMat);
+  plat.name = 'Plataforma galeria nivel local';
   plat.receiveShadow = true; g.add(plat);
   const heightGuide = box(MAP_HALF_X * 2, 0.025, 0.035, 0, PLAT + 0.02, Z_STEP_TOP - 0.03, new THREE.MeshBasicMaterial({ color: 0xff1b1b }));
   heightGuide.name = 'Linea roja referencia altura subida BOB';
@@ -205,12 +228,14 @@ export function buildStreet(scene) {
   // delantero de la galería. Alero volado arriba.
   for (let x = -FRENTE + 2; x <= FRENTE - 2 + 0.01; x += EJE_COL) {
     const col = box(COL, H_LIBRE, COL, x, PLAT + H_LIBRE / 2, Z_STEP_TOP - 0.3, salviaMat);
+    col.name = `Columna salvia galeria ${Math.round((x + FRENTE) / EJE_COL) + 1}`;
     col.castShadow = true; col.receiveShadow = true; g.add(col);
     colliders.push({ minX: x - COL / 2 - 0.05, maxX: x + COL / 2 + 0.05, minY: 0, maxY: PLAT + H_LIBRE, minZ: Z_STEP_TOP - 0.3 - COL / 2, maxZ: Z_STEP_TOP - 0.3 + COL / 2 });
   }
   // Alero/losa voladiza (canto verde salvia), vuela 1.5m sobre la vereda.
   const aleroZ0 = Z_STEP_TOP + ALERO_VUELO, aleroZ1 = Z_FACADE;
   const alero = box(FRENTE * 2 + 1, ALERO_T, aleroZ0 - aleroZ1, 0, PLAT + H_LIBRE + ALERO_T / 2, (aleroZ0 + aleroZ1) / 2, salviaMat);
+  alero.name = 'Alero techo galeria salvia';
   alero.castShadow = true; g.add(alero);
 
   // ---- Frente de locales (línea Z_FACADE) ----------------------------------
@@ -218,17 +243,19 @@ export function buildStreet(scene) {
   // (FOURTWENTY), que lleva vidriera con puerta.
   const facadeTop = PLAT + H_LIBRE;
   // zócalo ciego verde continuo (0.9m) a lo largo del frente
-  g.add(box(FRENTE * 2, 0.9, 0.12, 0, PLAT + 0.45, Z_FACADE, inglesMat));
+  g.add(named(box(FRENTE * 2, 0.9, 0.12, 0, PLAT + 0.45, Z_FACADE, inglesMat), 'Zocalo verde frente locales'));
   // persianas a los costados del vano de FOURTWENTY
-  for (const [x0, x1] of [[-FRENTE, -VID_W / 2], [VID_W / 2, FRENTE]]) {
+  for (const [index, [x0, x1]] of [[-FRENTE, -VID_W / 2], [VID_W / 2, FRENTE]].entries()) {
     const w = x1 - x0, cx = (x0 + x1) / 2;
     const shutter = box(w, H_LIBRE - 0.9, 0.1, cx, PLAT + 0.9 + (H_LIBRE - 0.9) / 2, Z_FACADE, shutterMat);
+    shutter.name = index === 0 ? 'Persianas verdes locales izquierda' : 'Persianas verdes locales derecha';
     shutter.castShadow = true; shutter.receiveShadow = true; g.add(shutter);
     colliders.push({ minX: x0, maxX: x1, minY: 0, maxY: facadeTop, minZ: Z_FACADE - 0.1, maxZ: Z_FACADE + 0.1 });
   }
   // dintel sobre el vano central + cartel-toldo plano para branding
-  g.add(box(VID_W + 0.4, 0.5, 0.14, 0, facadeTop - 0.25, Z_FACADE, cremaMat));
+  g.add(named(box(VID_W + 0.4, 0.5, 0.14, 0, facadeTop - 0.25, Z_FACADE, cremaMat), 'Dintel crema local FOURTWENTY'));
   const toldo = box(VID_W + 0.2, 0.06, 0.9, 0, facadeTop - 0.5, Z_FACADE + 0.5, mat(0x1a1a1e, 0.5));
+  toldo.name = 'Toldo negro local FOURTWENTY';
   g.add(toldo);
   neonFT(scene, 0, facadeTop - 0.55, Z_FACADE + 0.9);
 
@@ -245,6 +272,9 @@ export function buildStreet(scene) {
   const rearStrip = box(FRENTE * 2 + 2, 24, 0.5, 0, baseY + 12, Z_FACADE - 0.5, towerMat);
   const rearLeft = box(10, 20, 0.5, -FRENTE - 3, facadeTop + 10, Z_FACADE + 2, towerMat);
   const rearRight = box(10, 20, 0.5, FRENTE + 3, facadeTop + 10, Z_FACADE + 2, towerMat);
+  rearStrip.name = 'Edificios fondo paralelos centro';
+  rearLeft.name = 'Edificio fondo paralelo izquierda';
+  rearRight.name = 'Edificio fondo paralelo derecha';
   for (const b of [rearStrip, rearLeft, rearRight]) {
     b.castShadow = true;
     b.receiveShadow = true;
@@ -252,10 +282,11 @@ export function buildStreet(scene) {
   }
 
   // reja verde mínima a un costado (el lado derecho completo va en Pass C)
+  let railIndex = 1;
   for (let x = FRENTE - 1; x <= FRENTE + 2; x += 0.4) {
-    g.add(box(0.05, 1.2, 0.05, x, 0.6, Z_STEP_TOP - 1, mat(REJA, 0.5, 0.5)));
+    g.add(named(box(0.05, 1.2, 0.05, x, 0.6, Z_STEP_TOP - 1, mat(REJA, 0.5, 0.5)), `Reja verde lateral barrote ${railIndex++}`));
   }
-  g.add(box(3.4, 0.08, 0.08, FRENTE + 0.5, 1.2, Z_STEP_TOP - 1, mat(REJA, 0.5, 0.5)));
+  g.add(named(box(3.4, 0.08, 0.08, FRENTE + 0.5, 1.2, Z_STEP_TOP - 1, mat(REJA, 0.5, 0.5)), 'Reja verde lateral travesano'));
 
   // ---- Límites invisibles (spec 02): cordón + 2 extremos + fondo -----------
   colliders.push({ minX: -MAP_HALF_X - 0.5, maxX: MAP_HALF_X + 0.5, minY: 0, maxY: 3, minZ: MAP_MAX_Z, maxZ: MAP_MAX_Z + 0.4 }); // fondo calle
@@ -265,14 +296,14 @@ export function buildStreet(scene) {
 
   // ---- Vegetación PUNTUAL (ref: plano del dueño) ---------------------------
   // Cantero principal centro-izquierda: árbol + plantas cannábicas (marca).
-  planter(scene, colliders, -4, 2.6, 5.5, 1.4);
-  tree(scene, -5.5, 2.6, true);
-  for (const cx of [-5, -4, -3, -2.2]) cannabisPlant(scene, cx, 2.7, 0.5);
+  planter(scene, colliders, -4, 2.6, 5.5, 1.4, 'Cantero principal izquierdo');
+  tree(scene, -5.5, 2.6, true, 'Arbol cantero principal');
+  [-5, -4, -3, -2.2].forEach((cx, i) => cannabisPlant(scene, cx, 2.7, 0.5, `Planta FOURTWENTY cantero principal ${i + 1}`));
   // Cantero chico a la derecha.
-  planter(scene, colliders, 5, 2.8, 3, 1.3);
-  cannabisPlant(scene, 4.4, 2.9, 0.5); cannabisPlant(scene, 5.5, 2.7, 0.5);
+  planter(scene, colliders, 5, 2.8, 3, 1.3, 'Cantero chico derecho');
+  cannabisPlant(scene, 4.4, 2.9, 0.5, 'Planta FOURTWENTY derecha 1'); cannabisPlant(scene, 5.5, 2.7, 0.5, 'Planta FOURTWENTY derecha 2');
   // Árboles lejanos SOLO de fondo (fuera de la zona caminable, enmarcan).
-  tree(scene, -22, 4, false); tree(scene, 23, 4.5, true); tree(scene, 15, -10, false);
+  tree(scene, -22, 4, false, 'Arbol fondo izquierdo'); tree(scene, 23, 4.5, true, 'Arbol fondo derecho'); tree(scene, 15, -10, false, 'Arbol fondo atras');
 
   // ---- Luz: sol de mediodía-invierno, cálido rasante, sombras largas -------
   scene.add(new THREE.HemisphereLight(0xbfd6ea, 0x9a9488, 0.9)); // cielo celeste / suelo
@@ -298,17 +329,21 @@ function buildStorefront(g, colliders, frameMat, glassMat) {
   const x0 = -VID_W / 2, x1 = VID_W / 2;
   // vidrio detrás de la cuadrícula
   const glass = new THREE.Mesh(new THREE.PlaneGeometry(VID_W, cristalH), glassMat);
+  glass.name = 'Vidriera FOURTWENTY vidrio principal';
   glass.position.set(0, (y0 + top) / 2, Z_FACADE + 0.02); g.add(glass);
   // cuadrícula: montantes verticales + travesaños horizontales
-  for (let x = x0; x <= x1 + 0.01; x += VID_W / 4) g.add(box(0.06, cristalH, 0.08, x, (y0 + top) / 2, Z_FACADE, frameMat));
-  for (let y = y0; y <= top + 0.01; y += cristalH / 3) g.add(box(VID_W, 0.06, 0.08, 0, y, Z_FACADE, frameMat));
+  let mullion = 1;
+  for (let x = x0; x <= x1 + 0.01; x += VID_W / 4) g.add(named(box(0.06, cristalH, 0.08, x, (y0 + top) / 2, Z_FACADE, frameMat), `Vidriera FOURTWENTY montante ${mullion++}`));
+  let crossbar = 1;
+  for (let y = y0; y <= top + 0.01; y += cristalH / 3) g.add(named(box(VID_W, 0.06, 0.08, 0, y, Z_FACADE, frameMat), `Vidriera FOURTWENTY travesano ${crossbar++}`));
   // rejas verticales sobre parte del vidrio (spec 04)
-  for (let x = x0 + 0.3; x < -0.9; x += 0.35) g.add(box(0.03, cristalH, 0.03, x, (y0 + top) / 2, Z_FACADE + 0.06, frameMat));
+  let bar = 1;
+  for (let x = x0 + 0.3; x < -0.9; x += 0.35) g.add(named(box(0.03, cristalH, 0.03, x, (y0 + top) / 2, Z_FACADE + 0.06, frameMat), `Reja vidriera FOURTWENTY ${bar++}`));
   // PUERTA: vano libre a la derecha del vano central (sin vidrio, caminable).
   // La mitad izquierda de la vidriera es fija (collider); la derecha se cruza.
   colliders.push({ minX: x0, maxX: -0.4, minY: 0, maxY: top, minZ: Z_FACADE - 0.1, maxZ: Z_FACADE + 0.1 });
   // marco de la puerta
-  g.add(box(0.08, cristalH + 0.4, 0.1, 1.5, PLAT + (cristalH + 0.4) / 2, Z_FACADE, frameMat));
+  g.add(named(box(0.08, cristalH + 0.4, 0.1, 1.5, PLAT + (cristalH + 0.4) / 2, Z_FACADE, frameMat), 'Marco puerta entrada FOURTWENTY'));
 }
 
 // Local FOURTWENTY (adentro), elevado a PLAT. SOLO estructura — sin muebles
@@ -326,6 +361,10 @@ function buildLocalInterior(scene, g, colliders) {
   const ceil = box(LOCAL_HALF * 2, WT, depth, 0, PLAT + H, zc, ceilMat);
   const wallL = box(WT, H, depth, -LOCAL_HALF, PLAT + H / 2, zc, wallMat);
   const wallR = box(WT, H, depth, LOCAL_HALF, PLAT + H / 2, zc, wallMat);
+  floor.name = 'Interior local · piso beige';
+  ceil.name = 'Interior local · techo blanco';
+  wallL.name = 'Interior local · pared izquierda';
+  wallR.name = 'Interior local · pared derecha';
   colliders.push({ minX: -LOCAL_HALF - WT, maxX: -LOCAL_HALF, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK, maxZ: Z_FACADE });
   colliders.push({ minX: LOCAL_HALF, maxX: LOCAL_HALF + WT, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK, maxZ: Z_FACADE });
 
@@ -335,6 +374,7 @@ function buildLocalInterior(scene, g, colliders) {
   // trabe/gire en el pasillo angosto. Se reabre más adelante con cámara fija.
   const leftW = GAP_X0 - (-LOCAL_HALF);
   const wallBack = box(leftW, H, WT, -LOCAL_HALF + leftW / 2, PLAT + H / 2, Z_LOCAL_BACK, wallMat);
+  wallBack.name = 'Interior local · pared fondo izquierda';
   colliders.push({ minX: -LOCAL_HALF, maxX: LOCAL_HALF, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK - WT, maxZ: Z_LOCAL_BACK });
 
   for (const m of [floor, ceil, wallL, wallR, wallBack]) { m.castShadow = true; m.receiveShadow = true; g.add(m); }
@@ -355,15 +395,16 @@ function buildRealInterior(scene, g, colliders, H) {
   const white = mat(0xf2f0ec, 0.9);
 
   // — Vigas blancas transversales + rieles con spots circulares —
-  for (const bz of [-6.4, -8.4]) {
-    g.add(box(LOCAL_HALF * 2, 0.2, 0.18, 0, PLAT + H - 0.1, bz, white));
-  }
-  for (const tx of [-1.1, 1.1]) {
-    g.add(box(0.05, 0.05, 4.6, tx, PLAT + H - 0.22, -7.4, black));
+  [-6.4, -8.4].forEach((bz, i) => {
+    g.add(named(box(LOCAL_HALF * 2, 0.2, 0.18, 0, PLAT + H - 0.1, bz, white), `Interior local · viga blanca ${i + 1}`));
+  });
+  [-1.1, 1.1].forEach((tx, trackIndex) => {
+    g.add(named(box(0.05, 0.05, 4.6, tx, PLAT + H - 0.22, -7.4, black), `Interior local · riel luces ${trackIndex + 1}`));
     for (let i = 0; i < 4; i++) {
       const sz = -5.6 - i * 1.2;
       const can = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.075, 0.09, 10),
         new THREE.MeshBasicMaterial({ color: 0xfff6e6 }));
+      can.name = `Interior local · spot ${trackIndex + 1}.${i + 1}`;
       can.position.set(tx, PLAT + H - 0.3, sz);
       g.add(can);
     }
@@ -371,11 +412,12 @@ function buildRealInterior(scene, g, colliders, H) {
     spot.position.set(tx, PLAT + H - 0.3, -7.4);
     spot.target.position.set(tx, PLAT, -7.4);
     scene.add(spot, spot.target);
-  }
+  });
 
   // — Panel de madera del fondo + NEÓN (hoja verde + WE ROLL DIFFERENT) —
-  g.add(box(3.4, H, 0.08, -1.3, PLAT + H / 2, Z_LOCAL_BACK + 0.06, wood));
+  g.add(named(box(3.4, H, 0.08, -1.3, PLAT + H / 2, Z_LOCAL_BACK + 0.06, wood), 'Interior local · panel madera fondo'));
   const neon = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 1.5), new THREE.MeshBasicMaterial({ map: rollDifferentNeon(), transparent: true }));
+  neon.name = 'Interior local · neon WE ROLL DIFFERENT';
   neon.position.set(-1.3, PLAT + 1.9, Z_LOCAL_BACK + 0.12);
   g.add(neon);
   const glowG = new THREE.PointLight(0x39ff6a, 2.5, 3.5, 2);
@@ -383,22 +425,25 @@ function buildRealInterior(scene, g, colliders, H) {
   scene.add(glowG);
 
   // — Escritorio/mostrador central de madera + 2 banquetas negras —
-  g.add(box(1.7, 0.95, 0.62, -0.6, PLAT + 0.475, -9.15, wood));
-  g.add(box(1.78, 0.05, 0.7, -0.6, PLAT + 0.975, -9.15, wood)); // tapa
-  for (const dx of [-1.05, -0.6, -0.15]) g.add(box(0.28, 0.02, 0.02, dx, PLAT + 0.78, -8.82, black)); // tiradores
+  g.add(named(box(1.7, 0.95, 0.62, -0.6, PLAT + 0.475, -9.15, wood), 'Interior local · mostrador madera cuerpo'));
+  g.add(named(box(1.78, 0.05, 0.7, -0.6, PLAT + 0.975, -9.15, wood), 'Interior local · mostrador madera tapa'));
+  [-1.05, -0.6, -0.15].forEach((dx, i) => g.add(named(box(0.28, 0.02, 0.02, dx, PLAT + 0.78, -8.82, black), `Interior local · tirador mostrador ${i + 1}`)));
   colliders.push({ minX: -1.5, maxX: 0.3, minY: 0, maxY: PLAT + 1, minZ: -9.5, maxZ: -8.8 });
   for (const sx of [-1.0, -0.2]) {
     const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.05, 12), black);
+    seat.name = `Interior local · banqueta negra ${sx < -0.5 ? 1 : 2} asiento`;
     seat.position.set(sx, PLAT + 0.72, -9.75); g.add(seat);
-    g.add(box(0.04, 0.68, 0.04, sx, PLAT + 0.36, -9.75, black));
+    g.add(named(box(0.04, 0.68, 0.04, sx, PLAT + 0.36, -9.75, black), `Interior local · banqueta negra ${sx < -0.5 ? 1 : 2} pata`));
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.015, 6, 16), black);
+    ring.name = `Interior local · banqueta negra ${sx < -0.5 ? 1 : 2} aro`;
     ring.rotation.x = Math.PI / 2; ring.position.set(sx, PLAT + 0.22, -9.75); g.add(ring);
   }
 
   // — Pared izquierda: estante flotante + barral con remeras —
-  g.add(box(1.3, 0.05, 0.28, -2.8, PLAT + 2.15, -6.2, wood));
-  g.add(box(0.24, 0.14, 0.2, -3.05 + 0.4, PLAT + 2.25, -6.5, black)); // deco
+  g.add(named(box(1.3, 0.05, 0.28, -2.8, PLAT + 2.15, -6.2, wood), 'Interior local · estante pared izquierda'));
+  g.add(named(box(0.24, 0.14, 0.2, -3.05 + 0.4, PLAT + 2.25, -6.5, black), 'Interior local · deco estante'));
   const rail2 = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.6, 8), chrome);
+  rail2.name = 'Interior local · barral prendas izquierdo';
   rail2.rotation.x = Math.PI / 2; rail2.position.set(-2.78, PLAT + 1.95, -6.2); g.add(rail2);
   const shirtDefs = [
     { color: 0x141414, tipo: 'tee' }, { color: 0xf5f2ea, tipo: 'tee' },
@@ -407,6 +452,7 @@ function buildRealInterior(scene, g, colliders, H) {
   shirtDefs.forEach((d, i) => {
     const s = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.62),
       new THREE.MeshStandardMaterial({ map: garmentTexture(d.color, d.tipo), transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide }));
+    s.name = `Interior local · prenda colgada izquierda ${i + 1}`;
     s.position.set(-2.72 + i * 0.02, PLAT + 1.58, -6.85 + i * 0.42);
     s.rotation.y = Math.PI / 2;
     g.add(s);
@@ -415,33 +461,38 @@ function buildRealInterior(scene, g, colliders, H) {
   // — Exhibidor del jean blanco (adelante-izquierda, como la foto) —
   const px = -2.2, pz = -5.3;
   const base = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.03, 14), black);
+  base.name = 'Interior local · exhibidor jean base';
   base.position.set(px, PLAT + 0.015, pz); g.add(base);
-  g.add(box(0.13, 0.85, 0.15, px - 0.07, PLAT + 0.45, pz, white));
-  g.add(box(0.13, 0.85, 0.15, px + 0.07, PLAT + 0.45, pz, white));
-  g.add(box(0.3, 0.16, 0.17, px, PLAT + 0.95, pz, white));
+  g.add(named(box(0.13, 0.85, 0.15, px - 0.07, PLAT + 0.45, pz, white), 'Interior local · jean blanco pierna izquierda'));
+  g.add(named(box(0.13, 0.85, 0.15, px + 0.07, PLAT + 0.45, pz, white), 'Interior local · jean blanco pierna derecha'));
+  g.add(named(box(0.3, 0.16, 0.17, px, PLAT + 0.95, pz, white), 'Interior local · jean blanco cintura'));
   const top = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.04, 14), black);
+  top.name = 'Interior local · exhibidor jean tapa';
   top.position.set(px, PLAT + 1.12, pz); g.add(top);
   colliders.push({ minX: px - 0.25, maxX: px + 0.25, minY: 0, maxY: PLAT + 1.2, minZ: pz - 0.25, maxZ: pz + 0.25 });
 
   // — Derecha: divisor de madera + banqueta roja + corcho —
-  g.add(box(0.45, 1.05, 2.2, 2.72, PLAT + 0.525, -5.8, wood));
+  g.add(named(box(0.45, 1.05, 2.2, 2.72, PLAT + 0.525, -5.8, wood), 'Interior local · divisor madera derecho'));
   colliders.push({ minX: 2.5, maxX: 2.95, minY: 0, maxY: PLAT + 1.1, minZ: -6.9, maxZ: -4.7 });
   const rSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.05, 12), mat(0xc22a1f, 0.6));
+  rSeat.name = 'Interior local · banqueta roja asiento';
   rSeat.position.set(2.35, PLAT + 0.85, -7.5); g.add(rSeat);
   for (const [lx, lz] of [[-0.1, -0.1], [0.1, -0.1], [0, 0.12]]) {
-    const leg = box(0.03, 0.85, 0.03, 2.35 + lx, PLAT + 0.42, -7.5 + lz, mat(0xc22a1f, 0.6));
+    const leg = named(box(0.03, 0.85, 0.03, 2.35 + lx, PLAT + 0.42, -7.5 + lz, mat(0xc22a1f, 0.6)), 'Interior local · banqueta roja pata');
     g.add(leg);
   }
   colliders.push({ minX: 2.15, maxX: 2.55, minY: 0, maxY: PLAT + 0.9, minZ: -7.7, maxZ: -7.3 });
   const cork = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.75), corkTexturePlane());
+  cork.name = 'Interior local · corcho pared derecha';
   cork.position.set(LOCAL_HALF - 0.11, PLAT + 1.5, -6.8);
   cork.rotation.y = -Math.PI / 2;
   g.add(cork);
 
   // — Detalles: extintor + aire acondicionado —
   const ext = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.34, 10), mat(0xc22a1f, 0.5));
+  ext.name = 'Interior local · extintor';
   ext.position.set(0.28, PLAT + 1.15, Z_LOCAL_BACK + 0.14); g.add(ext);
-  g.add(box(0.85, 0.28, 0.22, 0.8, PLAT + 2.72, Z_FACADE - 0.16, white)); // split AC
+  g.add(named(box(0.85, 0.28, 0.22, 0.8, PLAT + 2.72, Z_FACADE - 0.16, white), 'Interior local · aire acondicionado split'));
 
   // luz de relleno cálida general
   const fill = new THREE.PointLight(0xfff0dd, 3, 8, 2);
@@ -506,10 +557,11 @@ function buildStockSelector(scene, g) {
 
   // vestir el pocket: panel oscuro de fondo + laterales + barral cromado
   const dark = mat(0x24241f, 0.95);
-  g.add(box(W, H_LIBRE, 0.1, cx, PLAT + H_LIBRE / 2, zBack, dark));
-  g.add(box(0.08, H_LIBRE, GAP_STUB, GAP_X0, PLAT + H_LIBRE / 2, Z_LOCAL_BACK - GAP_STUB / 2, dark));
-  g.add(box(0.08, H_LIBRE, GAP_STUB, GAP_X1, PLAT + H_LIBRE / 2, Z_LOCAL_BACK - GAP_STUB / 2, dark));
+  g.add(named(box(W, H_LIBRE, 0.1, cx, PLAT + H_LIBRE / 2, zBack, dark), 'Stock selector · panel fondo oscuro'));
+  g.add(named(box(0.08, H_LIBRE, GAP_STUB, GAP_X0, PLAT + H_LIBRE / 2, Z_LOCAL_BACK - GAP_STUB / 2, dark), 'Stock selector · lateral izquierdo'));
+  g.add(named(box(0.08, H_LIBRE, GAP_STUB, GAP_X1, PLAT + H_LIBRE / 2, Z_LOCAL_BACK - GAP_STUB / 2, dark), 'Stock selector · lateral derecho'));
   const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, W - 0.3, 8), mat(0xb9bcc2, 0.25, 0.9));
+  rail.name = 'Stock selector · barral cromado';
   rail.rotation.z = Math.PI / 2;
   rail.position.set(cx, PLAT + 2.05, zShirt);
   g.add(rail);
@@ -535,6 +587,7 @@ function buildStockSelector(scene, g) {
       new THREE.PlaneGeometry(0.46, 0.55),
       new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide, emissive: 0x111111 }),
     );
+    shirt.name = `Stock selector · remera ${d.label}`;
     shirt.position.set(x, PLAT + 1.72, zShirt);
     shirt.userData = { piso: d.piso, label: d.label, baseScale: 1 };
     g.add(shirt);
@@ -548,6 +601,7 @@ function buildStockSelector(scene, g) {
     ctx.fillText(d.label, 128, 26);
     const lt = new THREE.CanvasTexture(c); lt.colorSpace = THREE.SRGBColorSpace; lt.anisotropy = 4;
     const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 0.082), new THREE.MeshBasicMaterial({ map: lt }));
+    tag.name = `Stock selector · etiqueta ${d.label}`;
     tag.position.set(x, PLAT + 1.32, zShirt);
     g.add(tag);
   });

@@ -208,7 +208,7 @@ function labelFor(object) {
 export function autoRegisterScene(root, { prefix = 'mundo', skip = [] } = {}) {
   const skipSet = new Set(skip.filter(Boolean));
   const registered = [];
-  const visit = (object, path) => {
+  const visit = (object, path, parentLabel = '') => {
     for (let i = 0; i < object.children.length; i++) {
       const child = object.children[i];
       if (skipSet.has(child)) continue;
@@ -218,16 +218,18 @@ export function autoRegisterScene(root, { prefix = 'mundo', skip = [] } = {}) {
       if (!hasRenderableDescendant(child)) continue;
       const childPath = [...path, i];
       const id = `${prefix}:${childPath.join('.')}`;
-      const label = labelFor(child);
+      const ownName = child.name?.trim();
+      const baseLabel = labelFor(child);
+      const label = ownName || (parentLabel ? `${parentLabel} · ${baseLabel} ${i}` : `${baseLabel} ${childPath.join('.')}`);
       const entry = registerEditableObject({
         id,
-        name: child.name ? label : `${label} ${childPath.join('.')}`,
+        name: label,
         type: prefix,
         object3D: child,
         manageShadows: false,
       }, { silent: true });
       if (entry) registered.push(entry);
-      if (child.children.length) visit(child, childPath);
+      if (child.children.length) visit(child, childPath, label);
     }
   };
   visit(root, []);
