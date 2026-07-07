@@ -212,7 +212,10 @@ export function buildStreet(scene) {
   const stepB = box(MAP_HALF_X * 2, STEP_RISE * 2, STEP_RUN, 0, STEP_RISE, -STEP_RUN * 2, hormigonMat);
   stepA.name = 'Escalon Burela bajo';
   stepB.name = 'Escalon Burela alto';
-  for (const s of [stepA, stepB]) { s.castShadow = true; s.receiveShadow = true; g.add(s); }
+  // editorCollider=true: son bajos (0.15m/0.30m) así que el step-offset
+  // genérico de main.js los toma como escalón (raycast), no como pared — si
+  // el dueño los duplica/rota con el editor, siguen siendo subibles.
+  for (const s of [stepA, stepB]) { s.castShadow = true; s.receiveShadow = true; s.userData.editorCollider = true; g.add(s); }
 
   // ---- Plataforma/galería a y=PLAT -----------------------------------------
   const galZc = (Z_STEP_TOP + Z_FACADE) / 2;
