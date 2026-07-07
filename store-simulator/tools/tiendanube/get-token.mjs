@@ -2,7 +2,7 @@
 // Uso:  npm run tn:token -- EL_CODE_DE_LA_URL
 // El code aparece en la URL a la que te redirige Tiendanube al autorizar la
 // app (?code=...) y vence a los 5 minutos. El token que devuelve NO vence.
-import { loadEnv, exchangeCodeForToken } from './api.mjs';
+import { loadEnv, exchangeCodeForToken, upsertEnv } from './api.mjs';
 
 const code = process.argv[2];
 if (!code) {
@@ -13,13 +13,17 @@ if (!code) {
 
 exchangeCodeForToken(loadEnv(), code)
   .then((data) => {
-    console.log('✔ Token obtenido. Pegá estas dos líneas en tu .env:');
+    // El token y el store id se escriben SOLOS en el .env — no editás nada.
+    const file = upsertEnv({
+      TN_ACCESS_TOKEN: data.access_token,
+      TN_STORE_ID: data.user_id,
+    });
+    console.log('✔ Token obtenido y guardado en el .env automáticamente.');
+    console.log(`  tienda #${data.user_id} · scope: ${data.scope ?? '—'}`);
+    console.log(`  (${file})`);
     console.log('');
-    console.log(`TN_ACCESS_TOKEN=${data.access_token}`);
-    console.log(`TN_STORE_ID=${data.user_id}`);
-    console.log('');
-    console.log(`(scope autorizado: ${data.scope ?? '—'})`);
-    console.log('Después corré: npm run tn:sync');
+    console.log('Último paso: cargá la categoría de cada piso en el admin (tecla P)');
+    console.log('y corré:  npm run tn:sync');
   })
   .catch((e) => {
     console.error(`✖ ${e.message}`);

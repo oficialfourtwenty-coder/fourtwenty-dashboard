@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "tn:setup": "node tools/tiendanube/setup.mjs",
     "tn:token": "node tools/tiendanube/get-token.mjs",
     "tn:sync": "node tools/tiendanube/sync.mjs"
   },
