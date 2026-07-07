@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "tn:token": "node tools/tiendanube/get-token.mjs",
+    "tn:sync": "node tools/tiendanube/sync.mjs"
   },
   "dependencies": {
     "three": "0.184.0"
