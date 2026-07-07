@@ -12,6 +12,7 @@
 // compañía), que queda construido pero desconectado hasta la carga de mapa
 // (ver nota al final del archivo).
 import * as THREE from 'three';
+import { Reflector } from 'three/addons/objects/Reflector.js';
 import { towerFacade, veredaTile, hexPaver, greenShutter, whiteFloor, lightWood } from './textures.js';
 import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
@@ -192,7 +193,6 @@ export function buildStreet(scene) {
   const cremaMat = mat(CREMA, 0.85);
   const shutterMat = new THREE.MeshStandardMaterial({ map: greenShutter(2, 1), roughness: 0.6, metalness: 0.3 });
   const inglesMat = mat(INGLES, 0.5, 0.4);
-  const glassMat = new THREE.MeshPhysicalMaterial({ color: 0x2a3a42, roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.4 });
   const towerMat = new THREE.MeshStandardMaterial({ map: towerFacade(8, 6), roughness: 0.9 });
 
   // ---- Suelos --------------------------------------------------------------
@@ -265,7 +265,7 @@ export function buildStreet(scene) {
   neonFT(scene, 0, facadeTop - 0.55, Z_FACADE + 0.9);
 
   // ---- Vidriera FOURTWENTY (verde inglés, cuadrícula) con puerta -----------
-  buildStorefront(g, colliders, inglesMat, glassMat);
+  buildStorefront(g, colliders, inglesMat);
 
   // ---- Interior del local (elevado a PLAT, sin muebles) --------------------
   const selectors = buildLocalInterior(scene, g, colliders);
@@ -331,7 +331,7 @@ export function buildStreet(scene) {
 }
 
 // Vidriera del local: marco de cuadrícula verde inglés + vidrio + puerta.
-function buildStorefront(g, colliders, frameMat, glassMat) {
+function buildStorefront(g, colliders, frameMat) {
   const y0 = PLAT + 0.9;                 // arriba del zócalo ciego
   const top = PLAT + H_LIBRE - 0.5;      // bajo el dintel
   const cristalH = top - y0;
@@ -339,12 +339,25 @@ function buildStorefront(g, colliders, frameMat, glassMat) {
   // vidrio fijo a la derecha; el paso real queda libre a la izquierda.
   const fixedX0 = 1.05;
   const fixedW = x1 - fixedX0;
-  const glassGeo = new THREE.BoxGeometry(fixedW, cristalH, 0.06);
-  glassGeo.translate((fixedX0 + x1) / 2, 0, 0);
-  const glass = new THREE.Mesh(glassGeo, glassMat);
+  const glass = new THREE.Group();
   glass.name = 'Vidriera FOURTWENTY vidrio principal';
   glass.position.set(0, (y0 + top) / 2, Z_FACADE + 0.02);
   glass.userData.editorCollider = true;
+  const mirror = new Reflector(new THREE.PlaneGeometry(fixedW, cristalH), {
+    clipBias: 0.003,
+    textureWidth: 1024,
+    textureHeight: 1024,
+    color: 0x8899a0,
+  });
+  mirror.name = 'Vidriera FOURTWENTY espejo reflejo';
+  mirror.position.x = (fixedX0 + x1) / 2;
+  const collider = new THREE.Mesh(
+    new THREE.BoxGeometry(fixedW, cristalH, 0.06),
+    new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, transparent: true, opacity: 0 }),
+  );
+  collider.name = 'Vidriera FOURTWENTY espejo collider';
+  collider.position.x = (fixedX0 + x1) / 2;
+  glass.add(mirror, collider);
   g.add(glass);
   // cuadrícula: montantes verticales + travesaños horizontales
   let mullion = 1;
