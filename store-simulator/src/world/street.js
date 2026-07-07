@@ -125,6 +125,7 @@ function tree(scene, x, z, pink = false, name = 'Arbol') {
 function planter(scene, colliders, x, z, w, d, name = 'Cantero') {
   const g = new THREE.Group();
   g.name = name;
+  g.userData.editorCollider = true;
   g.add(named(box(w, 0.5, d, x, 0.25, z, mat(MURETE, 0.9)), `${name} · ladrillo`));
   g.add(named(box(w - 0.15, 0.06, d - 0.15, x, 0.5, z, mat(0x3a2e22, 1)), `${name} · tierra`, { collider: false }));
   // matas: agapantos (tufts verdes acintados) + arbusto redondo
@@ -136,7 +137,6 @@ function planter(scene, colliders, x, z, w, d, name = 'Cantero') {
     bush.position.set(bx, 0.7, bz); bush.castShadow = true; g.add(bush);
   }
   scene.add(g);
-  colliders.push({ minX: x - w / 2, maxX: x + w / 2, minY: 0, maxY: 0.5, minZ: z - d / 2, maxZ: z + d / 2 });
 }
 
 // Planta cannábica estilizada (ref: plano del dueño, marca FOURTWENTY): hoja
@@ -232,8 +232,8 @@ export function buildStreet(scene) {
   for (let x = -FRENTE + 2; x <= FRENTE - 2 + 0.01; x += EJE_COL) {
     const col = box(COL, H_LIBRE, COL, x, PLAT + H_LIBRE / 2, Z_STEP_TOP - 0.3, salviaMat);
     col.name = `Columna salvia galeria ${Math.round((x + FRENTE) / EJE_COL) + 1}`;
+    col.userData.editorCollider = true;
     col.castShadow = true; col.receiveShadow = true; g.add(col);
-    colliders.push({ minX: x - COL / 2 - 0.05, maxX: x + COL / 2 + 0.05, minY: 0, maxY: PLAT + H_LIBRE, minZ: Z_STEP_TOP - 0.3 - COL / 2, maxZ: Z_STEP_TOP - 0.3 + COL / 2 });
   }
   // Alero/losa voladiza (canto verde salvia), vuela 1.5m sobre la vereda.
   const aleroZ0 = Z_STEP_TOP + ALERO_VUELO, aleroZ1 = Z_FACADE;
@@ -252,8 +252,8 @@ export function buildStreet(scene) {
     const w = x1 - x0, cx = (x0 + x1) / 2;
     const shutter = box(w, H_LIBRE - 0.9, 0.1, cx, PLAT + 0.9 + (H_LIBRE - 0.9) / 2, Z_FACADE, shutterMat);
     shutter.name = index === 0 ? 'Persianas verdes locales izquierda' : 'Persianas verdes locales derecha';
+    shutter.userData.editorCollider = true;
     shutter.castShadow = true; shutter.receiveShadow = true; g.add(shutter);
-    colliders.push({ minX: x0, maxX: x1, minY: 0, maxY: facadeTop, minZ: Z_FACADE - 0.1, maxZ: Z_FACADE + 0.1 });
   }
   // dintel sobre el vano central + cartel-toldo plano para branding
   g.add(named(box(VID_W + 0.4, 0.5, 0.14, 0, facadeTop - 0.25, Z_FACADE, cremaMat), 'Dintel crema local FOURTWENTY'));
