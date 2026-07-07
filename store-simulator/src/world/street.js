@@ -337,7 +337,7 @@ function buildStorefront(g, colliders, frameMat, glassMat) {
   const cristalH = top - y0;
   const x0 = -VID_W / 2, x1 = VID_W / 2;
   // vidrio fijo a la derecha; el paso real queda libre a la izquierda.
-  const fixedX0 = 0.4;
+  const fixedX0 = 1.05;
   const fixedW = x1 - fixedX0;
   const glassGeo = new THREE.BoxGeometry(fixedW, cristalH, 0.06);
   glassGeo.translate((fixedX0 + x1) / 2, 0, 0);
@@ -385,14 +385,11 @@ function buildLocalInterior(scene, g, colliders) {
   wallL.userData.editorCollider = true;
   wallR.userData.editorCollider = true;
 
-  // Fondo del local: muro visible a la izquierda; a la derecha queda el HUECO
-  // del stock VISIBLE (se ve el pocket atrás) pero BLOQUEADO físicamente con una
-  // pared invisible a lo ancho de TODO el fondo, para que BOB no se meta y se
-  // trabe/gire en el pasillo angosto. Se reabre más adelante con cámara fija.
+  // Fondo del local: solo bloquea el muro visible; el hueco derecho queda libre.
   const leftW = GAP_X0 - (-LOCAL_HALF);
   const wallBack = box(leftW, H, WT, -LOCAL_HALF + leftW / 2, PLAT + H / 2, Z_LOCAL_BACK, wallMat);
   wallBack.name = 'Interior local · pared fondo izquierda';
-  colliders.push({ minX: -LOCAL_HALF, maxX: LOCAL_HALF, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK - WT, maxZ: Z_LOCAL_BACK });
+  wallBack.userData.editorCollider = true;
 
   for (const m of [floor, ceil, wallL, wallR, wallBack]) { m.castShadow = true; m.receiveShadow = true; g.add(m); }
 
@@ -446,13 +443,17 @@ function buildRealInterior(scene, g, colliders, H) {
   g.add(named(box(1.78, 0.05, 0.7, -0.6, PLAT + 0.975, -9.15, wood), 'Interior local · mostrador madera tapa'));
   [-1.05, -0.6, -0.15].forEach((dx, i) => g.add(named(box(0.28, 0.02, 0.02, dx, PLAT + 0.78, -8.82, black), `Interior local · tirador mostrador ${i + 1}`)));
   for (const sx of [-1.0, -0.2]) {
+    const stool = new THREE.Group();
+    stool.name = `Interior local · banqueta negra ${sx < -0.5 ? 1 : 2} completa`;
+    stool.userData.editorCollider = true;
     const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.05, 12), black);
     seat.name = `Interior local · banqueta negra ${sx < -0.5 ? 1 : 2} asiento`;
-    seat.position.set(sx, PLAT + 0.72, -9.75); g.add(seat);
-    g.add(named(box(0.04, 0.68, 0.04, sx, PLAT + 0.36, -9.75, black), `Interior local · banqueta negra ${sx < -0.5 ? 1 : 2} pata`));
+    seat.position.set(sx, PLAT + 0.72, -9.75); stool.add(seat);
+    stool.add(named(box(0.04, 0.68, 0.04, sx, PLAT + 0.36, -9.75, black), `Interior local · banqueta negra ${sx < -0.5 ? 1 : 2} pata`));
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.015, 6, 16), black);
     ring.name = `Interior local · banqueta negra ${sx < -0.5 ? 1 : 2} aro`;
-    ring.rotation.x = Math.PI / 2; ring.position.set(sx, PLAT + 0.22, -9.75); g.add(ring);
+    ring.rotation.x = Math.PI / 2; ring.position.set(sx, PLAT + 0.22, -9.75); stool.add(ring);
+    g.add(stool);
   }
 
   // — Pared izquierda: estante flotante + barral con remeras —
@@ -476,27 +477,33 @@ function buildRealInterior(scene, g, colliders, H) {
 
   // — Exhibidor del jean blanco (adelante-izquierda, como la foto) —
   const px = -2.2, pz = -5.3;
+  const jean = new THREE.Group();
+  jean.name = 'Interior local · exhibidor jean completo';
+  jean.userData.editorCollider = true;
   const base = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.03, 14), black);
   base.name = 'Interior local · exhibidor jean base';
-  base.position.set(px, PLAT + 0.015, pz); g.add(base);
-  g.add(named(box(0.13, 0.85, 0.15, px - 0.07, PLAT + 0.45, pz, white), 'Interior local · jean blanco pierna izquierda'));
-  g.add(named(box(0.13, 0.85, 0.15, px + 0.07, PLAT + 0.45, pz, white), 'Interior local · jean blanco pierna derecha'));
-  g.add(named(box(0.3, 0.16, 0.17, px, PLAT + 0.95, pz, white), 'Interior local · jean blanco cintura'));
+  base.position.set(px, PLAT + 0.015, pz); jean.add(base);
+  jean.add(named(box(0.13, 0.85, 0.15, px - 0.07, PLAT + 0.45, pz, white), 'Interior local · jean blanco pierna izquierda'));
+  jean.add(named(box(0.13, 0.85, 0.15, px + 0.07, PLAT + 0.45, pz, white), 'Interior local · jean blanco pierna derecha'));
+  jean.add(named(box(0.3, 0.16, 0.17, px, PLAT + 0.95, pz, white), 'Interior local · jean blanco cintura'));
   const top = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.04, 14), black);
   top.name = 'Interior local · exhibidor jean tapa';
-  top.position.set(px, PLAT + 1.12, pz); g.add(top);
-  colliders.push({ minX: px - 0.25, maxX: px + 0.25, minY: 0, maxY: PLAT + 1.2, minZ: pz - 0.25, maxZ: pz + 0.25 });
+  top.position.set(px, PLAT + 1.12, pz); jean.add(top);
+  g.add(jean);
 
   // — Derecha: divisor de madera + banqueta roja + corcho —
   g.add(named(box(0.45, 1.05, 2.2, 2.72, PLAT + 0.525, -5.8, wood), 'Interior local · divisor madera derecho', { collider: true }));
+  const redStool = new THREE.Group();
+  redStool.name = 'Interior local · banqueta roja completa';
+  redStool.userData.editorCollider = true;
   const rSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.05, 12), mat(0xc22a1f, 0.6));
   rSeat.name = 'Interior local · banqueta roja asiento';
-  rSeat.position.set(2.35, PLAT + 0.85, -7.5); g.add(rSeat);
+  rSeat.position.set(2.35, PLAT + 0.85, -7.5); redStool.add(rSeat);
   for (const [lx, lz] of [[-0.1, -0.1], [0.1, -0.1], [0, 0.12]]) {
     const leg = named(box(0.03, 0.85, 0.03, 2.35 + lx, PLAT + 0.42, -7.5 + lz, mat(0xc22a1f, 0.6)), 'Interior local · banqueta roja pata');
-    g.add(leg);
+    redStool.add(leg);
   }
-  colliders.push({ minX: 2.15, maxX: 2.55, minY: 0, maxY: PLAT + 0.9, minZ: -7.7, maxZ: -7.3 });
+  g.add(redStool);
   const cork = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.75), corkTexturePlane());
   cork.name = 'Interior local · corcho pared derecha';
   cork.position.set(LOCAL_HALF - 0.11, PLAT + 1.5, -6.8);
