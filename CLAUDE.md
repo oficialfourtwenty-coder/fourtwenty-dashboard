@@ -112,6 +112,51 @@ Nombres/cantidades/paletas editables en `world/collections.js`; geometría en
 placeholders hasta linkear TiendaNube (Fase 5): cada colección se mapea a una
 categoría de TN y aparecen los productos reales con foto y precio.
 
+## Productos + Tiendanube (catálogo, click de compra y admin)
+
+El catálogo de prendas vive en `public/assets/data/productos.json` (5 colecciones:
+`local` + los 4 pisos), y es la ÚNICA fuente para el panel de producto y el admin.
+Dos formas de llenarlo, MISMO formato — a mano ahora, automático cuando haya
+credenciales — sin cambiar cómo se muestra nada.
+
+```
+src/data/productosStore.js       única puerta a los datos: carga (localStorage del
+                                 dueño → productos.json), guarda (localStorage +
+                                 POST /api/productos en dev), getProductoForSlot
+                                 (cicla los activos por gancho), export/import, subs.
+src/interact/productClicks.js    ⭐ CLICK EN PRENDA: capa NUEVA y AISLADA (raycaster
+                                 propio, no toca cámara/controles). Solo mira meshes
+                                 tageados userData.productSlot={piso,index}. Hover con
+                                 tooltip + click → panel. Bloqueada en loading/editor.
+src/ui/productPanel.js           tarjeta de producto (imagen/nombre/precio/desc) +
+                                 botón COMPRAR que SOLO redirige al link de TN (jamás
+                                 procesa pagos). Cierra con Esc/✕/click afuera.
+src/ui/adminPanel.js             ⭐ ADMIN (tecla P; en build online ?admin=1): prendas
+                                 por piso, form por percha (imagen/nombre/precio/link/
+                                 desc/visible), +agregar/borrar, categoriaTN por piso.
+                                 Auto-guarda (localStorage + productos.json en dev).
+                                 Export/Import JSON + botón Sincronizar Tiendanube.
+                                 P se bloquea si el editor de mundo está activo (usa P).
+src/integrations/tiendanube/     mapper.js (PURO, browser+node: {es} multi-idioma,
+                                 precio de variants, imagen images[].src, link
+                                 canonical_url) + client.js (/api/tn/* con degradado) +
+                                 README con el paso a paso completo del dueño.
+tools/tiendanube/                SOLO node (credenciales del .env, nunca al bundle):
+                                 api.mjs (auth code→token en apps/authorize/token, API
+                                 v1 con header 'Authentication: bearer'), get-token.mjs
+                                 (npm run tn:token -- CODE), sync.mjs (npm run tn:sync →
+                                 llena productos.json: cada colección con categoriaTN se
+                                 vuelve espejo de esa categoría; las demás quedan manual).
+vite.config.js                   middleware SOLO-dev: GET/POST /api/productos (el admin
+                                 escribe el archivo real) + /api/tn/status + /api/tn/sync.
+```
+
+Prendas tageadas `userData.productSlot` (sin cambio visual): las 4 colgadas + el jean
+del local (`street.js`) y todas las de galería + la pieza CULTURA (`gallery.js`).
+Credenciales en `.env` (gitignoreado, ver `.env.example`) — sin `.env` todo funciona
+igual con carga manual. `npm run dev` habilita guardar en archivo y el sync; el build
+online cae a localStorage + Exportar.
+
 ## Estado de fases
 
 | Fase | Qué | Estado |
