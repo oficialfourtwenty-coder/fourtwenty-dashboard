@@ -376,6 +376,19 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     else setStatus('Ese objeto no tiene grupo padre editable.');
   }
 
+  function wantsGroupSelection(event) {
+    return event.shiftKey || event.getModifierState?.('CapsLock') === true;
+  }
+
+  function parentForQuickGroup(id) {
+    const parentId = getParentEditableId(id);
+    if (!parentId) return null;
+    const parent = getEditableById(parentId);
+    // Evita que Shift/Caps sobre una pieza suelta seleccione todo el mapa.
+    if (parent?.object3D?.userData?.editorWorldRoot) return null;
+    return parentId;
+  }
+
   function onPointerDown(event) {
     if (!state.enabled) return;
     // preventDefault impide que el click saque el foco de los inputs del panel;
@@ -404,7 +417,8 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     }
     const root = findEditableRoot(hit);
     const id = root?.userData?.editorId;
-    if (id) selectId(id);
+    if (!id) return;
+    selectId(wantsGroupSelection(event) ? (parentForQuickGroup(id) ?? id) : id);
   }
 
   function onKeyDown(event) {

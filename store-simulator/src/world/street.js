@@ -183,6 +183,7 @@ export function buildStreet(scene) {
   const colliders = [];
   const g = new THREE.Group();
   g.name = 'Burela 2570 · local y galeria';
+  g.userData.editorWorldRoot = true;
 
   const hexMat = new THREE.MeshStandardMaterial({ map: hexPaver(6, 3), roughness: 0.95 });
   const veredaMat = new THREE.MeshStandardMaterial({ map: veredaTile(8, 4), roughness: 0.9 });
@@ -286,11 +287,15 @@ export function buildStreet(scene) {
   }
 
   // reja verde mínima a un costado (el lado derecho completo va en Pass C)
+  const railGroup = new THREE.Group();
+  railGroup.name = 'Reja verde lateral completa';
+  railGroup.userData.editorCollider = true;
   let railIndex = 1;
   for (let x = FRENTE - 1; x <= FRENTE + 2; x += 0.4) {
-    g.add(named(box(0.05, 1.2, 0.05, x, 0.6, Z_STEP_TOP - 1, mat(REJA, 0.5, 0.5)), `Reja verde lateral barrote ${railIndex++}`));
+    railGroup.add(named(box(0.05, 1.2, 0.05, x, 0.6, Z_STEP_TOP - 1, mat(REJA, 0.5, 0.5)), `Reja verde lateral barrote ${railIndex++}`));
   }
-  g.add(named(box(3.4, 0.08, 0.08, FRENTE + 0.5, 1.2, Z_STEP_TOP - 1, mat(REJA, 0.5, 0.5)), 'Reja verde lateral travesano'));
+  railGroup.add(named(box(3.4, 0.08, 0.08, FRENTE + 0.5, 1.2, Z_STEP_TOP - 1, mat(REJA, 0.5, 0.5)), 'Reja verde lateral travesano'));
+  g.add(railGroup);
 
   // ---- Límites invisibles (spec 02): cordón + 2 extremos + fondo -----------
   colliders.push({ minX: -MAP_HALF_X - 0.5, maxX: MAP_HALF_X + 0.5, minY: 0, maxY: 3, minZ: MAP_MAX_Z, maxZ: MAP_MAX_Z + 0.4 }); // fondo calle
