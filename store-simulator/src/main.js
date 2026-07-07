@@ -29,6 +29,7 @@ import { Input } from './core/input.js';
 import { Hud } from './ui/hud.js';
 import { loadProductos } from './data/productosStore.js';
 import { initProductClicks } from './interact/productClicks.js';
+import { initAdminPanel } from './ui/adminPanel.js';
 
 const QUALITY = new URLSearchParams(location.search).get('q') === 'low' ? 'low' : 'high';
 
@@ -214,6 +215,12 @@ const productClicks = initProductClicks({
   getScene: () => activeScene,
   isBlocked: () => loading || worldEditor.isEnabled(),
 });
+// ADMIN de prendas (tecla P; en build online requiere ?admin=1): carga manual
+// de imagen/nombre/precio/descripcion/link por percha — ver src/ui/adminPanel.js
+const adminPanel = initAdminPanel({
+  isBlocked: () => worldEditor.isEnabled(), // el editor usa P para "grupo padre"
+});
+window.__adminPanel = adminPanel;
 
 window.__bob = bob; // hooks de debug/testeo
 window.__cam = tpCam;
