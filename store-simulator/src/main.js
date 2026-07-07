@@ -550,6 +550,7 @@ renderer.shadowMap.autoUpdate = false;
 renderer.shadowMap.needsUpdate = true;
 const shadowRefreshAt = [1.5, 4, 8]; // segundos
 let elapsed = 0;
+let editorWasActive = false;
 
 const timer = new THREE.Timer();
 let lastZone = null;
@@ -565,6 +566,10 @@ renderer.setAnimationLoop(() => {
   }
 
   const editorActive = worldEditor.isEnabled();
+  if (renderer.shadowMap.enabled && (editorActive || editorWasActive)) {
+    renderer.shadowMap.needsUpdate = true;
+  }
+  editorWasActive = editorActive;
   if (!loading && !editorActive) bob.update(dt, input, tpCam.yaw, currentPlayerColliders(), camera.position);
   if (editorActive) input.consumeInteract();
   else if (input.consumeInteract()) interactNearest(); // E = remera más cercana

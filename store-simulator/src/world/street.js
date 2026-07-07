@@ -110,6 +110,7 @@ function neonFT(scene, x, y, z) {
 function tree(scene, x, z, pink = false, name = 'Arbol') {
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 4.5, 8), mat(0x5a4230, 0.9));
   trunk.name = `${name} · tronco`;
+  trunk.userData.editorCollider = true;
   trunk.position.set(x, 2.25, z); trunk.castShadow = true; scene.add(trunk);
   const leafMat = mat(pink ? 0xe8b8cf : 0x4c7a3a, 0.85);
   [[0, 4.6, 0, 1.6], [0.6, 4.2, 0.3, 1.2], [-0.5, 4.3, -0.4, 1.3], [0.2, 5.2, -0.2, 1.1]].forEach(([dx, dy, dz, s], i) => {
@@ -330,10 +331,16 @@ function buildStorefront(g, colliders, frameMat, glassMat) {
   const top = PLAT + H_LIBRE - 0.5;      // bajo el dintel
   const cristalH = top - y0;
   const x0 = -VID_W / 2, x1 = VID_W / 2;
-  // vidrio detrás de la cuadrícula
-  const glass = new THREE.Mesh(new THREE.PlaneGeometry(VID_W, cristalH), glassMat);
+  // vidrio fijo a la derecha; el paso real queda libre a la izquierda.
+  const fixedX0 = 0.4;
+  const fixedW = x1 - fixedX0;
+  const glassGeo = new THREE.BoxGeometry(fixedW, cristalH, 0.06);
+  glassGeo.translate((fixedX0 + x1) / 2, 0, 0);
+  const glass = new THREE.Mesh(glassGeo, glassMat);
   glass.name = 'Vidriera FOURTWENTY vidrio principal';
-  glass.position.set(0, (y0 + top) / 2, Z_FACADE + 0.02); g.add(glass);
+  glass.position.set(0, (y0 + top) / 2, Z_FACADE + 0.02);
+  glass.userData.editorCollider = true;
+  g.add(glass);
   // cuadrícula: montantes verticales + travesaños horizontales
   let mullion = 1;
   for (let x = x0; x <= x1 + 0.01; x += VID_W / 4) g.add(named(box(0.06, cristalH, 0.08, x, (y0 + top) / 2, Z_FACADE, frameMat), `Vidriera FOURTWENTY montante ${mullion++}`));
@@ -342,11 +349,13 @@ function buildStorefront(g, colliders, frameMat, glassMat) {
   // rejas verticales sobre parte del vidrio (spec 04)
   let bar = 1;
   for (let x = x0 + 0.3; x < -0.9; x += 0.35) g.add(named(box(0.03, cristalH, 0.03, x, (y0 + top) / 2, Z_FACADE + 0.06, frameMat), `Reja vidriera FOURTWENTY ${bar++}`));
-  // PUERTA: vano libre a la derecha del vano central (sin vidrio, caminable).
-  // La mitad izquierda de la vidriera es fija (collider); la derecha se cruza.
-  colliders.push({ minX: x0, maxX: -0.4, minY: 0, maxY: top, minZ: Z_FACADE - 0.1, maxZ: Z_FACADE + 0.1 });
+  // PUERTA: vano libre a la izquierda del vano central (sin collider).
   // marco de la puerta
-  g.add(named(box(0.08, cristalH + 0.4, 0.1, 1.5, PLAT + (cristalH + 0.4) / 2, Z_FACADE, frameMat), 'Marco puerta entrada FOURTWENTY'));
+  const doorFrameGeo = new THREE.BoxGeometry(0.08, cristalH + 0.4, 0.1);
+  doorFrameGeo.translate(-3.0, 0, 0);
+  const doorFrame = new THREE.Mesh(doorFrameGeo, frameMat);
+  doorFrame.position.set(1.5, PLAT + (cristalH + 0.4) / 2, Z_FACADE);
+  g.add(named(doorFrame, 'Marco puerta entrada FOURTWENTY'));
 }
 
 // Local FOURTWENTY (adentro), elevado a PLAT. SOLO estructura — sin muebles
@@ -368,8 +377,8 @@ function buildLocalInterior(scene, g, colliders) {
   ceil.name = 'Interior local · techo blanco';
   wallL.name = 'Interior local · pared izquierda';
   wallR.name = 'Interior local · pared derecha';
-  colliders.push({ minX: -LOCAL_HALF - WT, maxX: -LOCAL_HALF, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK, maxZ: Z_FACADE });
-  colliders.push({ minX: LOCAL_HALF, maxX: LOCAL_HALF + WT, minY: 0, maxY: PLAT + H, minZ: Z_LOCAL_BACK, maxZ: Z_FACADE });
+  wallL.userData.editorCollider = true;
+  wallR.userData.editorCollider = true;
 
   // Fondo del local: muro visible a la izquierda; a la derecha queda el HUECO
   // del stock VISIBLE (se ve el pocket atrás) pero BLOQUEADO físicamente con una
@@ -428,10 +437,9 @@ function buildRealInterior(scene, g, colliders, H) {
   scene.add(glowG);
 
   // — Escritorio/mostrador central de madera + 2 banquetas negras —
-  g.add(named(box(1.7, 0.95, 0.62, -0.6, PLAT + 0.475, -9.15, wood), 'Interior local · mostrador madera cuerpo'));
+  g.add(named(box(1.7, 0.95, 0.62, -0.6, PLAT + 0.475, -9.15, wood), 'Interior local · mostrador madera cuerpo', { collider: true }));
   g.add(named(box(1.78, 0.05, 0.7, -0.6, PLAT + 0.975, -9.15, wood), 'Interior local · mostrador madera tapa'));
   [-1.05, -0.6, -0.15].forEach((dx, i) => g.add(named(box(0.28, 0.02, 0.02, dx, PLAT + 0.78, -8.82, black), `Interior local · tirador mostrador ${i + 1}`)));
-  colliders.push({ minX: -1.5, maxX: 0.3, minY: 0, maxY: PLAT + 1, minZ: -9.5, maxZ: -8.8 });
   for (const sx of [-1.0, -0.2]) {
     const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.05, 12), black);
     seat.name = `Interior local · banqueta negra ${sx < -0.5 ? 1 : 2} asiento`;
@@ -475,8 +483,7 @@ function buildRealInterior(scene, g, colliders, H) {
   colliders.push({ minX: px - 0.25, maxX: px + 0.25, minY: 0, maxY: PLAT + 1.2, minZ: pz - 0.25, maxZ: pz + 0.25 });
 
   // — Derecha: divisor de madera + banqueta roja + corcho —
-  g.add(named(box(0.45, 1.05, 2.2, 2.72, PLAT + 0.525, -5.8, wood), 'Interior local · divisor madera derecho'));
-  colliders.push({ minX: 2.5, maxX: 2.95, minY: 0, maxY: PLAT + 1.1, minZ: -6.9, maxZ: -4.7 });
+  g.add(named(box(0.45, 1.05, 2.2, 2.72, PLAT + 0.525, -5.8, wood), 'Interior local · divisor madera derecho', { collider: true }));
   const rSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.05, 12), mat(0xc22a1f, 0.6));
   rSeat.name = 'Interior local · banqueta roja asiento';
   rSeat.position.set(2.35, PLAT + 0.85, -7.5); g.add(rSeat);
