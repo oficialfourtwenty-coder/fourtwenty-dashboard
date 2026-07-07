@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { addFurnitureItem } from '../furniture.js';
 import { createEditorPanel } from './editorPanel.js';
 import {
   applyLayout,
@@ -9,6 +10,7 @@ import {
   getEditableById,
   getEditableObjects,
   getParentEditableId,
+  isEditableEffectivelyVisible,
   isObjectInScene,
   removeEditable,
   serializeEditableObjects,
@@ -27,6 +29,18 @@ const SNAP = {
   translation: 0.25,
   rotation: Math.PI / 12,
   scale: 0.05,
+};
+
+const ADDABLE_MODELS = {
+  cantero: {
+    name: 'Cantero',
+    sourceId: 'calle-kit:26',
+  },
+  'apartment-building': {
+    name: 'Edificio GLB Burela · apartment-building',
+    model: 'assets/furniture/apartment-building.glb',
+    height: 20,
+  },
 };
 
 function noopEditor() {
@@ -57,8 +71,12 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
 
   let currentScene = scene;
   const raycaster = new THREE.Raycaster();
+  const sourceBox = new THREE.Box3();
+  const sourceCenter = new THREE.Vector3();
   const pointer = new THREE.Vector2();
   const orbitDir = new THREE.Vector3();
+  const spawnDir = new THREE.Vector3();
+  const spawnPos = new THREE.Vector3();
   let clipboardId = null; // Ctrl+C guarda el id del objeto; Ctrl+V lo pega
   const state = {
     enabled: false,
@@ -104,6 +122,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     onDelete: deleteSelected,
     onSelectParent: selectParent,
     onToggleVisible: toggleSelectedVisible,
+    onAddModel: addModelFromPreset,
   });
 
   function isInCurrentScene(object) {
@@ -114,7 +133,9 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     panel.setState(state);
     // la lista muestra solo la escena activa (calle o BOBILONIA)
     panel.setObjects(
-      getEditableObjects().filter((entry) => entry.object3D && isInCurrentScene(entry.object3D)),
+      getEditableObjects()
+        .filter((entry) => entry.object3D && isInCurrentScene(entry.object3D))
+        .map((entry) => ({ ...entry, effectiveVisible: isEditableEffectivelyVisible(entry.id) })),
       state.selectedId,
     );
     panel.setSelected(state.selectedId ? getEditableById(state.selectedId) : null);
@@ -276,6 +297,86 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     setStatus(ok ? message : 'No se pudo guardar local.');
   }
 
+  function uniqueFurnitureId(key) {
+    let n = 1;
+    let id = `furniture:${key}-${Date.now().toString(36)}`;
+    while (getEditableById(id)) id = `furniture:${key}-${Date.now().toString(36)}-${n++}`;
+    return id;
+  }
+
+  function spawnPositionInFront() {
+    camera.getWorldDirection(spawnDir);
+    spawnDir.y = 0;
+    if (spawnDir.lengthSq() < 0.001) spawnDir.set(0, 0, -1);
+    spawnDir.normalize();
+    if (player?.position) spawnPos.copy(player.position);
+    else spawnPos.copy(camera.position);
+    spawnPos.addScaledVector(spawnDir, 6);
+    spawnPos.y = Number.isFinite(player?.position?.y) ? player.position.y : 0;
+    return spawnPos.toArray();
+  }
+
+  async function addModelFromPreset(key) {
+    const preset = ADDABLE_MODELS[key];
+    if (!preset) {
+      setStatus(`Modelo no encontrado: ${key}`);
+      return;
+    }
+
+    if (preset.sourceId) {
+      const source = getEditableById(preset.sourceId);
+      if (!source?.object3D) {
+        setStatus(`No se encontro el origen de ${preset.name}.`);
+        return;
+      }
+      source.object3D.updateWorldMatrix(true, true);
+      sourceBox.setFromObject(source.object3D);
+      sourceBox.getCenter(sourceCenter);
+      spawnPositionInFront();
+      spawnPos.sub(sourceCenter).add(source.object3D.position);
+
+      const entry = duplicateEditable(preset.sourceId, {
+        newId: uniqueFurnitureId(key),
+        transform: {
+          position: spawnPos.toArray(),
+          rotation: [source.object3D.rotation.x, source.object3D.rotation.y, source.object3D.rotation.z],
+          scale: source.object3D.scale.toArray(),
+        },
+        makeVisible: true,
+      });
+      if (!entry) {
+        setStatus(`No se pudo agregar ${preset.name}.`);
+        return;
+      }
+      entry.name = `${preset.name} agregado`;
+      entry.type = 'furniture';
+      entry.object3D.userData.editorCollider = true;
+      selectId(entry.id);
+      saveNow(`${preset.name} agregado.`);
+      return;
+    }
+
+    setStatus(`Cargando ${preset.name}...`);
+    const id = uniqueFurnitureId(key);
+    const object = await addFurnitureItem(currentScene, {
+      ...preset,
+      id,
+      type: 'furniture',
+      position: spawnPositionInFront(),
+      rotation: [0, 0, 0],
+      scale: [1, 1, 1],
+      castShadow: true,
+      receiveShadow: true,
+      visible: true,
+    });
+    if (!object) {
+      setStatus(`No se pudo cargar ${preset.name}.`);
+      return;
+    }
+    selectId(id);
+    saveNow(`${preset.name} agregado.`);
+  }
+
   async function copyJSON() {
     const ok = await copyLayoutToClipboard(serializeCurrentLayout());
     setStatus(ok ? 'JSON copiado al portapapeles.' : 'No se pudo copiar JSON.');
@@ -364,7 +465,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   function toggleSelectedVisible() {
     if (!state.selectedId) return;
     const entry = getEditableById(state.selectedId);
-    const visible = setEditableVisible(state.selectedId, entry.visible === false);
+    const visible = setEditableVisible(state.selectedId, !isEditableEffectivelyVisible(state.selectedId));
     updateHelper();
     saveNow(visible ? `${entry.name} visible.` : `${entry.name} oculto.`);
   }
@@ -405,7 +506,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     );
 
     const roots = getEditableObjects()
-      .filter((entry) => entry.visible !== false && entry.object3D?.visible !== false && isInCurrentScene(entry.object3D))
+      .filter((entry) => isEditableEffectivelyVisible(entry.id) && isInCurrentScene(entry.object3D))
       .map((entry) => entry.object3D);
     raycaster.setFromCamera(pointer, camera);
 

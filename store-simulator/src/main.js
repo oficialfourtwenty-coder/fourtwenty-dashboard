@@ -18,7 +18,7 @@ import { buildGallery } from './world/gallery.js';
 import { buildRetail } from './world/retail.js';
 import { addFurniture } from './world/furniture.js';
 import { initWorldEditor } from './world/editor/worldEditor.js';
-import { autoRegisterScene, applyLayout, getEditableObjects, registerEditableObject, restoreClones } from './world/editor/editableRegistry.js';
+import { autoRegisterScene, applyLayout, getEditableObjects, isEditableEffectivelyVisible, registerEditableObject, restoreClones } from './world/editor/editableRegistry.js';
 import { loadInitialLayout } from './world/editor/layoutStore.js';
 import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
@@ -57,6 +57,7 @@ let activeScene = scene; // se cambia al montar BOBILONIA
 
 const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 140);
 const editableColliderBox = new THREE.Box3();
+const editableColliderPartBox = new THREE.Box3();
 const editableColliderSize = new THREE.Vector3();
 const streetRuntimeColliders = [];
 const streetRuntimeSteppables = [];
@@ -243,20 +244,35 @@ registerEditableObject({
   manageShadows: false,
   transient: true,
 });
-loadInitialLayout().then((layout) => {
-  applyLayout(layout);
-  restoreClones(layout);
+
+function applySavedEditorLayout() {
+  return loadInitialLayout().then((layout) => {
+    applyLayout(layout);
+    restoreClones(layout);
+    return layout;
+  });
+}
+
+applySavedEditorLayout();
+addFurniture(scene).then(() => {
+  renderer.shadowMap.needsUpdate = true;
+  applySavedEditorLayout();
 });
 
 function appendEditableColliders(targetColliders, targetSteppables) {
   for (const entry of getEditableObjects()) {
     const object = entry.object3D;
-    if (!object || entry.transient || entry.visible === false || object.visible === false) continue;
+    if (!object || entry.transient || !isEditableEffectivelyVisible(entry.id)) continue;
     if (!entry.id.startsWith('calle-kit:') && entry.type !== 'furniture') continue;
     const wantsCollider = object.userData?.editorCollider === true || entry.type === 'furniture';
     if (!wantsCollider && object.userData?.walkStep !== true) continue;
 
     object.updateWorldMatrix(true, true);
+
+    if (!object.isMesh && !entry.model) {
+      appendVisibleMeshColliders(targetColliders, targetSteppables, object, entry);
+      continue;
+    }
 
     // Bajo (en SU propio eje) → escalón: se pisa, no bloquea. Se mide con
     // raycast (ver sampleStepHeight), así que rotarlo/inclinarlo en el editor
@@ -266,12 +282,14 @@ function appendEditableColliders(targetColliders, targetSteppables) {
       continue;
     }
 
-    editableColliderBox.setFromObject(object);
+    setVisibleColliderBox(editableColliderBox, object);
     if (editableColliderBox.isEmpty()) continue;
     editableColliderBox.getSize(editableColliderSize);
     if (editableColliderSize.y < 0.2) continue;
 
     targetColliders.push({
+      id: entry.id,
+      source: entry.name,
       minX: editableColliderBox.min.x,
       maxX: editableColliderBox.max.x,
       minY: editableColliderBox.min.y,
@@ -280,6 +298,44 @@ function appendEditableColliders(targetColliders, targetSteppables) {
       maxZ: editableColliderBox.max.z,
     });
   }
+}
+
+function appendVisibleMeshColliders(targetColliders, targetSteppables, object, entry) {
+  object.traverseVisible((child) => {
+    if (!child.isMesh || !child.geometry) return;
+    if (isSteppable(child)) {
+      targetSteppables.push(child);
+      return;
+    }
+
+    if (!child.geometry.boundingBox) child.geometry.computeBoundingBox();
+    editableColliderPartBox.copy(child.geometry.boundingBox).applyMatrix4(child.matrixWorld);
+    if (editableColliderPartBox.isEmpty()) return;
+    editableColliderPartBox.getSize(editableColliderSize);
+    if (editableColliderSize.y < 0.2) return;
+
+    targetColliders.push({
+      id: entry.id,
+      source: child.name ? `${entry.name} · ${child.name}` : entry.name,
+      minX: editableColliderPartBox.min.x,
+      maxX: editableColliderPartBox.max.x,
+      minY: editableColliderPartBox.min.y,
+      maxY: editableColliderPartBox.max.y,
+      minZ: editableColliderPartBox.min.z,
+      maxZ: editableColliderPartBox.max.z,
+    });
+  });
+}
+
+function setVisibleColliderBox(target, object) {
+  target.makeEmpty();
+  object.updateWorldMatrix(true, true);
+  object.traverseVisible((child) => {
+    if (!child.isMesh || !child.geometry) return;
+    if (!child.geometry.boundingBox) child.geometry.computeBoundingBox();
+    editableColliderPartBox.copy(child.geometry.boundingBox).applyMatrix4(child.matrixWorld);
+    target.union(editableColliderPartBox);
+  });
 }
 
 function currentPlayerColliders() {
@@ -314,6 +370,7 @@ const loadingTitleMain = document.getElementById('loading-title-main');
 const loadingTitleSub = document.getElementById('loading-title-sub');
 const loadingBarFill = document.getElementById('loading-bar-fill');
 const bobLoadingVideo = document.getElementById('bob-loading-video');
+const culturaIntroVideo = document.getElementById('cultura-intro-video');
 const bobLoadingBarFill = document.getElementById('bob-loading-bar-fill');
 const loadingMessage = document.getElementById('loading-message');
 const shirtTip = document.getElementById('shirt-tip');
@@ -321,13 +378,21 @@ const shirtTip = document.getElementById('shirt-tip');
 function finishLoadingUi() {
   loadingEl.classList.remove('show');
   requestAnimationFrame(() => {
-    loadingEl.classList.remove('hoop-season', 'bob-collection');
+    loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro');
     bobLoadingVideo.pause();
     bobLoadingVideo.onended = null;
     bobLoadingVideo.onerror = null;
     bobLoadingVideo.onstalled = null;
     bobLoadingVideo.onabort = null;
     try { bobLoadingVideo.currentTime = 0; } catch {}
+    if (culturaIntroVideo) {
+      culturaIntroVideo.pause();
+      culturaIntroVideo.onended = null;
+      culturaIntroVideo.onerror = null;
+      culturaIntroVideo.onstalled = null;
+      culturaIntroVideo.onabort = null;
+      try { culturaIntroVideo.currentTime = 0; } catch {}
+    }
     bobLoadingBarFill.style.width = '0%';
   });
   loading = false;
@@ -395,22 +460,27 @@ const SHOP_BOUNDS = {
   minX: -INTERIOR.x, maxX: INTERIOR.x,
   minZ: -INTERIOR.z, maxZ: INTERIOR.z,
 };
+const CULTURA_PISO = 5;
+let culturaIntroPlayed = false;
 
 function startLoading(piso, label) {
   loading = true;
+  input.keys.clear();
   shirtTip.style.display = 'none';
   canvas.style.cursor = 'default';
 
   const isHoopSeason = piso === 3;
   const isBobCollection = piso === 4;
+  const shouldPlayCulturaIntro = piso === CULTURA_PISO && !culturaIntroPlayed;
   loadingEl.classList.toggle('hoop-season', isHoopSeason);
   loadingEl.classList.toggle('bob-collection', isBobCollection);
+  loadingEl.classList.toggle('cultura-intro', shouldPlayCulturaIntro);
   bobLoadingVideo.pause();
   bobLoadingVideo.muted = false;
   bobLoadingVideo.volume = 1;
   bobLoadingBarFill.style.width = '0%';
 
-  if (isBobCollection) {
+  if (isBobCollection || shouldPlayCulturaIntro) {
     loadingEl.style.backgroundImage = '';
   } else if (isHoopSeason) {
     loadingEl.style.backgroundImage = '';
@@ -436,6 +506,10 @@ function startLoading(piso, label) {
   const ready = buildShopping();
   if (isBobCollection) {
     playBobLoading(ready, piso);
+    return;
+  }
+  if (shouldPlayCulturaIntro) {
+    playCulturaIntro(ready, piso);
     return;
   }
 
@@ -512,6 +586,61 @@ function playBobLoading(ready, piso) {
   const playPromise = bobLoadingVideo.play();
   raf = requestAnimationFrame(trackVideo);
   if (playPromise?.catch) playPromise.catch(fallbackTimed);
+}
+
+function playCulturaIntro(ready, piso) {
+  if (!culturaIntroVideo) {
+    culturaIntroPlayed = true;
+    enterShopping(ready, piso);
+    finishLoadingUi();
+    return;
+  }
+
+  culturaIntroPlayed = true;
+  let done = false;
+
+  const cleanup = () => {
+    window.removeEventListener('keydown', onKeyDown, true);
+    loadingEl.removeEventListener('click', skipIntro, true);
+    culturaIntroVideo.onended = null;
+    culturaIntroVideo.onerror = null;
+    culturaIntroVideo.onstalled = null;
+    culturaIntroVideo.onabort = null;
+    culturaIntroVideo.pause();
+  };
+
+  const finish = () => {
+    if (done) return;
+    done = true;
+    cleanup();
+    input.keys.clear();
+    enterShopping(ready, piso);
+    finishLoadingUi();
+  };
+
+  const skipIntro = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    finish();
+  };
+
+  const onKeyDown = (event) => {
+    if (event.code !== 'Escape') return;
+    skipIntro(event);
+  };
+
+  window.addEventListener('keydown', onKeyDown, true);
+  loadingEl.addEventListener('click', skipIntro, true);
+  culturaIntroVideo.controls = false;
+  culturaIntroVideo.muted = false;
+  culturaIntroVideo.volume = 1;
+  culturaIntroVideo.onended = finish;
+  culturaIntroVideo.onerror = finish;
+  culturaIntroVideo.onstalled = finish;
+  culturaIntroVideo.onabort = finish;
+  try { culturaIntroVideo.currentTime = 0; } catch {}
+  const playPromise = culturaIntroVideo.play();
+  if (playPromise?.catch) playPromise.catch(finish);
 }
 
 function buildShopping() {

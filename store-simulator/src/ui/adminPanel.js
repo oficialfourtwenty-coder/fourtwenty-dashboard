@@ -16,6 +16,7 @@ import {
   importProductos,
   productoVacio,
   onProductosChange,
+  notifyProductosChange,
 } from '../data/productosStore.js';
 import { getTnStatus, syncTiendanube } from '../integrations/tiendanube/client.js';
 
@@ -207,6 +208,7 @@ export function initAdminPanel({ isBlocked = () => false } = {}) {
           preview.textContent = t.value ? '' : 'FOTO';
         }
       }
+      if (t.dataset.key === 'imagen' || t.dataset.key === 'activo') notifyProductosChange();
     }
     scheduleSave();
   });

@@ -9,6 +9,7 @@ import { FLOOR_YS, FLOOR_H, INTERIOR } from './building.js';
 import { registerSpinner } from './anim.js';
 import { normalizeGLTFHeight } from './gltfUtils.js';
 import { box, smoothTexture as smooth, hiCanvas, white } from './gfxUtils.js';
+import { bindProductVisual } from './productVisuals.js';
 
 const WALL_W = -INTERIOR.x + 0.03; // cara interna pared oeste
 const WALL_E = INTERIOR.x - 0.03;  // cara interna pared este
@@ -161,7 +162,7 @@ function hangGarment(g, side, z, y, tex, scale = 1, slot = null) {
   );
   garment.position.set(x + (side === 'w' ? 0.06 : -0.06), y, z);
   garment.rotation.y = rotY;
-  if (slot) garment.userData.productSlot = slot;
+  if (slot) bindProductVisual(garment, slot, tex);
   g.add(garment);
   g.add(box(0.03, 0.2 * scale, 0.03, x + (side === 'w' ? 0.05 : -0.05), y + 0.66 * scale, z, white));
 }
@@ -360,12 +361,13 @@ export function buildGallery(scene, collection) {
     const px = WALL_W + 2.6, pz = -1;
     g.add(box(0.7, 0.8, 0.7, px, Y + 0.4, pz, white));
     colliders.push({ minX: px - 0.35, maxX: px + 0.35, minY: Y, maxY: Y + 0.8, minZ: pz - 0.35, maxZ: pz + 0.35 });
+    const piezaTex = texFor(0);
     const pieza = new THREE.Mesh(
       new THREE.PlaneGeometry(0.9, 1.05),
-      new THREE.MeshStandardMaterial({ map: texFor(0), transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide }),
+      new THREE.MeshStandardMaterial({ map: piezaTex, transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide }),
     );
     pieza.position.set(px, Y + 1.45, pz);
-    pieza.userData.productSlot = { piso: collection.piso, index: 0 }; // clickeable
+    bindProductVisual(pieza, { piso: collection.piso, index: 0 }, piezaTex); // clickeable
     g.add(pieza);
     registerSpinner(pieza); // gira lento, vidriera GTA V
     for (const [dx, dz] of [[-1.1, -1.1], [1.1, -1.1], [-1.1, 1.1], [1.1, 1.1]]) {

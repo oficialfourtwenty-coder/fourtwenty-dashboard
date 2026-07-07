@@ -1,6 +1,8 @@
+import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { registerEditableObject, unregisterEditableObject } from './editor/editableRegistry.js';
 import { loadInitialLayout } from './editor/layoutStore.js';
+import { normalizeGLTFHeight } from './gltfUtils.js';
 
 const loader = new GLTFLoader();
 const modelCache = new Map();
@@ -52,7 +54,17 @@ function applyShadows(object, item) {
   });
 }
 
-async function addFurnitureItem(scene, item) {
+function buildFurnitureRoot(gltf, item) {
+  const model = gltf.scene.clone(true);
+  if (!Number.isFinite(item.height)) return model;
+
+  const root = new THREE.Group();
+  normalizeGLTFHeight(model, item.height);
+  root.add(model);
+  return root;
+}
+
+export async function addFurnitureItem(scene, item) {
   if (!item?.id || !item.model) {
     console.warn('addFurniture: item invalido, faltan id/model.', item);
     return null;
@@ -63,7 +75,7 @@ async function addFurnitureItem(scene, item) {
   try {
     const gltf = await loadModel(item.model);
     // Test FurniMesh furniture asset — removable/provisional.
-    const object = gltf.scene.clone(true);
+    const object = buildFurnitureRoot(gltf, item);
     object.name = item.name ?? item.id;
     applyLayoutToObject(object, item);
     applyShadows(object, item);
@@ -81,6 +93,7 @@ async function addFurnitureItem(scene, item) {
       position: vec3(item.position, [0, 0, 0]),
       rotation: vec3(item.rotation, [0, 0, 0]),
       scale: vec3(item.scale, [1, 1, 1]),
+      height: Number.isFinite(item.height) ? item.height : null,
       castShadow: item.castShadow !== false,
       receiveShadow: item.receiveShadow !== false,
       locked: item.locked === true,

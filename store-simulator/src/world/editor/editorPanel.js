@@ -114,6 +114,14 @@ export function createEditorPanel(callbacks = {}) {
       </div>
 
       <div class="we-section">
+        <div class="we-label">Add</div>
+        <div class="we-grid">
+          ${button('Cantero', 'add:cantero')}
+          ${button('Building GLB', 'add:apartment-building')}
+        </div>
+      </div>
+
+      <div class="we-section">
         <div class="we-label">Position</div>
         ${inputRow('position')}
       </div>
@@ -188,7 +196,7 @@ export function createEditorPanel(callbacks = {}) {
     fields.objectList.innerHTML = shown.length
       ? shown.map((obj) => `
         <button type="button" class="we-object ${obj.id === lastSelectedId ? 'is-active' : ''}" data-object-id="${obj.id}">
-          ${obj.name}${obj.visible === false || obj.object3D?.visible === false ? ' · <small>OCULTO</small>' : ''}<br><small>${obj.cloneOf ? 'copia editable' : 'pieza editable'}</small>
+          ${obj.name}${obj.effectiveVisible === false || obj.visible === false || obj.object3D?.visible === false ? ' · <small>OCULTO</small>' : ''}<br><small>${obj.cloneOf ? 'copia editable' : 'pieza editable'}</small>
         </button>
       `).join('') + (filtered.length > MAX_LIST ? `<div class="we-status">…y ${filtered.length - MAX_LIST} más (usá el filtro)</div>` : '')
       : '<div class="we-status">No hay objetos editables cargados.</div>';
@@ -214,6 +222,7 @@ export function createEditorPanel(callbacks = {}) {
     else if (action === 'delete') callbacks.onDelete?.();
     else if (action === 'parent') callbacks.onSelectParent?.();
     else if (action === 'visible') callbacks.onToggleVisible?.();
+    else if (action.startsWith('add:')) callbacks.onAddModel?.(action.slice(4));
     else if (action === 'save') callbacks.onSave?.();
     else if (action === 'copy') callbacks.onCopy?.();
     else if (action === 'download') callbacks.onDownload?.();

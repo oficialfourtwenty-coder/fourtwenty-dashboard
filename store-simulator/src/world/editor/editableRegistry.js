@@ -51,6 +51,7 @@ function serializeEntry(entry) {
     locked: entry.locked === true,
     visible: entry.object3D ? entry.object3D.visible !== false : entry.visible !== false,
   };
+  if (entry.height != null) data.height = entry.height;
   if (entry.cloneOf) data.cloneOf = entry.cloneOf;
   if (entry.manageShadows === false) data.manageShadows = false;
   return data;
@@ -82,6 +83,7 @@ export function registerEditableObject(config, { silent = false } = {}) {
     name: config.name ?? config.id,
     type: config.type ?? 'object',
     model: config.model ?? '',
+    height: Number.isFinite(config.height) ? config.height : null,
     object3D: config.object3D,
     position: toArray3(config.position, live.position),
     rotation: toArray3(config.rotation, live.rotation),
@@ -124,6 +126,35 @@ export function getEditableById(id) {
   return registry.get(id) ?? null;
 }
 
+function isRenderableObject(object) {
+  return object?.isMesh || object?.isSprite || object?.isInstancedMesh || object?.isPoints || object?.isLine;
+}
+
+function hasVisibleRenderableDescendant(object3D) {
+  if (!object3D) return false;
+  const visit = (object, ancestorsVisible) => {
+    const visible = ancestorsVisible && object.visible !== false;
+    if (!visible) return false;
+    if (isRenderableObject(object)) return true;
+    for (const child of object.children ?? []) {
+      if (visit(child, visible)) return true;
+    }
+    return false;
+  };
+  return visit(object3D, true);
+}
+
+export function isEditableEffectivelyVisible(id) {
+  const entry = registry.get(id);
+  if (!entry?.object3D || entry.visible === false) return false;
+  let current = entry.object3D;
+  while (current) {
+    if (current.visible === false) return false;
+    current = current.parent;
+  }
+  return hasVisibleRenderableDescendant(entry.object3D);
+}
+
 export function findEditableRoot(object) {
   let current = object;
   while (current) {
@@ -162,6 +193,7 @@ export function applyLayout(layout) {
     entry.name = item.name ?? entry.name;
     entry.type = item.type ?? entry.type;
     entry.model = item.model ?? entry.model;
+    entry.height = Number.isFinite(item.height) ? item.height : entry.height;
     entry.position = position;
     entry.rotation = rotation;
     entry.scale = scale;
@@ -190,7 +222,7 @@ export function clearEditableRegistry() {
 // ---------------------------------------------------------------------------
 
 function hasRenderableDescendant(object) {
-  if (object.isMesh || object.isSprite || object.isInstancedMesh || object.isPoints || object.isLine) return true;
+  if (isRenderableObject(object)) return true;
   for (const child of object.children ?? []) {
     if (hasRenderableDescendant(child)) return true;
   }
@@ -248,7 +280,7 @@ export function isObjectInScene(object, sceneRoot) {
   return sceneRootOf(object) === sceneRoot;
 }
 
-export function duplicateEditable(id, { offset = [0.6, 0, 0], transform = null, newId = null } = {}) {
+export function duplicateEditable(id, { offset = [0.6, 0, 0], transform = null, newId = null, makeVisible = false } = {}) {
   const entry = registry.get(id);
   if (!entry?.object3D?.parent) return null;
   const source = entry.object3D;
@@ -268,7 +300,8 @@ export function duplicateEditable(id, { offset = [0.6, 0, 0], transform = null, 
   }
 
   source.parent.add(clone);
-  if (source.visible === false) clone.visible = true;
+  if (source.visible === false || makeVisible) clone.visible = true;
+  if (makeVisible) clone.traverse((child) => { child.visible = true; });
   if (transform) {
     clone.position.fromArray(toArray3(transform.position, source.position.toArray()));
     const rot = toArray3(transform.rotation, [source.rotation.x, source.rotation.y, source.rotation.z]);
@@ -286,6 +319,7 @@ export function duplicateEditable(id, { offset = [0.6, 0, 0], transform = null, 
     name: `${entry.name} (copia)`,
     type: entry.type,
     model: entry.model,
+    height: entry.height,
     object3D: clone,
     cloneOf: entry.cloneOf ?? entry.id,
     manageShadows: entry.manageShadows,
@@ -315,6 +349,27 @@ export function setEditableVisible(id, visible) {
   if (!entry?.object3D) return null;
   entry.visible = visible !== false;
   entry.object3D.visible = entry.visible;
+
+  if (entry.visible) {
+    let current = entry.object3D.parent;
+    while (current) {
+      const parentId = current.userData?.editorId;
+      const parentEntry = parentId ? registry.get(parentId) : null;
+      if (parentEntry?.object3D === current) {
+        parentEntry.visible = true;
+        current.visible = true;
+      }
+      current = current.parent;
+    }
+
+    entry.object3D.traverse?.((child) => {
+      const childId = child.userData?.editorId;
+      const childEntry = childId ? registry.get(childId) : null;
+      if (childEntry?.object3D === child) childEntry.visible = true;
+      child.visible = true;
+    });
+  }
+
   emitRegistryChange();
   return entry.visible;
 }
@@ -345,9 +400,11 @@ export function restoreClones(layout) {
     const entry = duplicateEditable(item.cloneOf, {
       newId: item.id,
       transform: { position: item.position, rotation: item.rotation, scale: item.scale },
+      makeVisible: item.visible !== false,
     });
     if (entry) {
       entry.name = item.name ?? entry.name;
+      entry.type = item.type ?? entry.type;
       entry.visible = item.visible !== false;
       entry.object3D.visible = entry.visible;
       changed = true;

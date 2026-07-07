@@ -16,6 +16,7 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 import { towerFacade, veredaTile, hexPaver, greenShutter, whiteFloor, lightWood } from './textures.js';
 import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
+import { bindProductVisual } from './productVisuals.js';
 
 // ---- Paleta del spec (albedo base) ------------------------------------------
 const SALVIA = 0x8C9A78;   // columnas / alero
@@ -480,10 +481,11 @@ function buildRealInterior(scene, g, colliders, H) {
     { color: 0xf5f2ea, tipo: 'tee' }, { color: 0x2a3550, tipo: 'hoodie' },
   ];
   shirtDefs.forEach((d, i) => {
+    const tex = garmentTexture(d.color, d.tipo);
     const s = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.62),
-      new THREE.MeshStandardMaterial({ map: garmentTexture(d.color, d.tipo), transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide }));
+      new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide }));
     s.name = `Interior local · prenda colgada izquierda ${i + 1}`;
-    s.userData.productSlot = { piso: 'local', index: i }; // clickeable como producto
+    bindProductVisual(s, { piso: 'local', index: i }, tex); // clickeable como producto
     s.position.set(-2.72 + i * 0.02, PLAT + 1.58, -6.85 + i * 0.42);
     s.rotation.y = Math.PI / 2;
     g.add(s);

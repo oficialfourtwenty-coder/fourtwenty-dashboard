@@ -76,6 +76,10 @@ export function onProductosChange(cb) {
   return () => listeners.delete(cb);
 }
 
+export function notifyProductosChange() {
+  emit();
+}
+
 export function getProductos() {
   return state;
 }
