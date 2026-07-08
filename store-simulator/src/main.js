@@ -30,6 +30,7 @@ import { Hud } from './ui/hud.js';
 import { loadProductos } from './data/productosStore.js';
 import { initProductClicks } from './interact/productClicks.js';
 import { initAdminPanel } from './ui/adminPanel.js';
+import { initCulturaIntro } from './ui/culturaIntro.js';
 
 const QUALITY = new URLSearchParams(location.search).get('q') === 'low' ? 'low' : 'high';
 
@@ -221,6 +222,16 @@ const adminPanel = initAdminPanel({
   isBlocked: () => worldEditor.isEnabled(), // el editor usa P para "grupo padre"
 });
 window.__adminPanel = adminPanel;
+
+// Intro de video del piso CULTURA (una vez por sesión): al entrar, pausa a BOB
+// y reproduce el video a pantalla completa; ESC/click o el fin del video lo
+// cierran solos. Si el asset falta, no rompe nada (ver culturaIntro.js).
+const culturaIntro = initCulturaIntro({
+  videoUrl: 'assets/ui/cultura-intro.mp4',
+  onStart: () => input.keys?.clear?.(), // que BOB no arranque solo al terminar
+  onEnd: () => input.keys?.clear?.(),
+});
+window.__culturaIntro = culturaIntro;
 
 window.__bob = bob; // hooks de debug/testeo
 window.__cam = tpCam;
@@ -590,7 +601,7 @@ renderer.setAnimationLoop(() => {
     renderer.shadowMap.needsUpdate = true;
   }
   editorWasActive = editorActive;
-  if (!loading && !editorActive) bob.update(dt, input, tpCam.yaw, currentPlayerColliders(), camera.position);
+  if (!loading && !editorActive && !culturaIntro.isPlaying()) bob.update(dt, input, tpCam.yaw, currentPlayerColliders(), camera.position);
   if (editorActive) input.consumeInteract();
   else if (input.consumeInteract()) interactNearest(); // E = remera más cercana
   if (editorActive) clearShirtHover();
@@ -615,6 +626,7 @@ renderer.setAnimationLoop(() => {
   }
   if (zoneName !== lastZone) {
     hud.showZoneTitle(zoneName); // cartel de zona estilo GTA V
+    culturaIntro.maybePlayFor(zoneName); // intro de video al entrar a CULTURA (1 vez)
     lastZone = zoneName;
   }
   if (!editorActive) tpCam.update(dt, bob.position, floorY, bob.modelYaw, ceiling);

@@ -106,7 +106,11 @@ decoración ni gráfica sin que él lo pida explícitamente. Distribución pedid
 - **Piso 4 · BOB** — 42 prendas con la carita del mono, en dos paredes a dos filas,
   + **estatua gigante de BOB** (el mismo bob.glb, 2.6 m) sobre pedestal.
 - **Piso 5 · CULTURA** — 1 prenda única en vitrina central con foco, mural graffiti
-  "CULTURA", alfombra negra y LEDs verticales (ambiente hip hop).
+  "CULTURA", alfombra negra y LEDs verticales (ambiente hip hop). Al ENTRAR por
+  primera vez en la sesión se reproduce `public/assets/ui/cultura-intro.mp4` a
+  pantalla completa (`src/ui/culturaIntro.js`, enganchado al cambio de zona en
+  main.js): pausa a BOB, se salta con ESC/click, cierra solo al terminar y no se
+  repite. Si el asset falta, degrada sin congelar.
 Nombres/cantidades/paletas editables en `world/collections.js`; geometría en
 `world/gallery.js`. Las prendas son siluetas dibujadas (remera/buzo/camiseta),
 placeholders hasta linkear TiendaNube (Fase 5): cada colección se mapea a una
