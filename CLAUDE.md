@@ -214,6 +214,26 @@ store-simulator/    → el juego (Vite + Three.js)
   reposo; si en el futuro se ve algo raro ahí, revisar con
   `tools/inspect_glb.py` + un script que compare `JOINTS_0`/`WEIGHTS_0` contra
   la posición Y de cada vértice, no asumir que ya está 100% perfecto.)
+  ⚠️ **Sexta vuelta — el dueño mandó otra captura con la mano/dedo estirado en
+  forma de garra:** el fix de mano/pie (vuelta anterior) usaba un radio fijo
+  (0.09m) desde el segmento del hueso `Hand`/`ToeBase` — no llegaba a los
+  vértices de la PUNTA de los dedos si se extendían más allá de ese radio.
+  Esos vértices seguían con su peso original (a veces huesos de PIERNA,
+  ahora congelada) — al mover el brazo, ese dedo se estiraba entre el punto
+  fijo (pegado a la pierna quieta) y el resto de la mano (que sí sigue al
+  brazo). **Fix: flood-fill por conectividad de malla** en vez de radio fijo:
+  arrancar de los vértices con >30% de peso en `Hand`/`ToeBase` (núcleo
+  confiable) y expandir por aristas reales de la superficie (hasta 25 saltos)
+  — así se cubre toda la mano/dedo/pie sin importar la distancia euclídea al
+  hueso, porque sigue la malla real en vez de adivinar un radio. ~3700
+  vértices afectados. Verificado con 24 capturas del ciclo completo (zoom en
+  mano/cadera) + prueba de juego real (60 frames, 6s caminando y girando):
+  sin nada pegado ni estirado. Sigue habiendo un residuo chico (~200 vértices
+  de mano con ~17% de peso en huesos de pierna, no dominante) que la
+  auditoría numérica marca pero no se ve en ninguna prueba — mismo tipo de
+  nota que arriba: no asumir 100% perfecto, si vuelve a aparecer algo raro
+  revisar con más cuidado (probablemente haga falta pintura de pesos a mano
+  en Blender en vez de otro script automático).
   El material también traía `Sheen`/`Anisotropic`/`Specular IOR Level` subidos
   en el Principled BSDF (probablemente para simular "fur" en el viewport de
   Blender), que el exportador vuelca como
