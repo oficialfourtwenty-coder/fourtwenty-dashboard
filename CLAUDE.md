@@ -169,6 +169,20 @@ store-simulator/    → el juego (Vite + Three.js)
   sin serlo del todo): sin grietas en ninguno. El `neutral_bone` (huérfano, sin
   peso de ningún vértice tras el fix) quedó podado del esqueleto exportado —
   inofensivo, era un hueso de control sin uso real.
+  ⚠️ **Tercera vuelta — dedos/pie deformados (pedido explícito del dueño: no
+  hace falta articulación de dedos, solo que el brazo y la pierna se muevan
+  bien):** `L_ToeBase`/`R_ToeBase` quedaban con pesos raros del auto-rig
+  (geometría muy fina/enroscada, la difusión de calor se confunde igual que
+  con los brazos pegados al torso) y el pie se veía explotado/con los dedos
+  separados al animar. Simplificación pedida y hecha: cualquier vértice con
+  peso en `ToeBase` pasa a depender **100% de `Foot`** (se le borra el resto de
+  huesos); mismo criterio para `Hand` → **100% de `Forearm`** (pedido
+  preventivo del dueño aunque no se veía roto). Con esto pie y mano quedan como
+  una sola pieza rígida (no se curvan los dedos, pero tampoco se deforman) —
+  se hace DESPUÉS del fix de vértices sin peso y ANTES de sincronizar
+  duplicados de costura (para que la simplificación también quede sincronizada
+  en las costuras UV del pie/mano). ~3450 vértices afectados. Verificado con
+  las mismas 24 frames: pies estables, sin dedos disparados.
   El material también traía `Sheen`/`Anisotropic`/`Specular IOR Level` subidos
   en el Principled BSDF (probablemente para simular "fur" en el viewport de
   Blender), que el exportador vuelca como
