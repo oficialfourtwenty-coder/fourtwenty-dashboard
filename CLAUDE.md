@@ -148,17 +148,27 @@ store-simulator/    → el juego (Vite + Three.js)
   Paint) para limar transiciones duras entre huesos.
   ⚠️ **Segunda vuelta — "grietas" al mover el brazo:** el recálculo de arriba
   dejó el cuerpo estable pero abrió grietas visibles en hombro/cuello al
-  animar. Causa real: el mesh tiene **4019 grupos de vértices duplicados por
-  costura UV/normal** (misma posición 3D, distinto UV — normal en cualquier
-  malla con textura) y en **3635 de esos grupos las copias quedaron con pesos
-  de hueso ligeramente distintos** (la difusión de calor las trata como nodos
-  separados del grafo de conectividad). Al rotar el brazo cada copia se movía
-  un poquito distinto → la costura se abría. Fix: tras el recálculo + suavizado,
-  agrupar vértices por posición idéntica (redondeada a 5 decimales), promediar
-  los pesos de cada grupo y reasignar el mismo resultado a todas las copias
-  (3984 de 4019 grupos sincronizados) — así los vértices "gemelos" de cada
-  costura se mueven siempre pegados, sin importar la pose. Verificado en los
-  frames más extremos del ciclo: sin grietas.
+  animar. Causa real, dos partes: (1) el mesh tiene **4019 grupos de vértices
+  duplicados por costura UV/normal** (misma posición 3D, distinto UV — normal
+  en cualquier malla con textura) y muchos de esos grupos quedaron con pesos
+  de hueso ligeramente distintos entre copias (la difusión de calor las trata
+  como nodos separados del grafo de conectividad) — al rotar el brazo cada
+  copia se movía un poquito distinto y la costura se abría. (2) **358 vértices
+  quedaron sin ningún peso asignado** (geometría casi aislada, sobre todo cerca
+  del cuello/omóplato, que la difusión de calor no pudo alcanzar) — sin peso,
+  un vértice no seguía al esqueleto para nada.
+  Fix (`tools` ad-hoc en Blender, no versionado): (1) para cada vértice sin
+  peso, copiar el peso completo del vértice pesado más cercano (KDTree); (2)
+  ⚠️ ese paso va ANTES de sincronizar duplicados — si no, algunos grupos
+  duplicados quedaban con peso total 0 y no se sincronizaban (pasó en el primer
+  intento: solo 3984 de 4019); (3) agrupar vértices por posición idéntica
+  (redondeada a 5 decimales), promediar los pesos de cada grupo y reasignar el
+  mismo resultado a todas las copias — con (1) hecho antes, esta vez sincronizó
+  los 4019 de 4019. Verificado con 24 frames repartidos por todo el ciclo de
+  caminata (antes solo se habían mirado 6 y por eso se dio por resuelto una vez
+  sin serlo del todo): sin grietas en ninguno. El `neutral_bone` (huérfano, sin
+  peso de ningún vértice tras el fix) quedó podado del esqueleto exportado —
+  inofensivo, era un hueso de control sin uso real.
   El material también traía `Sheen`/`Anisotropic`/`Specular IOR Level` subidos
   en el Principled BSDF (probablemente para simular "fur" en el viewport de
   Blender), que el exportador vuelca como
