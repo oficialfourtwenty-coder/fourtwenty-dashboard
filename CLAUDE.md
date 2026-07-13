@@ -4,6 +4,60 @@ Juego web 3D: una tienda de ropa virtual de la marca **fourtwenty** donde el jug
 camina con **BOB** (mascota de la marca), se prueba ropa, junta prendas en la bolsa y
 termina comprando en el checkout real de TiendaNube.
 
+## ⚠️ VERSIÓN DE TRABAJO ACTUAL (leer esto primero, siempre)
+
+**Esta es la ÚNICA versión sobre la que se trabaja.** El 8 de julio, un intento
+de Codex de agregar un ascensor de 6 pisos rompió el mundo y generó versiones
+viejas/confusas. El dueño recuperó esta versión ("mundo perfecto") y a partir de
+acá seguimos — **no volver a ninguna versión anterior sin que el dueño lo pida
+explícitamente**, aunque parezca más "limpia" en el historial de git.
+
+- **Commit de referencia:** `6742172` ("Guardar version actual del mundo
+  FOURTWENTY"), en GitHub dentro del branch `codex/elevator-handoff` (no está
+  en un branch propio ahí — es un commit intermedio). En la Mac del dueño el
+  branch local se llama `probar-mundo-perfecto-6742172`.
+- **Cómo correrlo (Mac del dueño):**
+  ```bash
+  cd /Users/kusher/Desktop/fourtwenty-dashboard
+  git switch probar-mundo-perfecto-6742172
+  cd store-simulator
+  npm run dev -- --host 0.0.0.0 --port 5190
+  ```
+- **Pendiente:** este branch existía SOLO en la Mac del dueño hasta que esta
+  sesión lo empujó a GitHub como `probar-mundo-perfecto-6742172` (mismo commit
+  `6742172` + este commit de documentación arriba). Cualquier sesión nueva
+  (Claude o Codex) debe partir de acá con `git fetch && git switch
+  probar-mundo-perfecto-6742172` — NUNCA de `claude/fourtwenty-store-simulator-g3rigz`
+  ni de `main`, que quedaron desincronizados.
+
+### Qué tiene esta versión que otros branches no tienen
+- Editor de mundo (tecla T) bastante más extendido que en `claude/fourtwenty-store-simulator-g3rigz`
+  (cambios grandes en `editableRegistry.js`, `editorPanel.js`, `worldEditor.js`).
+- `src/world/productVisuals.js` (nuevo, no existe en otros branches).
+- Mueble nuevo `public/assets/furniture/apartment-building.glb`.
+- El video real `public/assets/ui/cultura-intro.mp4` ya cargado (antes era un
+  placeholder pendiente).
+
+### Qué NO tiene (para no reintroducir por accidente)
+- **El módulo `src/ui/culturaIntro.js`** (intro de video de Cultura como
+  componente aislado) que se hizo en `claude/fourtwenty-store-simulator-g3rigz`
+  **no existe acá**. Esta versión resuelve el video de Cultura de otra forma,
+  integrada directo en `main.js`/`index.html` (mismo patrón que las pantallas
+  de carga de hoop-season/bob-collection). Son DOS implementaciones distintas
+  del mismo feature — no mezclar ambas sin revisar primero cuál quedó.
+- El ascensor de 6 pisos: **NO está implementado**. Se intentó, salió mal, se
+  descartó. Ver `design/ELEVATOR_HANDOFF_CLAUDE.md` (si existe en un commit
+  posterior) para la spec acordada si se retoma — con mucho más cuidado que la
+  vez pasada: probar en un branch/worktree aparte, nunca directo sobre esta
+  versión, y confirmar con el dueño antes de cada paso grande.
+
+### Regla operativa
+Antes de tocar código de este proyecto, cualquier sesión (mía o de Codex) debe
+confirmar en qué branch está parada y que coincide con `probar-mundo-perfecto-6742172`.
+Si se va a probar algo grande y riesgoso (como un ascensor), hacerlo en un
+branch/worktree separado y NO mezclarlo con este hasta que el dueño lo vea
+funcionando y lo apruebe explícitamente.
+
 ## Estructura del repo
 
 ```
