@@ -126,20 +126,39 @@ store-simulator/    → el juego (Vite + Three.js)
   (⚠️ dejar `--compress false`: el modo default mete `EXT_meshopt_compression`/
   `KHR_mesh_quantization` como *required*, y el `GLTFLoader` de bob3d.js no tiene
   registrado el decoder — rompería la carga). GLB final: 1.3 MB (era 2.6 MB).
-  ⚠️ **Dos bugs de la primera conversión, ya corregidos, ojo si se vuelve a
-  re-exportar el `.blend`:** (1) ~230 vértices de la cabeza/orejas venían mal
-  pesados (skinning) hacia `L_Upperarm`/`R_Upperarm` y sus twist bones — como esos
-  huesos sí se animan en la caminata, media cabeza "viajaba" con el brazo. Se
-  limpió a mano: cualquier vértice con >50% de peso en huesos de cabeza
-  (`Head`/`neutral_bone`/`NeckTwist01`/`NeckTwist02`/`Spine02`) se le sacó el resto
-  del peso de otros huesos, sin tocar los vértices de hombro que sí deben mezclarse.
-  (2) El material traía `Sheen`/`Anisotropic`/`Specular IOR Level` subidos en el
-  Principled BSDF (probablemente para simular "fur" en el viewport de Blender), que
-  el exportador vuelca como `KHR_materials_sheen`/`anisotropy`/`specular` — con las
-  luces cálidas + bloom del juego se veía plástico brillante en vez de peluche mate.
-  Se resetearon a los valores neutros de Blender antes de exportar (Specular IOR
-  Level 0.5, Anisotropic 0, Sheen Weight 0) — el material final quedó igual de
-  simple que el bob.glb original (solo baseColor+roughness+normal, sin extensions).
+  ⚠️ **El `.blend` traía el skinning roto de fondo — ojo si se vuelve a
+  re-exportar:** el primer intento de arreglo fue parcial (limpiar a mano ~230
+  vértices de cabeza/orejas mal pesados hacia `L_Upperarm`/`R_Upperarm`) y no
+  alcanzó — el dueño reportó que al caminar "se movía casi toda la parte del
+  costado". Medición real: la **suma de pesos por vértice tenía mediana ~12.8**
+  (debería ser ~1.0) — casi todos los vértices del mesh estaban influenciados
+  fuerte por 15+ huesos sin relación anatómica entre sí (torso mezclado con
+  brazo, pierna, etc.), probablemente del auto-rig de Tripo. Blender lo
+  disimulaba normalizando en tiempo real al deformar en el viewport, pero el
+  exportador de glTF solo guarda los 4 huesos de mayor peso por vértice — con
+  docenas de huesos casi empatados en peso, terminaba eligiendo casi al azar,
+  de ahí la deformación grande al animar el brazo.
+  **Fix real:** recalcular el skinning de cero con el algoritmo de Blender
+  (`bpy.ops.object.parent_set(type='ARMATURE_AUTO')`, difusión de calor sobre
+  la superficie de la malla, no por distancia euclídea — importante porque en
+  la pose de reposo los brazos están pegados al torso) tras borrar todos los
+  vertex groups viejos. Post-fix: mediana de suma de pesos ~0.995, 95% de los
+  vértices en rango sano. Esto introdujo una costura fina visible en el
+  hombro/cuello en poses de brazo muy extendido (límite de las 4 influencias
+  de glTF + geometría delgada ahí) — se atenuó bastante con
+  `bpy.ops.object.vertex_group_smooth(factor=0.5, repeat=3)` en modo Weight
+  Paint tras el recálculo, pero no desapareció del todo en el frame más extremo
+  del ciclo; queda como limitación menor conocida (mucho mejor que el problema
+  original, pero no perfecto — retocar a mano con pintura de pesos visual
+  sería el siguiente paso si hace falta pulirlo más).
+  El material también traía `Sheen`/`Anisotropic`/`Specular IOR Level` subidos
+  en el Principled BSDF (probablemente para simular "fur" en el viewport de
+  Blender), que el exportador vuelca como
+  `KHR_materials_sheen`/`anisotropy`/`specular` — con las luces cálidas + bloom
+  del juego se veía plástico brillante en vez de peluche mate. Se resetearon a
+  los valores neutros de Blender antes de exportar (Specular IOR Level 0.5,
+  Anisotropic 0, Sheen Weight 0) — el material final quedó igual de simple que
+  el bob.glb original (solo baseColor+roughness+normal, sin extensions).
   `bob3d.js` no tiene clip de "idle" propio (el .blend solo trae el de caminata):
   cuando la velocidad es ~0 el clip de caminata se **pausa** en el frame en el que
   esté (pose neutra), y cuando BOB se mueve se reproduce con `timeScale` escalado a
