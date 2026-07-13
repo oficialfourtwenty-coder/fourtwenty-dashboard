@@ -182,6 +182,38 @@ store-simulator/    → el juego (Vite + Three.js)
   a moverse, hay que re-agregar esos fcurves Y resolver el skinning de la
   pierna en serio (probablemente con el mismo criterio geométrico que
   mano/pie, o pintura de pesos a mano) — no alcanza con los fixes ya hechos.
+  ⚠️ **Quinta vuelta — el dueño reportó otra vez "un dedo pegado al cuerpo"
+  aun con la pierna quieta:** midiendo a fondo el archivo YA exportado (no un
+  intermedio) encontré que **5434 de 15683 vértices** tenían >15% de peso en
+  `Upperarm`/`Forearm` (los únicos huesos que se mueven) **estando fuera de
+  la zona real del brazo** — incluía vértices literalmente a la altura del
+  pie, 100% pesados a `R_Forearm`. Causa: los fixes anteriores (mano→Forearm,
+  dedo del pie→Foot) solo agarraban vértices *cerca* de esos huesos, nunca al
+  revés — vértices lejos del brazo que igual habían quedado mal pesados por
+  la misma confusión de la difusión de calor (mano y pie quedan muy cerca
+  entre sí en la pose de reposo, un mono chico con brazos largos).
+  Fix: una "cápsula" geométrica a lo largo de toda la cadena
+  `Clavicle→Upperarm→Forearm→Hand` (radio 0.14m, cada lado). Cualquier
+  vértice CON peso en esos huesos pero FUERA de la cápsula pierde ese peso
+  por completo, sin importar cuánto tuviera — es el opuesto exacto del fix de
+  mano/pie (ahí se fuerza peso a los vértices *cerca*; acá se saca a los
+  vértices *lejos*). ⚠️ Se aplica como el **último** paso del pipeline (después
+  de sincronizar duplicados de costura), no antes — un intento anterior lo
+  hizo más temprano y la sincronización de costuras post-fix reintrodujo
+  parte de la contaminación en las copias duplicadas; haciéndolo al final no
+  hay ningún paso posterior que lo pueda arruinar. Los vértices que quedan en
+  0 tras sacarles el peso de brazo se reasignan del vértice pesado más
+  cercano que **también** esté fuera de la cápsula (si no se excluye esto, el
+  vecino más cercano de un vértice de pie puede ser un vértice real de mano
+  — vuelven a quedar pegados). ~728 vértices corregidos. Verificado con 24
+  capturas del ciclo completo, zoom en mano/cadera/pie en cada una: nada
+  pegado ni estirado. (Nota: sigue habiendo un grupo de vértices a altura de
+  pie con peso residual en `Forearm` que la auditoría numérica detecta pero
+  que NO es visible en ninguna de las 24 capturas — probablemente mechones de
+  pelaje que cuelgan de la muñeca y llegan cerca del tobillo en la pose de
+  reposo; si en el futuro se ve algo raro ahí, revisar con
+  `tools/inspect_glb.py` + un script que compare `JOINTS_0`/`WEIGHTS_0` contra
+  la posición Y de cada vértice, no asumir que ya está 100% perfecto.)
   El material también traía `Sheen`/`Anisotropic`/`Specular IOR Level` subidos
   en el Principled BSDF (probablemente para simular "fur" en el viewport de
   Blender), que el exportador vuelca como
