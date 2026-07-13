@@ -6,37 +6,52 @@ termina comprando en el checkout real de TiendaNube.
 
 ## ⚠️ VERSIÓN DE TRABAJO ACTUAL (leer esto primero, siempre)
 
-**Esta es la ÚNICA versión sobre la que se trabaja.** El 8 de julio, un intento
-de Codex de agregar un ascensor de 6 pisos rompió el mundo y generó versiones
-viejas/confusas. El dueño recuperó esta versión ("mundo perfecto") y a partir de
-acá seguimos — **no volver a ninguna versión anterior sin que el dueño lo pida
-explícitamente**, aunque parezca más "limpia" en el historial de git.
+**`version-lunes-13` es la ÚNICA versión sobre la que se trabaja** (branch en
+GitHub, pusheada el 13 de julio). Reemplaza a `probar-mundo-perfecto-6742172`
+(ver más abajo por qué). El respaldo inmediato anterior es `domingo-12`
+(sin ascensor, previo a que el dueño lo aprobara). **No volver a ninguna
+versión anterior sin que el dueño lo pida explícitamente.**
 
-- **Commit de referencia:** `6742172` ("Guardar version actual del mundo
-  FOURTWENTY"), en GitHub dentro del branch `codex/elevator-handoff` (no está
-  en un branch propio ahí — es un commit intermedio). En la Mac del dueño el
-  branch local se llama `probar-mundo-perfecto-6742172`.
 - **Cómo correrlo (Mac del dueño):**
   ```bash
   cd /Users/kusher/Desktop/fourtwenty-dashboard
-  git switch probar-mundo-perfecto-6742172
+  git switch version-lunes-13
   cd store-simulator
   npm run dev -- --host 0.0.0.0 --port 5190
   ```
-- **Pendiente:** este branch existía SOLO en la Mac del dueño hasta que esta
-  sesión lo empujó a GitHub como `probar-mundo-perfecto-6742172` (mismo commit
-  `6742172` + este commit de documentación arriba). Cualquier sesión nueva
-  (Claude o Codex) debe partir de acá con `git fetch && git switch
-  probar-mundo-perfecto-6742172` — NUNCA de `claude/fourtwenty-store-simulator-g3rigz`
-  ni de `main`, que quedaron desincronizados.
+- **Historia (para entender el árbol de branches, no repetir el lío):**
+  `probar-mundo-perfecto-6742172` (commit `6742172`, "mundo perfecto"
+  recuperado tras el desastre del ascensor del 8 de julio) fue la versión de
+  trabajo hasta el 13 de julio. Sobre esa base, el dueño le pidió a Codex
+  el ascensor en una copia aparte de su Mac (nunca tocando la versión
+  principal); cuando le gustó el resultado, guardó ese estado como
+  `domingo-12` (checkpoint sin ascensor, solo con datos/layout actualizados)
+  y encima `version-lunes-13` (con el ascensor ya integrado). Ambos branches
+  arrancan desde el mismo punto de `probar-mundo-perfecto-6742172` (el commit
+  de los fixes de BOB, ver más abajo) — **no se perdió nada de esos fixes**,
+  se mergearon a mano después de que las 3 ramas quedaran en GitHub.
+  `probar-mundo-perfecto-6742172` queda **superada/congelada** — no seguir
+  trabajando ahí.
+- ⚠️ **Ojo con confundir ramas locales:** el 13 de julio hubo una sesión entera
+  perdida arreglando `bob.glb` en `probar-mundo-perfecto-6742172` mientras el
+  dueño probaba los resultados en `version-lunes-13` (rama local en su Mac,
+  todavía no pusheada) — dos archivos `bob.glb` completamente distintos, cada
+  arreglo en una rama no aparecía en la otra. **Antes de reportar o descartar
+  un bug, confirmar explícitamente en qué branch/carpeta se está parado** (a
+  ambos lados: el dueño en su Mac, cualquier sesión de Claude/Codex).
 
-### Qué tiene esta versión que otros branches no tienen
-- Editor de mundo (tecla T) bastante más extendido que en `claude/fourtwenty-store-simulator-g3rigz`
-  (cambios grandes en `editableRegistry.js`, `editorPanel.js`, `worldEditor.js`).
-- `src/world/productVisuals.js` (nuevo, no existe en otros branches).
-- Mueble nuevo `public/assets/furniture/apartment-building.glb`.
-- El video real `public/assets/ui/cultura-intro.mp4` ya cargado (antes era un
-  placeholder pendiente).
+### Qué tiene esta versión que las anteriores no tenían
+- 🛗 **Ascensor de 6 pisos** (`src/world/elevator.js`, `src/world/destinationScenes.js`,
+  `src/ui/elevatorPanel.js`) — hecho por Codex en una carpeta aparte
+  (`/Users/kusher/Documents/simulador/prueba-ascensor`, fuera de este repo) y
+  aprobado por el dueño; recién integrado acá. Panel con destinos, escenas de
+  piso independientes (solo se carga el piso activo), objetos movibles/color
+  editable por piso vía el World Editor (tecla T).
+- `bob.glb` con animación de caminata real y todos los fixes de skinning
+  descritos más abajo (piernas quietas, manos/pies sin bugs).
+- Editor de mundo (tecla T) extendido (`editableRegistry.js`, `editorPanel.js`,
+  `worldEditor.js`), `productVisuals.js`, mueble `apartment-building.glb`,
+  video real `cultura-intro.mp4` — heredado de `probar-mundo-perfecto-6742172`.
 
 ### Qué NO tiene (para no reintroducir por accidente)
 - **El módulo `src/ui/culturaIntro.js`** (intro de video de Cultura como
@@ -45,50 +60,13 @@ explícitamente**, aunque parezca más "limpia" en el historial de git.
   integrada directo en `main.js`/`index.html` (mismo patrón que las pantallas
   de carga de hoop-season/bob-collection). Son DOS implementaciones distintas
   del mismo feature — no mezclar ambas sin revisar primero cuál quedó.
-- El ascensor de 6 pisos: **sigue sin estar en esta versión** — pero hay un
-  prototipo funcional en progreso, en otra carpeta, ver abajo.
-
-### 🛗 Prototipo de ascensor (en progreso, FUERA de este repo/branch)
-
-Tras el desastre del 8 de julio, el ascensor se está probando en un lugar
-totalmente aislado, para que un intento fallido no vuelva a romper esta
-versión: **`/Users/kusher/Documents/simulador/prueba-ascensor`** (carpeta
-aparte en la Mac del dueño, NO es un branch de este repo — está fuera de
-`/Users/kusher/Desktop/fourtwenty-dashboard`). Trabajo hecho con Codex,
-servidor de prueba en `http://127.0.0.1:4174/`.
-
-**Regla explícita del dueño:** ninguna sesión (Claude o Codex) debe tocar
-`store-simulator/` (la versión principal) mientras se prueba el ascensor.
-Todo cambio queda en `prueba-ascensor` hasta que el dueño lo vea funcionar y
-autorice explícitamente pasarlo a esta versión.
-
-Estado actual del prototipo (según el dueño, 13 de julio — **base
-funcionando**, pendiente de mejoras):
-- Ascensor interactivo y movible con el editor (tecla T).
-- Apertura inmediata al llamar.
-- Espera de 2s al entrar + difuminado (fade) de 1s antes de viajar.
-- Panel interactivo con destinos 0–5 (botón 0 con el mismo acabado que
-  el resto — antes quedaba distinto).
-- Cada piso es una escena independiente: **solo se carga el piso activo**
-  (no los 6 en memoria a la vez).
-- Espacios de cada piso ampliados x2 respecto al edificio original.
-- Todos los objetos de cada piso son movibles con el editor.
-- Selector de color por objeto (con T) — los colores se guardan por piso.
-- La función de productos/compra (click en prenda → panel → link TN) se
-  mantiene funcionando dentro del prototipo.
-
-Cuando el dueño confirme que quiere pasar esto a la versión principal, hay
-que revisar `design/ELEVATOR_HANDOFF_CLAUDE.md` (si existe en un commit
-posterior a este) para comparar contra la spec original acordada, y portar
-los cambios con cuidado (branch/worktree aparte, nunca directo sobre esta
-versión) — recién ahí, confirmando con el dueño antes de cada paso grande.
 
 ### Regla operativa
 Antes de tocar código de este proyecto, cualquier sesión (mía o de Codex) debe
-confirmar en qué branch está parada y que coincide con `probar-mundo-perfecto-6742172`.
-Si se va a probar algo grande y riesgoso (como un ascensor), hacerlo en un
-branch/worktree separado y NO mezclarlo con este hasta que el dueño lo vea
-funcionando y lo apruebe explícitamente.
+confirmar en qué branch está parada y que coincide con `version-lunes-13`.
+Si se va a probar algo grande y riesgoso, hacerlo en un branch/worktree
+separado y NO mezclarlo con este hasta que el dueño lo vea funcionando y lo
+apruebe explícitamente.
 
 ## Estructura del repo
 
