@@ -1,7 +1,6 @@
-// FOURTWENTY Store Simulator — INTRO: calle de Burela 2570 + local chico.
-// El "shopping" de 5 pisos (world/building.js y compañía) queda construido
-// pero DESCONECTADO por ahora: se reengancha cuando se implemente la carga
-// de mapa hacia la escalera mecánica (ver nota al final de world/street.js).
+// FOURTWENTY Store Simulator — calle de Burela + destinos aislados por ascensor.
+// Cada seccion se construye como una escena independiente y se descarta al
+// viajar: nunca se renderizan ni se montan todos los pisos al mismo tiempo.
 // Calidad: por defecto 'high' (sombras + post-processing). En celulares o
 // máquinas flojas abrir con ?q=low (sin sombras ni post, misma jugabilidad).
 import * as THREE from 'three';
@@ -12,7 +11,6 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildStreet, SPAWN, isInsideLocal, streetSampleGround, STREET_BOUNDS, LOCAL_BOUNDS, CEILING_OUT, CEILING_IN } from './world/street.js';
-// BOBILONIA: el shopping de 5 pisos ya construido, se monta al elegir remera
 import { buildBuilding, buildLights, getColliders, sampleGround as shopSampleGround, floorIndexAt, FLOOR_YS, FLOOR_H, INTERIOR } from './world/building.js';
 import { buildGallery } from './world/gallery.js';
 import { buildRetail } from './world/retail.js';
@@ -23,10 +21,13 @@ import { loadInitialLayout } from './world/editor/layoutStore.js';
 import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
 import { tickAmbient } from './world/anim.js';
+import { ElevatorController } from './world/elevator.js';
+import { buildDestinationScene, disposeDestinationScene, ELEVATOR_DESTINATIONS, getDestination, sceneStats } from './world/destinationScenes.js';
 import { Player } from './player/bob3d.js';
 import { ThirdPersonCamera } from './core/camera.js';
 import { Input } from './core/input.js';
 import { Hud } from './ui/hud.js';
+import { initElevatorPanel } from './ui/elevatorPanel.js';
 import { loadProductos } from './data/productosStore.js';
 import { initProductClicks } from './interact/productClicks.js';
 import { initAdminPanel } from './ui/adminPanel.js';
@@ -53,7 +54,7 @@ const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environment = envTex;
 scene.environmentIntensity = 0.22;
 
-let activeScene = scene; // se cambia al montar BOBILONIA
+let activeScene = scene;
 
 const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 140);
 const editableColliderBox = new THREE.Box3();
@@ -61,6 +62,7 @@ const editableColliderPartBox = new THREE.Box3();
 const editableColliderSize = new THREE.Vector3();
 const streetRuntimeColliders = [];
 const streetRuntimeSteppables = [];
+const destinationRuntimeColliders = [];
 
 // ---- Step-offset genérico (consciente de rotación) -------------------------
 // Un objeto "pared" bloquea con una caja alineada a los ejes del mundo — eso
@@ -190,9 +192,12 @@ function checkPerf(dt) {
   }
 }
 
-const { colliders: streetColliders, selectors } = buildStreet(scene);
+const { colliders: streetColliders } = buildStreet(scene);
 let colliders = streetColliders;
-let world = 'street'; // 'street' | 'shopping'
+let world = 'street'; // 'street' | 'destination'
+let loading = false;
+let currentDestinationId = 0;
+let activeDestinationRecord = null;
 
 const bob = new Player(scene, SPAWN);
 bob.sampleGround = streetSampleGroundWithSteps; // rampa fija + escalones editables (rotados o no)
@@ -203,6 +208,18 @@ tpCam.targetYaw = 0;
 const input = new Input(canvas);
 const hud = new Hud();
 const worldEditor = initWorldEditor({ scene, camera, renderer, input, player: bob });
+const streetElevator = new ElevatorController(scene, {
+  id: 'elevator-street',
+  name: 'Ascensor FOURTWENTY · Calle Burela',
+  position: [0, 0, 3.0],
+  rotationY: 0,
+  onEnter: handleElevatorEntered,
+});
+let activeElevator = streetElevator;
+const elevatorPanel = initElevatorPanel({
+  destinations: ELEVATOR_DESTINATIONS,
+  onSelect: travelToDestination,
+});
 
 // SIN pointer lock: el overlay de inicio solo se cierra con el primer click.
 hud.onStart(() => hud.showOverlay(false));
@@ -227,12 +244,19 @@ window.__bob = bob; // hooks de debug/testeo
 window.__cam = tpCam;
 window.__worldEditor = worldEditor;
 window.__productClicks = productClicks;
-window.__startLoading = (piso, label) => startLoading(piso, label ?? `PISO ${piso}`);
+
+registerEditableObject({
+  id: 'elevator-street',
+  name: 'Ascensor FOURTWENTY (mover completo)',
+  type: 'elevator',
+  object3D: streetElevator.root,
+  manageShadows: false,
+});
 
 // EDITOR: todo lo que hay en la calle queda registrado como editable (tecla T).
 // Si el dueño ya movió/ocultó/duplicó cosas (localStorage o layout base), se
 // re-aplica acá. Los muebles GLB se registran solos en addFurniture.
-autoRegisterScene(scene, { prefix: 'calle-kit', skip: [bob.rig, bob.shadow] });
+autoRegisterScene(scene, { prefix: 'calle-kit', skip: [bob.rig, bob.shadow, streetElevator.root] });
 // BOB es editable en vivo (teletransportar, rotar, escalar) pero transient:
 // nunca se guarda en el layout para que el juego conserve su spawn normal.
 // Duplicarlo crea una "estatua" que sí persiste.
@@ -253,6 +277,42 @@ function applySavedEditorLayout() {
   });
 }
 
+function clearDestinationEditorSync(record) {
+  for (const timer of record?.editorSyncTimers ?? []) window.clearTimeout(timer);
+  if (record) record.editorSyncTimers = [];
+}
+
+function registerDestinationEditables(record) {
+  if (!record || activeDestinationRecord !== record) return;
+  const prefix = `destino-${record.destination.id}`;
+  registerEditableObject({
+    id: record.elevator.id,
+    name: `Ascensor FOURTWENTY · ${record.destination.hudLabel} (mover completo)`,
+    type: 'elevator',
+    object3D: record.elevator.root,
+    manageShadows: false,
+  });
+  autoRegisterScene(record.scene, {
+    prefix,
+    skip: [bob.rig, bob.shadow, record.elevator.root],
+  });
+
+  loadInitialLayout().then((layout) => {
+    if (activeDestinationRecord !== record) return;
+    applyLayout(layout);
+    restoreClones(layout);
+    renderer.shadowMap.needsUpdate = true;
+  });
+}
+
+function setupDestinationEditor(record) {
+  registerDestinationEditables(record);
+  // Los GLB de mobiliario y la estatua BOB llegan asincronicamente.
+  record.editorSyncTimers = [700, 2400, 6000].map((delay) => window.setTimeout(() => {
+    registerDestinationEditables(record);
+  }, delay));
+}
+
 applySavedEditorLayout();
 addFurniture(scene).then(() => {
   renderer.shadowMap.needsUpdate = true;
@@ -263,6 +323,9 @@ function appendEditableColliders(targetColliders, targetSteppables) {
   for (const entry of getEditableObjects()) {
     const object = entry.object3D;
     if (!object || entry.transient || !isEditableEffectivelyVisible(entry.id)) continue;
+    // El ascensor calcula sus paredes y puertas en vivo. Usar la caja del grupo
+    // completo taparia el hueco de entrada despues de moverlo con T.
+    if (entry.type === 'elevator') continue;
     if (!entry.id.startsWith('calle-kit:') && entry.type !== 'furniture') continue;
     const wantsCollider = object.userData?.editorCollider === true || entry.type === 'furniture';
     if (!wantsCollider && object.userData?.walkStep !== true) continue;
@@ -339,11 +402,16 @@ function setVisibleColliderBox(target, object) {
 }
 
 function currentPlayerColliders() {
-  if (world !== 'street') return colliders;
+  if (world !== 'street') {
+    destinationRuntimeColliders.length = 0;
+    destinationRuntimeColliders.push(...colliders, ...activeElevator.getColliders());
+    return destinationRuntimeColliders;
+  }
   streetRuntimeColliders.length = 0;
   streetRuntimeColliders.push(...streetColliders);
   streetRuntimeSteppables.length = 0;
   appendEditableColliders(streetRuntimeColliders, streetRuntimeSteppables);
+  streetRuntimeColliders.push(...streetElevator.getColliders());
   return streetRuntimeColliders;
 }
 
@@ -358,11 +426,10 @@ function streetSampleGroundWithSteps(x, z) {
   return Math.max(base, stepped);
 }
 
-// ---- Selector de colecciones (remeras del stock): hover + click + E --------
+// ---- Boton exterior del ascensor: hover + click + E -------------------------
 const raycaster = new THREE.Raycaster();
 const pointerNdc = new THREE.Vector2(-2, -2); // fuera de pantalla hasta que se mueva
-let hovered = null;
-let loading = false;
+let hovered = false;
 const loadingEl = document.getElementById('loading-screen');
 const loadingCount = document.getElementById('loading-count');
 const loadingDest = document.getElementById('loading-dest');
@@ -410,49 +477,46 @@ bgProbe.src = 'assets/ui/bobilonia.jpg';
 canvas.addEventListener('pointermove', (e) => {
   pointerNdc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
 });
-canvas.addEventListener('click', () => {
-  if (loading || world !== 'street' || !hovered) return;
-  if (!isInsideLocal(bob.position)) return; // hay que estar adentro del local
-  startLoading(hovered.userData.piso, hovered.userData.label);
+canvas.addEventListener('click', (event) => {
+  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled()) return;
+  pointerNdc.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
+  raycaster.setFromCamera(pointerNdc, camera);
+  const hit = raycaster.intersectObject(activeElevator.callButton, false)[0];
+  if (hit && activeElevator.isNearCallButton(bob.position)) callActiveElevator();
 });
 
 function updateHover() {
-  if (loading || world !== 'street' || !isInsideLocal(bob.position)) {
+  if (loading || elevatorPanel.isVisible() || !activeElevator || !activeElevator.isNearCallButton(bob.position)) {
     clearShirtHover();
     return;
   }
   raycaster.setFromCamera(pointerNdc, camera);
-  const hit = raycaster.intersectObjects(selectors, false)[0]?.object ?? null;
-  if (hit !== hovered) {
-    if (hovered) hovered.scale.setScalar(1);
-    hovered = hit;
-    if (hovered) {
-      hovered.scale.setScalar(1.18); // feedback: se agranda al pasar el mouse
-      shirtTip.textContent = `${hovered.userData.label} — CLICK PARA VIAJAR`;
-    }
-    canvas.style.cursor = hovered ? 'pointer' : 'default';
-    shirtTip.style.display = hovered ? 'block' : 'none';
-  }
+  hovered = Boolean(raycaster.intersectObject(activeElevator.callButton, false)[0]);
+  activeElevator.setHighlighted(hovered);
+  canvas.style.cursor = hovered ? 'pointer' : 'default';
+  shirtTip.style.display = hovered ? 'block' : 'none';
+  if (!hovered) return;
+  if (activeElevator.state === 'calling' || activeElevator.state === 'opening') shirtTip.textContent = 'ABRIENDO ASCENSOR';
+  else if (activeElevator.state === 'open' || activeElevator.state === 'arrived-open') shirtTip.textContent = 'PUERTAS ABIERTAS';
+  else shirtTip.textContent = 'LLAMAR ASCENSOR';
 }
 
 function clearShirtHover() {
-  if (hovered) {
-    hovered.scale.setScalar(1);
-    hovered = null;
-  }
+  hovered = false;
+  activeElevator?.setHighlighted(false);
   canvas.style.cursor = 'default';
   shirtTip.style.display = 'none';
 }
 
-// E = interactuar con la remera más cercana (a menos de 3m)
+function callActiveElevator() {
+  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled()) return;
+  activeElevator.call();
+}
+
+// E = pulsar el boton cuando BOB esta cerca.
 function interactNearest() {
-  if (loading || world !== 'street' || !isInsideLocal(bob.position)) return;
-  let best = null, bestD = 3;
-  for (const s of selectors) {
-    const d = Math.hypot(s.position.x - bob.position.x, s.position.z - bob.position.z);
-    if (d < bestD) { bestD = d; best = s; }
-  }
-  if (best) startLoading(best.userData.piso, best.userData.label);
+  if (loading || elevatorPanel.isVisible() || !activeElevator?.isNearCallButton(bob.position)) return;
+  callActiveElevator();
 }
 
 // ---- Pantalla de carga BOBILONIA + montaje del shopping ---------------------
@@ -692,6 +756,162 @@ function enterShopping({ scene: s, colliders: cols }, piso) {
   shadowRefreshAt.push(elapsed + 1.5, elapsed + 4);
 }
 
+// ---- Viaje por ascensor -----------------------------------------------------
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+let travelling = false;
+
+async function handleElevatorEntered(elevator) {
+  if (loading || elevator !== activeElevator) return;
+  loading = true;
+  input.keys.clear();
+  clearShirtHover();
+
+  // BOB ya esta adentro: dos segundos quieto antes del cierre pedido.
+  await wait(2000);
+  if (elevator !== activeElevator) return;
+
+  // La puerta y el fundido avanzan juntos. El panel aparece solamente cuando
+  // ambos terminaron, como la mirada en primera persona de BOB.
+  await Promise.all([
+    elevator.closeDoors(),
+    elevatorPanel.fadeToBlack(1000),
+  ]);
+  bob.rig.visible = false;
+  bob.shadow.visible = false;
+  elevatorPanel.show(currentDestinationId);
+  await elevatorPanel.fadeFromBlack(1);
+}
+
+function activateDestination(destinationId) {
+  const destination = getDestination(destinationId);
+  if (!destination) throw new Error(`Destino de ascensor invalido: ${destinationId}`);
+
+  if (activeDestinationRecord) {
+    clearDestinationEditorSync(activeDestinationRecord);
+    disposeDestinationScene(activeDestinationRecord, bob);
+    activeDestinationRecord = null;
+  }
+
+  if (destination.kind === 'street') {
+    scene.add(bob.rig, bob.shadow);
+    activeScene = scene;
+    activeElevator = streetElevator;
+    colliders = streetColliders;
+    world = 'street';
+    bob.sampleGround = streetSampleGroundWithSteps;
+    tpCam.bounds = STREET_BOUNDS;
+    worldEditor.setScene(scene);
+  } else {
+    activeDestinationRecord = buildDestinationScene(destination.id, {
+      environment: envTex,
+      shadows: QUALITY === 'high' && !downgraded,
+      onElevatorEnter: handleElevatorEntered,
+    });
+    activeDestinationRecord.scene.add(bob.rig, bob.shadow);
+    activeScene = activeDestinationRecord.scene;
+    activeElevator = activeDestinationRecord.elevator;
+    colliders = activeDestinationRecord.colliders;
+    world = 'destination';
+    bob.sampleGround = activeDestinationRecord.sampleGround;
+    tpCam.bounds = activeDestinationRecord.bounds;
+    worldEditor.setScene(activeScene);
+    setupDestinationEditor(activeDestinationRecord);
+  }
+
+  currentDestinationId = destination.id;
+  activeElevator.placePlayerAtExit(bob);
+  activeElevator.openDoors({ arrival: true, immediate: true });
+  bob.vy = 0;
+  bob.rig.visible = true;
+  bob.shadow.visible = true;
+  tpCam.yaw = bob.modelYaw + Math.PI;
+  tpCam.targetYaw = tpCam.yaw;
+  tpCam.focus.set(bob.position.x, bob.position.y + 1.15, bob.position.z);
+  tpCam._first = true;
+  lastZone = null;
+  if (renderPass) renderPass.scene = activeScene;
+  renderer.shadowMap.needsUpdate = true;
+  shadowRefreshAt.push(elapsed + 1.2, elapsed + 3.5);
+}
+
+async function travelToDestination(destinationId) {
+  const destination = getDestination(destinationId);
+  if (!destination || travelling) return;
+  travelling = true;
+  loading = true;
+  input.keys.clear();
+
+  try {
+    await elevatorPanel.fadeToBlack(500);
+    elevatorPanel.hide();
+    activateDestination(destination.id);
+    await elevatorPanel.fadeFromBlack(500);
+  } catch (error) {
+    console.error('No se pudo completar el viaje en ascensor.', error);
+    bob.rig.visible = true;
+    bob.shadow.visible = true;
+    elevatorPanel.hide();
+    await elevatorPanel.fadeFromBlack(250);
+  } finally {
+    loading = false;
+    travelling = false;
+  }
+}
+
+window.__elevatorTest = {
+  call: () => activeElevator.call(),
+  openAndBoard: async () => {
+    await activeElevator.openDoors({ immediate: true });
+    activeElevator.placePlayerInside(bob);
+  },
+  travelTo: (destinationId) => travelToDestination(destinationId),
+  openFirstProduct: () => productClicks.openFirst(),
+  getState: () => ({
+    destinationId: currentDestinationId,
+    destination: getDestination(currentDestinationId)?.label,
+    elevatorState: activeElevator.state,
+    panelVisible: elevatorPanel.isVisible(),
+    productPanelVisible: productClicks.panel.isOpen(),
+    activeScene: activeScene.name || (world === 'street' ? 'Calle Burela' : ''),
+    elevator: {
+      position: activeElevator.root.position.toArray().map((value) => Number(value.toFixed(3))),
+      callButton: activeElevator.getCallButtonWorldPosition().toArray().map((value) => Number(value.toFixed(3))),
+      colliders: activeElevator.getColliders().length,
+      doorProgress: Number(activeElevator.doorProgress.toFixed(3)),
+    },
+    scene: sceneStats(activeScene),
+  }),
+};
+
+function initElevatorTestControls() {
+  if (new URLSearchParams(location.search).get('elevatorTest') !== '1') return null;
+  const root = document.createElement('div');
+  root.id = 'elevator-test-controls';
+  root.innerHTML = `
+    <button type="button" data-action="call" data-testid="elevator-test-call">CALL</button>
+    <button type="button" data-action="board" data-testid="elevator-test-board">BOARD</button>
+    ${ELEVATOR_DESTINATIONS.map((destination) => `<button type="button" data-destination="${destination.id}" data-testid="elevator-test-go-${destination.id}">${destination.id}</button>`).join('')}
+    <button type="button" data-action="product" data-testid="elevator-test-product">PRODUCTO</button>
+    <output id="elevator-test-state"></output>
+  `;
+  root.addEventListener('click', (event) => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    if (button.dataset.action === 'call') window.__elevatorTest.call();
+    else if (button.dataset.action === 'board') window.__elevatorTest.openAndBoard();
+    else if (button.dataset.action === 'product') window.__elevatorTest.openFirstProduct();
+    else if (button.dataset.destination !== undefined) window.__elevatorTest.travelTo(Number(button.dataset.destination));
+  });
+  document.body.append(root);
+  return root.querySelector('#elevator-test-state');
+}
+
+const elevatorTestState = initElevatorTestControls();
+function updateElevatorTestState() {
+  if (!elevatorTestState) return;
+  elevatorTestState.value = JSON.stringify(window.__elevatorTest.getState());
+}
+
 // Sombras congeladas: todo lo que proyecta sombra es estático (BOB usa sombra
 // blob), así que las shadow maps se calculan UNA vez en lugar de 60 por segundo.
 // Se refrescan un par de veces al inicio para capturar el GLB que carga async.
@@ -720,10 +940,11 @@ renderer.setAnimationLoop(() => {
   }
   editorWasActive = editorActive;
   if (!loading && !editorActive) bob.update(dt, input, tpCam.yaw, currentPlayerColliders(), camera.position);
+  activeElevator?.update(dt, bob.position);
   if (editorActive) input.consumeInteract();
-  else if (input.consumeInteract()) interactNearest(); // E = remera más cercana
+  else if (input.consumeInteract()) interactNearest(); // E = boton exterior del ascensor
   if (editorActive) clearShirtHover();
-  else updateHover();      // resaltado de remeras bajo el mouse
+  else updateHover();      // feedback del pulsador bajo el mouse
   tickAmbient(dt);         // displays giratorios
 
   let floorY, ceiling, zoneName;
@@ -736,11 +957,11 @@ renderer.setAnimationLoop(() => {
     ceiling = inside ? CEILING_IN : CEILING_OUT;
     hud.setZone(zoneName);
   } else {
-    const idx = floorIndexAt(bob.position.y);
-    zoneName = COLLECTIONS.find((c) => c.piso === idx)?.name ?? 'FOURTWENTY';
-    floorY = FLOOR_YS[idx - 1];
-    ceiling = FLOOR_H;
-    hud.setFloor(idx, zoneName);
+    const destination = getDestination(currentDestinationId);
+    zoneName = destination?.hudLabel ?? 'FOURTWENTY';
+    floorY = 0;
+    ceiling = activeDestinationRecord?.ceiling ?? 3.4;
+    hud.setFloor(destination?.id ?? 0, zoneName);
   }
   if (zoneName !== lastZone) {
     hud.showZoneTitle(zoneName); // cartel de zona estilo GTA V
@@ -750,4 +971,5 @@ renderer.setAnimationLoop(() => {
 
   if (composer) composer.render();
   else renderer.render(activeScene, camera);
+  updateElevatorTestState();
 });

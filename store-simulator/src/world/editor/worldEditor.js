@@ -8,12 +8,14 @@ import {
   duplicateEditable,
   findEditableRoot,
   getEditableById,
+  getEditableColorInfo,
   getEditableObjects,
   getParentEditableId,
   isEditableEffectivelyVisible,
   isObjectInScene,
   removeEditable,
   serializeEditableObjects,
+  setEditableColor,
   setEditableVisible,
 } from './editableRegistry.js';
 import {
@@ -112,6 +114,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     onDeselect: deselect,
     onSelectId: selectId,
     onTransformInput: applyInputTransform,
+    onColorInput: applyInputColor,
     onSave: () => saveNow('Layout local guardado.'),
     onCopy: copyJSON,
     onDownload: () => downloadLayout(serializeCurrentLayout()),
@@ -138,12 +141,14 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
         .map((entry) => ({ ...entry, effectiveVisible: isEditableEffectivelyVisible(entry.id) })),
       state.selectedId,
     );
-    panel.setSelected(state.selectedId ? getEditableById(state.selectedId) : null);
+    const selected = state.selectedId ? getEditableById(state.selectedId) : null;
+    panel.setSelected(selected, selected ? getEditableColorInfo(selected.id) : null);
   }
 
   // refresco liviano (mientras se arrastra el gizmo): no reconstruye la lista
   function refreshSelected() {
-    panel.setSelected(state.selectedId ? getEditableById(state.selectedId) : null);
+    const selected = state.selectedId ? getEditableById(state.selectedId) : null;
+    panel.setSelected(selected, selected ? getEditableColorInfo(selected.id) : null);
   }
 
   function setStatus(message) {
@@ -158,6 +163,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     currentScene = nextScene;
     currentScene.add(transformHelper);
     currentScene.add(boxHelper);
+    refreshPanel();
   }
 
   function setEnabled(enabled) {
@@ -284,6 +290,19 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     updateHelper();
     refreshPanel();
     scheduleSave();
+  }
+
+  function applyInputColor(value) {
+    if (!state.selectedId) return;
+    const colorInfo = setEditableColor(state.selectedId, value);
+    if (!colorInfo?.supported) {
+      setStatus('Ese objeto no tiene un material compatible con color.');
+      refreshSelected();
+      return;
+    }
+    refreshSelected();
+    scheduleSave();
+    setStatus(`Color ${colorInfo.value} aplicado.`);
   }
 
   function scheduleSave() {
@@ -523,6 +542,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   }
 
   function onKeyDown(event) {
+    if (document.body.classList.contains('elevator-panel-open')) return;
     const typing = isTypingTarget(event.target);
     // T (pedido del dueño) o Tab: entrar/salir del modo editor
     if ((event.code === 'KeyT' || event.code === 'Tab') && !typing && !event.metaKey && !event.ctrlKey) {

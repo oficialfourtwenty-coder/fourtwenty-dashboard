@@ -203,8 +203,8 @@ function ceilingLeds(g, Y) {
 }
 
 // ---- Galería por colección --------------------------------------------------
-export function buildGallery(scene, collection) {
-  const Y = FLOOR_YS[collection.piso - 1];
+export function buildGallery(scene, collection, { floorY = FLOOR_YS[collection.piso - 1] } = {}) {
+  const Y = floorY;
   const { colors, name, count, theme } = collection;
   const g = new THREE.Group();
   const colliders = [];

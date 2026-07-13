@@ -7,5 +7,12 @@ export function registerSpinner(obj, speed = 0.6) {
 }
 
 export function tickAmbient(dt) {
-  for (const s of spinners) s.obj.rotation.y += s.speed * dt;
+  for (let i = spinners.length - 1; i >= 0; i--) {
+    const spinner = spinners[i];
+    if (!spinner.obj.parent) {
+      spinners.splice(i, 1);
+      continue;
+    }
+    spinner.obj.rotation.y += spinner.speed * dt;
+  }
 }

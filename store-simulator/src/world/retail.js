@@ -324,7 +324,7 @@ function spinDisplay(g, colliders, Y, x, z, tex) {
 const deg = (d) => (d * Math.PI) / 180;
 
 // ---- Vestido por piso: lee el plano editable de layout.js -------------------
-export function buildRetail(scene) {
+export function buildRetail(scene, { selectedFloor = null, floorY = null } = {}) {
   const g = new THREE.Group();
   const colliders = [];
   const pools = makePools();
@@ -332,7 +332,8 @@ export function buildRetail(scene) {
 
   for (const [pisoStr, items] of Object.entries(LAYOUT)) {
     const piso = Number(pisoStr);
-    const Y = FLOOR_YS[piso - 1];
+    if (selectedFloor !== null && piso !== selectedFloor) continue;
+    const Y = floorY ?? FLOOR_YS[piso - 1];
     const colors = COLLECTIONS.find((c) => c.piso === piso)?.colors ?? LOBBY_COLORS;
 
     for (const it of items) {

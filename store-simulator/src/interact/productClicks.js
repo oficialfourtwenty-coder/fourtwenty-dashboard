@@ -66,6 +66,27 @@ export function initProductClicks({ canvas, camera, getScene, isBlocked = () => 
     return hit ? { hit, slot: slotOf(hit) } : null;
   }
 
+  function showProduct(slot) {
+    if (!slot) return null;
+    const info = getProductoForSlot(slot.piso, slot.index);
+    panel.show({
+      producto: info?.producto ?? null,
+      coleccion: info?.coleccion ?? getColeccionByPiso(slot.piso),
+      slotIndex: slot.index,
+    });
+    clearHover();
+    return { slot, producto: info?.producto ?? null };
+  }
+
+  // Solo lo usan los controles de diagnostico con ?elevatorTest=1.
+  function openFirst() {
+    if (getScene() !== cachedScene) rescan();
+    const slots = productMeshes.map(slotOf).filter(Boolean);
+    const slot = slots.find((candidate) => getProductoForSlot(candidate.piso, candidate.index)?.producto?.link)
+      ?? slots[0];
+    return showProduct(slot);
+  }
+
   function clearHover() {
     hovered = null;
     tip.style.display = 'none';
@@ -106,14 +127,8 @@ export function initProductClicks({ canvas, camera, getScene, isBlocked = () => 
     if (isBlocked() || panel.isOpen()) return;
     const res = raycastSlot();
     if (!res?.slot) return;
-    const info = getProductoForSlot(res.slot.piso, res.slot.index);
-    panel.show({
-      producto: info?.producto ?? null,
-      coleccion: info?.coleccion ?? getColeccionByPiso(res.slot.piso),
-      slotIndex: res.slot.index,
-    });
-    clearHover();
+    showProduct(res.slot);
   });
 
-  return { rescan, panel };
+  return { rescan, panel, openFirst };
 }

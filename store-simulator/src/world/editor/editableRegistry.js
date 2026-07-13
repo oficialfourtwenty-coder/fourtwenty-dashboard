@@ -1,5 +1,78 @@
 const registry = new Map();
 
+function normalizeEditorColor(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return `#${(value & 0xffffff).toString(16).padStart(6, '0')}`;
+  }
+  const raw = String(value ?? '').trim();
+  const short = raw.match(/^#?([0-9a-f]{3})$/i);
+  if (short) return `#${short[1].split('').map((digit) => `${digit}${digit}`).join('').toLowerCase()}`;
+  const full = raw.match(/^#?([0-9a-f]{6})$/i);
+  return full ? `#${full[1].toLowerCase()}` : null;
+}
+
+function colorMaterials(object3D) {
+  const materials = [];
+  const seen = new Set();
+  object3D?.traverse?.((child) => {
+    const childMaterials = Array.isArray(child.material) ? child.material : [child.material];
+    for (const material of childMaterials) {
+      if (!material?.color?.set || !material.color.getHexString || seen.has(material)) continue;
+      seen.add(material);
+      materials.push(material);
+    }
+  });
+  return materials;
+}
+
+function cloneColorMaterials(object3D) {
+  const replacements = new Map();
+  object3D?.traverse?.((child) => {
+    if (!child.material) return;
+    const cloneMaterial = (material) => {
+      if (!material?.color?.set || typeof material.clone !== 'function') return material;
+      if (!replacements.has(material)) replacements.set(material, material.clone());
+      return replacements.get(material);
+    };
+    if (Array.isArray(child.material)) child.material = child.material.map(cloneMaterial);
+    else child.material = cloneMaterial(child.material);
+  });
+  return replacements.size > 0;
+}
+
+function isolateColorMaterials(entry) {
+  if (!entry?.object3D || entry.colorMaterialsIsolated) return;
+  cloneColorMaterials(entry.object3D);
+  entry.colorMaterialsIsolated = true;
+}
+
+function applyColorToEntry(entry, value) {
+  const color = normalizeEditorColor(value);
+  if (!entry?.object3D || !color) return false;
+  isolateColorMaterials(entry);
+  const materials = colorMaterials(entry.object3D);
+  if (!materials.length) return false;
+  for (const material of materials) {
+    material.color.set(color);
+  }
+  entry.color = color;
+  return true;
+}
+
+function clearDescendantColorOverrides(parentEntry) {
+  for (const entry of registry.values()) {
+    if (entry === parentEntry || !entry.object3D) continue;
+    let current = entry.object3D.parent;
+    while (current) {
+      if (current === parentEntry.object3D) {
+        entry.color = null;
+        break;
+      }
+      current = current.parent;
+    }
+  }
+}
+
 function toArray3(value, fallback = [0, 0, 0]) {
   if (Array.isArray(value) && value.length >= 3) return value.slice(0, 3).map(Number);
   return fallback.slice();
@@ -54,6 +127,7 @@ function serializeEntry(entry) {
   if (entry.height != null) data.height = entry.height;
   if (entry.cloneOf) data.cloneOf = entry.cloneOf;
   if (entry.manageShadows === false) data.manageShadows = false;
+  if (entry.color) data.color = entry.color;
   return data;
 }
 
@@ -73,6 +147,7 @@ export function registerEditableObject(config, { silent = false } = {}) {
   }
 
   const previous = registry.get(config.id);
+  const sameObject = previous?.object3D === config.object3D;
   if (previous?.object3D && previous.object3D !== config.object3D) {
     unmarkEditableTree(previous.object3D);
   }
@@ -96,6 +171,8 @@ export function registerEditableObject(config, { silent = false } = {}) {
     // les pisa las flags de sombra (cada mesh conserva la suya del build).
     manageShadows: config.manageShadows !== false,
     cloneOf: config.cloneOf ?? null,
+    color: normalizeEditorColor(config.color) ?? (sameObject ? previous.color : null),
+    colorMaterialsIsolated: config.colorMaterialsIsolated === true || (sameObject && previous.colorMaterialsIsolated === true),
     // transient=true: editable en vivo pero nunca se guarda ni se restaura
     // desde layout. Sirve para BOB jugador: el juego maneja su spawn.
     transient: config.transient === true,
@@ -105,6 +182,7 @@ export function registerEditableObject(config, { silent = false } = {}) {
   if (entry.manageShadows) applyShadowFlags(entry.object3D, entry.castShadow, entry.receiveShadow);
   markEditableTree(entry.object3D, entry.id);
   registry.set(entry.id, entry);
+  if (entry.color) applyColorToEntry(entry, entry.color);
   if (!silent) emitRegistryChange();
   return entry;
 }
@@ -124,6 +202,29 @@ export function getEditableObjects() {
 
 export function getEditableById(id) {
   return registry.get(id) ?? null;
+}
+
+export function getEditableColorInfo(id) {
+  const entry = registry.get(id);
+  const materials = colorMaterials(entry?.object3D);
+  const colors = materials.map((material) => `#${material.color.getHexString()}`);
+  const uniqueColors = new Set(colors);
+  return {
+    supported: materials.length > 0,
+    value: entry?.color ?? colors[0] ?? '#ffffff',
+    mixed: !entry?.color && uniqueColors.size > 1,
+    materialCount: materials.length,
+    overridden: Boolean(entry?.color),
+  };
+}
+
+export function setEditableColor(id, value) {
+  const entry = registry.get(id);
+  if (!entry) return null;
+  const color = normalizeEditorColor(value);
+  if (!color || !applyColorToEntry(entry, color)) return getEditableColorInfo(id);
+  clearDescendantColorOverrides(entry);
+  return getEditableColorInfo(id);
 }
 
 function isRenderableObject(object) {
@@ -202,6 +303,7 @@ export function applyLayout(layout) {
     entry.locked = item.locked === true;
     entry.visible = item.visible !== false;
     if (entry.manageShadows) applyShadowFlags(entry.object3D, entry.castShadow, entry.receiveShadow);
+    if (item.color != null) setEditableColor(entry.id, item.color);
   }
 
   emitRegistryChange();
@@ -285,6 +387,7 @@ export function duplicateEditable(id, { offset = [0.6, 0, 0], transform = null, 
   if (!entry?.object3D?.parent) return null;
   const source = entry.object3D;
   const clone = source.clone(true);
+  const colorMaterialsIsolated = cloneColorMaterials(clone);
   clone.traverse((child) => {
     delete child.userData.editable;
     delete child.userData.editorId;
@@ -323,6 +426,8 @@ export function duplicateEditable(id, { offset = [0.6, 0, 0], transform = null, 
     object3D: clone,
     cloneOf: entry.cloneOf ?? entry.id,
     manageShadows: entry.manageShadows,
+    color: entry.color,
+    colorMaterialsIsolated,
   });
 }
 
@@ -407,6 +512,7 @@ export function restoreClones(layout) {
       entry.type = item.type ?? entry.type;
       entry.visible = item.visible !== false;
       entry.object3D.visible = entry.visible;
+      if (item.color != null) applyColorToEntry(entry, item.color);
       changed = true;
     }
   }

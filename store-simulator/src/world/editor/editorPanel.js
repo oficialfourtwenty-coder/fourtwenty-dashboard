@@ -40,6 +40,15 @@ function injectStyles() {
       border: 1px solid rgba(255,255,255,0.16); font: inherit;
     }
     #${PANEL_ID} input:focus { outline: 1px solid #ff6d18; border-color: #ff6d18; }
+    #${PANEL_ID} [hidden] { display: none !important; }
+    #${PANEL_ID} .we-color-row {
+      display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 8px; align-items: center;
+    }
+    #${PANEL_ID} input[type="color"] {
+      width: 48px; height: 34px; min-height: 34px; padding: 3px; cursor: pointer;
+    }
+    #${PANEL_ID} input:disabled { cursor: not-allowed; opacity: 0.38; }
+    #${PANEL_ID} .we-color-note { margin-top: 6px; color: rgba(245,241,232,0.55); font-size: 10px; }
     #${PANEL_ID} .we-object-list { display: grid; gap: 5px; max-height: 200px; overflow: auto; margin-top: 6px; }
     #${PANEL_ID} .we-object {
       width: 100%; text-align: left; text-transform: none; letter-spacing: 0;
@@ -90,6 +99,15 @@ export function createEditorPanel(callbacks = {}) {
       <div class="we-row"><span>Snapping</span><span class="we-pill" data-field="snapping">OFF</span></div>
 
       <div class="we-selected" data-field="selected">Sin objeto seleccionado</div>
+
+      <div class="we-section" data-field="colorSection" hidden>
+        <div class="we-label">Color del objeto</div>
+        <div class="we-color-row">
+          <input type="color" data-field="colorPicker" value="#ffffff" aria-label="Elegir color del objeto">
+          <input type="text" data-field="colorHex" value="#ffffff" maxlength="7" spellcheck="false" aria-label="Color hexadecimal">
+        </div>
+        <div class="we-color-note" data-field="colorNote"></div>
+      </div>
 
       <div class="we-section">
         <div class="we-label">Objects <span data-field="objectCount"></span></div>
@@ -167,6 +185,10 @@ export function createEditorPanel(callbacks = {}) {
     filter: root.querySelector('[data-field="filter"]'),
     status: root.querySelector('[data-field="status"]'),
     fileInput: root.querySelector('[data-field="fileInput"]'),
+    colorSection: root.querySelector('[data-field="colorSection"]'),
+    colorPicker: root.querySelector('[data-field="colorPicker"]'),
+    colorHex: root.querySelector('[data-field="colorHex"]'),
+    colorNote: root.querySelector('[data-field="colorNote"]'),
   };
 
   // lista con filtro: con TODO el mundo registrado son cientos de objetos
@@ -237,10 +259,37 @@ export function createEditorPanel(callbacks = {}) {
     fields.fileInput.value = '';
   });
 
-  root.addEventListener('change', (event) => {
+  function applyTransformField(event) {
     const input = event.target.closest('[data-transform]');
     if (!input) return;
-    callbacks.onTransformInput?.(input.dataset.transform, Number(input.dataset.index), Number(input.value));
+    const value = Number(input.value);
+    if (input.value === '' || !Number.isFinite(value)) return;
+    callbacks.onTransformInput?.(input.dataset.transform, Number(input.dataset.index), value);
+  }
+  root.addEventListener('input', applyTransformField);
+  root.addEventListener('change', applyTransformField);
+
+  function normalizeHex(value) {
+    const raw = String(value ?? '').trim();
+    const short = raw.match(/^#?([0-9a-f]{3})$/i);
+    if (short) return `#${short[1].split('').map((digit) => `${digit}${digit}`).join('').toLowerCase()}`;
+    const full = raw.match(/^#?([0-9a-f]{6})$/i);
+    return full ? `#${full[1].toLowerCase()}` : null;
+  }
+
+  fields.colorPicker.addEventListener('input', () => {
+    fields.colorHex.value = fields.colorPicker.value;
+    callbacks.onColorInput?.(fields.colorPicker.value);
+  });
+  fields.colorHex.addEventListener('input', () => {
+    const color = normalizeHex(fields.colorHex.value);
+    if (!color) return;
+    fields.colorPicker.value = color;
+    callbacks.onColorInput?.(color);
+  });
+  fields.colorHex.addEventListener('change', () => {
+    const color = normalizeHex(fields.colorHex.value);
+    fields.colorHex.value = color ?? fields.colorPicker.value;
   });
 
   function setButtons(state) {
@@ -267,12 +316,23 @@ export function createEditorPanel(callbacks = {}) {
       lastSelectedId = selectedId;
       renderObjectList();
     },
-    setSelected(entry) {
+    setSelected(entry, colorInfo = null) {
       if (!entry) {
         fields.selected.textContent = 'Sin objeto seleccionado';
+        fields.colorSection.hidden = true;
         return;
       }
       fields.selected.innerHTML = `<strong>${entry.name}</strong><br>${entry.id}<br>${entry.type}${entry.locked ? ' · LOCKED' : ''}`;
+      fields.colorSection.hidden = false;
+      const supportsColor = colorInfo?.supported === true;
+      const color = normalizeHex(colorInfo?.value) ?? '#ffffff';
+      fields.colorPicker.value = color;
+      fields.colorHex.value = color;
+      fields.colorPicker.disabled = !supportsColor;
+      fields.colorHex.disabled = !supportsColor;
+      fields.colorNote.textContent = supportsColor
+        ? (colorInfo.mixed ? 'La pieza tiene varios colores. El nuevo color se aplicara a toda la seleccion.' : 'El cambio se aplica en vivo y queda guardado en este piso.')
+        : 'Este objeto no tiene un material compatible con color.';
       const transforms = {
         position: entry.object3D.position.toArray(),
         rotation: [entry.object3D.rotation.x, entry.object3D.rotation.y, entry.object3D.rotation.z],

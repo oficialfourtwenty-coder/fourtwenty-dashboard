@@ -4,18 +4,24 @@ export class Hud {
     this.floorEl = document.getElementById('hud-floor');
     this.overlay = document.getElementById('start-overlay');
     this._lastFloor = 0;
+    this._lastFloorLabel = '';
+    this._lastZone = '';
   }
 
   setFloor(n, label) {
-    if (n === this._lastFloor) return;
+    if (n === this._lastFloor && label === this._lastFloorLabel && this.floorEl.textContent.startsWith('PISO')) return;
     this._lastFloor = n;
+    this._lastFloorLabel = label ?? '';
+    this._lastZone = '';
     this.floorEl.textContent = label ? `PISO ${n} · ${label}` : `PISO ${n}`;
   }
 
   // Para escenas sin "pisos" (la calle, el local chico): un texto plano.
   setZone(text) {
-    if (text === this._lastZone) return;
+    if (text === this._lastZone && this.floorEl.textContent === text) return;
     this._lastZone = text;
+    this._lastFloor = -1;
+    this._lastFloorLabel = '';
     this.floorEl.textContent = text;
   }
 
