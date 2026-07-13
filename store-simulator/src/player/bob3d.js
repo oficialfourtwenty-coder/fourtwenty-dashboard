@@ -123,14 +123,20 @@ export class Player {
     if (clips.length) {
       this.mixer = new THREE.AnimationMixer(model);
       const find = (re) => clips.find((c) => re.test(c.name));
-      const idle = find(/idle|stand|breath/i) || clips[0];
-      const move = find(/run|walk|jog|move/i) || (clips.length > 1 ? clips[1] : clips[0]);
-      this.actions.idle = this.mixer.clipAction(idle);
+      const idleClip = find(/idle|stand|breath/i);
+      const move = find(/run|walk|jog|move/i) || clips[0];
       this.actions.move = this.mixer.clipAction(move);
-      this.actions.idle.play();
       this.actions.move.play();
-      this.actions.move.weight = 0;
-      console.info(`bob.glb: ${clips.length} clips (idle="${idle.name}", move="${move.name}")`);
+      // Sin clip de idle propio: reutilizamos el de caminata pero pausado en
+      // el primer frame (pose neutra) cuando BOB está quieto.
+      this._singleClip = !idleClip;
+      if (idleClip) {
+        this.actions.idle = this.mixer.clipAction(idleClip);
+        this.actions.idle.play();
+      } else {
+        this.actions.idle = this.actions.move;
+      }
+      console.info(`bob.glb: ${clips.length} clips (idle="${idleClip ? idleClip.name : move.name + ' [pausado]'}", move="${move.name}")`);
     } else {
       console.info('bob.glb sin animation clips — animación procedural activada');
     }
@@ -202,11 +208,19 @@ export class Player {
 
     // 6) Animación
     if (this.mixer) {
-      // crossfade idle ↔ move según velocidad, y el clip acompaña el paso
-      const w = THREE.MathUtils.clamp(speed / WALK, 0, 1);
-      this.actions.move.weight = w;
-      this.actions.idle.weight = 1 - w;
-      this.actions.move.timeScale = THREE.MathUtils.clamp(speed / WALK, 0.6, 1.8);
+      if (this._singleClip) {
+        // un solo clip (caminata): se reproduce escalado por velocidad y se
+        // pausa en el primer frame (pose neutra) cuando BOB está quieto
+        this.actions.move.weight = 1;
+        this.actions.move.paused = speed < 0.05;
+        this.actions.move.timeScale = THREE.MathUtils.clamp(speed / WALK, 0.6, 1.8);
+      } else {
+        // crossfade idle ↔ move según velocidad, y el clip acompaña el paso
+        const w = THREE.MathUtils.clamp(speed / WALK, 0, 1);
+        this.actions.move.weight = w;
+        this.actions.idle.weight = 1 - w;
+        this.actions.move.timeScale = THREE.MathUtils.clamp(speed / WALK, 0.6, 1.8);
+      }
       this.mixer.update(dt);
     } else if (this.model && !this._isBillboard) {
       // procedural: bounce al ritmo del paso + lean hacia el giro + tilt al acelerar

@@ -83,11 +83,26 @@ store-simulator/    → el juego (Vite + Three.js)
   `public/assets/bob/bob.glb`, cargado por `src/player/bob3d.js` (escala y pies se
   normalizan solos; sombra blob estilo PS2; ⚠️ el frente del GLB de Tripo es **+x**,
   bob3d.js lo rota -90° al cargar — la estatua del piso 4 también lo asume).
-  El GLB está optimizado: 465k → 22.5k triángulos, 15.5 MB → 2.6 MB (gltf-transform).
-  **Sin skeleton ni animation clips** → animación procedural (bounce/lean). Mejora
-  pendiente: conseguir versión riggeada con clips idle/walk (Mixamo o rig de Tripo)
-  y el AnimationMixer ya presente en bob3d.js la usa solo. El sistema sprite viejo
-  (`src/player/bob.js` + PNGs) queda de **backup — NO TOCAR NI BORRAR**.
+  **Ya tiene skeleton + 1 animation clip de caminata** ("walk", 0.96s, 42 huesos):
+  el dueño pasó un `bob_final.blend` (mismo mesh de Tripo, riggeado y con un ciclo
+  de caminata keyframeado a mano — 8 huesos de piernas/brazos, 12 huesos totales
+  animados) que se convirtió acá con Blender headless (`bpy` vía pip, no vino
+  instalado — ⚠️ el paquete `bpy` pip solo se puede `import` si el script corre por
+  **stdin** (`python3 - < script.py`); por archivo (`python3 script.py`) crashea con
+  "InitGoogleLogging() called twice", bug conocido de esa build) + exportado a GLB +
+  optimizado con `gltf-transform optimize --texture-size 1024 --compress false`
+  (⚠️ dejar `--compress false`: el modo default mete `EXT_meshopt_compression`/
+  `KHR_mesh_quantization` como *required*, y el `GLTFLoader` de bob3d.js no tiene
+  registrado el decoder — rompería la carga). GLB final: 1.3 MB (era 2.6 MB).
+  `bob3d.js` no tiene clip de "idle" propio (el .blend solo trae el de caminata):
+  cuando la velocidad es ~0 el clip de caminata se **pausa** en el frame en el que
+  esté (pose neutra), y cuando BOB se mueve se reproduce con `timeScale` escalado a
+  la velocidad — ver `this._singleClip` en `bob3d.js`. Si en el futuro llega un
+  clip de idle separado, `_setupModel` ya lo detecta por nombre (`idle|stand|breath`)
+  y vuelve al crossfade idle↔move de antes. El `bob.glb` viejo (sin animación) quedó
+  de backup en `bob.sin-animacion-previo.glb` (mismo patrón que
+  `bob.sin-rig-o-previo.glb`, que es el aún más viejo, sin rig). El sistema sprite
+  viejo (`src/player/bob.js` + PNGs) sigue de **backup — NO TOCAR NI BORRAR**.
 - **Probador:** sistema de capas PNG. BOB base + 1 PNG transparente por prenda dibujado
   sobre su pose, apiladas en tiempo real (torso/piernas/pies/accesorio). Como los avatares 2K.
 - **Login:** cuenta propia del juego, match por email contra la API de clientes de
@@ -285,6 +300,7 @@ world/editor/         ⭐ WORLD EDITOR interno (tecla T o Tab; en build ?editor=
                       sampleStepHeight). Así, un escalón/rampa duplicado con el editor y
                       rotado en diagonal o inclinado sigue siendo subible.
 player/bob3d.js       jugador ACTIVO: GLB + física GTA (aceleración, giro suave) + sombra blob
+                      + AnimationMixer con el clip real de caminata (ver BOB arriba)
 player/bob.js         backup sprite 2D — NO TOCAR NI BORRAR
 ui/hud.js             HUD retro: título, indicador de piso, ayuda de controles
 tools/inspect_glb.py  inspector de GLB: skeleton, clips, tamaño
