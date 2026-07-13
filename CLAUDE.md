@@ -94,6 +94,20 @@ store-simulator/    → el juego (Vite + Three.js)
   (⚠️ dejar `--compress false`: el modo default mete `EXT_meshopt_compression`/
   `KHR_mesh_quantization` como *required*, y el `GLTFLoader` de bob3d.js no tiene
   registrado el decoder — rompería la carga). GLB final: 1.3 MB (era 2.6 MB).
+  ⚠️ **Dos bugs de la primera conversión, ya corregidos, ojo si se vuelve a
+  re-exportar el `.blend`:** (1) ~230 vértices de la cabeza/orejas venían mal
+  pesados (skinning) hacia `L_Upperarm`/`R_Upperarm` y sus twist bones — como esos
+  huesos sí se animan en la caminata, media cabeza "viajaba" con el brazo. Se
+  limpió a mano: cualquier vértice con >50% de peso en huesos de cabeza
+  (`Head`/`neutral_bone`/`NeckTwist01`/`NeckTwist02`/`Spine02`) se le sacó el resto
+  del peso de otros huesos, sin tocar los vértices de hombro que sí deben mezclarse.
+  (2) El material traía `Sheen`/`Anisotropic`/`Specular IOR Level` subidos en el
+  Principled BSDF (probablemente para simular "fur" en el viewport de Blender), que
+  el exportador vuelca como `KHR_materials_sheen`/`anisotropy`/`specular` — con las
+  luces cálidas + bloom del juego se veía plástico brillante en vez de peluche mate.
+  Se resetearon a los valores neutros de Blender antes de exportar (Specular IOR
+  Level 0.5, Anisotropic 0, Sheen Weight 0) — el material final quedó igual de
+  simple que el bob.glb original (solo baseColor+roughness+normal, sin extensions).
   `bob3d.js` no tiene clip de "idle" propio (el .blend solo trae el de caminata):
   cuando la velocidad es ~0 el clip de caminata se **pausa** en el frame en el que
   esté (pose neutra), y cuando BOB se mueve se reproduce con `timeScale` escalado a
