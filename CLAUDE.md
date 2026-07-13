@@ -143,14 +143,22 @@ store-simulator/    → el juego (Vite + Three.js)
   la superficie de la malla, no por distancia euclídea — importante porque en
   la pose de reposo los brazos están pegados al torso) tras borrar todos los
   vertex groups viejos. Post-fix: mediana de suma de pesos ~0.995, 95% de los
-  vértices en rango sano. Esto introdujo una costura fina visible en el
-  hombro/cuello en poses de brazo muy extendido (límite de las 4 influencias
-  de glTF + geometría delgada ahí) — se atenuó bastante con
-  `bpy.ops.object.vertex_group_smooth(factor=0.5, repeat=3)` en modo Weight
-  Paint tras el recálculo, pero no desapareció del todo en el frame más extremo
-  del ciclo; queda como limitación menor conocida (mucho mejor que el problema
-  original, pero no perfecto — retocar a mano con pintura de pesos visual
-  sería el siguiente paso si hace falta pulirlo más).
+  vértices en rango sano, más un suavizado leve
+  (`bpy.ops.object.vertex_group_smooth(factor=0.5, repeat=3)` en modo Weight
+  Paint) para limar transiciones duras entre huesos.
+  ⚠️ **Segunda vuelta — "grietas" al mover el brazo:** el recálculo de arriba
+  dejó el cuerpo estable pero abrió grietas visibles en hombro/cuello al
+  animar. Causa real: el mesh tiene **4019 grupos de vértices duplicados por
+  costura UV/normal** (misma posición 3D, distinto UV — normal en cualquier
+  malla con textura) y en **3635 de esos grupos las copias quedaron con pesos
+  de hueso ligeramente distintos** (la difusión de calor las trata como nodos
+  separados del grafo de conectividad). Al rotar el brazo cada copia se movía
+  un poquito distinto → la costura se abría. Fix: tras el recálculo + suavizado,
+  agrupar vértices por posición idéntica (redondeada a 5 decimales), promediar
+  los pesos de cada grupo y reasignar el mismo resultado a todas las copias
+  (3984 de 4019 grupos sincronizados) — así los vértices "gemelos" de cada
+  costura se mueven siempre pegados, sin importar la pose. Verificado en los
+  frames más extremos del ciclo: sin grietas.
   El material también traía `Sheen`/`Anisotropic`/`Specular IOR Level` subidos
   en el Principled BSDF (probablemente para simular "fur" en el viewport de
   Blender), que el exportador vuelca como
