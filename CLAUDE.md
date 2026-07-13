@@ -169,20 +169,25 @@ store-simulator/    → el juego (Vite + Three.js)
   sin serlo del todo): sin grietas en ninguno. El `neutral_bone` (huérfano, sin
   peso de ningún vértice tras el fix) quedó podado del esqueleto exportado —
   inofensivo, era un hueso de control sin uso real.
-  ⚠️ **Tercera vuelta — dedos/pie deformados (pedido explícito del dueño: no
-  hace falta articulación de dedos, solo que el brazo y la pierna se muevan
-  bien):** `L_ToeBase`/`R_ToeBase` quedaban con pesos raros del auto-rig
-  (geometría muy fina/enroscada, la difusión de calor se confunde igual que
-  con los brazos pegados al torso) y el pie se veía explotado/con los dedos
-  separados al animar. Simplificación pedida y hecha: cualquier vértice con
-  peso en `ToeBase` pasa a depender **100% de `Foot`** (se le borra el resto de
-  huesos); mismo criterio para `Hand` → **100% de `Forearm`** (pedido
-  preventivo del dueño aunque no se veía roto). Con esto pie y mano quedan como
-  una sola pieza rígida (no se curvan los dedos, pero tampoco se deforman) —
-  se hace DESPUÉS del fix de vértices sin peso y ANTES de sincronizar
-  duplicados de costura (para que la simplificación también quede sincronizada
-  en las costuras UV del pie/mano). ~3450 vértices afectados. Verificado con
-  las mismas 24 frames: pies estables, sin dedos disparados.
+  ⚠️ **Tercera vuelta — dedos/mano pegados al cuerpo (pedido explícito del
+  dueño: no hace falta articulación de dedos, solo que el brazo y la pierna se
+  muevan bien):** primer intento — buscar vértices que ya tuvieran ALGO de
+  peso en `Hand`/`ToeBase` y pasarlos 100% a `Forearm`/`Foot` — **no
+  alcanzó**: el dueño reportó que un dedo de la mano seguía pegado al cuerpo.
+  Causa real: cerca de la mano, un grupo de vértices había quedado pesado casi
+  entero hacia huesos de la **pierna** (`L_Calf`/`L_Thigh` — la mano descansa
+  cerca de la pierna en la pose de reposo, mismo tipo de confusión de la
+  difusión de calor que con los brazos y el torso) **con prácticamente CERO
+  peso en `Hand`** — el filtro "¿tiene peso en Hand?" nunca los detectaba.
+  **Fix correcto — criterio geométrico, no por peso existente:** tomar la
+  posición mundial del hueso `Hand`/`ToeBase` (segmento cabeza→cola en pose de
+  reposo) y, sin importar a qué estuviera pesado antes, forzar **100% de
+  `Forearm`/`Foot`** a cualquier vértice a menos de 0.09 m de ese segmento.
+  Esto sí atrapa los vértices "huérfanos" que el primer intento se salteaba.
+  ~4118 vértices afectados (antes solo se habían tocado ~3450). Se hace
+  DESPUÉS del fix de vértices sin peso y ANTES de sincronizar duplicados de
+  costura. Verificado con 24 frames del ciclo completo, mirando de cerca la
+  zona de mano/cadera en cada uno: sin nada pegado ni deformado.
   El material también traía `Sheen`/`Anisotropic`/`Specular IOR Level` subidos
   en el Principled BSDF (probablemente para simular "fur" en el viewport de
   Blender), que el exportador vuelca como
