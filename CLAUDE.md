@@ -188,6 +188,22 @@ store-simulator/    → el juego (Vite + Three.js)
   DESPUÉS del fix de vértices sin peso y ANTES de sincronizar duplicados de
   costura. Verificado con 24 frames del ciclo completo, mirando de cerca la
   zona de mano/cadera en cada uno: sin nada pegado ni deformado.
+  ⚠️ **Cuarta vuelta — el dueño reportó OTRA vez algo pegado (captura con la
+  pierna muy distorsionada) y pidió explícitamente cortar por lo sano: "que
+  las partes del cuerpo se mantengan donde van, únicamente debe moverse las
+  manos y los brazos".** Decisión: en vez de seguir persiguiendo bugs de
+  skinning en la pierna, se sacaron directamente los 12 fcurves de rotación de
+  `L_Thigh`/`R_Thigh`/`L_Calf`/`R_Calf` del clip `walk` (quedan 12, solo
+  `L_Upperarm`/`R_Upperarm`/`L_Forearm`/`R_Forearm`) — la pierna queda fija en
+  pose de reposo todo el ciclo, así que no importa qué tan prolijo esté su
+  skinning: nunca se mueve, nunca se puede deformar. Verificado dos formas:
+  (1) numéricamente, leyendo el quaternion local de los huesos de pierna en 12
+  puntos del ciclo vía Playwright — idéntico en los 12; (2) visualmente con 36
+  capturas repartidas en todo el ciclo, zoom en cadera/mano: sin nada pegado
+  ni deformado en ninguna. Si en algún momento se quiere que la pierna vuelva
+  a moverse, hay que re-agregar esos fcurves Y resolver el skinning de la
+  pierna en serio (probablemente con el mismo criterio geométrico que
+  mano/pie, o pintura de pesos a mano) — no alcanza con los fixes ya hechos.
   El material también traía `Sheen`/`Anisotropic`/`Specular IOR Level` subidos
   en el Principled BSDF (probablemente para simular "fur" en el viewport de
   Blender), que el exportador vuelca como
