@@ -45,11 +45,43 @@ explícitamente**, aunque parezca más "limpia" en el historial de git.
   integrada directo en `main.js`/`index.html` (mismo patrón que las pantallas
   de carga de hoop-season/bob-collection). Son DOS implementaciones distintas
   del mismo feature — no mezclar ambas sin revisar primero cuál quedó.
-- El ascensor de 6 pisos: **NO está implementado**. Se intentó, salió mal, se
-  descartó. Ver `design/ELEVATOR_HANDOFF_CLAUDE.md` (si existe en un commit
-  posterior) para la spec acordada si se retoma — con mucho más cuidado que la
-  vez pasada: probar en un branch/worktree aparte, nunca directo sobre esta
-  versión, y confirmar con el dueño antes de cada paso grande.
+- El ascensor de 6 pisos: **sigue sin estar en esta versión** — pero hay un
+  prototipo funcional en progreso, en otra carpeta, ver abajo.
+
+### 🛗 Prototipo de ascensor (en progreso, FUERA de este repo/branch)
+
+Tras el desastre del 8 de julio, el ascensor se está probando en un lugar
+totalmente aislado, para que un intento fallido no vuelva a romper esta
+versión: **`/Users/kusher/Documents/simulador/prueba-ascensor`** (carpeta
+aparte en la Mac del dueño, NO es un branch de este repo — está fuera de
+`/Users/kusher/Desktop/fourtwenty-dashboard`). Trabajo hecho con Codex,
+servidor de prueba en `http://127.0.0.1:4174/`.
+
+**Regla explícita del dueño:** ninguna sesión (Claude o Codex) debe tocar
+`store-simulator/` (la versión principal) mientras se prueba el ascensor.
+Todo cambio queda en `prueba-ascensor` hasta que el dueño lo vea funcionar y
+autorice explícitamente pasarlo a esta versión.
+
+Estado actual del prototipo (según el dueño, 13 de julio — **base
+funcionando**, pendiente de mejoras):
+- Ascensor interactivo y movible con el editor (tecla T).
+- Apertura inmediata al llamar.
+- Espera de 2s al entrar + difuminado (fade) de 1s antes de viajar.
+- Panel interactivo con destinos 0–5 (botón 0 con el mismo acabado que
+  el resto — antes quedaba distinto).
+- Cada piso es una escena independiente: **solo se carga el piso activo**
+  (no los 6 en memoria a la vez).
+- Espacios de cada piso ampliados x2 respecto al edificio original.
+- Todos los objetos de cada piso son movibles con el editor.
+- Selector de color por objeto (con T) — los colores se guardan por piso.
+- La función de productos/compra (click en prenda → panel → link TN) se
+  mantiene funcionando dentro del prototipo.
+
+Cuando el dueño confirme que quiere pasar esto a la versión principal, hay
+que revisar `design/ELEVATOR_HANDOFF_CLAUDE.md` (si existe en un commit
+posterior a este) para comparar contra la spec original acordada, y portar
+los cambios con cuidado (branch/worktree aparte, nunca directo sobre esta
+versión) — recién ahí, confirmando con el dueño antes de cada paso grande.
 
 ### Regla operativa
 Antes de tocar código de este proyecto, cualquier sesión (mía o de Codex) debe
