@@ -234,6 +234,31 @@ store-simulator/    → el juego (Vite + Three.js)
   nota que arriba: no asumir 100% perfecto, si vuelve a aparecer algo raro
   revisar con más cuidado (probablemente haga falta pintura de pesos a mano
   en Blender en vez de otro script automático).
+  ⚠️ **Séptima vuelta — seguía apareciendo (misma garra), y esta vez se armó
+  una herramienta de diagnóstico visual real** en vez de seguir ajustando
+  números a ciegas: un script de Playwright que colorea el `SkinnedMesh` real
+  que corre en el juego (no un análisis aparte) — rojo = peso de huesos de
+  brazo, azul = peso de huesos de pierna, verde = resto — leyendo directo los
+  atributos `skinIndex`/`skinWeight` de la geometría cargada
+  (`window.__THREE` se expuso temporalmente en `main.js` para poder crear el
+  material desde el test; **se sacó después, no queda en el código**). Con
+  eso se vio a simple vista una mancha roja clara justo en el tobillo
+  derecho, mezclada con el azul de la pierna — la cápsula por distancia al
+  brazo (vuelta 5) no la agarraba porque la cola del hueso `Hand` cuelga casi
+  a la altura del tobillo en la pose de reposo (mono petiso, brazos largos),
+  entonces vértices de tobillo quedaban geométricamente "dentro" de esa
+  cápsula aunque anatómicamente son pie. **Fix definitivo:** para cualquier
+  vértice con peso de brazo, comparar su distancia real al segmento de hueso
+  de brazo MÁS CERCANO contra su distancia al segmento de hueso de PIERNA más
+  cercano (`Thigh`/`Calf`/`Foot`/`ToeBase`) — si la pierna está objetivamente
+  más cerca, se le saca todo el peso de brazo sin importar qué tan "cerca"
+  pareciera estar del hueso `Hand` en términos absolutos. ~494 vértices
+  reasignados. Verificado *visualmente* con el mismo colorcheck (la mancha
+  roja del tobillo desapareció, piernas 100% azules en todos los frames
+  revisados) + prueba de juego real de nuevo. **Si en algún momento se
+  reintroduce este tipo de bug, usar esta herramienta de colorcheck primero
+  — es mucho más confiable que auditar `JOINTS_0`/`WEIGHTS_0` a mano, porque
+  muestra exactamente lo que ve el jugador.**
   El material también traía `Sheen`/`Anisotropic`/`Specular IOR Level` subidos
   en el Principled BSDF (probablemente para simular "fur" en el viewport de
   Blender), que el exportador vuelca como
