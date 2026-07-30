@@ -352,12 +352,17 @@ export function createPhone({ music, cart, isBlocked = () => false, onBeforeOpen
     previousFocus = null;
   }
 
+  function toggle() {
+    if (open) { hide(); return true; }
+    return show();
+  }
+
   window.addEventListener('keydown', (event) => {
     if (event.code === 'KeyC' && !event.metaKey && !event.ctrlKey && !event.altKey && !isTypingTarget(event.target)) {
       if (!open && isBlocked()) return;
       event.preventDefault();
       event.stopPropagation();
-      if (open) hide(); else show();
+      toggle();
       return;
     }
     if (event.code === 'Escape' && open) {
@@ -367,5 +372,5 @@ export function createPhone({ music, cart, isBlocked = () => false, onBeforeOpen
     }
   }, true);
 
-  return { show, hide, isOpen: () => open, getView: () => currentView };
+  return { show, hide, toggle, isOpen: () => open, getView: () => currentView };
 }

@@ -32,6 +32,7 @@ export function initProductClicks({
   const pointer = new THREE.Vector2(-2, -2);
   const panel = createProductPanel({ onAddToCart });
   const tip = ensureTip();
+  const nearbyWorldPosition = new THREE.Vector3();
 
   // cache de meshes clickeables; se rearma cuando cambia la escena activa
   let cachedScene = null;
@@ -89,6 +90,32 @@ export function initProductClicks({
     return showProduct(slot);
   }
 
+  function nearestProduct(position, maxDistance = 2.8) {
+    if (getScene() !== cachedScene) rescan();
+    let nearest = null;
+    for (const mesh of productMeshes) {
+      if (!mesh.visible) continue;
+      mesh.getWorldPosition(nearbyWorldPosition);
+      const distance = nearbyWorldPosition.distanceTo(position);
+      if (distance > maxDistance || (nearest && distance >= nearest.distance)) continue;
+      const slot = slotOf(mesh);
+      if (slot) nearest = { slot, distance };
+    }
+    return nearest;
+  }
+
+  function canInteractNearby(position, maxDistance) {
+    return !isBlocked() && !panel.isOpen() && !!nearestProduct(position, maxDistance);
+  }
+
+  function interactNearby(position, maxDistance) {
+    if (isBlocked() || panel.isOpen()) return false;
+    const nearest = nearestProduct(position, maxDistance);
+    if (!nearest) return false;
+    showProduct(nearest.slot);
+    return true;
+  }
+
   function clearHover() {
     hovered = null;
     tip.style.display = 'none';
@@ -132,5 +159,5 @@ export function initProductClicks({
     showProduct(res.slot);
   });
 
-  return { rescan, panel, openFirst };
+  return { rescan, panel, openFirst, canInteractNearby, interactNearby };
 }

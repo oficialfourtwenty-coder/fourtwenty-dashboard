@@ -10,6 +10,7 @@ import { createCarRadio } from '../ui/carRadio.js';
 
 const TIP_ID = 'ft-car-tip';
 const MAX_ENTER_DISTANCE = 10;   // más lejos que esto, primero hay que acercarse
+const MAX_CONTEXT_DISTANCE = 3.5;
 const CAM_DIST_INSIDE = 4.4;     // se abre un poco para ver el auto entero
 
 function ensureTip() {
@@ -149,6 +150,35 @@ export function initCarInteract({
     return true;
   }
 
+  function nearestCar(position, maxDistance = MAX_CONTEXT_DISTANCE) {
+    const scene = getScene();
+    if (!cachedScene || scene !== cachedScene) rescan();
+    let nearest = null;
+    for (const car of cars) {
+      if (!isInScene(car.root, scene)) continue;
+      const distance = car.distanceTo(position);
+      if (distance <= maxDistance && (!nearest || distance < nearest.distance)) nearest = { car, distance };
+    }
+    return nearest;
+  }
+
+  function canInteract(position = player.position) {
+    if (isBlocked() || radio.isOpen()) return false;
+    return !!insideCar || !!nearestCar(position);
+  }
+
+  function interact(position = player.position) {
+    if (isBlocked() || radio.isOpen()) return false;
+    if (insideCar) {
+      openRadio();
+      return true;
+    }
+    const nearest = nearestCar(position);
+    if (!nearest) return false;
+    enterCar(nearest.car);
+    return true;
+  }
+
   canvas.addEventListener('pointermove', (e) => {
     pointer.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
     pointerDirty = true;
@@ -204,9 +234,9 @@ export function initCarInteract({
       exitCar();
       return;
     }
-    if ((e.key === 'e' || e.key === 'E') && insideCar && !radio.isOpen()) {
+    if ((e.key === 'e' || e.key === 'E') && !radio.isOpen()) {
       if (isBlocked()) return;
-      openRadio();
+      interact(player.position);
     }
   });
 
@@ -235,6 +265,8 @@ export function initCarInteract({
     getColliders,
     isPlayerLocked: () => insideCar !== null,
     isRadioOpen: () => radio.isOpen(),
+    canInteract,
+    interact,
     closeRadio,
     exitCar,
     getCurrentCar: () => insideCar,

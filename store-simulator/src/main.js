@@ -36,6 +36,7 @@ import { createMusicPlayer } from './audio/musicPlayer.js';
 import { initCarInteract } from './interact/carInteract.js';
 import { createCartStore } from './data/cartStore.js';
 import { createPhone } from './ui/phone.js';
+import { initMobileControls } from './ui/mobileControls.js';
 
 const QUALITY = new URLSearchParams(location.search).get('q') === 'low' ? 'low' : 'high';
 
@@ -280,8 +281,15 @@ phone = createPhone({
   onBeforeOpen: () => {
     carInteract?.closeRadio();
     input.keys.clear();
+    input.clearVirtualAxes();
     clearShirtHover();
   },
+});
+const mobileControls = initMobileControls({
+  canvas,
+  input,
+  onPhone: () => phone.toggle(),
+  onInteract: () => interactNearest(),
 });
 
 window.__bob = bob; // hooks de debug/testeo
@@ -293,6 +301,7 @@ window.__music = music;
 window.__carInteract = carInteract;
 window.__cart = cart;
 window.__phone = phone;
+window.__mobileControls = mobileControls;
 
 registerEditableObject({
   id: 'elevator-street',
@@ -579,8 +588,24 @@ function callActiveElevator() {
 
 // E = pulsar el boton cuando BOB esta cerca.
 function interactNearest() {
-  if (loading || elevatorPanel.isVisible() || phone?.isOpen() || !activeElevator?.isNearCallButton(bob.position)) return;
-  callActiveElevator();
+  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()
+    || adminPanel?.isOpen() || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) return false;
+  if (carInteract?.getCurrentCar() && carInteract.interact(bob.position)) return true;
+  if (activeElevator?.isNearCallButton(bob.position)) {
+    callActiveElevator();
+    return true;
+  }
+  if (carInteract?.interact(bob.position)) return true;
+  return productClicks.interactNearby(bob.position);
+}
+
+function hasNearbyInteraction() {
+  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()
+    || adminPanel?.isOpen() || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) return false;
+  return !!carInteract?.getCurrentCar()
+    || !!activeElevator?.isNearCallButton(bob.position)
+    || !!carInteract?.canInteract(bob.position)
+    || productClicks.canInteractNearby(bob.position);
 }
 
 // ---- Pantalla de carga BOBILONIA + montaje del shopping ---------------------
@@ -992,6 +1017,8 @@ renderer.shadowMap.needsUpdate = true;
 const shadowRefreshAt = [1.5, 4, 8]; // segundos
 let elapsed = 0;
 let editorWasActive = false;
+let nextMobileInteractionCheck = 0;
+let mobileInteractionAvailable = false;
 
 const timer = new THREE.Timer();
 let lastZone = null;
@@ -1019,6 +1046,18 @@ renderer.setAnimationLoop(() => {
   }
   carInteract?.update(dt); // puertas de los autos + BOB pegado a la butaca
   activeElevator?.update(dt, bob.position);
+  const mobileSuppressed = loading || elevatorPanel.isVisible() || editorActive
+    || !!adminPanel?.isOpen() || productClicks.panel.isOpen();
+  if (elapsed >= nextMobileInteractionCheck) {
+    mobileInteractionAvailable = hasNearbyInteraction();
+    nextMobileInteractionCheck = elapsed + 0.15;
+  }
+  mobileControls.setState({
+    suppressed: mobileSuppressed,
+    phoneOpen,
+    interactionAvailable: mobileInteractionAvailable,
+    canMove: !seated,
+  });
   // E: adentro del auto abre la radio (lo maneja carInteract), afuera es el
   // pulsador del ascensor. Se consume igual para que no quede trabado.
   if (editorActive || seated || phoneOpen) input.consumeInteract();
