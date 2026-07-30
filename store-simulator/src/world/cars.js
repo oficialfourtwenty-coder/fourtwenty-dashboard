@@ -445,6 +445,7 @@ class Car {
     this._box = new THREE.Box3();
     this._colliders = [];
     this._local = new THREE.Vector3();
+    this.interactionRevision = 0;
 
     this._tryLoadRealModel();
   }
@@ -461,6 +462,7 @@ class Car {
         model.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
         this.root.add(model);
         this.realModel = model;
+        this.interactionRevision += 1;
         // la radio del procedural sigue viva pero invisible: se usa solo como
         // punto de referencia, el click al auto entra igual.
         this.proceduralBody.visible = false;
@@ -513,11 +515,12 @@ class Car {
     }
   }
 
-  // Colisión: cuerpo del auto como una caja, para que no se lo atraviese.
+  // Colisión: conserva las medidas funcionales del auto aunque el GLB incluya
+  // geometría decorativa fuera de la carrocería.
   getColliders() {
     this.root.updateWorldMatrix(true, true);
     this._colliders.length = 0;
-    this._box.setFromObject(this.realModel ?? this.proceduralBody);
+    this._box.setFromObject(this.proceduralBody);
     if (!this._box.isEmpty()) {
       this._colliders.push({
         minX: this._box.min.x, maxX: this._box.max.x,

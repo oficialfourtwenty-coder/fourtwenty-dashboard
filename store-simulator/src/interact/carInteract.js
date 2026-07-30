@@ -48,6 +48,11 @@ export function initCarInteract({
   // meshes clickeables por auto (se rearman si cambia la escena)
   let cachedScene = null;
   let carMeshes = [];
+  let carMeshRevision = '';
+
+  function currentMeshRevision() {
+    return cars.map((car) => car.interactionRevision ?? 0).join('|');
+  }
 
   function rescan() {
     cachedScene = getScene();
@@ -56,6 +61,7 @@ export function initCarInteract({
       if (!cachedScene || !isInScene(car.root, cachedScene)) continue;
       car.root.traverse((obj) => { if (obj.isMesh) carMeshes.push(obj); });
     }
+    carMeshRevision = currentMeshRevision();
   }
 
   function isInScene(object, scene) {
@@ -78,11 +84,21 @@ export function initCarInteract({
     return null;
   }
 
+  function isEffectivelyVisible(object) {
+    let current = object;
+    while (current) {
+      if (!current.visible) return false;
+      current = current.parent;
+    }
+    return true;
+  }
+
   function raycastCar() {
-    if (getScene() !== cachedScene) rescan();
+    if (getScene() !== cachedScene || currentMeshRevision() !== carMeshRevision) rescan();
     if (!carMeshes.length) return null;
     raycaster.setFromCamera(pointer, camera);
-    const hit = raycaster.intersectObjects(carMeshes, false)[0];
+    const visibleMeshes = carMeshes.filter(isEffectivelyVisible);
+    const hit = raycaster.intersectObjects(visibleMeshes, false)[0];
     if (!hit) return null;
     return { car: carOf(hit.object), isRadio: !!hit.object.userData?.carRadio };
   }
