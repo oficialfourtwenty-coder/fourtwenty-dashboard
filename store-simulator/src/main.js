@@ -31,6 +31,9 @@ import { initElevatorPanel } from './ui/elevatorPanel.js';
 import { loadProductos } from './data/productosStore.js';
 import { initProductClicks } from './interact/productClicks.js';
 import { initAdminPanel } from './ui/adminPanel.js';
+import { buildCars } from './world/cars.js';
+import { createMusicPlayer } from './audio/musicPlayer.js';
+import { initCarInteract } from './interact/carInteract.js';
 
 const QUALITY = new URLSearchParams(location.search).get('q') === 'low' ? 'low' : 'high';
 
@@ -196,6 +199,8 @@ const { colliders: streetColliders } = buildStreet(scene);
 let colliders = streetColliders;
 let world = 'street'; // 'street' | 'destination'
 let loading = false;
+let carInteract = null; // se crea más abajo (autos + radio); acá para poder
+                        // consultarlo desde los isBlocked de otras capas
 let currentDestinationId = 0;
 let activeDestinationRecord = null;
 
@@ -231,7 +236,7 @@ const productClicks = initProductClicks({
   canvas,
   camera,
   getScene: () => activeScene,
-  isBlocked: () => loading || worldEditor.isEnabled(),
+  isBlocked: () => loading || worldEditor.isEnabled() || !!carInteract?.isRadioOpen(),
 });
 // ADMIN de prendas (tecla P; en build online requiere ?admin=1): carga manual
 // de imagen/nombre/precio/descripcion/link por percha — ver src/ui/adminPanel.js
@@ -240,10 +245,30 @@ const adminPanel = initAdminPanel({
 });
 window.__adminPanel = adminPanel;
 
+// AUTOS + MÚSICA: los dos autos estacionados en Burela (el up! de Luca y el
+// Corolla de Fer) son el dial de la radio del simulador. Click al auto → se
+// abre la puerta y BOB queda sentado; la radio del tablero elige el tema, y la
+// música sigue sonando en todo el resto del juego (calle, local, pisos).
+const streetCars = buildCars(scene);
+const music = createMusicPlayer();
+carInteract = initCarInteract({
+  canvas,
+  camera,
+  getScene: () => activeScene,
+  cars: streetCars,
+  player: bob,
+  tpCam,
+  music,
+  isBlocked: () => loading || worldEditor.isEnabled() || world !== 'street',
+});
+
 window.__bob = bob; // hooks de debug/testeo
 window.__cam = tpCam;
 window.__worldEditor = worldEditor;
 window.__productClicks = productClicks;
+window.__cars = streetCars;
+window.__music = music;
+window.__carInteract = carInteract;
 
 registerEditableObject({
   id: 'elevator-street',
@@ -252,6 +277,19 @@ registerEditableObject({
   object3D: streetElevator.root,
   manageShadows: false,
 });
+
+// Los autos se pueden mover/rotar con el editor (tecla T) como cualquier otra
+// cosa de la calle. La colisión se recalcula de la caja real, así que moverlos
+// no deja la colisión atrás.
+for (const car of streetCars) {
+  registerEditableObject({
+    id: car.id,
+    name: `${car.model} — ${car.owner} (mover completo)`,
+    type: 'car',
+    object3D: car.root,
+    manageShadows: false,
+  });
+}
 
 // EDITOR: todo lo que hay en la calle queda registrado como editable (tecla T).
 // Si el dueño ya movió/ocultó/duplicó cosas (localStorage o layout base), se
@@ -412,6 +450,8 @@ function currentPlayerColliders() {
   streetRuntimeSteppables.length = 0;
   appendEditableColliders(streetRuntimeColliders, streetRuntimeSteppables);
   streetRuntimeColliders.push(...streetElevator.getColliders());
+  // los autos frenan al jugador (menos el que esté ocupando)
+  if (carInteract) streetRuntimeColliders.push(...carInteract.getColliders());
   return streetRuntimeColliders;
 }
 
@@ -543,6 +583,7 @@ function startLoading(piso, label) {
   bobLoadingVideo.muted = false;
   bobLoadingVideo.volume = 1;
   bobLoadingBarFill.style.width = '0%';
+  music?.duck(true); // la radio baja mientras habla el video, no se corta
 
   if (isBobCollection || shouldPlayCulturaIntro) {
     loadingEl.style.backgroundImage = '';
@@ -610,6 +651,7 @@ function playBobLoading(ready, piso) {
     bobLoadingVideo.onabort = null;
     bobLoadingBarFill.style.width = '100%';
     bobLoadingVideo.pause();
+    music?.duck(false); // vuelve el volumen normal de la radio
     enterShopping(ready, piso);
     finishLoadingUi();
   };
@@ -735,6 +777,7 @@ function buildShopping() {
 }
 
 function enterShopping({ scene: s, colliders: cols }, piso) {
+  carInteract?.exitCar(); // por si quedó sentado en un auto: nunca viajar trabado
   // mover a BOB (rig + sombra) a la escena nueva y ubicarlo en su piso
   s.add(bob.rig);
   s.add(bob.shadow);
@@ -939,9 +982,16 @@ renderer.setAnimationLoop(() => {
     renderer.shadowMap.needsUpdate = true;
   }
   editorWasActive = editorActive;
-  if (!loading && !editorActive) bob.update(dt, input, tpCam.yaw, currentPlayerColliders(), camera.position);
+  // sentado en un auto BOB no se mueve con WASD (lo clava carInteract.update)
+  const seated = !!carInteract?.isPlayerLocked();
+  if (!loading && !editorActive && !seated) {
+    bob.update(dt, input, tpCam.yaw, currentPlayerColliders(), camera.position);
+  }
+  carInteract?.update(dt); // puertas de los autos + BOB pegado a la butaca
   activeElevator?.update(dt, bob.position);
-  if (editorActive) input.consumeInteract();
+  // E: adentro del auto abre la radio (lo maneja carInteract), afuera es el
+  // pulsador del ascensor. Se consume igual para que no quede trabado.
+  if (editorActive || seated) input.consumeInteract();
   else if (input.consumeInteract()) interactNearest(); // E = boton exterior del ascensor
   if (editorActive) clearShirtHover();
   else updateHover();      // feedback del pulsador bajo el mouse
