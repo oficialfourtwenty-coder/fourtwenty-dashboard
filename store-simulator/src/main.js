@@ -37,6 +37,7 @@ import { initCarInteract } from './interact/carInteract.js';
 import { createCartStore } from './data/cartStore.js';
 import { createPhone } from './ui/phone.js';
 import { initMobileControls } from './ui/mobileControls.js';
+import { createDayNightCycle } from './world/dayNightCycle.js';
 
 const QUALITY = new URLSearchParams(location.search).get('q') === 'low' ? 'low' : 'high';
 
@@ -198,7 +199,7 @@ function checkPerf(dt) {
   }
 }
 
-const { colliders: streetColliders } = buildStreet(scene);
+const { colliders: streetColliders, outdoorLighting: streetOutdoorLighting } = buildStreet(scene);
 let colliders = streetColliders;
 let world = 'street'; // 'street' | 'destination'
 let loading = false;
@@ -208,6 +209,19 @@ let phone = null;
 let adminPanel = null;
 let currentDestinationId = 0;
 let activeDestinationRecord = null;
+
+function activeOutdoorLighting() {
+  if (world === 'street') return streetOutdoorLighting;
+  return activeDestinationRecord?.outdoorLighting ?? null;
+}
+
+const dayNight = createDayNightCycle({
+  renderer,
+  getLighting: activeOutdoorLighting,
+  onShadowRefresh: () => { renderer.shadowMap.needsUpdate = true; },
+});
+dayNight.update(true);
+window.__dayNight = dayNight;
 
 const bob = new Player(scene, SPAWN);
 bob.sampleGround = streetSampleGroundWithSteps; // rampa fija + escalones editables (rotados o no)
@@ -924,6 +938,7 @@ function activateDestination(destinationId) {
   tpCam._first = true;
   lastZone = null;
   if (renderPass) renderPass.scene = activeScene;
+  dayNight.update(true);
   renderer.shadowMap.needsUpdate = true;
   shadowRefreshAt.push(elapsed + 1.2, elapsed + 3.5);
 }
@@ -977,6 +992,7 @@ window.__elevatorTest = {
       doorProgress: Number(activeElevator.doorProgress.toFixed(3)),
     },
     scene: sceneStats(activeScene),
+    dayNight: dayNight.getState(),
   }),
 };
 
@@ -1028,6 +1044,7 @@ renderer.setAnimationLoop(() => {
   checkPerf(rawDt);
   const dt = Math.min(rawDt, 0.05);
   elapsed += dt;
+  dayNight.update();
   if (shadowRefreshAt.length && elapsed > shadowRefreshAt[0]) {
     renderer.shadowMap.needsUpdate = true;
     shadowRefreshAt.shift();

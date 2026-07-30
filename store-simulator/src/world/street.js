@@ -17,6 +17,7 @@ import { towerFacade, veredaTile, hexPaver, greenShutter, whiteFloor, lightWood 
 import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
 import { bindProductVisual } from './productVisuals.js';
+import { createSunDisc } from './dayNightCycle.js';
 
 // ---- Paleta del spec (albedo base) ------------------------------------------
 const SALVIA = 0x8C9A78;   // columnas / alero
@@ -316,7 +317,8 @@ export function buildStreet(scene) {
   tree(scene, -22, 4, false, 'Arbol fondo izquierdo'); tree(scene, 23, 4.5, true, 'Arbol fondo derecho'); tree(scene, 15, -10, false, 'Arbol fondo atras');
 
   // ---- Luz: sol de mediodía-invierno, cálido rasante, sombras largas -------
-  scene.add(new THREE.HemisphereLight(0xbfd6ea, 0x9a9488, 0.9)); // cielo celeste / suelo
+  const hemisphere = new THREE.HemisphereLight(0xbfd6ea, 0x9a9488, 0.9);
+  scene.add(hemisphere); // cielo celeste / suelo
   const sun = new THREE.DirectionalLight(0xfff1d6, 2.2);
   sun.position.set(14, 16, 10); // bajo → sombras largas
   sun.castShadow = true;
@@ -326,9 +328,15 @@ export function buildStreet(scene) {
   sun.shadow.camera.near = 1; sun.shadow.camera.far = 70;
   sun.shadow.bias = -0.0004;
   scene.add(sun);
+  const sunDisc = createSunDisc(1.7);
+  scene.add(sunDisc);
 
   scene.add(g);
-  return { colliders, selectors };
+  return {
+    colliders,
+    selectors,
+    outdoorLighting: { scene, sun, hemisphere, sunDisc },
+  };
 }
 
 // Vidriera del local: marco de cuadrícula verde inglés + vidrio + puerta.

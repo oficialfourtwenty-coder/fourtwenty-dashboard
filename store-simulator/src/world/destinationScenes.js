@@ -5,6 +5,7 @@ import { COLLECTIONS } from './collections.js';
 import { box } from './gfxUtils.js';
 import { whiteFloor, whitePlaster, lightCeiling, windowDaylight } from './textures.js';
 import { ElevatorController } from './elevator.js';
+import { createSunDisc } from './dayNightCycle.js';
 
 const ROOM_W = 12;
 const BASE_ROOM_D = 9;
@@ -173,12 +174,15 @@ function buildTerraceScene(destination, { environment, shadows, onElevatorEnter 
     { minX: halfW - 0.2, maxX: halfW + 0.2, minY: 0, maxY: 1.1, minZ: roofMinZ, maxZ: roofMaxZ },
   );
 
-  scene.add(new THREE.HemisphereLight(0xdff1ff, 0x6f706a, 1.25));
+  const hemisphere = new THREE.HemisphereLight(0xdff1ff, 0x6f706a, 1.25);
+  scene.add(hemisphere);
   const sun = new THREE.DirectionalLight(0xfff3dc, 2.2);
   sun.position.set(-12, 22, -9);
   sun.castShadow = shadows;
   if (shadows) sun.shadow.mapSize.set(1024, 1024);
   scene.add(sun);
+  const sunDisc = createSunDisc(1.7);
+  scene.add(sunDisc);
 
   const elevator = new ElevatorController(scene, {
     id: 'elevator-destination-5',
@@ -196,6 +200,7 @@ function buildTerraceScene(destination, { environment, shadows, onElevatorEnter 
     bounds: { minX: -8.7, maxX: 8.7, minZ: roofMinZ + 0.3, maxZ: roofMaxZ - 0.3 },
     ceiling: 30,
     sampleGround: () => 0,
+    outdoorLighting: { scene, sun, hemisphere, sunDisc },
   };
 }
 
