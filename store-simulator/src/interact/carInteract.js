@@ -142,6 +142,13 @@ export function initCarInteract({
     clearTip();
   }
 
+  function closeRadio() {
+    if (!radio.isOpen()) return false;
+    radio.hide();
+    clearTip();
+    return true;
+  }
+
   canvas.addEventListener('pointermove', (e) => {
     pointer.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
     pointerDirty = true;
@@ -192,7 +199,11 @@ export function initCarInteract({
   });
 
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && insideCar) { exitCar(); return; }
+    if (e.key === 'Escape' && insideCar) {
+      if (isBlocked()) return;
+      exitCar();
+      return;
+    }
     if ((e.key === 'e' || e.key === 'E') && insideCar && !radio.isOpen()) {
       if (isBlocked()) return;
       openRadio();
@@ -224,6 +235,7 @@ export function initCarInteract({
     getColliders,
     isPlayerLocked: () => insideCar !== null,
     isRadioOpen: () => radio.isOpen(),
+    closeRadio,
     exitCar,
     getCurrentCar: () => insideCar,
   };

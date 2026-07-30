@@ -34,6 +34,8 @@ import { initAdminPanel } from './ui/adminPanel.js';
 import { buildCars } from './world/cars.js';
 import { createMusicPlayer } from './audio/musicPlayer.js';
 import { initCarInteract } from './interact/carInteract.js';
+import { createCartStore } from './data/cartStore.js';
+import { createPhone } from './ui/phone.js';
 
 const QUALITY = new URLSearchParams(location.search).get('q') === 'low' ? 'low' : 'high';
 
@@ -201,6 +203,8 @@ let world = 'street'; // 'street' | 'destination'
 let loading = false;
 let carInteract = null; // se crea más abajo (autos + radio); acá para poder
                         // consultarlo desde los isBlocked de otras capas
+let phone = null;
+let adminPanel = null;
 let currentDestinationId = 0;
 let activeDestinationRecord = null;
 
@@ -231,17 +235,20 @@ hud.onStart(() => hud.showOverlay(false));
 
 // PRODUCTOS: catálogo (productos.json / panel admin) + click en prendas.
 // Capa aislada: raycaster propio contra meshes tageados userData.productSlot.
+const cart = createCartStore();
 loadProductos();
 const productClicks = initProductClicks({
   canvas,
   camera,
   getScene: () => activeScene,
-  isBlocked: () => loading || worldEditor.isEnabled() || !!carInteract?.isRadioOpen(),
+  isBlocked: () => loading || elevatorPanel.isVisible() || worldEditor.isEnabled()
+    || !!carInteract?.isRadioOpen() || !!phone?.isOpen() || !!adminPanel?.isOpen(),
+  onAddToCart: (product) => cart.add(product),
 });
 // ADMIN de prendas (tecla P; en build online requiere ?admin=1): carga manual
 // de imagen/nombre/precio/descripcion/link por percha — ver src/ui/adminPanel.js
-const adminPanel = initAdminPanel({
-  isBlocked: () => worldEditor.isEnabled(), // el editor usa P para "grupo padre"
+adminPanel = initAdminPanel({
+  isBlocked: () => worldEditor.isEnabled() || !!phone?.isOpen(), // el editor usa P para "grupo padre"
 });
 window.__adminPanel = adminPanel;
 
@@ -259,7 +266,22 @@ carInteract = initCarInteract({
   player: bob,
   tpCam,
   music,
-  isBlocked: () => loading || worldEditor.isEnabled() || world !== 'street',
+  isBlocked: () => loading || elevatorPanel.isVisible() || worldEditor.isEnabled()
+    || !!phone?.isOpen() || !!adminPanel?.isOpen() || productClicks.panel.isOpen() || world !== 'street',
+});
+
+// CELULAR: interfaz global, independiente de la escena activa. Comparte el
+// reproductor de los autos y el carrito local de productos.
+phone = createPhone({
+  music,
+  cart,
+  isBlocked: () => loading || elevatorPanel.isVisible() || worldEditor.isEnabled()
+    || !!adminPanel?.isOpen() || productClicks.panel.isOpen(),
+  onBeforeOpen: () => {
+    carInteract?.closeRadio();
+    input.keys.clear();
+    clearShirtHover();
+  },
 });
 
 window.__bob = bob; // hooks de debug/testeo
@@ -269,6 +291,8 @@ window.__productClicks = productClicks;
 window.__cars = streetCars;
 window.__music = music;
 window.__carInteract = carInteract;
+window.__cart = cart;
+window.__phone = phone;
 
 registerEditableObject({
   id: 'elevator-street',
@@ -518,7 +542,7 @@ canvas.addEventListener('pointermove', (e) => {
   pointerNdc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
 });
 canvas.addEventListener('click', (event) => {
-  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled()) return;
+  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()) return;
   pointerNdc.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
   raycaster.setFromCamera(pointerNdc, camera);
   const hit = raycaster.intersectObject(activeElevator.callButton, false)[0];
@@ -526,7 +550,7 @@ canvas.addEventListener('click', (event) => {
 });
 
 function updateHover() {
-  if (loading || elevatorPanel.isVisible() || !activeElevator || !activeElevator.isNearCallButton(bob.position)) {
+  if (loading || elevatorPanel.isVisible() || phone?.isOpen() || !activeElevator || !activeElevator.isNearCallButton(bob.position)) {
     clearShirtHover();
     return;
   }
@@ -549,13 +573,13 @@ function clearShirtHover() {
 }
 
 function callActiveElevator() {
-  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled()) return;
+  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()) return;
   activeElevator.call();
 }
 
 // E = pulsar el boton cuando BOB esta cerca.
 function interactNearest() {
-  if (loading || elevatorPanel.isVisible() || !activeElevator?.isNearCallButton(bob.position)) return;
+  if (loading || elevatorPanel.isVisible() || phone?.isOpen() || !activeElevator?.isNearCallButton(bob.position)) return;
   callActiveElevator();
 }
 
@@ -568,6 +592,7 @@ const CULTURA_PISO = 5;
 let culturaIntroPlayed = false;
 
 function startLoading(piso, label) {
+  phone?.hide();
   loading = true;
   input.keys.clear();
   shirtTip.style.display = 'none';
@@ -805,6 +830,7 @@ let travelling = false;
 
 async function handleElevatorEntered(elevator) {
   if (loading || elevator !== activeElevator) return;
+  phone?.hide();
   loading = true;
   input.keys.clear();
   clearShirtHover();
@@ -881,6 +907,7 @@ async function travelToDestination(destinationId) {
   const destination = getDestination(destinationId);
   if (!destination || travelling) return;
   travelling = true;
+  phone?.hide();
   loading = true;
   input.keys.clear();
 
@@ -915,6 +942,8 @@ window.__elevatorTest = {
     elevatorState: activeElevator.state,
     panelVisible: elevatorPanel.isVisible(),
     productPanelVisible: productClicks.panel.isOpen(),
+    phoneOpen: phone?.isOpen() ?? false,
+    cartCount: cart.getState().count,
     activeScene: activeScene.name || (world === 'street' ? 'Calle Burela' : ''),
     elevator: {
       position: activeElevator.root.position.toArray().map((value) => Number(value.toFixed(3))),
@@ -984,16 +1013,17 @@ renderer.setAnimationLoop(() => {
   editorWasActive = editorActive;
   // sentado en un auto BOB no se mueve con WASD (lo clava carInteract.update)
   const seated = !!carInteract?.isPlayerLocked();
-  if (!loading && !editorActive && !seated) {
+  const phoneOpen = !!phone?.isOpen();
+  if (!loading && !editorActive && !seated && !phoneOpen) {
     bob.update(dt, input, tpCam.yaw, currentPlayerColliders(), camera.position);
   }
   carInteract?.update(dt); // puertas de los autos + BOB pegado a la butaca
   activeElevator?.update(dt, bob.position);
   // E: adentro del auto abre la radio (lo maneja carInteract), afuera es el
   // pulsador del ascensor. Se consume igual para que no quede trabado.
-  if (editorActive || seated) input.consumeInteract();
+  if (editorActive || seated || phoneOpen) input.consumeInteract();
   else if (input.consumeInteract()) interactNearest(); // E = boton exterior del ascensor
-  if (editorActive) clearShirtHover();
+  if (editorActive || phoneOpen) clearShirtHover();
   else updateHover();      // feedback del pulsador bajo el mouse
   tickAmbient(dt);         // displays giratorios
 

@@ -25,10 +25,12 @@ function ensureTip() {
   return tip;
 }
 
-export function initProductClicks({ canvas, camera, getScene, isBlocked = () => false }) {
+export function initProductClicks({
+  canvas, camera, getScene, isBlocked = () => false, onAddToCart = () => false,
+}) {
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2(-2, -2);
-  const panel = createProductPanel();
+  const panel = createProductPanel({ onAddToCart });
   const tip = ensureTip();
 
   // cache de meshes clickeables; se rearma cuando cambia la escena activa
