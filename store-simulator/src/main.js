@@ -165,7 +165,8 @@ const MAX_PIXELS = QUALITY === 'high' ? 2.6e6 : 1.3e6;
 const MIN_RATIO = 0.85;
 
 function resize() {
-  const w = window.innerWidth, h = window.innerHeight;
+  const w = Math.max(1, Math.round(canvas.clientWidth || window.innerWidth));
+  const h = Math.max(1, Math.round(canvas.clientHeight || window.innerHeight));
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const ratio = Math.max(MIN_RATIO, Math.min(dpr, Math.sqrt(MAX_PIXELS / (w * h))));
   renderer.setPixelRatio(ratio);
@@ -180,6 +181,7 @@ function resize() {
   camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', resize);
+window.visualViewport?.addEventListener('resize', resize);
 resize();
 
 // Auto-downgrade: si la máquina no da abasto (notebooks flojas, integradas),
@@ -199,7 +201,11 @@ function checkPerf(dt) {
   }
 }
 
-const { colliders: streetColliders, outdoorLighting: streetOutdoorLighting } = buildStreet(scene);
+const {
+  colliders: streetColliders,
+  outdoorLighting: streetOutdoorLighting,
+  whiteLightSwitch: streetWhiteLightSwitch,
+} = buildStreet(scene);
 let colliders = streetColliders;
 let world = 'street'; // 'street' | 'destination'
 let loading = false;
@@ -290,6 +296,7 @@ carInteract = initCarInteract({
 phone = createPhone({
   music,
   cart,
+  clock: dayNight,
   isBlocked: () => loading || elevatorPanel.isVisible() || worldEditor.isEnabled()
     || !!adminPanel?.isOpen() || productClicks.panel.isOpen(),
   onBeforeOpen: () => {
@@ -316,6 +323,7 @@ window.__carInteract = carInteract;
 window.__cart = cart;
 window.__phone = phone;
 window.__mobileControls = mobileControls;
+window.__whiteLightSwitch = streetWhiteLightSwitch;
 
 registerEditableObject({
   id: 'elevator-street',
@@ -412,6 +420,7 @@ function appendEditableColliders(targetColliders, targetSteppables) {
     // completo taparia el hueco de entrada despues de moverlo con T.
     if (entry.type === 'elevator') continue;
     if (!entry.id.startsWith('calle-kit:') && entry.type !== 'furniture') continue;
+    if (entry.type === 'furniture' && entry.collidable === false) continue;
     const wantsCollider = object.userData?.editorCollider === true || entry.type === 'furniture';
     if (!wantsCollider && object.userData?.walkStep !== true) continue;
 
@@ -565,15 +574,33 @@ canvas.addEventListener('pointermove', (e) => {
   pointerNdc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
 });
 canvas.addEventListener('click', (event) => {
-  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()) return;
+  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()
+    || adminPanel?.isOpen() || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) return;
   pointerNdc.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
   raycaster.setFromCamera(pointerNdc, camera);
   const hit = raycaster.intersectObject(activeElevator.callButton, false)[0];
-  if (hit && activeElevator.isNearCallButton(bob.position)) callActiveElevator();
+  if (hit && activeElevator.isNearCallButton(bob.position)) {
+    callActiveElevator();
+    return;
+  }
+  if (world === 'street') streetWhiteLightSwitch.interactFromRay(raycaster, bob.position);
 });
 
 function updateHover() {
-  if (loading || elevatorPanel.isVisible() || phone?.isOpen() || !activeElevator || !activeElevator.isNearCallButton(bob.position)) {
+  if (loading || elevatorPanel.isVisible() || phone?.isOpen() || adminPanel?.isOpen()
+    || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) {
+    clearShirtHover();
+    return;
+  }
+  if (world === 'street' && streetWhiteLightSwitch.canInteract(bob.position)) {
+    hovered = false;
+    activeElevator?.setHighlighted(false);
+    canvas.style.cursor = 'default';
+    shirtTip.style.display = 'block';
+    shirtTip.textContent = 'E · LUCES';
+    return;
+  }
+  if (!activeElevator || !activeElevator.isNearCallButton(bob.position)) {
     clearShirtHover();
     return;
   }
@@ -610,6 +637,7 @@ function interactNearest() {
     return true;
   }
   if (carInteract?.interact(bob.position)) return true;
+  if (world === 'street' && streetWhiteLightSwitch.interact(bob.position)) return true;
   return productClicks.interactNearby(bob.position);
 }
 
@@ -619,6 +647,7 @@ function hasNearbyInteraction() {
   return !!carInteract?.getCurrentCar()
     || !!activeElevator?.isNearCallButton(bob.position)
     || !!carInteract?.canInteract(bob.position)
+    || (world === 'street' && streetWhiteLightSwitch.canInteract(bob.position))
     || productClicks.canInteractNearby(bob.position);
 }
 

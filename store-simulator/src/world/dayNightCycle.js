@@ -1,150 +1,177 @@
 import * as THREE from 'three';
 
-// Ubicacion aproximada de Calle Burela, Buenos Aires. Es suficiente para que
-// amanecer, atardecer y duracion del dia acompanen la fecha real.
-const BURELA_LATITUDE = -34.574;
-const BURELA_LONGITUDE = -58.49;
 const UPDATE_INTERVAL_MS = 30_000;
 const SHADOW_UPDATE_INTERVAL_MS = 120_000;
-const DEG = Math.PI / 180;
-const DAY_MS = 86_400_000;
-const J1970 = 2440588;
-const J2000 = 2451545;
-const EARTH_TILT = DEG * 23.4397;
+const MANUAL_HOUR_KEY = 'fourtwenty:manual-hour';
 
-const PHASE_ALTITUDES = Object.freeze({
-  sol: 28,
-  atardecer: 7,
-  naranja: 1,
-  'ultima-luz': -5,
-  noche: -14,
+const PHASE_HOURS = Object.freeze({
+  sol: 12,
+  atardecer: 16,
+  naranja: 18,
+  'ultima-luz': 19.5,
+  noche: 23,
 });
 
-const PALETTES = Object.freeze([
+// Hitos visuales del dia. Los valores intermedios se mezclan de forma suave.
+const HOUR_FRAMES = Object.freeze([
   {
-    altitude: -18,
-    sky: 0x06101f,
-    fog: 0x0b1726,
-    hemisphereSky: 0x284568,
-    hemisphereGround: 0x090a0e,
-    hemisphereIntensity: 0.28,
-    sun: 0x9bb8df,
-    sunIntensity: 0.22,
-    exposure: 0.72,
-    environmentIntensity: 0.1,
-  },
-  {
-    altitude: -8,
-    sky: 0x1a2949,
-    fog: 0x2a3552,
-    hemisphereSky: 0x46628f,
-    hemisphereGround: 0x151322,
-    hemisphereIntensity: 0.38,
-    sun: 0x9db8df,
-    sunIntensity: 0.28,
-    exposure: 0.76,
+    hour: 0,
+    sky: 0x102440,
+    fog: 0x162a45,
+    hemisphereSky: 0x7897ba,
+    hemisphereGround: 0x101522,
+    hemisphereIntensity: 0.42,
+    light: 0xeaf2ff,
+    lightIntensity: 0.55,
+    exposure: 0.78,
     environmentIntensity: 0.12,
   },
   {
-    altitude: -1,
-    sky: 0xb84b32,
-    fog: 0xa65d4c,
-    hemisphereSky: 0xd87852,
-    hemisphereGround: 0x3f2621,
-    hemisphereIntensity: 0.52,
-    sun: 0xff642e,
-    sunIntensity: 1.15,
-    exposure: 0.78,
+    hour: 5,
+    sky: 0x4d7fa9,
+    fog: 0x698eac,
+    hemisphereSky: 0xb7d8ed,
+    hemisphereGround: 0x364250,
+    hemisphereIntensity: 0.65,
+    light: 0xf4f8ff,
+    lightIntensity: 0.72,
+    exposure: 0.88,
+    environmentIntensity: 0.16,
+  },
+  {
+    hour: 6,
+    sky: 0x93c9ed,
+    fog: 0xb7d8ec,
+    hemisphereSky: 0xd9efff,
+    hemisphereGround: 0x8f9597,
+    hemisphereIntensity: 0.9,
+    light: 0xfff8e9,
+    lightIntensity: 1.4,
+    exposure: 0.96,
+    environmentIntensity: 0.2,
+  },
+  {
+    hour: 9,
+    sky: 0x83bde7,
+    fog: 0xabcde5,
+    hemisphereSky: 0xd4e9f7,
+    hemisphereGround: 0x9d978c,
+    hemisphereIntensity: 1,
+    light: 0xffedb5,
+    lightIntensity: 2.25,
+    exposure: 1,
+    environmentIntensity: 0.23,
+  },
+  {
+    hour: 12,
+    sky: 0x72b4e5,
+    fog: 0xa7cce7,
+    hemisphereSky: 0xd5ecfa,
+    hemisphereGround: 0xa39b8c,
+    hemisphereIntensity: 1.05,
+    light: 0xffdc6a,
+    lightIntensity: 2.8,
+    exposure: 1.03,
+    environmentIntensity: 0.25,
+  },
+  {
+    hour: 15,
+    sky: 0x82b8df,
+    fog: 0xb4cce0,
+    hemisphereSky: 0xd9e6ee,
+    hemisphereGround: 0xa29683,
+    hemisphereIntensity: 1,
+    light: 0xffc845,
+    lightIntensity: 2.5,
+    exposure: 1,
+    environmentIntensity: 0.23,
+  },
+  {
+    hour: 17,
+    sky: 0xd99a69,
+    fog: 0xd7ac85,
+    hemisphereSky: 0xf0c095,
+    hemisphereGround: 0x6e5548,
+    hemisphereIntensity: 0.82,
+    light: 0xff8a38,
+    lightIntensity: 2,
+    exposure: 0.91,
+    environmentIntensity: 0.18,
+  },
+  {
+    hour: 18,
+    sky: 0xed7748,
+    fog: 0xcf8567,
+    hemisphereSky: 0xf0a174,
+    hemisphereGround: 0x4d332c,
+    hemisphereIntensity: 0.68,
+    light: 0xff5b22,
+    lightIntensity: 1.35,
+    exposure: 0.84,
+    environmentIntensity: 0.15,
+  },
+  {
+    hour: 19,
+    sky: 0x435a82,
+    fog: 0x59677e,
+    hemisphereSky: 0x879fbc,
+    hemisphereGround: 0x252637,
+    hemisphereIntensity: 0.5,
+    light: 0xf0f5ff,
+    lightIntensity: 0.58,
+    exposure: 0.79,
     environmentIntensity: 0.13,
   },
   {
-    altitude: 4,
-    sky: 0xe39568,
-    fog: 0xd9ad86,
-    hemisphereSky: 0xf2c09a,
-    hemisphereGround: 0x655047,
-    hemisphereIntensity: 0.76,
-    sun: 0xff8a3d,
-    sunIntensity: 2.25,
-    exposure: 0.88,
-    environmentIntensity: 0.17,
+    hour: 21,
+    sky: 0x172d4d,
+    fog: 0x213753,
+    hemisphereSky: 0x718eae,
+    hemisphereGround: 0x141925,
+    hemisphereIntensity: 0.44,
+    light: 0xeaf2ff,
+    lightIntensity: 0.52,
+    exposure: 0.77,
+    environmentIntensity: 0.11,
   },
   {
-    altitude: 10,
-    sky: 0xa7c7e5,
-    fog: 0xc0d5e8,
-    hemisphereSky: 0xc9dceb,
-    hemisphereGround: 0x9b958b,
-    hemisphereIntensity: 0.92,
-    sun: 0xffefd2,
-    sunIntensity: 2.2,
-    exposure: 0.98,
-    environmentIntensity: 0.22,
-  },
-  {
-    altitude: 50,
-    sky: 0x86b9e3,
-    fog: 0xafd0e8,
-    hemisphereSky: 0xc8e0f2,
-    hemisphereGround: 0x9d978c,
-    hemisphereIntensity: 1.0,
-    sun: 0xfff8e8,
-    sunIntensity: 2.45,
-    exposure: 1.02,
-    environmentIntensity: 0.24,
+    hour: 24,
+    sky: 0x102440,
+    fog: 0x162a45,
+    hemisphereSky: 0x7897ba,
+    hemisphereGround: 0x101522,
+    hemisphereIntensity: 0.42,
+    light: 0xeaf2ff,
+    lightIntensity: 0.55,
+    exposure: 0.78,
+    environmentIntensity: 0.12,
   },
 ]);
 
-function toDays(date) {
-  return (date.valueOf() / DAY_MS) - 0.5 + J1970 - J2000;
+function normalizeHour(value) {
+  if (value === null || value === undefined || String(value).trim() === '') return null;
+  const number = Number(value);
+  if (!Number.isFinite(number)) return null;
+  return ((number % 24) + 24) % 24;
 }
 
-function rightAscension(longitude, latitude) {
-  return Math.atan2(
-    Math.sin(longitude) * Math.cos(EARTH_TILT) - Math.tan(latitude) * Math.sin(EARTH_TILT),
-    Math.cos(longitude),
-  );
+function currentHour(date = new Date()) {
+  return date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600;
 }
 
-function declination(longitude, latitude) {
-  return Math.asin(
-    Math.sin(latitude) * Math.cos(EARTH_TILT)
-      + Math.cos(latitude) * Math.sin(EARTH_TILT) * Math.sin(longitude),
-  );
+function formatHour(value) {
+  const normalized = normalizeHour(value) ?? 0;
+  const totalMinutes = Math.round(normalized * 60) % (24 * 60);
+  const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+  const minutes = String(totalMinutes % 60).padStart(2, '0');
+  return `${hours}:${minutes}`;
 }
 
-function solarPosition(date) {
-  const days = toDays(date);
-  const meanAnomaly = DEG * (357.5291 + 0.98560028 * days);
-  const equationOfCenter = DEG * (
-    1.9148 * Math.sin(meanAnomaly)
-      + 0.02 * Math.sin(2 * meanAnomaly)
-      + 0.0003 * Math.sin(3 * meanAnomaly)
-  );
-  const eclipticLongitude = meanAnomaly + equationOfCenter + DEG * 102.9372 + Math.PI;
-  const sunDeclination = declination(eclipticLongitude, 0);
-  const sunRightAscension = rightAscension(eclipticLongitude, 0);
-  const observerLatitude = BURELA_LATITUDE * DEG;
-  const observerLongitude = -BURELA_LONGITUDE * DEG;
-  const siderealTime = DEG * (280.16 + 360.9856235 * days) - observerLongitude;
-  const hourAngle = siderealTime - sunRightAscension;
-  const altitude = Math.asin(
-    Math.sin(observerLatitude) * Math.sin(sunDeclination)
-      + Math.cos(observerLatitude) * Math.cos(sunDeclination) * Math.cos(hourAngle),
-  );
-  const azimuth = Math.atan2(
-    Math.sin(hourAngle),
-    Math.cos(hourAngle) * Math.sin(observerLatitude)
-      - Math.tan(sunDeclination) * Math.cos(observerLatitude),
-  );
-  return { altitude, azimuth };
-}
-
-function phaseForAltitude(altitudeDegrees) {
-  if (altitudeDegrees >= 10) return 'SOL';
-  if (altitudeDegrees >= 4) return 'ATARDECER';
-  if (altitudeDegrees >= -1) return 'ATARDECER NARANJA';
-  if (altitudeDegrees >= -8) return 'NOCHE CON ULTIMA LUZ';
+function phaseForHour(hour) {
+  if (hour >= 6 && hour < 15) return 'SOL';
+  if (hour >= 15 && hour < 17) return 'ATARDECER';
+  if (hour >= 17 && hour < 19) return 'ATARDECER NARANJA';
+  if (hour >= 19 && hour < 20) return 'NOCHE CON ULTIMA LUZ';
   return 'NOCHE';
 }
 
@@ -152,36 +179,18 @@ function smoothstep(value) {
   return value * value * (3 - 2 * value);
 }
 
-function paletteFromFrame(frame) {
-  return {
-    sky: new THREE.Color(frame.sky),
-    fog: new THREE.Color(frame.fog),
-    hemisphereSky: new THREE.Color(frame.hemisphereSky),
-    hemisphereGround: new THREE.Color(frame.hemisphereGround),
-    sun: new THREE.Color(frame.sun),
-    hemisphereIntensity: frame.hemisphereIntensity,
-    sunIntensity: frame.sunIntensity,
-    exposure: frame.exposure,
-    environmentIntensity: frame.environmentIntensity,
-  };
-}
-
-function paletteAt(altitudeDegrees) {
-  if (altitudeDegrees <= PALETTES[0].altitude) return paletteFromFrame(PALETTES[0]);
-  const last = PALETTES[PALETTES.length - 1];
-  if (altitudeDegrees >= last.altitude) return paletteFromFrame(last);
-
-  let low = PALETTES[0];
-  let high = last;
-  for (let index = 1; index < PALETTES.length; index++) {
-    if (altitudeDegrees <= PALETTES[index].altitude) {
-      high = PALETTES[index];
-      low = PALETTES[index - 1];
+function paletteAt(hour) {
+  let low = HOUR_FRAMES[0];
+  let high = HOUR_FRAMES[HOUR_FRAMES.length - 1];
+  for (let index = 1; index < HOUR_FRAMES.length; index++) {
+    if (hour <= HOUR_FRAMES[index].hour) {
+      low = HOUR_FRAMES[index - 1];
+      high = HOUR_FRAMES[index];
       break;
     }
   }
 
-  const raw = (altitudeDegrees - low.altitude) / (high.altitude - low.altitude);
+  const raw = (hour - low.hour) / Math.max(high.hour - low.hour, 0.001);
   const mix = smoothstep(THREE.MathUtils.clamp(raw, 0, 1));
   const color = (key) => new THREE.Color(low[key]).lerp(new THREE.Color(high[key]), mix);
   const number = (key) => THREE.MathUtils.lerp(low[key], high[key], mix);
@@ -190,110 +199,134 @@ function paletteAt(altitudeDegrees) {
     fog: color('fog'),
     hemisphereSky: color('hemisphereSky'),
     hemisphereGround: color('hemisphereGround'),
-    sun: color('sun'),
+    light: color('light'),
     hemisphereIntensity: number('hemisphereIntensity'),
-    sunIntensity: number('sunIntensity'),
+    lightIntensity: number('lightIntensity'),
     exposure: number('exposure'),
     environmentIntensity: number('environmentIntensity'),
   };
 }
 
-function dateFromQuery(now, params) {
-  const rawHour = params.get('sunHour');
-  if (rawHour === null || rawHour.trim() === '') return now;
-  const hour = Number(rawHour);
-  if (!Number.isFinite(hour)) return now;
-  const date = new Date(now);
-  const clamped = THREE.MathUtils.clamp(hour, 0, 23.999);
-  date.setHours(Math.floor(clamped), Math.round((clamped % 1) * 60), 0, 0);
-  return date;
+function celestialPosition(angle, distance, inverted = false) {
+  const direction = inverted ? -1 : 1;
+  return new THREE.Vector3(
+    -Math.cos(angle) * distance * direction,
+    Math.sin(angle) * distance,
+    6,
+  );
 }
 
-function sampleCycle(now, params) {
-  const date = dateFromQuery(now, params);
-  const solar = solarPosition(date);
-  const forcedPhase = params.get('sunPhase')?.toLowerCase();
-  const forcedAltitude = PHASE_ALTITUDES[forcedPhase];
-  const altitude = Number.isFinite(forcedAltitude) ? forcedAltitude * DEG : solar.altitude;
-  const azimuth = Number.isFinite(forcedAltitude) ? Math.PI : solar.azimuth;
-  const altitudeDegrees = THREE.MathUtils.radToDeg(altitude);
+function sampleCycle(hour) {
+  const sunAngle = ((hour - 6) / 12) * Math.PI;
+  const extendedMoonHour = hour < 6 ? hour + 24 : hour;
+  const moonAngle = ((extendedMoonHour - 18) / 12) * Math.PI;
+  const sunVisible = hour >= 6 && hour < 19;
+  const moonVisible = hour >= 19 || hour < 6;
+  const sunPosition = celestialPosition(sunAngle, 85);
+  const moonPosition = celestialPosition(moonAngle, 85, true);
+  const activePosition = sunVisible ? sunPosition : moonPosition;
+  const activeAngle = sunVisible ? sunAngle : moonAngle;
+
   return {
-    date,
-    altitude,
-    azimuth,
-    altitudeDegrees,
-    phase: phaseForAltitude(altitudeDegrees),
-    forced: Number.isFinite(forcedAltitude),
+    hour,
+    phase: phaseForHour(hour),
+    palette: paletteAt(hour),
+    sunVisible,
+    moonVisible,
+    sunPosition,
+    moonPosition,
+    activePosition,
+    altitudeDegrees: Math.sin(activeAngle) * 90,
   };
 }
 
 export function createSunDisc(radius = 1.6) {
   const disc = new THREE.Mesh(
     new THREE.SphereGeometry(radius, 18, 10),
-    new THREE.MeshBasicMaterial({ color: 0xfff2cf, fog: false, toneMapped: false }),
+    new THREE.MeshBasicMaterial({ color: 0xffdc6a, fog: false, toneMapped: false }),
   );
   disc.name = 'Sol dinamico';
   disc.frustumCulled = false;
   return disc;
 }
 
+export function createMoonDisc(radius = 1.35) {
+  const disc = new THREE.Mesh(
+    new THREE.SphereGeometry(radius, 18, 10),
+    new THREE.MeshBasicMaterial({ color: 0xf5f8ff, fog: false, toneMapped: false }),
+  );
+  disc.name = 'Luna dinamica';
+  disc.frustumCulled = false;
+  return disc;
+}
+
 function applyLighting(lighting, renderer, sample) {
-  const palette = paletteAt(sample.altitudeDegrees);
+  const { palette } = sample;
   const scene = lighting.scene;
-  scene.background?.copy?.(palette.sky);
+  if (scene.background?.isColor) scene.background.copy(palette.sky);
+  else scene.background = palette.sky.clone();
   if (scene.fog?.color) scene.fog.color.copy(palette.fog);
   scene.environmentIntensity = palette.environmentIntensity;
 
   lighting.hemisphere.color.copy(palette.hemisphereSky);
   lighting.hemisphere.groundColor.copy(palette.hemisphereGround);
   lighting.hemisphere.intensity = palette.hemisphereIntensity;
-  lighting.sun.color.copy(palette.sun);
-  lighting.sun.intensity = palette.sunIntensity;
+  lighting.sun.color.copy(palette.light);
+  lighting.sun.intensity = palette.lightIntensity;
 
-  const nightFill = sample.altitudeDegrees < -1;
-  const lightAzimuth = nightFill ? sample.azimuth + Math.PI : sample.azimuth;
-  const lightAltitude = Math.max(sample.altitude, 3 * DEG);
-  const horizontal = Math.cos(lightAltitude);
-  lighting.sun.position.set(
-    Math.sin(lightAzimuth) * horizontal * 45,
-    Math.sin(lightAltitude) * 45,
-    Math.cos(lightAzimuth) * horizontal * 45,
-  );
+  lighting.sun.position.copy(sample.activePosition).normalize().multiplyScalar(45);
+  lighting.sun.position.y = Math.max(lighting.sun.position.y, 3);
 
   if (lighting.sunDisc) {
-    const discDistance = 85;
-    const discHorizontal = Math.cos(sample.altitude);
-    lighting.sunDisc.position.set(
-      Math.sin(sample.azimuth) * discHorizontal * discDistance,
-      Math.sin(sample.altitude) * discDistance,
-      Math.cos(sample.azimuth) * discHorizontal * discDistance,
-    );
-    lighting.sunDisc.material.color.copy(palette.sun);
-    lighting.sunDisc.visible = sample.altitudeDegrees > -2.2;
+    lighting.sunDisc.position.copy(sample.sunPosition);
+    lighting.sunDisc.material.color.copy(palette.light);
+    lighting.sunDisc.visible = sample.sunVisible;
+  }
+  if (lighting.moonDisc) {
+    lighting.moonDisc.position.copy(sample.moonPosition);
+    lighting.moonDisc.visible = sample.moonVisible;
   }
 
   renderer.toneMappingExposure = palette.exposure;
 }
 
+function storedHour() {
+  try {
+    return normalizeHour(localStorage.getItem(MANUAL_HOUR_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function queryHour(params) {
+  const hour = normalizeHour(params.get('sunHour'));
+  if (hour !== null) return hour;
+  return PHASE_HOURS[params.get('sunPhase')?.toLowerCase()] ?? null;
+}
+
 export function createDayNightCycle({ renderer, getLighting, onShadowRefresh } = {}) {
   const params = new URLSearchParams(location.search);
+  let forcedQueryHour = queryHour(params);
+  let manualHour = storedHour();
   let nextUpdateAt = 0;
   let nextShadowUpdateAt = 0;
   let state = null;
+
+  function effectiveHour(date = new Date()) {
+    return manualHour ?? forcedQueryHour ?? currentHour(date);
+  }
 
   function update(force = false) {
     const nowMs = Date.now();
     if (!force && nowMs < nextUpdateAt) return state;
     nextUpdateAt = nowMs + UPDATE_INTERVAL_MS;
-    const lighting = getLighting?.() ?? null;
-    if (!lighting) {
-      renderer.toneMappingExposure = 1;
-      state = null;
-      return state;
-    }
 
-    const sample = sampleCycle(new Date(nowMs), params);
-    applyLighting(lighting, renderer, sample);
+    const hour = effectiveHour(new Date(nowMs));
+    const sample = sampleCycle(hour);
+    const lighting = getLighting?.() ?? null;
+    if (lighting) applyLighting(lighting, renderer, sample);
+    else renderer.toneMappingExposure = 1;
+
     if (force || nowMs >= nextShadowUpdateAt) {
       nextShadowUpdateAt = nowMs + SHADOW_UPDATE_INTERVAL_MS;
       onShadowRefresh?.();
@@ -301,11 +334,30 @@ export function createDayNightCycle({ renderer, getLighting, onShadowRefresh } =
     state = {
       phase: sample.phase,
       altitude: Number(sample.altitudeDegrees.toFixed(2)),
-      hour: sample.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      forced: sample.forced,
+      hour: formatHour(hour),
+      hourValue: hour,
+      manual: manualHour !== null || forcedQueryHour !== null,
+      celestial: sample.sunVisible ? 'SOL' : 'LUNA',
     };
     return state;
   }
 
-  return { update, getState: () => state };
+  function setHour(value) {
+    const normalized = normalizeHour(value);
+    if (normalized === null) return state;
+    forcedQueryHour = null;
+    manualHour = normalized;
+    try { localStorage.setItem(MANUAL_HOUR_KEY, String(normalized)); } catch { /* sin persistencia */ }
+    nextUpdateAt = 0;
+    return update(false);
+  }
+
+  function useRealTime() {
+    forcedQueryHour = null;
+    manualHour = null;
+    try { localStorage.removeItem(MANUAL_HOUR_KEY); } catch { /* sin persistencia */ }
+    return update(true);
+  }
+
+  return { update, setHour, useRealTime, getState: () => state };
 }

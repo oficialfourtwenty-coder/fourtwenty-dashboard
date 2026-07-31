@@ -86,6 +86,40 @@ function transformFromObject(object3D) {
   };
 }
 
+function normalizeLightRange(value) {
+  const range = Math.round(Number(value));
+  return range >= 1 && range <= 3 ? range : null;
+}
+
+function hasEditableLight(object3D) {
+  let found = false;
+  object3D?.traverse?.((child) => {
+    if (child.isLight && child.userData?.editorLight === true) found = true;
+  });
+  return found;
+}
+
+function applyLightRangeToEntry(entry, value) {
+  const range = normalizeLightRange(value);
+  const object = entry?.object3D;
+  if (!object || !range || object.userData?.editorLightRangeSelectable !== true) return false;
+  const preset = object.userData.editorLightRangePresets?.[range];
+  if (!preset) return false;
+
+  let applied = false;
+  object.traverse?.((child) => {
+    if (!child.isLight || child.userData?.editorLight !== true) return;
+    child.distance = Number(preset.distance);
+    child.intensity = Number(preset.intensity);
+    applied = true;
+  });
+  if (!applied) return false;
+
+  object.userData.editorLightRange = range;
+  entry.lightRange = range;
+  return true;
+}
+
 function emitRegistryChange() {
   window.dispatchEvent(new CustomEvent('fourtwenty:editable-registry-change'));
 }
@@ -125,9 +159,12 @@ function serializeEntry(entry) {
     visible: entry.object3D ? entry.object3D.visible !== false : entry.visible !== false,
   };
   if (entry.height != null) data.height = entry.height;
+  if (entry.collidable === false) data.collidable = false;
   if (entry.cloneOf) data.cloneOf = entry.cloneOf;
+  if (entry.cloneAtSceneRoot) data.cloneAtSceneRoot = true;
   if (entry.manageShadows === false) data.manageShadows = false;
   if (entry.color) data.color = entry.color;
+  if (entry.lightRange) data.lightRange = entry.lightRange;
   return data;
 }
 
@@ -165,13 +202,17 @@ export function registerEditableObject(config, { silent = false } = {}) {
     scale: toArray3(config.scale, live.scale),
     castShadow: config.castShadow !== false,
     receiveShadow: config.receiveShadow !== false,
+    collidable: config.collidable !== false,
     locked: config.locked === true,
     visible: config.visible ?? (config.object3D.visible !== false),
     // manageShadows=false: objetos auto-registrados de la escena; el editor no
     // les pisa las flags de sombra (cada mesh conserva la suya del build).
     manageShadows: config.manageShadows !== false,
     cloneOf: config.cloneOf ?? null,
+    cloneAtSceneRoot: config.cloneAtSceneRoot === true,
     color: normalizeEditorColor(config.color) ?? (sameObject ? previous.color : null),
+    lightRange: normalizeLightRange(config.lightRange ?? config.object3D.userData?.editorLightRange)
+      ?? (sameObject ? previous.lightRange : null),
     colorMaterialsIsolated: config.colorMaterialsIsolated === true || (sameObject && previous.colorMaterialsIsolated === true),
     // transient=true: editable en vivo pero nunca se guarda ni se restaura
     // desde layout. Sirve para BOB jugador: el juego maneja su spawn.
@@ -183,6 +224,7 @@ export function registerEditableObject(config, { silent = false } = {}) {
   markEditableTree(entry.object3D, entry.id);
   registry.set(entry.id, entry);
   if (entry.color) applyColorToEntry(entry, entry.color);
+  if (entry.lightRange) applyLightRangeToEntry(entry, entry.lightRange);
   if (!silent) emitRegistryChange();
   return entry;
 }
@@ -225,6 +267,22 @@ export function setEditableColor(id, value) {
   if (!color || !applyColorToEntry(entry, color)) return getEditableColorInfo(id);
   clearDescendantColorOverrides(entry);
   return getEditableColorInfo(id);
+}
+
+export function getEditableLightRangeInfo(id) {
+  const entry = registry.get(id);
+  const supported = entry?.object3D?.userData?.editorLightRangeSelectable === true
+    && hasEditableLight(entry.object3D);
+  return {
+    supported,
+    value: supported ? (entry.lightRange ?? normalizeLightRange(entry.object3D.userData.editorLightRange) ?? 2) : null,
+  };
+}
+
+export function setEditableLightRange(id, value) {
+  const entry = registry.get(id);
+  if (!entry || !applyLightRangeToEntry(entry, value)) return getEditableLightRangeInfo(id);
+  return getEditableLightRangeInfo(id);
 }
 
 function isRenderableObject(object) {
@@ -304,6 +362,7 @@ export function applyLayout(layout) {
     entry.visible = item.visible !== false;
     if (entry.manageShadows) applyShadowFlags(entry.object3D, entry.castShadow, entry.receiveShadow);
     if (item.color != null) setEditableColor(entry.id, item.color);
+    if (item.lightRange != null) setEditableLightRange(entry.id, item.lightRange);
   }
 
   emitRegistryChange();
@@ -363,7 +422,7 @@ export function autoRegisterScene(root, { prefix = 'mundo', skip = [] } = {}) {
         manageShadows: false,
       }, { silent: true });
       if (entry) registered.push(entry);
-      if (child.children.length) visit(child, childPath, label);
+      if (child.children.length && child.userData?.editorUnit !== true) visit(child, childPath, label);
     }
   };
   visit(root, []);
@@ -382,10 +441,18 @@ export function isObjectInScene(object, sceneRoot) {
   return sceneRootOf(object) === sceneRoot;
 }
 
-export function duplicateEditable(id, { offset = [0.6, 0, 0], transform = null, newId = null, makeVisible = false } = {}) {
+export function duplicateEditable(id, {
+  offset = [0.6, 0, 0],
+  transform = null,
+  newId = null,
+  makeVisible = false,
+  cloneAtSceneRoot = false,
+} = {}) {
   const entry = registry.get(id);
   if (!entry?.object3D?.parent) return null;
   const source = entry.object3D;
+  const cloneParent = cloneAtSceneRoot ? sceneRootOf(source) : source.parent;
+  if (!cloneParent?.add) return null;
   const clone = source.clone(true);
   const colorMaterialsIsolated = cloneColorMaterials(clone);
   clone.traverse((child) => {
@@ -402,7 +469,7 @@ export function duplicateEditable(id, { offset = [0.6, 0, 0], transform = null, 
     do { cloneId = `${base}-copia-${n++}`; } while (registry.has(cloneId));
   }
 
-  source.parent.add(clone);
+  cloneParent.add(clone);
   if (source.visible === false || makeVisible) clone.visible = true;
   if (makeVisible) clone.traverse((child) => { child.visible = true; });
   if (transform) {
@@ -425,8 +492,13 @@ export function duplicateEditable(id, { offset = [0.6, 0, 0], transform = null, 
     height: entry.height,
     object3D: clone,
     cloneOf: entry.cloneOf ?? entry.id,
+    cloneAtSceneRoot,
     manageShadows: entry.manageShadows,
+    castShadow: entry.castShadow,
+    receiveShadow: entry.receiveShadow,
+    collidable: entry.collidable,
     color: entry.color,
+    lightRange: entry.lightRange,
     colorMaterialsIsolated,
   });
 }
@@ -506,6 +578,7 @@ export function restoreClones(layout) {
       newId: item.id,
       transform: { position: item.position, rotation: item.rotation, scale: item.scale },
       makeVisible: item.visible !== false,
+      cloneAtSceneRoot: item.cloneAtSceneRoot === true,
     });
     if (entry) {
       entry.name = item.name ?? entry.name;
@@ -513,6 +586,7 @@ export function restoreClones(layout) {
       entry.visible = item.visible !== false;
       entry.object3D.visible = entry.visible;
       if (item.color != null) applyColorToEntry(entry, item.color);
+      if (item.lightRange != null) applyLightRangeToEntry(entry, item.lightRange);
       changed = true;
     }
   }

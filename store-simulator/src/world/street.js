@@ -17,7 +17,7 @@ import { towerFacade, veredaTile, hexPaver, greenShutter, whiteFloor, lightWood 
 import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
 import { bindProductVisual } from './productVisuals.js';
-import { createSunDisc } from './dayNightCycle.js';
+import { createMoonDisc, createSunDisc } from './dayNightCycle.js';
 
 // ---- Paleta del spec (albedo base) ------------------------------------------
 const SALVIA = 0x8C9A78;   // columnas / alero
@@ -329,13 +329,136 @@ export function buildStreet(scene) {
   sun.shadow.bias = -0.0004;
   scene.add(sun);
   const sunDisc = createSunDisc(1.7);
-  scene.add(sunDisc);
-
+  const moonDisc = createMoonDisc(1.35);
+  // Se agrega al final del grupo para conservar los IDs de todos los objetos
+  // que el dueño ya posicionó con el editor.
+  const whiteLightSwitch = createWhiteLightSwitch(scene, g);
+  // El local debe conservar el indice historico 49: todo el layout editable
+  // usa ese prefijo. El sol se agrega despues para no desplazar esos IDs.
   scene.add(g);
+  scene.add(sunDisc);
+  scene.add(moonDisc);
   return {
     colliders,
     selectors,
-    outdoorLighting: { scene, sun, hemisphere, sunDisc },
+    whiteLightSwitch,
+    outdoorLighting: { scene, sun, hemisphere, sunDisc, moonDisc },
+  };
+}
+
+function createWhiteLightSwitch(scene, g) {
+  const root = new THREE.Group();
+  root.name = 'Interior local · interruptor rosa luces blancas';
+  root.position.set(2.86, PLAT + 1.25, -5.2);
+  root.userData.editorUnit = true;
+  root.userData.editorCollider = false;
+  root.userData.whiteLightSwitch = true;
+
+  const plate = box(0.06, 0.24, 0.18, 0, 0, 0, mat(0x28262a, 0.45, 0.65));
+  plate.name = 'Interruptor rosa · placa metalica';
+  const buttonMaterial = new THREE.MeshStandardMaterial({
+    color: 0xff4f9a,
+    emissive: 0xff176f,
+    emissiveIntensity: 1.15,
+    roughness: 0.35,
+    metalness: 0.25,
+  });
+  const button = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, 0.035, 20), buttonMaterial);
+  button.name = 'Interruptor rosa · boton';
+  button.rotation.z = Math.PI / 2;
+  button.position.x = -0.052;
+  button.userData.whiteLightSwitchButton = true;
+  root.add(plate, button);
+  g.add(root);
+
+  const worldPosition = new THREE.Vector3();
+  let lightsEnabled = true;
+
+  function isEffectivelyVisible(object) {
+    for (let current = object; current; current = current.parent) {
+      if (current.visible === false) return false;
+    }
+    return true;
+  }
+
+  function isWhiteLightSwitch(object) {
+    return object?.userData?.whiteLightSwitch === true
+      || object?.name?.toLowerCase().includes('interruptor rosa luces blancas');
+  }
+
+  function switchDistanceSq(object, playerPosition) {
+    object.getWorldPosition(worldPosition);
+    const dx = worldPosition.x - playerPosition.x;
+    const dz = worldPosition.z - playerPosition.z;
+    return dx * dx + dz * dz;
+  }
+
+  function nearestSwitch(playerPosition, maxDistance = 3.5) {
+    if (!playerPosition) return null;
+    let nearest = null;
+    let nearestDistanceSq = maxDistance * maxDistance;
+    scene.traverse((object) => {
+      if (!isWhiteLightSwitch(object) || !isEffectivelyVisible(object)) return;
+      const distanceSq = switchDistanceSq(object, playerPosition);
+      if (distanceSq > nearestDistanceSq) return;
+      nearest = object;
+      nearestDistanceSq = distanceSq;
+    });
+    return nearest;
+  }
+
+  function switchFromRay(raycaster, playerPosition, maxDistance = 3.5) {
+    if (!raycaster || !playerPosition) return null;
+    const roots = [];
+    scene.traverse((object) => {
+      if (isWhiteLightSwitch(object) && isEffectivelyVisible(object)) roots.push(object);
+    });
+    const hit = roots.length ? raycaster.intersectObjects(roots, true)[0]?.object : null;
+    let candidate = hit;
+    while (candidate && !isWhiteLightSwitch(candidate)) candidate = candidate.parent;
+    if (!candidate || switchDistanceSq(candidate, playerPosition) > maxDistance * maxDistance) return null;
+    return candidate;
+  }
+
+  function setEnabled(enabled) {
+    lightsEnabled = !!enabled;
+    scene.traverse((object) => {
+      if (object.userData.whiteInteriorLight) object.visible = lightsEnabled;
+      if (object.userData.whiteInteriorLightLens) {
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        for (const material of materials) {
+          if (material && 'emissiveIntensity' in material) material.emissiveIntensity = lightsEnabled ? 2.7 : 0.04;
+        }
+      }
+      if (object.userData.whiteLightSwitchButton) {
+        object.position.x = lightsEnabled ? -0.052 : -0.044;
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        for (const material of materials) {
+          if (material && 'emissiveIntensity' in material) material.emissiveIntensity = lightsEnabled ? 1.15 : 0.45;
+        }
+      }
+    });
+  }
+
+  function canInteract(playerPosition, maxDistance = 3.5) {
+    return nearestSwitch(playerPosition, maxDistance) !== null;
+  }
+
+  return {
+    root,
+    canInteract,
+    interact(playerPosition) {
+      if (!nearestSwitch(playerPosition)) return false;
+      setEnabled(!lightsEnabled);
+      return true;
+    },
+    interactFromRay(raycaster, playerPosition) {
+      if (!switchFromRay(raycaster, playerPosition)) return false;
+      setEnabled(!lightsEnabled);
+      return true;
+    },
+    isEnabled: () => lightsEnabled,
+    setEnabled,
   };
 }
 
@@ -438,16 +561,46 @@ function buildRealInterior(scene, g, colliders, H) {
     g.add(named(box(0.05, 0.05, 4.6, tx, PLAT + H - 0.22, -7.4, black), `Interior local · riel luces ${trackIndex + 1}`));
     for (let i = 0; i < 4; i++) {
       const sz = -5.6 - i * 1.2;
-      const can = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.075, 0.09, 10),
-        new THREE.MeshBasicMaterial({ color: 0xfff6e6 }));
-      can.name = `Interior local · spot ${trackIndex + 1}.${i + 1}`;
-      can.position.set(tx, PLAT + H - 0.3, sz);
-      g.add(can);
+      const fixture = new THREE.Group();
+      fixture.name = `Interior local · spot ${trackIndex + 1}.${i + 1}`;
+      fixture.position.set(tx, PLAT + H - 0.3, sz);
+      fixture.userData.editorUnit = true;
+      fixture.userData.editorLightRangeSelectable = true;
+      fixture.userData.editorLightRange = 2;
+      fixture.userData.editorLightRangePresets = {
+        1: { distance: 3, intensity: 2 },
+        2: { distance: 5.5, intensity: 3.5 },
+        3: { distance: 8, intensity: 5.5 },
+      };
+
+      const lens = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.07, 0.075, 0.09, 16),
+        new THREE.MeshStandardMaterial({
+          color: 0xfff6e6,
+          emissive: 0xffdfaa,
+          emissiveIntensity: 2.7,
+          roughness: 0.28,
+        }),
+      );
+      lens.name = `${fixture.name} · lente luminosa`;
+      lens.userData.whiteInteriorLightLens = true;
+
+      const light = new THREE.PointLight(0xfff0d6, 3.5, 5.5, 2);
+      light.name = `${fixture.name} · luz`;
+      light.position.set(0, -0.08, 0);
+      light.userData.editorLight = true;
+      light.userData.whiteInteriorLight = true;
+
+      fixture.add(lens, light);
+      g.add(fixture);
     }
-    const spot = new THREE.SpotLight(0xfff2e0, 9, 8, 0.95, 0.55, 1.6);
-    spot.position.set(tx, PLAT + H - 0.3, -7.4);
-    spot.target.position.set(tx, PLAT, -7.4);
-    scene.add(spot, spot.target);
+
+    // Conserva dos nodos por riel para que no cambien los IDs determinísticos
+    // del editor. La iluminación ahora pertenece a cada círculo individual.
+    const legacySpot = new THREE.SpotLight(0xfff2e0, 0, 0, 0.95, 0.55, 1.6);
+    legacySpot.visible = false;
+    legacySpot.target.visible = false;
+    scene.add(legacySpot, legacySpot.target);
   });
 
   // — Panel de madera del fondo + NEÓN (hoja verde + WE ROLL DIFFERENT) —
@@ -544,6 +697,7 @@ function buildRealInterior(scene, g, colliders, H) {
   // luz de relleno cálida general
   const fill = new THREE.PointLight(0xfff0dd, 3, 8, 2);
   fill.position.set(0, PLAT + H - 0.4, -7.2);
+  fill.userData.whiteInteriorLight = true;
   scene.add(fill);
 }
 
@@ -615,6 +769,7 @@ function buildStockSelector(scene, g) {
   // foco puntual para que las remeras se lean bien
   const spot = new THREE.PointLight(0xfff3dd, 5, 4.5, 2);
   spot.position.set(cx, PLAT + 2.6, Z_LOCAL_BACK - 0.5);
+  spot.userData.whiteInteriorLight = true;
   scene.add(spot);
 
   // las 5 remeras (color + tipo + destino). Textura placeholder de silueta;

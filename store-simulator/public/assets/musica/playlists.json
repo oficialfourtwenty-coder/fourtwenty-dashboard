@@ -1,10 +1,78 @@
 {
   "luca": {
     "titulo": "BEATS DE LUCA",
-    "temas": []
+    "temas": [
+      {
+        "archivo": "luca/BUENOS AIRES.wav",
+        "titulo": "BUENOS AIRES",
+        "artista": "Luca",
+        "link": ""
+      },
+      {
+        "archivo": "luca/mi polo v5.wav",
+        "titulo": "Mi Polo V5",
+        "artista": "Luca",
+        "link": ""
+      },
+      {
+        "archivo": "luca/pal coliseo ft.FF42.wav",
+        "titulo": "Pal Coliseo Ft.FF42",
+        "artista": "Luca",
+        "link": ""
+      },
+      {
+        "archivo": "luca/VALENTINO V8000.wav",
+        "titulo": "VALENTINO V8000",
+        "artista": "Luca",
+        "link": ""
+      }
+    ]
   },
   "fer": {
     "titulo": "ARTISTAS FOURTWENTY",
-    "temas": []
+    "temas": [
+      {
+        "archivo": "fer/bile.wav",
+        "titulo": "Bile",
+        "artista": "Fer",
+        "link": ""
+      },
+      {
+        "archivo": "fer/BURELA.wav",
+        "titulo": "BURELA",
+        "artista": "Fer",
+        "link": ""
+      },
+      {
+        "archivo": "fer/Domingo en Burela..wav",
+        "titulo": "Domingo En Burela.",
+        "artista": "Fer",
+        "link": ""
+      },
+      {
+        "archivo": "fer/double cup V3.wav",
+        "titulo": "Double Cup V3",
+        "artista": "Fer",
+        "link": ""
+      },
+      {
+        "archivo": "fer/n l valhalla.wav",
+        "titulo": "N L Valhalla",
+        "artista": "Fer",
+        "link": ""
+      },
+      {
+        "archivo": "fer/Nirvana VM3.wav",
+        "titulo": "Nirvana VM3",
+        "artista": "Fer",
+        "link": ""
+      },
+      {
+        "archivo": "fer/revolution sample.wav",
+        "titulo": "Revolution Sample",
+        "artista": "Fer",
+        "link": ""
+      }
+    ]
   }
 }

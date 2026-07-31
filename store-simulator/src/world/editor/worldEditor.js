@@ -3,12 +3,14 @@ import { TransformControls } from 'three/examples/jsm/controls/TransformControls
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { addFurnitureItem } from '../furniture.js';
 import { createEditorPanel } from './editorPanel.js';
+import { ADDABLE_MODELS, searchableModelPresets } from './modelCatalog.js';
 import {
   applyLayout,
   duplicateEditable,
   findEditableRoot,
   getEditableById,
   getEditableColorInfo,
+  getEditableLightRangeInfo,
   getEditableObjects,
   getParentEditableId,
   isEditableEffectivelyVisible,
@@ -16,6 +18,7 @@ import {
   removeEditable,
   serializeEditableObjects,
   setEditableColor,
+  setEditableLightRange,
   setEditableVisible,
 } from './editableRegistry.js';
 import {
@@ -31,18 +34,6 @@ const SNAP = {
   translation: 0.25,
   rotation: Math.PI / 12,
   scale: 0.05,
-};
-
-const ADDABLE_MODELS = {
-  cantero: {
-    name: 'Cantero',
-    sourceId: 'calle-kit:26',
-  },
-  'apartment-building': {
-    name: 'Edificio GLB Burela · apartment-building',
-    model: 'assets/furniture/apartment-building.glb',
-    height: 20,
-  },
 };
 
 function noopEditor() {
@@ -75,6 +66,19 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   const raycaster = new THREE.Raycaster();
   const sourceBox = new THREE.Box3();
   const sourceCenter = new THREE.Vector3();
+  const sourceSize = new THREE.Vector3();
+  const sourceWorldPosition = new THREE.Vector3();
+  const sourceWorldScale = new THREE.Vector3();
+  const sourceWorldQuaternion = new THREE.Quaternion();
+  const cloneLocalPosition = new THREE.Vector3();
+  const cloneLocalScale = new THREE.Vector3();
+  const cloneLocalQuaternion = new THREE.Quaternion();
+  const cloneLocalRotation = new THREE.Euler();
+  const targetCenter = new THREE.Vector3();
+  const targetRootWorldPosition = new THREE.Vector3();
+  const targetWorldMatrix = new THREE.Matrix4();
+  const parentInverseMatrix = new THREE.Matrix4();
+  const cloneLocalMatrix = new THREE.Matrix4();
   const pointer = new THREE.Vector2();
   const orbitDir = new THREE.Vector3();
   const spawnDir = new THREE.Vector3();
@@ -108,13 +112,15 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
 
   let saveTimer = 0;
   const panel = createEditorPanel({
+    modelPresets: searchableModelPresets(),
     onMode: setMode,
     onToggleSpace: toggleSpace,
     onToggleSnap: toggleSnap,
     onDeselect: deselect,
-    onSelectId: selectId,
+    onSelectId: duplicateFromObjectList,
     onTransformInput: applyInputTransform,
     onColorInput: applyInputColor,
+    onLightRangeInput: applyInputLightRange,
     onSave: () => saveNow('Layout local guardado.'),
     onCopy: copyJSON,
     onDownload: () => downloadLayout(serializeCurrentLayout()),
@@ -142,13 +148,21 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       state.selectedId,
     );
     const selected = state.selectedId ? getEditableById(state.selectedId) : null;
-    panel.setSelected(selected, selected ? getEditableColorInfo(selected.id) : null);
+    panel.setSelected(
+      selected,
+      selected ? getEditableColorInfo(selected.id) : null,
+      selected ? getEditableLightRangeInfo(selected.id) : null,
+    );
   }
 
   // refresco liviano (mientras se arrastra el gizmo): no reconstruye la lista
   function refreshSelected() {
     const selected = state.selectedId ? getEditableById(state.selectedId) : null;
-    panel.setSelected(selected, selected ? getEditableColorInfo(selected.id) : null);
+    panel.setSelected(
+      selected,
+      selected ? getEditableColorInfo(selected.id) : null,
+      selected ? getEditableLightRangeInfo(selected.id) : null,
+    );
   }
 
   function setStatus(message) {
@@ -305,6 +319,19 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     setStatus(`Color ${colorInfo.value} aplicado.`);
   }
 
+  function applyInputLightRange(value) {
+    if (!state.selectedId) return;
+    const rangeInfo = setEditableLightRange(state.selectedId, value);
+    if (!rangeInfo?.supported) {
+      setStatus('Ese objeto no tiene rango de iluminacion editable.');
+      refreshSelected();
+      return;
+    }
+    refreshSelected();
+    scheduleSave();
+    setStatus(`Rango de iluminacion ${rangeInfo.value} aplicado.`);
+  }
+
   function scheduleSave() {
     clearTimeout(saveTimer);
     saveTimer = window.setTimeout(() => saveNow('Auto-save local actualizado.'), 450);
@@ -323,16 +350,74 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     return id;
   }
 
-  function spawnPositionInFront() {
-    camera.getWorldDirection(spawnDir);
-    spawnDir.y = 0;
+  function directionInFrontOfPlayer() {
+    if (Number.isFinite(player?.modelYaw)) {
+      spawnDir.set(Math.sin(player.modelYaw), 0, Math.cos(player.modelYaw));
+    } else {
+      camera.getWorldDirection(spawnDir);
+      spawnDir.y = 0;
+    }
     if (spawnDir.lengthSq() < 0.001) spawnDir.set(0, 0, -1);
     spawnDir.normalize();
-    if (player?.position) spawnPos.copy(player.position);
+    return spawnDir;
+  }
+
+  function playerWorldPosition() {
+    if (player?.rig?.getWorldPosition) player.rig.getWorldPosition(spawnPos);
+    else if (player?.position) spawnPos.copy(player.position);
     else spawnPos.copy(camera.position);
-    spawnPos.addScaledVector(spawnDir, 6);
-    spawnPos.y = Number.isFinite(player?.position?.y) ? player.position.y : 0;
+    return spawnPos;
+  }
+
+  function spawnPositionInFront(distance = 6) {
+    playerWorldPosition();
+    spawnPos.addScaledVector(directionInFrontOfPlayer(), distance);
     return spawnPos.toArray();
+  }
+
+  function duplicateFromObjectList(id) {
+    const source = getEditableById(id);
+    if (!source?.object3D) {
+      setStatus(`Objeto no encontrado: ${id}`);
+      return;
+    }
+
+    source.object3D.updateWorldMatrix(true, true);
+    sourceBox.setFromObject(source.object3D);
+    if (sourceBox.isEmpty()) sourceBox.setFromCenterAndSize(source.object3D.getWorldPosition(sourceCenter), sourceSize.set(1, 1, 1));
+    sourceBox.getCenter(sourceCenter);
+    sourceBox.getSize(sourceSize);
+    source.object3D.matrixWorld.decompose(sourceWorldPosition, sourceWorldQuaternion, sourceWorldScale);
+
+    const forward = directionInFrontOfPlayer();
+    const halfDepth = (Math.abs(forward.x) * sourceSize.x + Math.abs(forward.z) * sourceSize.z) * 0.5;
+    const distance = Math.max(2.25, halfDepth + 1.25);
+    targetCenter.copy(playerWorldPosition()).addScaledVector(forward, distance);
+    targetCenter.y = playerWorldPosition().y + Math.max(0.85, sourceSize.y * 0.5);
+    targetRootWorldPosition.copy(sourceWorldPosition).add(targetCenter).sub(sourceCenter);
+
+    currentScene.updateWorldMatrix(true, false);
+    targetWorldMatrix.compose(targetRootWorldPosition, sourceWorldQuaternion, sourceWorldScale);
+    parentInverseMatrix.copy(currentScene.matrixWorld).invert();
+    cloneLocalMatrix.multiplyMatrices(parentInverseMatrix, targetWorldMatrix);
+    cloneLocalMatrix.decompose(cloneLocalPosition, cloneLocalQuaternion, cloneLocalScale);
+    cloneLocalRotation.setFromQuaternion(cloneLocalQuaternion, source.object3D.rotation.order);
+
+    const entry = duplicateEditable(id, {
+      transform: {
+        position: cloneLocalPosition.toArray(),
+        rotation: [cloneLocalRotation.x, cloneLocalRotation.y, cloneLocalRotation.z],
+        scale: cloneLocalScale.toArray(),
+      },
+      makeVisible: true,
+      cloneAtSceneRoot: true,
+    });
+    if (!entry) {
+      setStatus(`No se pudo crear una copia de ${source.name}.`);
+      return;
+    }
+    selectId(entry.id);
+    saveNow(`${entry.name} creado frente a BOB.`);
   }
 
   async function addModelFromPreset(key) {
@@ -384,7 +469,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       position: spawnPositionInFront(),
       rotation: [0, 0, 0],
       scale: [1, 1, 1],
-      castShadow: true,
+      castShadow: preset.castShadow !== false,
       receiveShadow: true,
       visible: true,
     });

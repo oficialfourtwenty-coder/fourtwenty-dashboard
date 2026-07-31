@@ -116,8 +116,8 @@ export function createCarRadio({ music, onExit }) {
     if (!list.temas.length) {
       listEl.innerHTML = `<div class="cr-empty">
         Todavía no hay temas cargados en esta playlist.<br>
-        Poné los MP3 en <code>public/assets/musica/</code> y anotalos en
-        <code>playlists.json</code> — mirá el README de esa carpeta.
+        Poné los MP3 en <code>public/assets/musica/${activeCar.playlist}/</code>
+        y recargá el juego.
       </div>`;
       return;
     }

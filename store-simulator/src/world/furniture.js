@@ -1,11 +1,48 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { registerEditableObject, unregisterEditableObject } from './editor/editableRegistry.js';
-import { loadInitialLayout } from './editor/layoutStore.js';
+import { loadInitialLayout, saveLocalLayout } from './editor/layoutStore.js';
+import { BUNDLED_FURNITURE, MODEL_CATALOG_MIGRATION_KEY } from './editor/modelCatalog.js';
 import { normalizeGLTFHeight } from './gltfUtils.js';
 
 const loader = new GLTFLoader();
 const modelCache = new Map();
+
+function cloneLayoutItem(item) {
+  return {
+    ...item,
+    position: [...item.position],
+    rotation: [...item.rotation],
+    scale: [...item.scale],
+  };
+}
+
+function migrateBundledFurniture(layout) {
+  try {
+    if (localStorage.getItem(MODEL_CATALOG_MIGRATION_KEY) === '1') return layout;
+  } catch {
+    // La carga sigue con el layout disponible aunque no haya persistencia.
+  }
+
+  let changed = false;
+  const bundledByModel = new Map(BUNDLED_FURNITURE.map((item) => [item.model, item]));
+  const next = layout.map((item) => {
+    const bundled = bundledByModel.get(item.model);
+    if (!bundled || item.collidable === false) return item;
+    changed = true;
+    return { ...item, collidable: false };
+  });
+
+  for (const bundled of BUNDLED_FURNITURE) {
+    if (next.some((item) => item.model === bundled.model)) continue;
+    next.push(cloneLayoutItem(bundled));
+    changed = true;
+  }
+
+  if (changed) saveLocalLayout(next);
+  try { localStorage.setItem(MODEL_CATALOG_MIGRATION_KEY, '1'); } catch { /* sin persistencia */ }
+  return next;
+}
 
 function vec3(value, fallback) {
   return Array.isArray(value) && value.length >= 3 ? value.slice(0, 3).map(Number) : fallback.slice();
@@ -107,7 +144,7 @@ export async function addFurnitureItem(scene, item) {
 }
 
 export async function addFurniture(scene) {
-  const layout = await loadInitialLayout();
+  const layout = migrateBundledFurniture(await loadInitialLayout());
   const furniture = layout.filter((item) => item.type === 'furniture');
   if (!furniture.length) {
     console.warn('addFurniture: layout sin muebles editables.');

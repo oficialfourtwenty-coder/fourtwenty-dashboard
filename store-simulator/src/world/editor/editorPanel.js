@@ -34,6 +34,7 @@ function injectStyles() {
     }
     #${PANEL_ID} button:hover { border-color: rgba(255, 110, 24, 0.75); background: rgba(255,110,24,0.12); }
     #${PANEL_ID} button.is-active { color: #111; background: #ff6d18; border-color: #ff6d18; font-weight: 900; }
+    #${PANEL_ID} .we-range-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     #${PANEL_ID} input {
       width: 100%; min-height: 28px; padding: 5px 6px;
       color: #f5f1e8; background: rgba(0,0,0,0.35);
@@ -109,6 +110,15 @@ export function createEditorPanel(callbacks = {}) {
         <div class="we-color-note" data-field="colorNote"></div>
       </div>
 
+      <div class="we-section" data-field="lightRangeSection" hidden>
+        <div class="we-label">Rango de iluminacion</div>
+        <div class="we-range-grid">
+          ${button('1', 'light-range:1')}
+          ${button('2', 'light-range:2')}
+          ${button('3', 'light-range:3')}
+        </div>
+      </div>
+
       <div class="we-section">
         <div class="we-label">Objects <span data-field="objectCount"></span></div>
         <input type="text" data-field="filter" placeholder="filtrar por nombre…" autocomplete="off" spellcheck="false">
@@ -136,6 +146,9 @@ export function createEditorPanel(callbacks = {}) {
         <div class="we-grid">
           ${button('Cantero', 'add:cantero')}
           ${button('Building GLB', 'add:apartment-building')}
+          ${button('Tram Station', 'add:tram-station')}
+          ${button('B54 Simulator', 'add:b54-simulator')}
+          ${button('City Map', 'add:city-map')}
         </div>
       </div>
 
@@ -189,10 +202,12 @@ export function createEditorPanel(callbacks = {}) {
     colorPicker: root.querySelector('[data-field="colorPicker"]'),
     colorHex: root.querySelector('[data-field="colorHex"]'),
     colorNote: root.querySelector('[data-field="colorNote"]'),
+    lightRangeSection: root.querySelector('[data-field="lightRangeSection"]'),
   };
 
   // lista con filtro: con TODO el mundo registrado son cientos de objetos
   const MAX_LIST = 400;
+  const modelPresets = Array.isArray(callbacks.modelPresets) ? callbacks.modelPresets : [];
   let lastObjects = [];
   let lastSelectedId = null;
 
@@ -209,24 +224,51 @@ export function createEditorPanel(callbacks = {}) {
     const terms = searchableText(fields.filter.value).split(/\s+/).filter(Boolean);
     const filtered = terms.length
       ? lastObjects.filter((obj) => {
-        const haystack = searchableText(obj.name);
+        const haystack = searchableText([
+          obj.name,
+          obj.id,
+          obj.type,
+          obj.model,
+          obj.cloneOf,
+        ].filter(Boolean).join(' '));
         return terms.every((term) => haystack.includes(term));
       })
       : lastObjects;
-    fields.objectCount.textContent = `(${filtered.length}/${lastObjects.length})`;
+    const matchingPresets = terms.length
+      ? modelPresets.filter((preset) => {
+        const haystack = searchableText([preset.name, preset.key, preset.model, preset.searchTerms].filter(Boolean).join(' '));
+        return terms.every((term) => haystack.includes(term));
+      })
+      : [];
+    fields.objectCount.textContent = matchingPresets.length
+      ? `(${filtered.length} objetos + ${matchingPresets.length} modelos)`
+      : `(${filtered.length}/${lastObjects.length})`;
     const shown = filtered.slice(0, MAX_LIST);
-    fields.objectList.innerHTML = shown.length
+    const presetHTML = matchingPresets.map((preset) => `
+      <button type="button" class="we-object" data-add-model-key="${preset.key}">
+        ${preset.name}<br><small>AGREGAR MODELO</small>
+      </button>
+    `).join('');
+    const objectHTML = shown.length
       ? shown.map((obj) => `
         <button type="button" class="we-object ${obj.id === lastSelectedId ? 'is-active' : ''}" data-object-id="${obj.id}">
           ${obj.name}${obj.effectiveVisible === false || obj.visible === false || obj.object3D?.visible === false ? ' · <small>OCULTO</small>' : ''}<br><small>${obj.cloneOf ? 'copia editable' : 'pieza editable'}</small>
         </button>
       `).join('') + (filtered.length > MAX_LIST ? `<div class="we-status">…y ${filtered.length - MAX_LIST} más (usá el filtro)</div>` : '')
+      : '';
+    fields.objectList.innerHTML = presetHTML || objectHTML
+      ? `${presetHTML}${objectHTML}`
       : '<div class="we-status">No hay objetos editables cargados.</div>';
   }
 
   fields.filter.addEventListener('input', renderObjectList);
 
   root.addEventListener('click', (event) => {
+    const addModelButton = event.target.closest('[data-add-model-key]');
+    if (addModelButton) {
+      callbacks.onAddModel?.(addModelButton.dataset.addModelKey);
+      return;
+    }
     const objectButton = event.target.closest('[data-object-id]');
     if (objectButton) {
       callbacks.onSelectId?.(objectButton.dataset.objectId);
@@ -237,6 +279,7 @@ export function createEditorPanel(callbacks = {}) {
     if (!actionButton) return;
     const action = actionButton.dataset.action;
     if (action.startsWith('mode:')) callbacks.onMode?.(action.split(':')[1]);
+    else if (action.startsWith('light-range:')) callbacks.onLightRangeInput?.(Number(action.split(':')[1]));
     else if (action === 'space') callbacks.onToggleSpace?.();
     else if (action === 'snap') callbacks.onToggleSnap?.();
     else if (action === 'deselect') callbacks.onDeselect?.();
@@ -316,10 +359,11 @@ export function createEditorPanel(callbacks = {}) {
       lastSelectedId = selectedId;
       renderObjectList();
     },
-    setSelected(entry, colorInfo = null) {
+    setSelected(entry, colorInfo = null, lightRangeInfo = null) {
       if (!entry) {
         fields.selected.textContent = 'Sin objeto seleccionado';
         fields.colorSection.hidden = true;
+        fields.lightRangeSection.hidden = true;
         return;
       }
       fields.selected.innerHTML = `<strong>${entry.name}</strong><br>${entry.id}<br>${entry.type}${entry.locked ? ' · LOCKED' : ''}`;
@@ -333,6 +377,12 @@ export function createEditorPanel(callbacks = {}) {
       fields.colorNote.textContent = supportsColor
         ? (colorInfo.mixed ? 'La pieza tiene varios colores. El nuevo color se aplicara a toda la seleccion.' : 'El cambio se aplica en vivo y queda guardado en este piso.')
         : 'Este objeto no tiene un material compatible con color.';
+      const supportsLightRange = lightRangeInfo?.supported === true;
+      fields.lightRangeSection.hidden = !supportsLightRange;
+      root.querySelectorAll('[data-action^="light-range:"]').forEach((rangeButton) => {
+        rangeButton.classList.toggle('is-active', supportsLightRange
+          && rangeButton.dataset.action === `light-range:${lightRangeInfo.value}`);
+      });
       const transforms = {
         position: entry.object3D.position.toArray(),
         rotation: [entry.object3D.rotation.x, entry.object3D.rotation.y, entry.object3D.rotation.z],

@@ -2527,18 +2527,18 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -2.7775446548610727,
-      1.467602307718272,
-      -4.931812206950647
+      0,
+      2.25,
+      -4.4399999999999995
     ],
     "rotation": [
-      -2.7229584702593237,
-      1.5036239777661502,
-      2.722119284898808
+      0,
+      0,
+      0
     ],
     "scale": [
-      0.5417541897077711,
-      1.2878588508978244,
+      1,
+      1,
       1
     ],
     "castShadow": true,
@@ -2986,7 +2986,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": false,
+    "visible": true,
     "manageShadows": false
   },
   {
@@ -8012,5 +8012,86 @@
     "visible": true,
     "height": 20,
     "cloneOf": "furniture:apartment-building-mrb4ow5q"
+  },
+  {
+    "id": "furniture:tram-station-base",
+    "name": "Tram Station · Estacion de tranvia GLB",
+    "type": "furniture",
+    "model": "assets/furniture/tram-station.glb",
+    "position": [
+      16,
+      0,
+      6
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "collidable": false,
+    "locked": false,
+    "visible": true,
+    "height": 7
+  },
+  {
+    "id": "furniture:b54-simulator-base",
+    "name": "B54 FTT Lowpoly Simulator",
+    "type": "furniture",
+    "model": "assets/furniture/b54-ftt-lowpoly-simulator.glb",
+    "position": [
+      -14,
+      0,
+      18
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "collidable": false,
+    "locked": false,
+    "visible": true,
+    "height": 6
+  },
+  {
+    "id": "furniture:city-map-base",
+    "name": "City Map Free · Mapa de ciudad",
+    "type": "furniture",
+    "model": "assets/furniture/city-map-free.glb",
+    "position": [
+      0,
+      -0.2,
+      42
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "collidable": false,
+    "locked": false,
+    "visible": true,
+    "height": 5
   }
 ]

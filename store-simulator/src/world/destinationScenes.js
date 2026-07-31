@@ -5,7 +5,7 @@ import { COLLECTIONS } from './collections.js';
 import { box } from './gfxUtils.js';
 import { whiteFloor, whitePlaster, lightCeiling, windowDaylight } from './textures.js';
 import { ElevatorController } from './elevator.js';
-import { createSunDisc } from './dayNightCycle.js';
+import { createMoonDisc, createSunDisc } from './dayNightCycle.js';
 
 const ROOM_W = 12;
 const BASE_ROOM_D = 9;
@@ -182,7 +182,9 @@ function buildTerraceScene(destination, { environment, shadows, onElevatorEnter 
   if (shadows) sun.shadow.mapSize.set(1024, 1024);
   scene.add(sun);
   const sunDisc = createSunDisc(1.7);
+  const moonDisc = createMoonDisc(1.35);
   scene.add(sunDisc);
+  scene.add(moonDisc);
 
   const elevator = new ElevatorController(scene, {
     id: 'elevator-destination-5',
@@ -200,7 +202,7 @@ function buildTerraceScene(destination, { environment, shadows, onElevatorEnter 
     bounds: { minX: -8.7, maxX: 8.7, minZ: roofMinZ + 0.3, maxZ: roofMaxZ - 0.3 },
     ceiling: 30,
     sampleGround: () => 0,
-    outdoorLighting: { scene, sun, hemisphere, sunDisc },
+    outdoorLighting: { scene, sun, hemisphere, sunDisc, moonDisc },
   };
 }
 

@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
+import { buildMusicManifest } from './tools/musicManifest.mjs';
 
 // Endpoints locales SOLO del servidor de desarrollo (npm run dev):
 //   GET/POST /api/productos → lee/escribe public/assets/data/productos.json,
@@ -29,7 +30,21 @@ function adminApiPlugin() {
 
   return {
     name: 'fourtwenty-admin-api',
+    buildStart() {
+      buildMusicManifest({ rootDir: import.meta.dirname });
+    },
     configureServer(server) {
+      server.middlewares.use('/assets/musica/playlists.json', (_req, res) => {
+        try {
+          const playlists = buildMusicManifest({ rootDir: import.meta.dirname });
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Cache-Control', 'no-store');
+          res.end(JSON.stringify(playlists, null, 2));
+        } catch (e) {
+          json(res, 500, { error: String(e.message ?? e) });
+        }
+      });
+
       server.middlewares.use('/api/productos', async (req, res) => {
         try {
           if (req.method === 'GET') {

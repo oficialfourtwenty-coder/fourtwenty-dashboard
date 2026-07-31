@@ -45,7 +45,7 @@ function injectStyles() {
     }
     #${PHONE_ID} .phone-app[data-app="music"] { background: #a83c31; }
     #${PHONE_ID} .phone-app[data-app="cart"] { background: #1f7255; }
-    #${PHONE_ID} .phone-app[data-app="option3"] { background: #315374; }
+    #${PHONE_ID} .phone-app[data-app="clock"] { background: #315374; }
     #${PHONE_ID} .phone-app[data-app="option4"] { background: #786326; }
     #${PHONE_ID} .phone-app:not([disabled]):hover,
     #${PHONE_ID} .phone-app:not([disabled]):focus-visible { border-color: #fff; outline: 2px solid #fff; outline-offset: 1px; }
@@ -83,6 +83,25 @@ function injectStyles() {
     #${PHONE_ID} .phone-player-controls { margin-top: 14px; display: flex; justify-content: center; gap: 14px; }
     #${PHONE_ID} .phone-player-controls .phone-icon-button { width: 50px; height: 50px; }
     #${PHONE_ID} .phone-icon-button[disabled] { opacity: 0.35; cursor: not-allowed; }
+    #${PHONE_ID} .phone-clock-display {
+      min-height: 150px; display: grid; place-content: center; gap: 7px; text-align: center;
+      border-top: 1px solid #485260; border-bottom: 1px solid #485260; background: #101a26;
+    }
+    #${PHONE_ID} .phone-clock-time { font: 900 48px/1 "Courier New", monospace; }
+    #${PHONE_ID} .phone-clock-phase { min-height: 14px; color: #f2bd54; font-size: 10px; font-weight: 900; }
+    #${PHONE_ID} .phone-clock-mode { color: rgba(244,241,232,0.58); font-size: 9px; }
+    #${PHONE_ID} .phone-clock-controls { margin-top: 18px; display: grid; gap: 13px; }
+    #${PHONE_ID} .phone-clock-label { display: grid; gap: 7px; color: rgba(244,241,232,0.7); font-size: 9px; font-weight: 900; }
+    #${PHONE_ID} .phone-clock-range { width: 100%; margin: 0; accent-color: #f2bd54; }
+    #${PHONE_ID} .phone-clock-input {
+      box-sizing: border-box; width: 100%; min-height: 42px; padding: 8px 10px;
+      color: #f4f1e8; color-scheme: dark; background: #0d0f13; border: 1px solid #596371;
+      font: 900 16px/1 "Courier New", monospace;
+    }
+    #${PHONE_ID} .phone-clock-now {
+      min-height: 38px; padding: 8px 12px; cursor: pointer; color: #111820; background: #f2bd54;
+      border: 1px solid #ffe09a; font: 900 10px/1 "Courier New", monospace;
+    }
     #${PHONE_ID} .phone-cart-list { display: grid; gap: 8px; }
     #${PHONE_ID} .phone-cart-empty { padding: 48px 12px; text-align: center; color: rgba(244,241,232,0.56); font-size: 11px; }
     #${PHONE_ID} .phone-cart-item {
@@ -110,7 +129,15 @@ function injectStyles() {
       border: 1px solid #646a74; font: inherit; font-size: 9px; font-weight: 900;
     }
     @media (max-width: 520px) {
-      #${PHONE_ID} .phone-shell { right: 10px; bottom: 10px; width: min(326px, calc(100vw - 20px)); height: min(590px, calc(100vh - 20px)); }
+      #${PHONE_ID} .phone-shell { right: 10px; bottom: 10px; width: min(326px, calc(100vw - 20px)); height: min(590px, calc(100dvh - 20px)); }
+    }
+    @media (pointer: coarse) {
+      #${PHONE_ID} .phone-shell {
+        right: max(10px, env(safe-area-inset-right));
+        bottom: max(10px, env(safe-area-inset-bottom));
+        width: min(326px, calc(100vw - 20px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+        height: min(590px, calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+      }
     }
     @media (prefers-reduced-motion: reduce) {
       #${PHONE_ID} .phone-shell { transition: none; }
@@ -129,7 +156,7 @@ function priceText(value, currency = 'ARS') {
   return `$ ${number.toLocaleString('es-AR')} ${currency || ''}`.trim();
 }
 
-export function createPhone({ music, cart, isBlocked = () => false, onBeforeOpen = () => {} }) {
+export function createPhone({ music, cart, clock, isBlocked = () => false, onBeforeOpen = () => {} }) {
   injectStyles();
   const root = document.createElement('div');
   root.id = PHONE_ID;
@@ -148,8 +175,8 @@ export function createPhone({ music, cart, isBlocked = () => false, onBeforeOpen
               <span class="phone-badge" data-field="cart-badge" hidden></span>
               <span class="phone-app-mark">C</span><span class="phone-app-name">CARRITO</span>
             </button>
-            <button type="button" class="phone-app" data-app="option3" disabled>
-              <span class="phone-app-mark">3</span><span class="phone-app-name">OPCION 3</span>
+            <button type="button" class="phone-app" data-app="clock">
+              <span class="phone-app-mark">12</span><span class="phone-app-name">RELOJ</span>
             </button>
             <button type="button" class="phone-app" data-app="option4" disabled>
               <span class="phone-app-mark">4</span><span class="phone-app-name">OPCION 4</span>
@@ -186,6 +213,26 @@ export function createPhone({ music, cart, isBlocked = () => false, onBeforeOpen
             <span data-field="cart-total"></span>
           </div>
         </div>
+        <div class="phone-view" data-view="clock" hidden>
+          <div class="phone-view-head">
+            <button type="button" class="phone-icon-button" data-action="home" aria-label="Volver" title="Volver">&#8592;</button>
+            <div class="phone-view-title">RELOJ</div><span></span>
+          </div>
+          <div class="phone-clock-display">
+            <div class="phone-clock-time" data-field="clock-display"></div>
+            <div class="phone-clock-phase" data-field="clock-phase"></div>
+            <div class="phone-clock-mode" data-field="clock-mode"></div>
+          </div>
+          <div class="phone-clock-controls">
+            <label class="phone-clock-label">MOVER EL CIELO
+              <input class="phone-clock-range" data-field="clock-range" type="range" min="0" max="23.75" step="0.25">
+            </label>
+            <label class="phone-clock-label">ELEGIR HORA
+              <input class="phone-clock-input" data-field="clock-input" type="time" step="900">
+            </label>
+            <button type="button" class="phone-clock-now" data-action="clock-now">USAR HORA REAL</button>
+          </div>
+        </div>
       </div>
     </section>
   `;
@@ -201,8 +248,25 @@ export function createPhone({ music, cart, isBlocked = () => false, onBeforeOpen
   let cartState = cart.getState();
   let previousFocus = null;
 
+  function fallbackClockState() {
+    const now = new Date();
+    const hourValue = now.getHours() + now.getMinutes() / 60;
+    return {
+      hourValue,
+      hour: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+      phase: '',
+      manual: false,
+    };
+  }
+
+  function getClockState() {
+    clock?.update?.();
+    return clock?.getState?.() ?? fallbackClockState();
+  }
+
   function updateClock() {
-    field('clock').textContent = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    field('clock').textContent = getClockState().hour;
+    if (currentView === 'clock') renderClock();
   }
   updateClock();
   window.setInterval(updateClock, 30000);
@@ -210,8 +274,36 @@ export function createPhone({ music, cart, isBlocked = () => false, onBeforeOpen
   function showView(name) {
     currentView = name;
     for (const view of views) view.hidden = view.dataset.view !== name;
+    if (name === 'clock') renderClock();
     root.querySelector(`[data-view="${name}"] button:not([disabled])`)?.focus({ preventScroll: true });
   }
+
+  function renderClock() {
+    const state = getClockState();
+    const hour = Number.isFinite(state.hourValue) ? state.hourValue : 0;
+    field('clock-display').textContent = state.hour;
+    field('clock-phase').textContent = state.phase;
+    field('clock-mode').textContent = state.manual ? 'HORA MANUAL' : 'HORA REAL';
+    field('clock-range').value = String(hour);
+    field('clock-input').value = state.hour;
+  }
+
+  function setClockFromTime(value) {
+    const [hours, minutes] = String(value).split(':').map(Number);
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return;
+    clock?.setHour?.(hours + minutes / 60);
+    clock?.update?.(true);
+    renderClock();
+    updateClock();
+  }
+
+  field('clock-range').addEventListener('input', (event) => {
+    clock?.setHour?.(Number(event.currentTarget.value));
+    renderClock();
+    field('clock').textContent = getClockState().hour;
+  });
+  field('clock-range').addEventListener('change', () => clock?.update?.(true));
+  field('clock-input').addEventListener('change', (event) => setClockFromTime(event.currentTarget.value));
 
   function renderMusic() {
     const source = PLAYLISTS.find((item) => item.id === selectedPlaylist) || PLAYLISTS[0];
@@ -309,6 +401,11 @@ export function createPhone({ music, cart, isBlocked = () => false, onBeforeOpen
     else if (action === 'play') toggleMusic();
     else if (action === 'next') nextTrack();
     else if (action === 'clear-cart') cart.clear();
+    else if (action === 'clock-now') {
+      clock?.useRealTime?.();
+      renderClock();
+      updateClock();
+    }
 
     const cartButton = event.target.closest('[data-cart-action]');
     const row = cartButton?.closest('[data-key]');

@@ -3,9 +3,9 @@
 // sonando cuando bajás, entrás al local, tomás el ascensor y recorrés los
 // pisos. Los autos son solo el dial.
 //
-// Las playlists se cargan de public/assets/musica/playlists.json — ese archivo
-// lo edita el dueño a mano (ver el README de esa carpeta). Si un tema no está
-// o falla, se saltea solo y no rompe nada.
+// Las playlists se cargan de public/assets/musica/playlists.json, que se genera
+// automáticamente mirando las carpetas public/assets/musica/luca y /fer. Si un
+// tema no está o falla, se saltea solo y no rompe nada.
 //
 // ⚠️ Derechos: en la playlist de Fer van artistas locales CON PERMISO. Guardar
 // el permiso por escrito de cada uno (ver PLAN MAESTRO en Notion).

@@ -7,6 +7,7 @@
 // adentro del auto, main.js congela su movimiento vía isPlayerLocked().
 import * as THREE from 'three';
 import { createCarRadio } from '../ui/carRadio.js';
+import { createCarInteriorView } from '../ui/carInteriorView.js';
 
 const TIP_ID = 'ft-car-tip';
 const MAX_ENTER_DISTANCE = 10;   // más lejos que esto, primero hay que acercarse
@@ -44,6 +45,10 @@ export function initCarInteract({
   let hoveredCar = null;
 
   const radio = createCarRadio({ music, onExit: () => exitCar() });
+  const interiorView = createCarInteriorView({
+    onRadio: () => openRadio(),
+    onExit: () => exitCar(),
+  });
 
   // meshes clickeables por auto (se rearman si cambia la escena)
   let cachedScene = null;
@@ -133,13 +138,14 @@ export function initCarInteract({
     tpCam.dist = CAM_DIST_INSIDE;
 
     clearTip();
-    showTip('APRETÁ LA RADIO (E)');
+    interiorView.show(car);
   }
 
   function exitCar() {
     if (!insideCar) return;
     const car = insideCar;
     radio.hide();
+    interiorView.hide();
     car.setRadioActive(false);
     car.closeDoor();
 
@@ -285,6 +291,7 @@ export function initCarInteract({
     interact,
     closeRadio,
     exitCar,
+    isInteriorViewOpen: () => interiorView.isVisible(),
     getCurrentCar: () => insideCar,
   };
 }

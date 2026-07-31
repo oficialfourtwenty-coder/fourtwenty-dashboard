@@ -27,6 +27,12 @@ const CAR_SPECS = [
     model: 'Volkswagen up! Pepper TSI',
     playlist: 'luca',
     radioLabel: 'BEATS DE LUCA',
+    interiorView: {
+      image: 'assets/cars/interiors/pepper-luca.jpg',
+      width: 1448,
+      height: 1086,
+      radio: { x: 575, y: 475, width: 285, height: 185 },
+    },
     // medidas reales del up! (m)
     length: 3.60, width: 1.65, height: 1.50, wheelbase: 2.42,
     bodyColor: 0x3C4046,      // gris oscuro (auto real de Luca)
@@ -57,6 +63,12 @@ const CAR_SPECS = [
     model: 'Toyota Corolla 2019 SLINE',
     playlist: 'fer',
     radioLabel: 'ARTISTAS FOURTWENTY',
+    interiorView: {
+      image: 'assets/cars/interiors/corolla-fer.jpg',
+      width: 1448,
+      height: 1086,
+      radio: { x: 475, y: 630, width: 290, height: 185 },
+    },
     // medidas reales del Corolla (m)
     length: 4.62, width: 1.78, height: 1.44, wheelbase: 2.70,
     bodyColor: 0xF0F0EA,      // BLANCO (auto real de Fer)
@@ -432,6 +444,7 @@ class Car {
     this.model = spec.model;
     this.playlist = spec.playlist;
     this.radioLabel = spec.radioLabel;
+    this.interiorView = spec.interiorView;
 
     const built = buildCar(spec);
     this.root = built.root;

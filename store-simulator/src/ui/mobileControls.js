@@ -1,5 +1,6 @@
 const ROOT_ID = 'ft-mobile-controls';
 const STYLE_ID = 'ft-mobile-controls-style';
+const ORIENTATION_ID = 'ft-mobile-orientation';
 const JOYSTICK_RADIUS = 58;
 const DEAD_ZONE = 6;
 
@@ -30,6 +31,25 @@ function injectStyles() {
     }
     #${ROOT_ID} .mobile-interact[hidden] { display: none; }
     #${ROOT_ID} .mobile-action:active { transform: scale(0.94); }
+    #${ORIENTATION_ID} {
+      position: fixed; inset: 0; z-index: 200; display: none; place-items: center;
+      padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+        max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+      box-sizing: border-box; color: #f5f1e8; background: #090a0c;
+      font: 900 13px/1.2 "Courier New", monospace; letter-spacing: 2px;
+      text-align: center; touch-action: none; user-select: none; -webkit-user-select: none;
+    }
+    #${ORIENTATION_ID}.is-visible { display: grid; }
+    #${ORIENTATION_ID} .mobile-orientation-content { display: grid; justify-items: center; gap: 18px; }
+    #${ORIENTATION_ID} .mobile-orientation-phone {
+      position: relative; width: 48px; height: 82px; border: 3px solid #f5f1e8;
+      border-radius: 8px; transform: rotate(90deg);
+    }
+    #${ORIENTATION_ID} .mobile-orientation-phone::after {
+      content: ""; position: absolute; left: 50%; bottom: 5px; width: 5px; height: 5px;
+      border-radius: 50%; background: #f5f1e8; transform: translateX(-50%);
+    }
+    #${ORIENTATION_ID} .mobile-orientation-label { color: #f36a21; }
   `;
   document.head.appendChild(style);
 }
@@ -50,6 +70,17 @@ export function initMobileControls({ canvas, input, onPhone, onInteract }) {
     return { isEnabled: () => false, setState() {} };
   }
 
+  const orientationOverlay = document.createElement('div');
+  orientationOverlay.id = ORIENTATION_ID;
+  orientationOverlay.setAttribute('role', 'status');
+  orientationOverlay.innerHTML = `
+    <div class="mobile-orientation-content">
+      <span class="mobile-orientation-phone" aria-hidden="true"></span>
+      <span class="mobile-orientation-label">MODO HORIZONTAL</span>
+    </div>
+  `;
+  document.body.appendChild(orientationOverlay);
+
   const interactButton = root.querySelector('[data-action="interact"]');
   const phoneButton = root.querySelector('[data-action="phone"]');
   let activePointer = null;
@@ -58,6 +89,23 @@ export function initMobileControls({ canvas, input, onPhone, onInteract }) {
   let moved = false;
   let suppressClickUntil = 0;
   let movementEnabled = true;
+
+  const preventGestureZoom = (event) => event.preventDefault();
+  for (const eventName of ['gesturestart', 'gesturechange', 'gestureend']) {
+    document.addEventListener(eventName, preventGestureZoom, { passive: false });
+  }
+
+  function syncOrientation() {
+    const portrait = window.matchMedia('(orientation: portrait)').matches;
+    orientationOverlay.classList.toggle('is-visible', portrait);
+    orientationOverlay.setAttribute('aria-hidden', String(!portrait));
+    document.body.classList.toggle('mobile-portrait-blocked', portrait);
+    if (portrait) release();
+  }
+
+  window.addEventListener('resize', syncOrientation);
+  window.addEventListener('orientationchange', syncOrientation);
+  window.visualViewport?.addEventListener('resize', syncOrientation);
 
   canvas.style.touchAction = 'none';
 
@@ -104,6 +152,8 @@ export function initMobileControls({ canvas, input, onPhone, onInteract }) {
     event.preventDefault();
     event.stopImmediatePropagation();
   }, true);
+
+  syncOrientation();
 
   for (const button of root.querySelectorAll('button')) {
     button.addEventListener('pointerdown', (event) => event.stopPropagation());
