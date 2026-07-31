@@ -38,6 +38,7 @@ import { createCartStore } from './data/cartStore.js';
 import { createPhone } from './ui/phone.js';
 import { initMobileControls } from './ui/mobileControls.js';
 import { createDayNightCycle } from './world/dayNightCycle.js';
+import { assetUrl } from './core/assetUrl.js';
 
 const QUALITY = new URLSearchParams(location.search).get('q') === 'low' ? 'low' : 'high';
 
@@ -568,7 +569,7 @@ bgProbe.onload = () => {
     loadingEl.style.backgroundImage = `url(${bgProbe.src})`;
   }
 };
-bgProbe.src = 'assets/ui/bobilonia.jpg';
+bgProbe.src = assetUrl('assets/ui/bobilonia.jpg');
 
 canvas.addEventListener('pointermove', (e) => {
   pointerNdc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);

@@ -3,6 +3,7 @@
 // placeholder procedural hasta que llegue el arte definitivo.
 import * as THREE from 'three';
 import { sampleGround } from '../world/building.js';
+import { assetUrl } from '../core/assetUrl.js';
 
 const SPEED = 3.2;        // m/s
 const RADIUS = 0.35;      // radio de colisión
@@ -67,8 +68,8 @@ async function loadRealFrames() {
       t.minFilter = THREE.NearestFilter;
       res(t);
     }, undefined, rej));
-  const idle = await load('assets/bob/bob_idle.png');
-  const walk = await Promise.all([0, 1, 2, 3].map((i) => load(`assets/bob/bob_walk_${i}.png`)));
+  const idle = await load(assetUrl('assets/bob/bob_idle.png'));
+  const walk = await Promise.all([0, 1, 2, 3].map((i) => load(assetUrl(`assets/bob/bob_walk_${i}.png`))));
   return { idle, walk };
 }
 

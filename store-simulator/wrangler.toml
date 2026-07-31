@@ -1,0 +1,25 @@
+# Configuración de Cloudflare para el Simulador Bobilonia.
+#
+# Sirve para dos cosas:
+#   1. `npx wrangler pages dev dist` → probar el sitio EXACTAMENTE como lo va a
+#      servir Cloudflare (con _headers y con functions/), antes de deployar.
+#   2. Dejar declarado el binding de R2 para cuando se muden los assets.
+#
+# ⚠️ El deploy real se hace por la integración de Git en el panel de Cloudflare
+# Pages (build command, output dir y variables se cargan ahí). Este archivo NO
+# reemplaza esa configuración, la acompaña.
+
+name = "simulador-bobilonia"
+compatibility_date = "2026-07-31"
+pages_build_output_dir = "dist"
+
+# --- R2 ---------------------------------------------------------------------
+# Descomentar SOLO cuando el bucket exista y se hayan subido los assets.
+# Este binding hace falta únicamente si en el futuro una Function necesita
+# leer/escribir el bucket desde el servidor. Para servir los GLB/música al
+# navegador NO hace falta binding: alcanza con el dominio público del bucket
+# cargado en VITE_ASSETS_BASE_URL.
+#
+# [[r2_buckets]]
+# binding = "ASSETS_BUCKET"
+# bucket_name = "bobilonia-assets"

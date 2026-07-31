@@ -16,6 +16,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { normalizeGLTFHeight } from './gltfUtils.js';
+import { assetUrl } from '../core/assetUrl.js';
 
 // ---- Especificación de cada auto -------------------------------------------
 // ⚠️ COLOR Y PATENTE: cambialos acá si no coinciden con los autos reales.
@@ -467,7 +468,7 @@ class Car {
   // la carrocería procedural desaparece. La puerta/asiento/radio siguen igual.
   _tryLoadRealModel() {
     new GLTFLoader().load(
-      `assets/cars/${this.id}.glb`,
+      assetUrl(`assets/cars/${this.id}.glb`),
       (gltf) => {
         const model = gltf.scene;
         normalizeGLTFHeight(model, this.spec.height);

@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { sampleGround } from '../world/building.js';
 import { normalizeGLTFHeight } from '../world/gltfUtils.js';
+import { assetUrl } from '../core/assetUrl.js';
 
 // Cada escena provee su propia función de altura de piso (la calle tiene
 // escalones; el shopping tiene pisos). Se asigna a `bob.sampleGround` desde
@@ -94,7 +95,7 @@ export class Player {
     this.sampleGround = sampleGround; // la escena activa puede reemplazarla
 
     new GLTFLoader().load(
-      'assets/bob/bob.glb',
+      assetUrl('assets/bob/bob.glb'),
       (gltf) => this._setupModel(gltf),
       undefined,
       () => {

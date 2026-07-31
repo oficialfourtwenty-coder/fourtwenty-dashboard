@@ -1,3 +1,5 @@
+import { assetUrl } from '../core/assetUrl.js';
+
 const ROOT_ID = 'ft-car-interior';
 const STYLE_ID = 'ft-car-interior-style';
 
@@ -114,7 +116,7 @@ export function createCarInteriorView({ onRadio, onExit } = {}) {
       root.classList.add('is-visible');
       root.setAttribute('aria-hidden', 'false');
       image.alt = `Interior de ${car.model}`;
-      image.src = config.image;
+      image.src = assetUrl(config.image);
       if (image.complete && image.naturalWidth) finishImageLoad(revision);
       return true;
     },

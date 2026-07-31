@@ -1,0 +1,44 @@
+# Reglas de cache y seguridad para Cloudflare Pages.
+# Este archivo se copia tal cual a dist/ (Vite copia todo public/ verbatim)
+# y Cloudflare lo lee del root del sitio publicado.
+#
+# La regla de oro: los archivos con nombre FIJO (bob.glb, un tema de música)
+# no pueden ser "immutable", porque si el dueño los reemplaza la URL no cambia
+# y el navegador se quedaría con el viejo para siempre. Solo los bundles que
+# Vite genera con hash en el nombre son inmutables de verdad.
+
+# --- JS/CSS con hash generado por Vite: sí son inmutables ---
+/assets/*.js
+  Cache-Control: public, max-age=31536000, immutable
+/assets/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+# --- Media pesada: cache larga pero revalidable ---
+# Un día en el navegador; el borde de Cloudflare igual la sirve rápido.
+/assets/musica/*
+  Cache-Control: public, max-age=86400
+/assets/furniture/*
+  Cache-Control: public, max-age=86400
+/assets/cars/*
+  Cache-Control: public, max-age=86400
+/assets/bob/*
+  Cache-Control: public, max-age=86400
+/assets/models/*
+  Cache-Control: public, max-age=86400
+/assets/ui/*
+  Cache-Control: public, max-age=86400
+/assets/prendas/*
+  Cache-Control: public, max-age=86400
+
+# --- Datos: cambian cuando el dueño edita, nunca cachear ---
+/assets/data/*
+  Cache-Control: no-cache
+/assets/layouts/*
+  Cache-Control: no-cache
+# (playlists.json no necesita regla: musicPlayer.js ya lo pide con cache:'no-store')
+
+# --- Seguridad básica en todo el sitio ---
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN

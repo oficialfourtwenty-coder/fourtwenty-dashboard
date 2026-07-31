@@ -12,14 +12,17 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { normalizeGLTFHeight } from './gltfUtils.js';
+import { assetUrl } from '../core/assetUrl.js';
 
 const loader = new GLTFLoader();
 const cache = new Map(); // evita cargar el mismo GLB dos veces si se repite
 
+// La clave del cache es la ruta del repo ('assets/furniture/x.glb'), no la URL
+// final: así el cache sigue funcionando igual esté o no activado R2.
 function loadOnce(path) {
   if (!cache.has(path)) {
     cache.set(path, new Promise((resolve, reject) => {
-      loader.load(path, resolve, undefined, reject);
+      loader.load(assetUrl(path), resolve, undefined, reject);
     }));
   }
   return cache.get(path);

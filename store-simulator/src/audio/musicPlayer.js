@@ -9,7 +9,11 @@
 //
 // ⚠️ Derechos: en la playlist de Fer van artistas locales CON PERMISO. Guardar
 // el permiso por escrito de cada uno (ver PLAN MAESTRO en Notion).
+import { assetUrl } from '../core/assetUrl.js';
 
+// El manifiesto es un JSON chico y parte del deploy: viaja siempre con el
+// sitio. Los MP3/WAV en cambio son el bloque más pesado del proyecto y son los
+// primeros candidatos a mudarse a R2 → por eso pasan por assetUrl().
 const MANIFEST_URL = 'assets/musica/playlists.json';
 const TRACK_BASE = 'assets/musica/';
 const DEFAULT_VOLUME = 0.55;
@@ -82,7 +86,7 @@ export function createMusicPlayer() {
     const track = list.temas[index];
     if (!track) return Promise.resolve(false);
     current = { playlistId, index };
-    audio.src = TRACK_BASE + track.archivo;
+    audio.src = assetUrl(TRACK_BASE + track.archivo);
     audio.preload = 'auto';
     return audio.play()
       .then(() => { notify(); return true; })
