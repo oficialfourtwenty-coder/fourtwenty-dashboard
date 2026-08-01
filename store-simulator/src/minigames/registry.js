@@ -20,7 +20,7 @@
 const LOADERS = {
   1: loadBobsMaze, // ORIGEN
   2: loadBobsMaze, // HOOP SEASON  → futuro: básquet
-  3: loadBobsMaze, // CULTURA
+  3: loadFtGrow,   // CULTURA      → FT GROW
   4: loadBobsMaze, // BOB
   5: loadBobsMaze, // TERRAZA
 };
@@ -28,6 +28,25 @@ const LOADERS = {
 async function loadBobsMaze() {
   const { createBobsMazeGame } = await import('./bobsMaze.js');
   return createBobsMazeGame;
+}
+
+async function loadFtGrow() {
+  const { createFtGrowGame } = await import('./ftGrow.js');
+  return createFtGrowGame;
+}
+
+// Nombre que muestra el cartel "E · JUGAR ..." al acercarse al arcade. Vive acá
+// para que agregar un juego sea un solo lugar a tocar.
+const NAMES = {
+  1: "BOB'S MAZE",
+  2: "BOB'S MAZE",
+  3: 'FT GROW',
+  4: "BOB'S MAZE",
+  5: "BOB'S MAZE",
+};
+
+export function getMinigameName(destinationId) {
+  return NAMES[Number(destinationId)] ?? 'MINIJUEGO';
 }
 
 // Un juego ya descargado no se vuelve a pedir: la segunda partida abre al toque.

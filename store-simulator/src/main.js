@@ -40,7 +40,7 @@ import { createPhone } from './ui/phone.js';
 import { initMobileControls } from './ui/mobileControls.js';
 import { createDayNightCycle } from './world/dayNightCycle.js';
 import { createMinigameManager } from './minigames/minigameManager.js';
-import { loadMinigame } from './minigames/registry.js';
+import { loadMinigame, getMinigameName } from './minigames/registry.js';
 
 const QUALITY = new URLSearchParams(location.search).get('q') === 'low' ? 'low' : 'high';
 
@@ -709,7 +709,7 @@ function updateHover() {
     arcade.setHighlighted(arcadeHovered);
     canvas.style.cursor = arcadeHovered ? 'pointer' : 'default';
     shirtTip.style.display = 'block';
-    shirtTip.textContent = "E · JUGAR BOB'S MAZE";
+    shirtTip.textContent = `E · JUGAR ${getMinigameName(currentDestinationId)}`;
     return;
   }
   if (world === 'street' && twentyTimeInteract?.canInteract(bob.position)) {
