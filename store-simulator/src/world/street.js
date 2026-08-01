@@ -300,7 +300,7 @@ export function buildStreet(scene) {
   g.add(railGroup);
 
   // ---- Límites invisibles (spec 02): cordón + 2 extremos + fondo -----------
-  colliders.push({ minX: -MAP_HALF_X - 0.5, maxX: MAP_HALF_X + 0.5, minY: 0, maxY: 3, minZ: MAP_MAX_Z, maxZ: MAP_MAX_Z + 0.4 }); // fondo calle
+  colliders.push({ minX: -MAP_HALF_X - 0.5, maxX: MAP_HALF_X + 0.5, minY: 0, maxY: 3, minZ: MAP_MAX_Z, maxZ: MAP_MAX_Z + 0.4, missionDisabled: true }); // fondo calle
   colliders.push({ minX: -MAP_HALF_X - 0.5, maxX: -MAP_HALF_X - 0.1, minY: 0, maxY: 4, minZ: MAP_MIN_Z, maxZ: MAP_MAX_Z }); // izq
   colliders.push({ minX: MAP_HALF_X + 0.1, maxX: MAP_HALF_X + 0.5, minY: 0, maxY: 4, minZ: MAP_MIN_Z, maxZ: MAP_MAX_Z });   // der
   colliders.push({ minX: -MAP_HALF_X - 0.5, maxX: MAP_HALF_X + 0.5, minY: 0, maxY: 4, minZ: MAP_MIN_Z - 0.4, maxZ: MAP_MIN_Z }); // fondo

@@ -259,8 +259,25 @@ const minigameManager = createMinigameManager({
 // aprieta el botón (después queda cacheado en registry.js) y recién ahí se le
 // pasa al manager una factory ya resuelta.
 let minigameOpening = false;
+const PACKAGE_MISSION_DESTINATION_ID = 4;
+const PACKAGE_MISSION_NAME = 'PAQUETE A LA ESTACION';
+let packageMissionOpening = false;
+let packageMissionClosing = false;
+let activePackageMission = null;
+let packageMissionReturnState = null;
+
+function isPackageMissionOpen() {
+  return Boolean(activePackageMission);
+}
+
+function getArcadeActivityName(destinationId) {
+  return Number(destinationId) === PACKAGE_MISSION_DESTINATION_ID
+    ? PACKAGE_MISSION_NAME
+    : getMinigameName(destinationId);
+}
+
 async function openMinigameFor(destinationId) {
-  if (minigameOpening || minigameManager.isOpen()) return false;
+  if (minigameOpening || minigameManager.isOpen() || packageMissionOpening || isPackageMissionOpen()) return false;
   minigameOpening = true;
   try {
     const createGame = await loadMinigame(destinationId);
@@ -271,6 +288,13 @@ async function openMinigameFor(destinationId) {
   } finally {
     minigameOpening = false;
   }
+}
+
+function openArcadeActivity(destinationId) {
+  if (Number(destinationId) === PACKAGE_MISSION_DESTINATION_ID) {
+    return startPackageStationMission();
+  }
+  return openMinigameFor(destinationId);
 }
 const streetElevator = new ElevatorController(scene, {
   id: 'elevator-street',
@@ -298,14 +322,14 @@ const productClicks = initProductClicks({
   getScene: () => activeScene,
   isBlocked: () => loading || elevatorPanel.isVisible() || worldEditor.isEnabled()
     || minigameManager.isOpen() || !!twentyTimeInteract?.isOpen() || !!carInteract?.isRadioOpen()
-    || !!phone?.isOpen() || !!adminPanel?.isOpen(),
+    || !!phone?.isOpen() || !!adminPanel?.isOpen() || isPackageMissionOpen(),
   onAddToCart: (product) => cart.add(product),
 });
 // ADMIN de prendas (tecla P; en build online requiere ?admin=1): carga manual
 // de imagen/nombre/precio/descripcion/link por percha — ver src/ui/adminPanel.js
 adminPanel = initAdminPanel({
   isBlocked: () => worldEditor.isEnabled() || minigameManager.isOpen()
-    || !!twentyTimeInteract?.isOpen() || !!phone?.isOpen(), // el editor usa P para "grupo padre"
+    || !!twentyTimeInteract?.isOpen() || !!phone?.isOpen() || isPackageMissionOpen(), // el editor usa P para "grupo padre"
 });
 window.__adminPanel = adminPanel;
 
@@ -325,7 +349,8 @@ carInteract = initCarInteract({
   music,
   isBlocked: () => loading || elevatorPanel.isVisible() || worldEditor.isEnabled()
     || minigameManager.isOpen() || !!twentyTimeInteract?.isOpen() || !!phone?.isOpen()
-    || !!adminPanel?.isOpen() || productClicks.panel.isOpen() || world !== 'street',
+    || !!adminPanel?.isOpen() || productClicks.panel.isOpen() || world !== 'street'
+    || isPackageMissionOpen(),
 });
 
 // TWENTY TIME: el lector se ancla a los nodos B54_M06/B54_M07 del puesto GLB.
@@ -335,7 +360,8 @@ twentyTimeInteract = initTwentyTimeInteract({
   getScene: () => activeScene,
   isBlocked: () => loading || elevatorPanel.isVisible() || worldEditor.isEnabled()
     || minigameManager.isOpen() || !!phone?.isOpen() || !!adminPanel?.isOpen()
-    || productClicks.panel.isOpen() || !!carInteract?.isRadioOpen() || world !== 'street',
+    || productClicks.panel.isOpen() || !!carInteract?.isRadioOpen() || world !== 'street'
+    || isPackageMissionOpen(),
   onOpenChange: () => {
     input.keys.clear();
     input.clearVirtualAxes();
@@ -351,7 +377,7 @@ phone = createPhone({
   clock: dayNight,
   isBlocked: () => loading || elevatorPanel.isVisible() || worldEditor.isEnabled()
     || minigameManager.isOpen() || !!twentyTimeInteract?.isOpen()
-    || !!adminPanel?.isOpen() || productClicks.panel.isOpen(),
+    || !!adminPanel?.isOpen() || productClicks.panel.isOpen() || isPackageMissionOpen(),
   onBeforeOpen: () => {
     carInteract?.closeRadio();
     input.keys.clear();
@@ -445,7 +471,7 @@ function registerDestinationEditables(record) {
       id: record.destination.id === 1
         ? 'origin-minigame-arcade'
         : `destination-${record.destination.id}-minigame-arcade`,
-      name: "Arcade BOB'S MAZE (mover completo)",
+      name: `Arcade ${getArcadeActivityName(record.destination.id)} (mover completo)`,
       type: 'minigame',
       object3D: record.minigameArcade.root,
       manageShadows: false,
@@ -592,6 +618,14 @@ function rebuildDestinationColliders(record) {
 }
 
 function currentPlayerColliders() {
+  if (isPackageMissionOpen()) {
+    streetRuntimeColliders.length = 0;
+    for (const collider of streetColliders) {
+      if (!collider.missionDisabled) streetRuntimeColliders.push(collider);
+    }
+    streetRuntimeColliders.push(...activePackageMission.getColliders());
+    return streetRuntimeColliders;
+  }
   if (world !== 'street') {
     if (activeDestinationRecord?.collidersDirty) rebuildDestinationColliders(activeDestinationRecord);
     destinationRuntimeColliders.length = 0;
@@ -620,6 +654,7 @@ function currentPlayerColliders() {
 // pisa nada de lo que ya funcionaba: solo suma altura cuando hay un escalón
 // real debajo, nunca resta.
 function streetSampleGroundWithSteps(x, z) {
+  if (isPackageMissionOpen()) return activePackageMission.sampleGround(x, z);
   const base = streetSampleGround(x, z);
   if (world !== 'street' || !streetRuntimeSteppables.length) return base;
   const stepped = sampleStepHeight(x, z, bob.position.y, streetRuntimeSteppables);
@@ -680,7 +715,7 @@ canvas.addEventListener('pointermove', (e) => {
 canvas.addEventListener('click', (event) => {
   if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()
     || minigameManager.isOpen() || twentyTimeInteract?.isOpen() || adminPanel?.isOpen()
-    || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) return;
+    || productClicks.panel.isOpen() || carInteract?.isRadioOpen() || isPackageMissionOpen()) return;
   pointerNdc.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
   raycaster.setFromCamera(pointerNdc, camera);
   if (world === 'street' && twentyTimeInteract?.interactFromRay(raycaster, bob.position)) return;
@@ -696,7 +731,7 @@ canvas.addEventListener('click', (event) => {
 function updateHover() {
   if (loading || elevatorPanel.isVisible() || phone?.isOpen() || minigameManager.isOpen()
     || twentyTimeInteract?.isOpen() || adminPanel?.isOpen()
-    || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) {
+    || productClicks.panel.isOpen() || carInteract?.isRadioOpen() || isPackageMissionOpen()) {
     clearShirtHover();
     return;
   }
@@ -709,7 +744,7 @@ function updateHover() {
     arcade.setHighlighted(arcadeHovered);
     canvas.style.cursor = arcadeHovered ? 'pointer' : 'default';
     shirtTip.style.display = 'block';
-    shirtTip.textContent = `E · JUGAR ${getMinigameName(currentDestinationId)}`;
+    shirtTip.textContent = `E · JUGAR ${getArcadeActivityName(currentDestinationId)}`;
     return;
   }
   if (world === 'street' && twentyTimeInteract?.canInteract(bob.position)) {
@@ -755,7 +790,7 @@ function clearShirtHover() {
 
 function callActiveElevator() {
   if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()
-    || minigameManager.isOpen() || twentyTimeInteract?.isOpen()) return;
+    || minigameManager.isOpen() || twentyTimeInteract?.isOpen() || isPackageMissionOpen()) return;
   activeElevator.call();
 }
 
@@ -763,7 +798,7 @@ function callActiveElevator() {
 function interactNearest() {
   if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()
     || minigameManager.isOpen() || twentyTimeInteract?.isOpen() || adminPanel?.isOpen()
-    || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) return false;
+    || productClicks.panel.isOpen() || carInteract?.isRadioOpen() || isPackageMissionOpen()) return false;
   if (carInteract?.getCurrentCar() && carInteract.interact(bob.position)) return true;
   if (activeElevator?.isNearCallButton(bob.position)) {
     callActiveElevator();
@@ -779,7 +814,7 @@ function interactNearest() {
 function hasNearbyInteraction() {
   if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()
     || minigameManager.isOpen() || twentyTimeInteract?.isOpen() || adminPanel?.isOpen()
-    || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) return false;
+    || productClicks.panel.isOpen() || carInteract?.isRadioOpen() || isPackageMissionOpen()) return false;
   return !!carInteract?.getCurrentCar()
     || !!activeElevator?.isNearCallButton(bob.position)
     || !!carInteract?.canInteract(bob.position)
@@ -1036,7 +1071,7 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let travelling = false;
 
 async function handleElevatorEntered(elevator) {
-  if (loading || elevator !== activeElevator) return;
+  if (loading || elevator !== activeElevator || isPackageMissionOpen()) return;
   phone?.hide();
   loading = true;
   input.keys.clear();
@@ -1082,7 +1117,7 @@ function activateDestination(destinationId) {
       environment: envTex,
       shadows: QUALITY === 'high' && !downgraded,
       onElevatorEnter: handleElevatorEntered,
-      onArcadeInteract: () => openMinigameFor(destination.id),
+      onArcadeInteract: () => openArcadeActivity(destination.id),
     });
     activeDestinationRecord.scene.add(bob.rig, bob.shadow);
     activeScene = activeDestinationRecord.scene;
@@ -1114,7 +1149,7 @@ function activateDestination(destinationId) {
 
 async function travelToDestination(destinationId) {
   const destination = getDestination(destinationId);
-  if (!destination || travelling) return;
+  if (!destination || travelling || isPackageMissionOpen()) return;
   travelling = true;
   phone?.hide();
   loading = true;
@@ -1137,6 +1172,119 @@ async function travelToDestination(destinationId) {
   }
 }
 
+function getStationMissionPosition() {
+  const stationEntry = getEditableObjects().find((entry) => entry.id === 'furniture:tram-station-base');
+  if (!stationEntry?.object3D || !isEditableEffectivelyVisible(stationEntry.id)) {
+    return new THREE.Vector3(-12.9, -6, 75.6);
+  }
+  stationEntry.object3D.updateWorldMatrix(true, false);
+  return stationEntry.object3D.getWorldPosition(new THREE.Vector3());
+}
+
+function restorePackageMissionReturnState() {
+  if (!packageMissionReturnState) return;
+  const snapshot = packageMissionReturnState;
+  packageMissionReturnState = null;
+  activateDestination(snapshot.destinationId);
+  bob.position.copy(snapshot.position);
+  bob.velocity.set(0, 0, 0);
+  bob.vy = 0;
+  bob.modelYaw = snapshot.modelYaw;
+  bob.rig.rotation.y = snapshot.modelYaw;
+  bob.shadow.position.set(bob.position.x, bob.position.y + 0.02, bob.position.z);
+  tpCam.yaw = snapshot.cameraYaw;
+  tpCam.targetYaw = snapshot.cameraTargetYaw;
+  tpCam.focus.set(bob.position.x, bob.position.y + 1.15, bob.position.z);
+  tpCam._first = true;
+}
+
+async function startPackageStationMission() {
+  if (packageMissionOpening || packageMissionClosing || isPackageMissionOpen()
+    || minigameManager.isOpen() || loading || travelling
+    || currentDestinationId !== PACKAGE_MISSION_DESTINATION_ID) return false;
+
+  packageMissionOpening = true;
+  loading = true;
+  input.keys.clear();
+  input.clearVirtualAxes();
+  clearShirtHover();
+  worldEditor.setEnabled(false);
+  packageMissionReturnState = {
+    destinationId: currentDestinationId,
+    position: bob.position.clone(),
+    modelYaw: bob.modelYaw,
+    cameraYaw: tpCam.yaw,
+    cameraTargetYaw: tpCam.targetYaw,
+  };
+
+  try {
+    const missionModule = import('./missions/packageStationMission.js');
+    const [{ createPackageStationMission }] = await Promise.all([
+      missionModule,
+      elevatorPanel.fadeToBlack(450),
+    ]);
+
+    activateDestination(0);
+    activePackageMission = createPackageStationMission({
+      scene,
+      camera,
+      canvas,
+      player: bob,
+      stationPosition: getStationMissionPosition(),
+      onExit: exitPackageStationMission,
+    });
+    document.body.classList.add('package-station-mission-open');
+    activePackageMission.mount();
+    bob.sampleGround = activePackageMission.sampleGround;
+    tpCam.bounds = activePackageMission.getBounds();
+    tpCam.yaw = Math.PI;
+    tpCam.targetYaw = Math.PI;
+    tpCam._first = true;
+    activePackageMission.start();
+    lastZone = null;
+    renderer.shadowMap.needsUpdate = true;
+    await elevatorPanel.fadeFromBlack(450);
+    return true;
+  } catch (error) {
+    console.error('No se pudo iniciar la mision del paquete.', error);
+    activePackageMission?.destroy();
+    activePackageMission = null;
+    document.body.classList.remove('package-station-mission-open');
+    restorePackageMissionReturnState();
+    await elevatorPanel.fadeFromBlack(250);
+    return false;
+  } finally {
+    loading = false;
+    packageMissionOpening = false;
+  }
+}
+
+async function exitPackageStationMission() {
+  if (!isPackageMissionOpen() || packageMissionClosing) return false;
+  packageMissionClosing = true;
+  loading = true;
+  input.keys.clear();
+  input.clearVirtualAxes();
+
+  try {
+    await elevatorPanel.fadeToBlack(350);
+    activePackageMission.destroy();
+    activePackageMission = null;
+    document.body.classList.remove('package-station-mission-open');
+    restorePackageMissionReturnState();
+    lastZone = null;
+    renderer.shadowMap.needsUpdate = true;
+    await elevatorPanel.fadeFromBlack(350);
+    return true;
+  } catch (error) {
+    console.error('No se pudo cerrar la mision del paquete.', error);
+    return false;
+  } finally {
+    loading = false;
+    packageMissionClosing = false;
+  }
+}
+
 window.__elevatorTest = {
   call: () => activeElevator.call(),
   openAndBoard: async () => {
@@ -1146,7 +1294,7 @@ window.__elevatorTest = {
   travelTo: (destinationId) => travelToDestination(destinationId),
   openFirstProduct: () => productClicks.openFirst(),
   openOriginMinigame: () => (currentDestinationId > 0
-    ? openMinigameFor(currentDestinationId)
+    ? openArcadeActivity(currentDestinationId)
     : Promise.resolve(false)),
   getState: () => ({
     destinationId: currentDestinationId,
@@ -1156,6 +1304,7 @@ window.__elevatorTest = {
     productPanelVisible: productClicks.panel.isOpen(),
     phoneOpen: phone?.isOpen() ?? false,
     minigameOpen: minigameManager.isOpen(),
+    packageMissionOpen: isPackageMissionOpen(),
     arcadePresent: Boolean(activeDestinationRecord?.minigameArcade?.root?.parent),
     destinationStructureColliders: activeDestinationRecord?.dynamicColliders?.length ?? 0,
     cartCount: cart.getState().count,
@@ -1171,6 +1320,25 @@ window.__elevatorTest = {
   }),
 };
 
+window.__packageMissionTest = {
+  start: async () => {
+    if (currentDestinationId !== PACKAGE_MISSION_DESTINATION_ID) {
+      await travelToDestination(PACKAGE_MISSION_DESTINATION_ID);
+    }
+    return startPackageStationMission();
+  },
+  exit: () => exitPackageStationMission(),
+  getState: () => activePackageMission?.getState() ?? { active: false },
+  teleportToPackage: () => {
+    const target = activePackageMission?.getState().package;
+    if (target) bob.position.fromArray(target);
+  },
+  teleportToDelivery: () => {
+    const target = activePackageMission?.getState().delivery;
+    if (target) bob.position.fromArray(target);
+  },
+};
+
 function initElevatorTestControls() {
   const params = new URLSearchParams(location.search);
   if (params.get('elevatorTest') !== '1' || params.get('debugUi') !== '1') return null;
@@ -1181,6 +1349,10 @@ function initElevatorTestControls() {
     <button type="button" data-action="board" data-testid="elevator-test-board">BOARD</button>
     ${ELEVATOR_DESTINATIONS.map((destination) => `<button type="button" data-destination="${destination.id}" data-testid="elevator-test-go-${destination.id}">${destination.id}</button>`).join('')}
     <button type="button" data-action="product" data-testid="elevator-test-product">PRODUCTO</button>
+    <button type="button" data-action="mission" data-testid="mission-test-start">MISION</button>
+    <button type="button" data-action="mission-package" data-testid="mission-test-package">PAQUETE</button>
+    <button type="button" data-action="mission-delivery" data-testid="mission-test-delivery">ESTACION</button>
+    <button type="button" data-action="mission-exit" data-testid="mission-test-exit">SALIR MISION</button>
     <output id="elevator-test-state"></output>
   `;
   root.addEventListener('click', (event) => {
@@ -1189,6 +1361,10 @@ function initElevatorTestControls() {
     if (button.dataset.action === 'call') window.__elevatorTest.call();
     else if (button.dataset.action === 'board') window.__elevatorTest.openAndBoard();
     else if (button.dataset.action === 'product') window.__elevatorTest.openFirstProduct();
+    else if (button.dataset.action === 'mission') window.__packageMissionTest.start();
+    else if (button.dataset.action === 'mission-package') window.__packageMissionTest.teleportToPackage();
+    else if (button.dataset.action === 'mission-delivery') window.__packageMissionTest.teleportToDelivery();
+    else if (button.dataset.action === 'mission-exit') window.__packageMissionTest.exit();
     else if (button.dataset.destination !== undefined) window.__elevatorTest.travelTo(Number(button.dataset.destination));
   });
   document.body.append(root);
@@ -1236,13 +1412,18 @@ renderer.setAnimationLoop(() => {
   const phoneOpen = !!phone?.isOpen();
   const minigameOpen = minigameManager.isOpen();
   const twentyTimeOpen = !!twentyTimeInteract?.isOpen();
-  if (!loading && !editorActive && !seated && !phoneOpen && !minigameOpen && !twentyTimeOpen) {
+  const packageMissionOpen = isPackageMissionOpen();
+  const packageMissionPlaying = activePackageMission?.isPlaying() ?? false;
+  if (!loading && !editorActive && !seated && !phoneOpen && !minigameOpen && !twentyTimeOpen
+    && (!packageMissionOpen || packageMissionPlaying)) {
     bob.update(dt, input, tpCam.yaw, currentPlayerColliders(), camera.position);
   }
+  activePackageMission?.update(dt);
   carInteract?.update(dt); // puertas de los autos + BOB pegado a la butaca
   activeElevator?.update(dt, bob.position);
   const mobileSuppressed = loading || elevatorPanel.isVisible() || editorActive
-    || minigameOpen || twentyTimeOpen || !!adminPanel?.isOpen() || productClicks.panel.isOpen();
+    || minigameOpen || twentyTimeOpen || packageMissionOpen
+    || !!adminPanel?.isOpen() || productClicks.panel.isOpen();
   if (elapsed >= nextMobileInteractionCheck) {
     mobileInteractionAvailable = hasNearbyInteraction();
     nextMobileInteractionCheck = elapsed + 0.15;
@@ -1255,14 +1436,20 @@ renderer.setAnimationLoop(() => {
   });
   // E: adentro del auto abre la radio (lo maneja carInteract), afuera es el
   // pulsador del ascensor. Se consume igual para que no quede trabado.
-  if (editorActive || seated || phoneOpen || minigameOpen || twentyTimeOpen) input.consumeInteract();
+  if (editorActive || seated || phoneOpen || minigameOpen || twentyTimeOpen || packageMissionOpen) input.consumeInteract();
   else if (input.consumeInteract()) interactNearest(); // E = boton exterior del ascensor
-  if (editorActive || phoneOpen || minigameOpen || twentyTimeOpen) clearShirtHover();
+  if (editorActive || phoneOpen || minigameOpen || twentyTimeOpen || packageMissionOpen) clearShirtHover();
   else updateHover();      // feedback del pulsador bajo el mouse
   tickAmbient(dt);         // displays giratorios
 
   let floorY, ceiling, zoneName;
-  if (world === 'street') {
+  if (packageMissionOpen) {
+    zoneName = 'MISION · ENTREGA';
+    tpCam.bounds = activePackageMission.getBounds();
+    floorY = activePackageMission.sampleGround(bob.position.x, bob.position.z);
+    ceiling = 10;
+    hud.setZone(zoneName);
+  } else if (world === 'street') {
     const inside = isInsideLocal(bob.position);
     zoneName = inside ? 'FOURTWENTY' : 'CALLE BURELA';
     // adentro: cámara acotada al local, techo bajo; afuera: cielo abierto.
