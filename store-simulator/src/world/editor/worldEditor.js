@@ -627,7 +627,8 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   }
 
   function onKeyDown(event) {
-    if (document.body.classList.contains('elevator-panel-open')) return;
+    if (document.body.classList.contains('elevator-panel-open')
+      || document.body.classList.contains('twenty-time-open')) return;
     const typing = isTypingTarget(event.target);
     // T (pedido del dueño) o Tab: entrar/salir del modo editor
     if ((event.code === 'KeyT' || event.code === 'Tab') && !typing && !event.metaKey && !event.ctrlKey) {
