@@ -12,8 +12,9 @@ producto que no esten escritas aqui.
 - Repositorio: `oficialfourtwenty-coder/fourtwenty-dashboard`.
 - Raiz local de Kusher: `/Users/kusher/Desktop/fourtwenty-dashboard`.
 - Aplicacion: `store-simulator/`.
-- Rama oficial actual: `version-jueves-30`.
-- `version-jueves-30` es un nombre historico de rama, no una fecha limite.
+- Rama oficial actual: `version-final-final-final`.
+- Respaldo anterior a todo el trabajo de esta noche: `version-jueves-30` en
+  `234e8e2`. No desarrollar sobre ese respaldo salvo pedido de Kusher.
 - Ultimo checkpoint funcional incluido antes de esta actualizacion documental:
   `e6123bc` (`feat(simulator): add per-floor environment drop folders`).
 - Bitacora detallada vigente:
@@ -27,13 +28,15 @@ producto que no esten escritas aqui.
 - La rama remota `migracion-cloudflare` es una propuesta separada, todavia no
   integrada a la version oficial.
 - Si GitHub y Notion difieren sobre archivos, ramas o commits, manda GitHub.
-  Notion explica vision, decisiones y calendario.
+  Notion explica vision, decisiones y prioridades flexibles.
 
 Antes de tocar codigo:
 
 ```bash
 cd /Users/kusher/Desktop/fourtwenty-dashboard
 git status --short --branch
+git fetch origin
+git switch version-final-final-final
 git pull --ff-only
 ```
 
@@ -385,7 +388,7 @@ checkout Tiendanube hasta completar la prueba y validacion oficial.
 
 ```bash
 cd /Users/kusher/Desktop/fourtwenty-dashboard
-git switch version-jueves-30
+git switch version-final-final-final
 git pull --ff-only
 cd store-simulator
 npm install

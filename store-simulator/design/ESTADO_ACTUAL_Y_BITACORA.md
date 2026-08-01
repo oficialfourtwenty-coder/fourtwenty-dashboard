@@ -21,9 +21,9 @@ colaborador antes de proponer cambios.
 
 - Repositorio: `oficialfourtwenty-coder/fourtwenty-dashboard`.
 - Aplicacion: `store-simulator/`.
-- Rama oficial: `version-jueves-30`.
-- El nombre de la rama es historico. No representa una fecha limite ni una
-  version vieja por el solo hecho de llamarse asi.
+- Rama oficial: `version-final-final-final`.
+- Respaldo anterior a esta sesion: `version-jueves-30` en `234e8e2`.
+- No integrar automaticamente cambios en el respaldo ni usarlo como base nueva.
 - Checkpoint de codigo que contiene todo el trabajo funcional de esta bitacora:
   `e6123bc`.
 - El commit documental que publique este archivo puede ser posterior.
