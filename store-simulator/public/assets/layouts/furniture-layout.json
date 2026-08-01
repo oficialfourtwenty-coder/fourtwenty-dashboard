@@ -1,5 +1,83 @@
 [
   {
+    "id": "elevator-street",
+    "name": "Ascensor FOURTWENTY (mover completo)",
+    "type": "elevator",
+    "model": "",
+    "position": [
+      0,
+      0,
+      3
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "car-up-luca",
+    "name": "Volkswagen up! Pepper TSI — Luca (mover completo)",
+    "type": "car",
+    "model": "",
+    "position": [
+      -7.2,
+      0,
+      9.05
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "car-corolla-fer",
+    "name": "Toyota Corolla 2019 SLINE — Fer (mover completo)",
+    "type": "car",
+    "model": "",
+    "position": [
+      6.4,
+      0,
+      9.05
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
     "id": "calle-kit:0",
     "name": "Calle Burela · asfalto",
     "type": "calle-kit",
@@ -3221,7 +3299,8 @@
     "receiveShadow": true,
     "locked": false,
     "visible": false,
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.42",
@@ -3247,7 +3326,8 @@
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.43",
@@ -3273,7 +3353,8 @@
     "receiveShadow": true,
     "locked": false,
     "visible": false,
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.44",
@@ -3299,7 +3380,8 @@
     "receiveShadow": true,
     "locked": false,
     "visible": false,
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.45",
@@ -3351,7 +3433,8 @@
     "receiveShadow": true,
     "locked": false,
     "visible": false,
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.47",
@@ -3377,7 +3460,8 @@
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.48",
@@ -3403,7 +3487,8 @@
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.49",
@@ -3429,7 +3514,8 @@
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.50",
@@ -5018,6 +5104,84 @@
     "manageShadows": false
   },
   {
+    "id": "calle-kit:49.87",
+    "name": "Interior local · interruptor rosa luces blancas",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.86,
+      1.7,
+      -5.2
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:50",
+    "name": "Sol dinamico",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -27.480341682827135,
+      -80.43525856858467,
+      6
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:51",
+    "name": "Luna dinamica",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -27.480341682827138,
+      80.43525856858467,
+      6
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
     "id": "calle-kit:1-copia-1",
     "name": "Vereda gris frente al local (copia)",
     "type": "calle-kit",
@@ -6338,7 +6502,8 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.47-copia-2",
@@ -6365,7 +6530,8 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.47-copia-3",
@@ -6392,7 +6558,8 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.47-copia-4",
@@ -6419,7 +6586,8 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.47-copia-5",
@@ -6446,7 +6614,8 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.47-copia-6",
@@ -6473,7 +6642,8 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.47-copia-7",
@@ -6500,7 +6670,8 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.47-copia-8",
@@ -6527,7 +6698,8 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.47-copia-9",
@@ -6554,7 +6726,8 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false
+    "manageShadows": false,
+    "lightRange": 2
   },
   {
     "id": "calle-kit:49.35-copia-2",
@@ -7907,6 +8080,89 @@
     "manageShadows": false
   },
   {
+    "id": "furniture:b54-simulator-base",
+    "name": "B54 FTT Lowpoly Simulator",
+    "type": "furniture",
+    "model": "assets/furniture/b54-ftt-lowpoly-simulator.glb",
+    "position": [
+      -14,
+      0,
+      18
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 6,
+    "collidable": false
+  },
+  {
+    "id": "furniture:city-map-base",
+    "name": "City Map Free · Mapa de ciudad",
+    "type": "furniture",
+    "model": "assets/furniture/city-map-free.glb",
+    "position": [
+      0,
+      -0.2,
+      42
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 5,
+    "collidable": false
+  },
+  {
+    "id": "furniture:city-map-base-copia-1",
+    "name": "City Map Free · Mapa de ciudad (copia)",
+    "type": "furniture",
+    "model": "assets/furniture/city-map-free.glb",
+    "position": [
+      4.36913991499072e-15,
+      -8.881784197001252e-16,
+      -15.171680499190998
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 5,
+    "collidable": false,
+    "cloneOf": "furniture:city-map-base",
+    "cloneAtSceneRoot": true
+  },
+  {
     "id": "furniture:apartment-building-mrb4ow5q",
     "name": "Edificio GLB Burela · apartment-building",
     "type": "furniture",
@@ -8035,47 +8291,20 @@
     ],
     "castShadow": false,
     "receiveShadow": true,
-    "collidable": false,
     "locked": false,
     "visible": true,
-    "height": 7
+    "height": 7,
+    "collidable": false
   },
   {
-    "id": "furniture:b54-simulator-base",
-    "name": "B54 FTT Lowpoly Simulator",
+    "id": "furniture:tram-station-base-copia-1",
+    "name": "Tram Station · Estacion de tranvia GLB (copia)",
     "type": "furniture",
-    "model": "assets/furniture/b54-ftt-lowpoly-simulator.glb",
+    "model": "assets/furniture/tram-station.glb",
     "position": [
-      -14,
+      7.105427357601002e-15,
       0,
-      18
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "collidable": false,
-    "locked": false,
-    "visible": true,
-    "height": 6
-  },
-  {
-    "id": "furniture:city-map-base",
-    "name": "City Map Free · Mapa de ciudad",
-    "type": "furniture",
-    "model": "assets/furniture/city-map-free.glb",
-    "position": [
-      0,
-      -0.2,
-      42
+      -39.46131331765864
     ],
     "rotation": [
       0,
@@ -8089,9 +8318,11 @@
     ],
     "castShadow": false,
     "receiveShadow": true,
-    "collidable": false,
     "locked": false,
     "visible": true,
-    "height": 5
+    "height": 7,
+    "collidable": false,
+    "cloneOf": "furniture:tram-station-base",
+    "cloneAtSceneRoot": true
   }
 ]
