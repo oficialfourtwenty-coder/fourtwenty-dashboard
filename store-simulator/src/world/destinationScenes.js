@@ -4,6 +4,7 @@ import { ElevatorController } from './elevator.js';
 import { createOriginArcade } from './originArcade.js';
 import { addBincoShopLights, buildBincoShopSet, buildBincoShopShell } from './bincoShopTrial.js';
 import { environmentForDestination } from './floorEnvironmentCatalog.js';
+import { buildHoopArena } from './hoopArena.js';
 
 const ROOM_W = 12;
 const BASE_ROOM_D = 9;
@@ -61,11 +62,16 @@ function buildSectionScene(destination, { environment, shadows, onElevatorEnter,
   const minigameArcade = createOriginArcade({ onInteract: onArcadeInteract });
   scene.add(minigameArcade.root);
 
+  // HOOP SEASON queda en el medio de un estadio NBA: se ve por el vidrio del
+  // frente. Es decorado procedural, sin colisión — ver hoopArena.js.
+  const arena = destination.id === 2 ? buildHoopArena(scene) : null;
+
   return {
     destination,
     scene,
     elevator,
     minigameArcade,
+    arena,
     colliders,
     dynamicColliders: [],
     collidersDirty: true,
@@ -85,6 +91,7 @@ export function disposeDestinationScene(record, player) {
   if (!record?.scene) return;
   record.scene.userData.disposed = true;
   record.elevator?.cancel();
+  record.arena?.dispose(); // las texturas de canvas del estadio no las suelta el traverse
   record.scene.remove(player.rig, player.shadow);
   record.scene.traverse((object) => {
     if (!object.isMesh) return;
