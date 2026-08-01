@@ -3,6 +3,7 @@ import { COLLECTIONS } from './collections.js';
 import { ElevatorController } from './elevator.js';
 import { createOriginArcade } from './originArcade.js';
 import { addBincoShopLights, buildBincoShopSet, buildBincoShopShell } from './bincoShopTrial.js';
+import { environmentForDestination } from './floorEnvironmentCatalog.js';
 
 const ROOM_W = 12;
 const BASE_ROOM_D = 9;
@@ -10,16 +11,6 @@ const ROOM_D = BASE_ROOM_D * 2;
 const ROOM_H = 3.4;
 const ROOM_MIN_Z = -BASE_ROOM_D / 2;
 const ROOM_MAX_Z = ROOM_MIN_Z + ROOM_D;
-
-// Una URL por piso permite cambiar cada esfera mas adelante sin tocar la escena.
-// Mientras todas usan el mismo archivo, la textura se carga una sola vez.
-const DESTINATION_ENVIRONMENTS = Object.freeze({
-  1: 'assets/environments/urban-alley-01-4k.exr',
-  2: 'assets/environments/urban-alley-01-4k.exr',
-  3: 'assets/environments/urban-alley-01-4k.exr',
-  4: 'assets/environments/urban-alley-01-4k.exr',
-  5: 'assets/environments/urban-alley-01-4k.exr',
-});
 
 export const ELEVATOR_DESTINATIONS = Object.freeze([
   { id: 0, label: 'Calle Burela', hudLabel: 'CALLE BURELA', kind: 'street' },
@@ -47,8 +38,10 @@ function buildSectionScene(destination, { environment, shadows, onElevatorEnter,
   scene.environment = environment;
   scene.environmentIntensity = 0.38;
 
+  const environmentConfig = environmentForDestination(destination.id);
+  scene.userData.environmentFile = environmentConfig.filename;
   const colliders = buildBincoShopShell(scene, {
-    environmentUrl: DESTINATION_ENVIRONMENTS[destination.id],
+    environmentConfig,
   });
   addBincoShopLights(scene, shadows);
 
@@ -99,6 +92,8 @@ export function disposeDestinationScene(record, player) {
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     for (const material of materials) material?.dispose?.();
   });
+  for (const texture of record.scene.userData.disposableEnvironmentTextures ?? []) texture.dispose();
+  record.scene.userData.disposableEnvironmentTextures?.clear();
   record.scene.clear();
 }
 
@@ -118,5 +113,6 @@ export function sceneStats(scene) {
     productFloors: [...productFloors],
     floorSize: scene?.userData?.floorSize ?? null,
     visualProfile: scene?.userData?.visualProfile ?? null,
+    environmentFile: scene?.userData?.environmentFile ?? null,
   };
 }

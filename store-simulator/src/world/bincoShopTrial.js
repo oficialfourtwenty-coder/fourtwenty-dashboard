@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
 import { bindProductVisual } from './productVisuals.js';
@@ -11,23 +12,41 @@ const ROOM_MIN_Z = -4.5;
 const ROOM_MAX_Z = 13.5;
 const ROOM_CENTER_Z = 4.5;
 const ROOM_HALF_W = ROOM_W / 2;
-const environmentTextureCache = new Map();
+const DEFAULT_ENVIRONMENT_URL = 'assets/environments/urban-alley-01-4k.exr';
+const sharedEnvironmentTextureCache = new Map();
 
-function loadEnvironmentTexture(url) {
-  if (!environmentTextureCache.has(url)) {
-    environmentTextureCache.set(url, new Promise((resolve, reject) => {
-      new EXRLoader().load(url, (texture) => {
-        texture.mapping = THREE.EquirectangularReflectionMapping;
-        texture.colorSpace = THREE.LinearSRGBColorSpace;
-        texture.generateMipmaps = false;
-        texture.minFilter = THREE.LinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        texture.needsUpdate = true;
-        resolve(texture);
-      }, undefined, reject);
-    }));
+function fileExtension(url) {
+  return String(url).split(/[?#]/)[0].split('.').pop()?.toLowerCase() ?? '';
+}
+
+function isHdrEnvironment(url) {
+  return ['hdr', 'exr'].includes(fileExtension(url));
+}
+
+function loadEquirectangularTexture(url) {
+  return new Promise((resolve, reject) => {
+    const onLoad = (texture) => {
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      texture.colorSpace = isHdrEnvironment(url) ? THREE.LinearSRGBColorSpace : THREE.SRGBColorSpace;
+      texture.generateMipmaps = false;
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.needsUpdate = true;
+      resolve(texture);
+    };
+    if (fileExtension(url) === 'exr') new EXRLoader().load(url, onLoad, undefined, reject);
+    else if (fileExtension(url) === 'hdr') new RGBELoader().load(url, onLoad, undefined, reject);
+    else new THREE.TextureLoader().load(url, onLoad, undefined, reject);
+  });
+}
+
+function loadSharedEnvironmentTexture(url) {
+  if (!sharedEnvironmentTextureCache.has(url)) {
+    const request = loadEquirectangularTexture(url);
+    request.catch(() => sharedEnvironmentTextureCache.delete(url));
+    sharedEnvironmentTextureCache.set(url, request);
   }
-  return environmentTextureCache.get(url);
+  return sharedEnvironmentTextureCache.get(url);
 }
 
 function markDestinationCollider(object) {
@@ -274,7 +293,12 @@ function addFluorescent(group, x, z, length, mats) {
   ));
 }
 
-function addEditableHdriSphere(group, scene, environmentUrl) {
+function addEditableHdriSphere(group, scene, {
+  backgroundUrl = DEFAULT_ENVIRONMENT_URL,
+  lightingUrl = DEFAULT_ENVIRONMENT_URL,
+  filename = 'urban-alley-01-4k.exr',
+  custom = false,
+} = {}) {
   const environmentRoot = new THREE.Group();
   environmentRoot.name = 'ESFERA 360 · TAMAÑO EDITABLE';
   environmentRoot.position.set(0, 1.55, ROOM_CENTER_Z);
@@ -289,28 +313,59 @@ function addEditableHdriSphere(group, scene, environmentUrl) {
     toneMapped: true,
   });
   const sphere = new THREE.Mesh(new THREE.SphereGeometry(42, 64, 32), material);
-  sphere.name = 'HDRI · Urban Alley 01 4K';
+  sphere.name = `ESFERA · ${filename}`;
   sphere.frustumCulled = false;
   sphere.renderOrder = -100;
   sphere.userData.skipShadow = true;
   environmentRoot.add(sphere);
   group.add(environmentRoot);
 
-  loadEnvironmentTexture(environmentUrl)
-    .then((texture) => {
-      if (scene.userData.disposed) return;
-      material.map = texture;
-      material.color.setHex(0xffffff);
-      material.needsUpdate = true;
+  const applyEnvironment = async () => {
+    let background;
+    let customTextureLoaded = false;
+    try {
+      background = custom
+        ? await loadEquirectangularTexture(backgroundUrl)
+        : await loadSharedEnvironmentTexture(backgroundUrl);
+      customTextureLoaded = custom;
+    } catch (error) {
+      console.warn(`No se pudo cargar la esfera ${filename}; se usara la esfera base.`, error);
+      background = await loadSharedEnvironmentTexture(DEFAULT_ENVIRONMENT_URL);
+    }
 
-      scene.environment = texture;
-      scene.environmentIntensity = 0.42;
-    })
-    .catch((error) => console.warn(`No se pudo cargar el entorno HDRI ${environmentUrl}.`, error));
+    if (scene.userData.disposed) {
+      if (customTextureLoaded) background.dispose();
+      return;
+    }
+    if (customTextureLoaded) {
+      scene.userData.disposableEnvironmentTextures ??= new Set();
+      scene.userData.disposableEnvironmentTextures.add(background);
+    }
+
+    material.map = background;
+    material.toneMapped = isHdrEnvironment(customTextureLoaded ? backgroundUrl : DEFAULT_ENVIRONMENT_URL);
+    material.color.setHex(0xffffff);
+    material.needsUpdate = true;
+
+    let lighting = background;
+    if (customTextureLoaded && lightingUrl !== backgroundUrl) {
+      try {
+        lighting = await loadSharedEnvironmentTexture(lightingUrl);
+      } catch (error) {
+        console.warn('No se pudo cargar la iluminacion de la esfera; se conserva la luz base.', error);
+        lighting = await loadSharedEnvironmentTexture(DEFAULT_ENVIRONMENT_URL);
+      }
+    }
+    if (scene.userData.disposed) return;
+    scene.environment = lighting;
+    scene.environmentIntensity = 0.42;
+  };
+
+  applyEnvironment().catch((error) => console.warn('No se pudo preparar la esfera 360.', error));
 }
 
 export function buildBincoShopShell(scene, {
-  environmentUrl = 'assets/environments/urban-alley-01-4k.exr',
+  environmentConfig,
 } = {}) {
   const group = new THREE.Group();
   group.name = 'PRUEBA BINCO · arquitectura completa';
@@ -348,7 +403,7 @@ export function buildBincoShopShell(scene, {
   const addStructure = (object) => group.add(markDestinationCollider(object));
 
   group.add(box(ROOM_W, 0.3, ROOM_D, 0, -0.15, ROOM_CENTER_Z, floorMaterial));
-  addEditableHdriSphere(group, scene, environmentUrl);
+  addEditableHdriSphere(group, scene, environmentConfig);
 
   // Frente: una columna central de ladrillo y vidrio a ambos lados.
   addStructure(box(ROOM_W, glassBottom, 0.25, 0, glassBottom / 2, ROOM_MIN_Z, brickMaterial));
