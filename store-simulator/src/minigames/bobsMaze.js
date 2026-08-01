@@ -1,7 +1,10 @@
 export const BOBS_MAZE_CONFIG = Object.freeze({
-  playerSpritePath: '/assets/minigames/bobs-maze/bob-face.png',
-  powerUpSpritePath: '/assets/minigames/bobs-maze/joint-fruit.png',
-  mapBackgroundPath: '/assets/minigames/bobs-maze/maze-420.png',
+  // WebP sin pérdida. El mapa NO se puede redimensionar ni comprimir con
+  // pérdida: el tablero (nodos amarillos y paredes) se deriva pixel por pixel
+  // de esta imagen a 960x1106, y cualquier cambio de color mueve los puntos.
+  playerSpritePath: '/assets/minigames/bobs-maze/bob-face.webp',
+  powerUpSpritePath: '/assets/minigames/bobs-maze/joint-fruit.webp',
+  mapBackgroundPath: '/assets/minigames/bobs-maze/maze-420.webp',
   dotSpritePath: null,
   villainsSpriteSheetPath: null,
   villainSheetColumns: 4,

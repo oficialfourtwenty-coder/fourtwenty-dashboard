@@ -40,7 +40,7 @@ import { createPhone } from './ui/phone.js';
 import { initMobileControls } from './ui/mobileControls.js';
 import { createDayNightCycle } from './world/dayNightCycle.js';
 import { createMinigameManager } from './minigames/minigameManager.js';
-import { createBobsMazeGame } from './minigames/bobsMaze.js';
+import { loadMinigame } from './minigames/registry.js';
 
 const QUALITY = new URLSearchParams(location.search).get('q') === 'low' ? 'low' : 'high';
 
@@ -254,6 +254,24 @@ const minigameManager = createMinigameManager({
     clearShirtHover();
   },
 });
+
+// Abre el minijuego del piso pedido. El chunk se baja la primera vez que alguien
+// aprieta el botón (después queda cacheado en registry.js) y recién ahí se le
+// pasa al manager una factory ya resuelta.
+let minigameOpening = false;
+async function openMinigameFor(destinationId) {
+  if (minigameOpening || minigameManager.isOpen()) return false;
+  minigameOpening = true;
+  try {
+    const createGame = await loadMinigame(destinationId);
+    // Mientras bajaba el chunk el jugador pudo abrir el celular, el editor o
+    // subirse al ascensor: en ese caso ya no corresponde abrir el juego.
+    if (!createGame || minigameManager.isOpen() || currentDestinationId !== destinationId) return false;
+    return minigameManager.show(() => createGame());
+  } finally {
+    minigameOpening = false;
+  }
+}
 const streetElevator = new ElevatorController(scene, {
   id: 'elevator-street',
   name: 'Ascensor FOURTWENTY · Calle Burela',
@@ -1064,7 +1082,7 @@ function activateDestination(destinationId) {
       environment: envTex,
       shadows: QUALITY === 'high' && !downgraded,
       onElevatorEnter: handleElevatorEntered,
-      onArcadeInteract: () => minigameManager.show(() => createBobsMazeGame()),
+      onArcadeInteract: () => openMinigameFor(destination.id),
     });
     activeDestinationRecord.scene.add(bob.rig, bob.shadow);
     activeScene = activeDestinationRecord.scene;
@@ -1127,8 +1145,9 @@ window.__elevatorTest = {
   },
   travelTo: (destinationId) => travelToDestination(destinationId),
   openFirstProduct: () => productClicks.openFirst(),
-  openOriginMinigame: () => currentDestinationId > 0
-    && minigameManager.show(() => createBobsMazeGame()),
+  openOriginMinigame: () => (currentDestinationId > 0
+    ? openMinigameFor(currentDestinationId)
+    : Promise.resolve(false)),
   getState: () => ({
     destinationId: currentDestinationId,
     destination: getDestination(currentDestinationId)?.label,

@@ -41,7 +41,7 @@ export const TWENTY_TIME_ISSUE = Object.freeze([
         className: 'tt-inset-street',
       }),
       Object.freeze({
-        image: '/assets/minigames/bobs-maze/maze-420.png',
+        image: '/assets/minigames/bobs-maze/maze-420.webp',
         alt: 'Mapa 420 del minijuego de BOB',
         className: 'tt-inset-maze',
       }),
