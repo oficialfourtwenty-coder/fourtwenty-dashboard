@@ -38,6 +38,8 @@ import { createCartStore } from './data/cartStore.js';
 import { createPhone } from './ui/phone.js';
 import { initMobileControls } from './ui/mobileControls.js';
 import { createDayNightCycle } from './world/dayNightCycle.js';
+import { createMinigameManager } from './minigames/minigameManager.js';
+import { createBobsMazeGame } from './minigames/bobsMaze.js';
 
 const QUALITY = new URLSearchParams(location.search).get('q') === 'low' ? 'low' : 'high';
 
@@ -238,6 +240,13 @@ tpCam.targetYaw = 0;
 const input = new Input(canvas);
 const hud = new Hud();
 const worldEditor = initWorldEditor({ scene, camera, renderer, input, player: bob });
+const minigameManager = createMinigameManager({
+  onOpenChange: () => {
+    input.keys.clear();
+    input.clearVirtualAxes();
+    clearShirtHover();
+  },
+});
 const streetElevator = new ElevatorController(scene, {
   id: 'elevator-street',
   name: 'Ascensor FOURTWENTY · Calle Burela',
@@ -263,13 +272,13 @@ const productClicks = initProductClicks({
   camera,
   getScene: () => activeScene,
   isBlocked: () => loading || elevatorPanel.isVisible() || worldEditor.isEnabled()
-    || !!carInteract?.isRadioOpen() || !!phone?.isOpen() || !!adminPanel?.isOpen(),
+    || minigameManager.isOpen() || !!carInteract?.isRadioOpen() || !!phone?.isOpen() || !!adminPanel?.isOpen(),
   onAddToCart: (product) => cart.add(product),
 });
 // ADMIN de prendas (tecla P; en build online requiere ?admin=1): carga manual
 // de imagen/nombre/precio/descripcion/link por percha — ver src/ui/adminPanel.js
 adminPanel = initAdminPanel({
-  isBlocked: () => worldEditor.isEnabled() || !!phone?.isOpen(), // el editor usa P para "grupo padre"
+  isBlocked: () => worldEditor.isEnabled() || minigameManager.isOpen() || !!phone?.isOpen(), // el editor usa P para "grupo padre"
 });
 window.__adminPanel = adminPanel;
 
@@ -288,7 +297,7 @@ carInteract = initCarInteract({
   tpCam,
   music,
   isBlocked: () => loading || elevatorPanel.isVisible() || worldEditor.isEnabled()
-    || !!phone?.isOpen() || !!adminPanel?.isOpen() || productClicks.panel.isOpen() || world !== 'street',
+    || minigameManager.isOpen() || !!phone?.isOpen() || !!adminPanel?.isOpen() || productClicks.panel.isOpen() || world !== 'street',
 });
 
 // CELULAR: interfaz global, independiente de la escena activa. Comparte el
@@ -298,7 +307,7 @@ phone = createPhone({
   cart,
   clock: dayNight,
   isBlocked: () => loading || elevatorPanel.isVisible() || worldEditor.isEnabled()
-    || !!adminPanel?.isOpen() || productClicks.panel.isOpen(),
+    || minigameManager.isOpen() || !!adminPanel?.isOpen() || productClicks.panel.isOpen(),
   onBeforeOpen: () => {
     carInteract?.closeRadio();
     input.keys.clear();
@@ -324,6 +333,7 @@ window.__cart = cart;
 window.__phone = phone;
 window.__mobileControls = mobileControls;
 window.__whiteLightSwitch = streetWhiteLightSwitch;
+window.__minigameManager = minigameManager;
 
 registerEditableObject({
   id: 'elevator-street',
@@ -385,9 +395,18 @@ function registerDestinationEditables(record) {
     object3D: record.elevator.root,
     manageShadows: false,
   });
+  if (record.minigameArcade) {
+    registerEditableObject({
+      id: 'origin-minigame-arcade',
+      name: "Arcade BOB'S MAZE (mover completo)",
+      type: 'minigame',
+      object3D: record.minigameArcade.root,
+      manageShadows: false,
+    });
+  }
   autoRegisterScene(record.scene, {
     prefix,
-    skip: [bob.rig, bob.shadow, record.elevator.root],
+    skip: [bob.rig, bob.shadow, record.elevator.root, record.minigameArcade?.root].filter(Boolean),
   });
 
   loadInitialLayout().then((layout) => {
@@ -499,6 +518,9 @@ function currentPlayerColliders() {
   if (world !== 'street') {
     destinationRuntimeColliders.length = 0;
     destinationRuntimeColliders.push(...colliders, ...activeElevator.getColliders());
+    if (activeDestinationRecord?.minigameArcade) {
+      destinationRuntimeColliders.push(...activeDestinationRecord.minigameArcade.getColliders());
+    }
     return destinationRuntimeColliders;
   }
   streetRuntimeColliders.length = 0;
@@ -575,9 +597,10 @@ canvas.addEventListener('pointermove', (e) => {
 });
 canvas.addEventListener('click', (event) => {
   if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()
-    || adminPanel?.isOpen() || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) return;
+    || minigameManager.isOpen() || adminPanel?.isOpen() || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) return;
   pointerNdc.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
   raycaster.setFromCamera(pointerNdc, camera);
+  if (activeDestinationRecord?.minigameArcade?.interactFromRay(raycaster, bob.position)) return;
   const hit = raycaster.intersectObject(activeElevator.callButton, false)[0];
   if (hit && activeElevator.isNearCallButton(bob.position)) {
     callActiveElevator();
@@ -587,9 +610,21 @@ canvas.addEventListener('click', (event) => {
 });
 
 function updateHover() {
-  if (loading || elevatorPanel.isVisible() || phone?.isOpen() || adminPanel?.isOpen()
+  if (loading || elevatorPanel.isVisible() || phone?.isOpen() || minigameManager.isOpen() || adminPanel?.isOpen()
     || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) {
     clearShirtHover();
+    return;
+  }
+  const arcade = activeDestinationRecord?.minigameArcade;
+  if (arcade?.canInteract(bob.position)) {
+    raycaster.setFromCamera(pointerNdc, camera);
+    const arcadeHovered = Boolean(raycaster.intersectObject(arcade.button, false)[0]);
+    hovered = false;
+    activeElevator?.setHighlighted(false);
+    arcade.setHighlighted(arcadeHovered);
+    canvas.style.cursor = arcadeHovered ? 'pointer' : 'default';
+    shirtTip.style.display = 'block';
+    shirtTip.textContent = "E · JUGAR BOB'S MAZE";
     return;
   }
   if (world === 'street' && streetWhiteLightSwitch.canInteract(bob.position)) {
@@ -618,35 +653,38 @@ function updateHover() {
 function clearShirtHover() {
   hovered = false;
   activeElevator?.setHighlighted(false);
+  activeDestinationRecord?.minigameArcade?.setHighlighted(false);
   canvas.style.cursor = 'default';
   shirtTip.style.display = 'none';
 }
 
 function callActiveElevator() {
-  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()) return;
+  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen() || minigameManager.isOpen()) return;
   activeElevator.call();
 }
 
 // E = pulsar el boton cuando BOB esta cerca.
 function interactNearest() {
   if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()
-    || adminPanel?.isOpen() || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) return false;
+    || minigameManager.isOpen() || adminPanel?.isOpen() || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) return false;
   if (carInteract?.getCurrentCar() && carInteract.interact(bob.position)) return true;
   if (activeElevator?.isNearCallButton(bob.position)) {
     callActiveElevator();
     return true;
   }
   if (carInteract?.interact(bob.position)) return true;
+  if (activeDestinationRecord?.minigameArcade?.interact(bob.position)) return true;
   if (world === 'street' && streetWhiteLightSwitch.interact(bob.position)) return true;
   return productClicks.interactNearby(bob.position);
 }
 
 function hasNearbyInteraction() {
   if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()
-    || adminPanel?.isOpen() || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) return false;
+    || minigameManager.isOpen() || adminPanel?.isOpen() || productClicks.panel.isOpen() || carInteract?.isRadioOpen()) return false;
   return !!carInteract?.getCurrentCar()
     || !!activeElevator?.isNearCallButton(bob.position)
     || !!carInteract?.canInteract(bob.position)
+    || !!activeDestinationRecord?.minigameArcade?.canInteract(bob.position)
     || (world === 'street' && streetWhiteLightSwitch.canInteract(bob.position))
     || productClicks.canInteractNearby(bob.position);
 }
@@ -943,6 +981,7 @@ function activateDestination(destinationId) {
       environment: envTex,
       shadows: QUALITY === 'high' && !downgraded,
       onElevatorEnter: handleElevatorEntered,
+      onArcadeInteract: () => minigameManager.show(() => createBobsMazeGame()),
     });
     activeDestinationRecord.scene.add(bob.rig, bob.shadow);
     activeScene = activeDestinationRecord.scene;
@@ -1005,6 +1044,8 @@ window.__elevatorTest = {
   },
   travelTo: (destinationId) => travelToDestination(destinationId),
   openFirstProduct: () => productClicks.openFirst(),
+  openOriginMinigame: () => currentDestinationId === 1
+    && minigameManager.show(() => createBobsMazeGame()),
   getState: () => ({
     destinationId: currentDestinationId,
     destination: getDestination(currentDestinationId)?.label,
@@ -1012,6 +1053,7 @@ window.__elevatorTest = {
     panelVisible: elevatorPanel.isVisible(),
     productPanelVisible: productClicks.panel.isOpen(),
     phoneOpen: phone?.isOpen() ?? false,
+    minigameOpen: minigameManager.isOpen(),
     cartCount: cart.getState().count,
     activeScene: activeScene.name || (world === 'street' ? 'Calle Burela' : ''),
     elevator: {
@@ -1087,13 +1129,14 @@ renderer.setAnimationLoop(() => {
   // sentado en un auto BOB no se mueve con WASD (lo clava carInteract.update)
   const seated = !!carInteract?.isPlayerLocked();
   const phoneOpen = !!phone?.isOpen();
-  if (!loading && !editorActive && !seated && !phoneOpen) {
+  const minigameOpen = minigameManager.isOpen();
+  if (!loading && !editorActive && !seated && !phoneOpen && !minigameOpen) {
     bob.update(dt, input, tpCam.yaw, currentPlayerColliders(), camera.position);
   }
   carInteract?.update(dt); // puertas de los autos + BOB pegado a la butaca
   activeElevator?.update(dt, bob.position);
   const mobileSuppressed = loading || elevatorPanel.isVisible() || editorActive
-    || !!adminPanel?.isOpen() || productClicks.panel.isOpen();
+    || minigameOpen || !!adminPanel?.isOpen() || productClicks.panel.isOpen();
   if (elapsed >= nextMobileInteractionCheck) {
     mobileInteractionAvailable = hasNearbyInteraction();
     nextMobileInteractionCheck = elapsed + 0.15;
@@ -1106,9 +1149,9 @@ renderer.setAnimationLoop(() => {
   });
   // E: adentro del auto abre la radio (lo maneja carInteract), afuera es el
   // pulsador del ascensor. Se consume igual para que no quede trabado.
-  if (editorActive || seated || phoneOpen) input.consumeInteract();
+  if (editorActive || seated || phoneOpen || minigameOpen) input.consumeInteract();
   else if (input.consumeInteract()) interactNearest(); // E = boton exterior del ascensor
-  if (editorActive || phoneOpen) clearShirtHover();
+  if (editorActive || phoneOpen || minigameOpen) clearShirtHover();
   else updateHover();      // feedback del pulsador bajo el mouse
   tickAmbient(dt);         // displays giratorios
 

@@ -6,6 +6,7 @@ import { box } from './gfxUtils.js';
 import { whiteFloor, whitePlaster, lightCeiling, windowDaylight } from './textures.js';
 import { ElevatorController } from './elevator.js';
 import { createMoonDisc, createSunDisc } from './dayNightCycle.js';
+import { createOriginArcade } from './originArcade.js';
 
 const ROOM_W = 12;
 const BASE_ROOM_D = 9;
@@ -94,7 +95,7 @@ function addSectionLights(scene, shadows) {
   }
 }
 
-function buildSectionScene(destination, { environment, shadows, onElevatorEnter }) {
+function buildSectionScene(destination, { environment, shadows, onElevatorEnter, onArcadeInteract }) {
   const scene = new THREE.Scene();
   scene.name = `Escena unica · ${destination.hudLabel}`;
   scene.userData.destinationId = destination.id;
@@ -118,11 +119,16 @@ function buildSectionScene(destination, { environment, shadows, onElevatorEnter 
     rotationY: Math.PI,
     onEnter: onElevatorEnter,
   });
+  const minigameArcade = destination.id === 1
+    ? createOriginArcade({ onInteract: onArcadeInteract })
+    : null;
+  if (minigameArcade) scene.add(minigameArcade.root);
 
   return {
     destination,
     scene,
     elevator,
+    minigameArcade,
     colliders,
     bounds: { minX: -5.85, maxX: 5.85, minZ: ROOM_MIN_Z + 0.15, maxZ: ROOM_MAX_Z - 0.15 },
     ceiling: ROOM_H,

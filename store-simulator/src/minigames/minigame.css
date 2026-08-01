@@ -1,0 +1,132 @@
+#minigame-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+  display: none;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.94);
+  font-family: "Courier New", monospace;
+  color: #f7edb0;
+  touch-action: none;
+}
+
+#minigame-overlay.show { display: grid; }
+
+.minigame-frame {
+  position: relative;
+  width: min(100%, 980px);
+  height: min(100%, 1040px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #050507;
+  border: 1px solid #333877;
+  box-shadow: 0 0 40px rgba(42, 49, 171, 0.28);
+}
+
+.minigame-stage { width: 100%; height: 100%; min-width: 0; min-height: 0; }
+
+.maze-game {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #050507;
+}
+
+.maze-status {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  box-sizing: border-box;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 14px;
+  border-bottom: 1px solid #292f79;
+  color: #fff0a6;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.maze-status strong { color: #f4f4f4; }
+
+.maze-canvas-wrap {
+  position: absolute;
+  inset: 42px 0 0;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  contain: size;
+  background: #09090b;
+}
+
+.maze-canvas-wrap canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  touch-action: none;
+}
+
+.maze-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #08080a;
+  color: #fff0a6;
+  font-size: 14px;
+  letter-spacing: 3px;
+}
+
+.maze-loading[hidden] { display: none; }
+
+.minigame-result {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  box-sizing: border-box;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: rgba(3, 3, 5, 0.96);
+}
+
+.minigame-result[hidden] { display: none; }
+.minigame-result-kicker { color: #848bd8; font-size: 12px; letter-spacing: 3px; }
+.minigame-result-title { margin: 8px 0 20px; color: #fff; font-size: clamp(26px, 5vw, 52px); letter-spacing: 0; }
+.minigame-discount { color: #ffe06f; font-size: clamp(42px, 9vw, 92px); }
+.minigame-code { margin-top: 14px; padding: 10px 14px; background: #171717; color: #fff; font-size: 18px; }
+.minigame-note { color: #9b9b9b; font-size: 12px; }
+.minigame-result-actions { display: flex; gap: 10px; margin-top: 22px; }
+.minigame-result-actions button {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid #444bb0;
+  border-radius: 4px;
+  background: #12152f;
+  color: #fff;
+  font: 700 12px "Courier New", monospace;
+  cursor: pointer;
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  #minigame-overlay { padding: 4px; }
+  .minigame-frame { width: min(100%, 900px); height: 100%; }
+  .maze-status { height: 34px; font-size: 10px; }
+  .maze-canvas-wrap { inset: 34px 0 0; }
+}
