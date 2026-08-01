@@ -1,11 +1,16 @@
 import * as THREE from 'three';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { registerEditableObject, unregisterEditableObject } from './editor/editableRegistry.js';
 import { loadInitialLayout, saveLocalLayout } from './editor/layoutStore.js';
 import { BUNDLED_FURNITURE, MODEL_CATALOG_MIGRATION_KEY } from './editor/modelCatalog.js';
 import { normalizeGLTFHeight } from './gltfUtils.js';
 
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('/assets/draco/');
+
 const loader = new GLTFLoader();
+loader.setDRACOLoader(dracoLoader);
 const modelCache = new Map();
 
 function cloneLayoutItem(item) {

@@ -5,13 +5,13 @@
     "type": "elevator",
     "model": "",
     "position": [
-      0,
+      -18.526738743851485,
       0,
       3
     ],
     "rotation": [
       0,
-      0,
+      1.5138288785956007,
       0
     ],
     "scale": [
@@ -31,19 +31,19 @@
     "type": "car",
     "model": "",
     "position": [
-      -7.2,
+      -2.1659797370525817,
       0,
-      9.05
+      11.356616090708657
     ],
     "rotation": [
       0,
-      0,
+      -0.17330179948450342,
       0
     ],
     "scale": [
-      1,
-      1,
-      1
+      1.3543344032931057,
+      1.1335378090765016,
+      1.4183622137204304
     ],
     "castShadow": true,
     "receiveShadow": true,
@@ -5135,34 +5135,8 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -27.480341682827135,
-      -80.43525856858467,
-      6
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": false,
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:51",
-    "name": "Luna dinamica",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -27.480341682827138,
-      80.43525856858467,
+      84.27281321677388,
+      11.094726338704383,
       6
     ],
     "rotation": [
@@ -5179,6 +5153,32 @@
     "receiveShadow": true,
     "locked": false,
     "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:51",
+    "name": "Luna dinamica",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      84.27281321677388,
+      -11.094726338704383,
+      6
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
     "manageShadows": false
   },
   {
@@ -5214,7 +5214,7 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -23.009477251777966,
+      -22.351769830609673,
       -0.0014956407163027041,
       6.788060288310436
     ],
@@ -5224,7 +5224,7 @@
       0
     ],
     "scale": [
-      0.2059407296305532,
+      0.18161753845501666,
       0.9825789761058001,
       1
     ],
@@ -5241,7 +5241,7 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      21.822736878107982,
+      23.042736378280814,
       0,
       6.788060288310436
     ],
@@ -8080,14 +8080,284 @@
     "manageShadows": false
   },
   {
+    "id": "calle-kit:15.5-copia-6",
+    "name": "Cantero principal izquierdo · arbusto 4 (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      73.54461093693699,
+      -0.0514339065472853,
+      -17.53054468702502
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      125.64848864107103,
+      1.9620577016222904,
+      519.9579825633998
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:15.5",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-31",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      20.789097604311813,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-32",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      22.628616262519486,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-33",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      24.464536440663288,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-34",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      26.30367576636549,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-35",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      28.14335890500554,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:15.5-copia-7",
+    "name": "Cantero principal izquierdo · arbusto 4 (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      59.36209289059329,
+      -0.28975057828441275,
+      3.741345059997501
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      125.64848864107103,
+      1.5017641553886392,
+      -77.06437802824495
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:15.5",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-36",
+    "name": "Vereda gris frente al local (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -54.06529892240452,
+      -0.08677141421358159,
+      2.057908414027489
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.953385466806859,
+      3.7344397933875073,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:0-copia-1",
+    "name": "Calle Burela · asfalto (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -31.59690658871783,
+      -0.00813325527564053,
+      13.072011494034816
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:0",
+    "manageShadows": false
+  },
+  {
     "id": "furniture:b54-simulator-base",
     "name": "B54 FTT Lowpoly Simulator",
     "type": "furniture",
     "model": "assets/furniture/b54-ftt-lowpoly-simulator.glb",
     "position": [
-      -14,
+      -14.128914675812094,
+      -0.006243758674880251,
+      15.31912964125118
+    ],
+    "rotation": [
+      -3.141592653589793,
+      0.02418530842458789,
+      -3.141592653589793
+    ],
+    "scale": [
+      1,
+      0.4894839510681678,
+      0.5404932531272055
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 6,
+    "collidable": false
+  },
+  {
+    "id": "furniture:b54-simulator-ms9vlt8r",
+    "name": "B54 FTT Lowpoly Simulator",
+    "type": "furniture",
+    "model": "assets/furniture/b54-ftt-lowpoly-simulator.glb",
+    "position": [
+      9.260272769186056,
       0,
-      18
+      14.98355907913245
     ],
     "rotation": [
       0,
@@ -8102,7 +8372,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": true,
+    "visible": false,
     "height": 6,
     "collidable": false
   },
@@ -8114,7 +8384,7 @@
     "position": [
       0,
       -0.2,
-      42
+      -20.517529676651392
     ],
     "rotation": [
       0,
@@ -8125,6 +8395,33 @@
       1,
       1,
       1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "height": 5,
+    "collidable": false
+  },
+  {
+    "id": "furniture:city-map-ms9vlv6m",
+    "name": "City Map Free · Mapa de ciudad",
+    "type": "furniture",
+    "model": "assets/furniture/city-map-free.glb",
+    "position": [
+      53.93277967331866,
+      -6.819166677171383,
+      -2
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      13.155294745967097,
+      4.045738982476506
     ],
     "castShadow": false,
     "receiveShadow": true,
@@ -8134,14 +8431,41 @@
     "collidable": false
   },
   {
-    "id": "furniture:city-map-base-copia-1",
-    "name": "City Map Free · Mapa de ciudad (copia)",
+    "id": "furniture:city-map-ms9vtkx4",
+    "name": "City Map Free · Mapa de ciudad",
     "type": "furniture",
     "model": "assets/furniture/city-map-free.glb",
     "position": [
-      4.36913991499072e-15,
-      -8.881784197001252e-16,
-      -15.171680499190998
+      -124.28762015390271,
+      -5.07865517438,
+      186.12210965736324
+    ],
+    "rotation": [
+      0,
+      1.2786962791258798,
+      0
+    ],
+    "scale": [
+      10.961669211601762,
+      17.011906161685253,
+      1.0781337887777909
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "height": 5,
+    "collidable": false
+  },
+  {
+    "id": "furniture:city-map-ms9w7wbs",
+    "name": "City Map Free · Mapa de ciudad",
+    "type": "furniture",
+    "model": "assets/furniture/city-map-free.glb",
+    "position": [
+      -9.087089914568004,
+      -10.75,
+      -142.1195532343957
     ],
     "rotation": [
       0,
@@ -8149,18 +8473,16 @@
       0
     ],
     "scale": [
-      1,
-      1,
-      1
+      4.106852633427134,
+      19.667535055027063,
+      4.2532141106873915
     ],
     "castShadow": false,
     "receiveShadow": true,
     "locked": false,
     "visible": true,
     "height": 5,
-    "collidable": false,
-    "cloneOf": "furniture:city-map-base",
-    "cloneAtSceneRoot": true
+    "collidable": false
   },
   {
     "id": "furniture:apartment-building-mrb4ow5q",
@@ -8270,14 +8592,14 @@
     "cloneOf": "furniture:apartment-building-mrb4ow5q"
   },
   {
-    "id": "furniture:tram-station-base",
-    "name": "Tram Station · Estacion de tranvia GLB",
+    "id": "furniture:apartment-building-ms9vlqe0",
+    "name": "Edificio GLB Burela · apartment-building",
     "type": "furniture",
-    "model": "assets/furniture/tram-station.glb",
+    "model": "assets/furniture/apartment-building.glb",
     "position": [
-      16,
+      9.260272769186056,
       0,
-      6
+      14.98355907913245
     ],
     "rotation": [
       0,
@@ -8288,6 +8610,32 @@
       1,
       1,
       1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "height": 20
+  },
+  {
+    "id": "furniture:tram-station-base",
+    "name": "Tram Station · Estacion de tranvia GLB",
+    "type": "furniture",
+    "model": "assets/furniture/tram-station.glb",
+    "position": [
+      -12.889858950727541,
+      -6,
+      75.56520771955645
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      2.8131458116503554,
+      6.469817467454453,
+      1.3250914005071617
     ],
     "castShadow": false,
     "receiveShadow": true,
@@ -8302,9 +8650,9 @@
     "type": "furniture",
     "model": "assets/furniture/tram-station.glb",
     "position": [
-      7.105427357601002e-15,
-      0,
-      -39.46131331765864
+      -169.25,
+      -6,
+      -23.25
     ],
     "rotation": [
       0,
@@ -8312,9 +8660,9 @@
       0
     ],
     "scale": [
-      1,
-      1,
-      1
+      2.8131458116503554,
+      6.469817467454453,
+      1.3250914005071617
     ],
     "castShadow": false,
     "receiveShadow": true,
@@ -8322,7 +8670,6 @@
     "visible": true,
     "height": 7,
     "collidable": false,
-    "cloneOf": "furniture:tram-station-base",
-    "cloneAtSceneRoot": true
+    "cloneOf": "furniture:tram-station-base"
   }
 ]
