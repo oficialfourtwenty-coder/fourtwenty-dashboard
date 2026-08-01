@@ -220,6 +220,11 @@ let adminPanel = null;
 let currentDestinationId = 0;
 let activeDestinationRecord = null;
 
+window.addEventListener('fourtwenty:world-edited', () => {
+  renderer.shadowMap.needsUpdate = true;
+  if (activeDestinationRecord) activeDestinationRecord.collidersDirty = true;
+});
+
 function activeOutdoorLighting() {
   if (world === 'street') return streetOutdoorLighting;
   return activeDestinationRecord?.outdoorLighting ?? null;
@@ -419,7 +424,9 @@ function registerDestinationEditables(record) {
   });
   if (record.minigameArcade) {
     registerEditableObject({
-      id: 'origin-minigame-arcade',
+      id: record.destination.id === 1
+        ? 'origin-minigame-arcade'
+        : `destination-${record.destination.id}-minigame-arcade`,
       name: "Arcade BOB'S MAZE (mover completo)",
       type: 'minigame',
       object3D: record.minigameArcade.root,
@@ -435,6 +442,7 @@ function registerDestinationEditables(record) {
     if (activeDestinationRecord !== record) return;
     applyLayout(layout);
     restoreClones(layout);
+    record.collidersDirty = true;
     renderer.shadowMap.needsUpdate = true;
   });
 }
@@ -536,10 +544,44 @@ function setVisibleColliderBox(target, object) {
   });
 }
 
+function rebuildDestinationColliders(record) {
+  if (!record) return;
+  const prefix = `destino-${record.destination.id}:`;
+  record.dynamicColliders.length = 0;
+
+  for (const entry of getEditableObjects()) {
+    const object = entry.object3D;
+    if (!entry.id.startsWith(prefix)
+      || object?.userData?.destinationCollider !== true
+      || !isEditableEffectivelyVisible(entry.id)) continue;
+
+    setVisibleColliderBox(editableColliderBox, object);
+    if (editableColliderBox.isEmpty()) continue;
+    editableColliderBox.getSize(editableColliderSize);
+    if (editableColliderSize.y < 0.2) continue;
+    record.dynamicColliders.push({
+      id: entry.id,
+      source: entry.name,
+      minX: editableColliderBox.min.x,
+      maxX: editableColliderBox.max.x,
+      minY: editableColliderBox.min.y,
+      maxY: editableColliderBox.max.y,
+      minZ: editableColliderBox.min.z,
+      maxZ: editableColliderBox.max.z,
+    });
+  }
+  record.collidersDirty = false;
+}
+
 function currentPlayerColliders() {
   if (world !== 'street') {
+    if (activeDestinationRecord?.collidersDirty) rebuildDestinationColliders(activeDestinationRecord);
     destinationRuntimeColliders.length = 0;
-    destinationRuntimeColliders.push(...colliders, ...activeElevator.getColliders());
+    destinationRuntimeColliders.push(
+      ...colliders,
+      ...(activeDestinationRecord?.dynamicColliders ?? []),
+      ...activeElevator.getColliders(),
+    );
     if (activeDestinationRecord?.minigameArcade) {
       destinationRuntimeColliders.push(...activeDestinationRecord.minigameArcade.getColliders());
     }
@@ -1085,7 +1127,7 @@ window.__elevatorTest = {
   },
   travelTo: (destinationId) => travelToDestination(destinationId),
   openFirstProduct: () => productClicks.openFirst(),
-  openOriginMinigame: () => currentDestinationId === 1
+  openOriginMinigame: () => currentDestinationId > 0
     && minigameManager.show(() => createBobsMazeGame()),
   getState: () => ({
     destinationId: currentDestinationId,
@@ -1095,6 +1137,8 @@ window.__elevatorTest = {
     productPanelVisible: productClicks.panel.isOpen(),
     phoneOpen: phone?.isOpen() ?? false,
     minigameOpen: minigameManager.isOpen(),
+    arcadePresent: Boolean(activeDestinationRecord?.minigameArcade?.root?.parent),
+    destinationStructureColliders: activeDestinationRecord?.dynamicColliders?.length ?? 0,
     cartCount: cart.getState().count,
     activeScene: activeScene.name || (world === 'street' ? 'Calle Burela' : ''),
     elevator: {
@@ -1109,7 +1153,8 @@ window.__elevatorTest = {
 };
 
 function initElevatorTestControls() {
-  if (new URLSearchParams(location.search).get('elevatorTest') !== '1') return null;
+  const params = new URLSearchParams(location.search);
+  if (params.get('elevatorTest') !== '1' || params.get('debugUi') !== '1') return null;
   const root = document.createElement('div');
   root.id = 'elevator-test-controls';
   root.innerHTML = `

@@ -7,11 +7,33 @@ import { bindProductVisual } from './productVisuals.js';
 const ROOM_W = 12;
 const ROOM_D = 18;
 const ROOM_H = 3.55;
-const WALL_T = 0.3;
 const ROOM_MIN_Z = -4.5;
 const ROOM_MAX_Z = 13.5;
 const ROOM_CENTER_Z = 4.5;
 const ROOM_HALF_W = ROOM_W / 2;
+const environmentTextureCache = new Map();
+
+function loadEnvironmentTexture(url) {
+  if (!environmentTextureCache.has(url)) {
+    environmentTextureCache.set(url, new Promise((resolve, reject) => {
+      new EXRLoader().load(url, (texture) => {
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        texture.colorSpace = THREE.LinearSRGBColorSpace;
+        texture.generateMipmaps = false;
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.needsUpdate = true;
+        resolve(texture);
+      }, undefined, reject);
+    }));
+  }
+  return environmentTextureCache.get(url);
+}
+
+function markDestinationCollider(object) {
+  object.userData.destinationCollider = true;
+  return object;
+}
 
 function seededRandom(seed) {
   let state = seed >>> 0;
@@ -252,7 +274,7 @@ function addFluorescent(group, x, z, length, mats) {
   ));
 }
 
-function addEditableHdriSphere(group, scene) {
+function addEditableHdriSphere(group, scene, environmentUrl) {
   const environmentRoot = new THREE.Group();
   environmentRoot.name = 'ESFERA 360 · TAMAÑO EDITABLE';
   environmentRoot.position.set(0, 1.55, ROOM_CENTER_Z);
@@ -274,28 +296,22 @@ function addEditableHdriSphere(group, scene) {
   environmentRoot.add(sphere);
   group.add(environmentRoot);
 
-  new EXRLoader().load(
-    'assets/environments/urban-alley-01-4k.exr',
-    (texture) => {
-      texture.mapping = THREE.EquirectangularReflectionMapping;
-      texture.colorSpace = THREE.LinearSRGBColorSpace;
-      texture.generateMipmaps = false;
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      texture.needsUpdate = true;
+  loadEnvironmentTexture(environmentUrl)
+    .then((texture) => {
+      if (scene.userData.disposed) return;
       material.map = texture;
       material.color.setHex(0xffffff);
       material.needsUpdate = true;
 
       scene.environment = texture;
       scene.environmentIntensity = 0.42;
-    },
-    undefined,
-    (error) => console.warn('No se pudo cargar el entorno HDRI Urban Alley.', error),
-  );
+    })
+    .catch((error) => console.warn(`No se pudo cargar el entorno HDRI ${environmentUrl}.`, error));
 }
 
-export function buildBincoShopShell(scene) {
+export function buildBincoShopShell(scene, {
+  environmentUrl = 'assets/environments/urban-alley-01-4k.exr',
+} = {}) {
   const group = new THREE.Group();
   group.name = 'PRUEBA BINCO · arquitectura completa';
   const mats = materials();
@@ -329,45 +345,47 @@ export function buildBincoShopShell(scene) {
   const glassHeight = glassTop - glassBottom;
   const glassY = glassBottom + glassHeight / 2;
 
+  const addStructure = (object) => group.add(markDestinationCollider(object));
+
   group.add(box(ROOM_W, 0.3, ROOM_D, 0, -0.15, ROOM_CENTER_Z, floorMaterial));
-  addEditableHdriSphere(group, scene);
+  addEditableHdriSphere(group, scene, environmentUrl);
 
   // Frente: una columna central de ladrillo y vidrio a ambos lados.
-  group.add(box(ROOM_W, glassBottom, 0.25, 0, glassBottom / 2, ROOM_MIN_Z, brickMaterial));
-  group.add(box(ROOM_W, ROOM_H - glassTop, 0.25, 0, glassTop + (ROOM_H - glassTop) / 2, ROOM_MIN_Z, brickMaterial));
-  group.add(box(0.48, ROOM_H, 0.34, 0, ROOM_H / 2, ROOM_MIN_Z, brickMaterial));
-  for (const x of [-5.86, 5.86]) group.add(box(0.28, ROOM_H, 0.32, x, ROOM_H / 2, ROOM_MIN_Z, brickMaterial));
+  addStructure(box(ROOM_W, glassBottom, 0.25, 0, glassBottom / 2, ROOM_MIN_Z, brickMaterial));
+  addStructure(box(ROOM_W, ROOM_H - glassTop, 0.25, 0, glassTop + (ROOM_H - glassTop) / 2, ROOM_MIN_Z, brickMaterial));
+  addStructure(box(0.48, ROOM_H, 0.34, 0, ROOM_H / 2, ROOM_MIN_Z, brickMaterial));
+  for (const x of [-5.86, 5.86]) addStructure(box(0.28, ROOM_H, 0.32, x, ROOM_H / 2, ROOM_MIN_Z, brickMaterial));
   for (const x of [-3.08, 3.08]) {
     const glass = box(5.45, glassHeight, 0.045, x, glassY, ROOM_MIN_Z + 0.08, glassMaterial);
     glass.name = 'VIDRIO · pared frontal';
-    group.add(glass);
+    addStructure(glass);
   }
 
   // Laterales: una columna en el centro de cada pared, con dos paños grandes.
   for (const side of [-1, 1]) {
     const wallX = side * ROOM_HALF_W;
-    group.add(box(0.25, glassBottom, ROOM_D, wallX, glassBottom / 2, ROOM_CENTER_Z, brickMaterial));
-    group.add(box(0.25, ROOM_H - glassTop, ROOM_D, wallX, glassTop + (ROOM_H - glassTop) / 2, ROOM_CENTER_Z, brickMaterial));
-    group.add(box(0.34, ROOM_H, 0.52, wallX, ROOM_H / 2, ROOM_CENTER_Z, brickMaterial));
+    addStructure(box(0.25, glassBottom, ROOM_D, wallX, glassBottom / 2, ROOM_CENTER_Z, brickMaterial));
+    addStructure(box(0.25, ROOM_H - glassTop, ROOM_D, wallX, glassTop + (ROOM_H - glassTop) / 2, ROOM_CENTER_Z, brickMaterial));
+    addStructure(box(0.34, ROOM_H, 0.52, wallX, ROOM_H / 2, ROOM_CENTER_Z, brickMaterial));
     for (const z of [ROOM_MIN_Z + 0.14, ROOM_MAX_Z - 0.14]) {
-      group.add(box(0.32, ROOM_H, 0.28, wallX, ROOM_H / 2, z, brickMaterial));
+      addStructure(box(0.32, ROOM_H, 0.28, wallX, ROOM_H / 2, z, brickMaterial));
     }
     for (const z of [-0.05, 9.05]) {
       const glass = box(0.045, glassHeight, 8.45, wallX - side * 0.08, glassY, z, glassMaterial);
       glass.name = side < 0 ? 'VIDRIO · pared izquierda' : 'VIDRIO · pared derecha';
-      group.add(glass);
+      addStructure(glass);
     }
   }
 
   // Fondo: el ascensor funciona como cuerpo central; el HDRI se ve a sus lados.
-  group.add(box(ROOM_W, glassBottom, 0.25, 0, glassBottom / 2, ROOM_MAX_Z, brickMaterial));
-  group.add(box(ROOM_W, ROOM_H - glassTop, 0.25, 0, glassTop + (ROOM_H - glassTop) / 2, ROOM_MAX_Z, brickMaterial));
-  group.add(box(2.65, ROOM_H, 0.34, 0, ROOM_H / 2, ROOM_MAX_Z, brickMaterial));
-  for (const x of [-5.86, 5.86]) group.add(box(0.28, ROOM_H, 0.32, x, ROOM_H / 2, ROOM_MAX_Z, brickMaterial));
+  addStructure(box(ROOM_W, glassBottom, 0.25, 0, glassBottom / 2, ROOM_MAX_Z, brickMaterial));
+  addStructure(box(ROOM_W, ROOM_H - glassTop, 0.25, 0, glassTop + (ROOM_H - glassTop) / 2, ROOM_MAX_Z, brickMaterial));
+  addStructure(box(2.65, ROOM_H, 0.34, 0, ROOM_H / 2, ROOM_MAX_Z, brickMaterial));
+  for (const x of [-5.86, 5.86]) addStructure(box(0.28, ROOM_H, 0.32, x, ROOM_H / 2, ROOM_MAX_Z, brickMaterial));
   for (const x of [-3.68, 3.68]) {
     const glass = box(4.48, glassHeight, 0.045, x, glassY, ROOM_MAX_Z - 0.08, glassMaterial);
     glass.name = 'VIDRIO · pared del ascensor';
-    group.add(glass);
+    addStructure(glass);
   }
 
   // Techo completamente vidriado, dividido por una cruz estructural.
@@ -439,12 +457,7 @@ export function buildBincoShopShell(scene) {
   });
   scene.add(group);
 
-  return [
-    { minX: -ROOM_HALF_W - WALL_T, maxX: ROOM_HALF_W + WALL_T, minY: 0, maxY: ROOM_H, minZ: ROOM_MAX_Z - 0.15, maxZ: ROOM_MAX_Z + WALL_T },
-    { minX: -ROOM_HALF_W - WALL_T, maxX: ROOM_HALF_W + WALL_T, minY: 0, maxY: ROOM_H, minZ: ROOM_MIN_Z - WALL_T, maxZ: ROOM_MIN_Z + 0.15 },
-    { minX: -ROOM_HALF_W - WALL_T, maxX: -ROOM_HALF_W + 0.15, minY: 0, maxY: ROOM_H, minZ: ROOM_MIN_Z, maxZ: ROOM_MAX_Z },
-    { minX: ROOM_HALF_W - 0.15, maxX: ROOM_HALF_W + WALL_T, minY: 0, maxY: ROOM_H, minZ: ROOM_MIN_Z, maxZ: ROOM_MAX_Z },
-  ];
+  return [];
 }
 
 export function addBincoShopLights(scene, shadows) {
@@ -567,11 +580,12 @@ function createGarment({ color, slot, type = 'jersey', mats }) {
   return group;
 }
 
-function createWallBay(group, colliders, {
+function createWallBay(group, {
   side,
   centerZ,
   colors,
   slotOffset,
+  productFloor,
   mats,
 }) {
   const bay = new THREE.Group();
@@ -586,7 +600,7 @@ function createWallBay(group, colliders, {
   for (let i = 0; i < 4; i++) {
     const garment = createGarment({
       color: colors[i % colors.length],
-      slot: { piso: 3, index: (slotOffset + i) % 4 },
+      slot: { piso: productFloor, index: (slotOffset + i) % 4 },
       type: i % 2 ? 'tee' : 'jersey',
       mats,
     });
@@ -605,18 +619,18 @@ function createWallBay(group, colliders, {
   const wallX = side === 'left' ? -5.72 : 5.72;
   bay.position.set(wallX, 0, centerZ);
   bay.rotation.y = side === 'left' ? Math.PI / 2 : -Math.PI / 2;
-  group.add(bay);
-  colliders.push({
-    minX: side === 'left' ? -5.95 : 5.08,
-    maxX: side === 'left' ? -5.08 : 5.95,
-    minY: 0,
-    maxY: 2.65,
-    minZ: centerZ - 1.9,
-    maxZ: centerZ + 1.9,
-  });
+  group.add(markDestinationCollider(bay));
 }
 
-function createRollingRack(group, colliders, { x, z, colors, mats, rotation = 0, slotOffset = 0 }) {
+function createRollingRack(group, {
+  x,
+  z,
+  colors,
+  mats,
+  productFloor,
+  rotation = 0,
+  slotOffset = 0,
+}) {
   const rack = new THREE.Group();
   rack.name = 'BINCO · perchero profesional con ruedas';
   rack.add(rodBetween(new THREE.Vector3(-1.25, 1.72, 0), new THREE.Vector3(1.25, 1.72, 0), 0.035, mats.darkSteel));
@@ -636,7 +650,7 @@ function createRollingRack(group, colliders, { x, z, colors, mats, rotation = 0,
   for (let i = 0; i < 7; i++) {
     const garment = createGarment({
       color: colors[i % colors.length],
-      slot: { piso: 3, index: (slotOffset + i) % 4 },
+      slot: { piso: productFloor, index: (slotOffset + i) % 4 },
       type: i % 3 === 0 ? 'jersey' : 'tee',
       mats,
     });
@@ -646,10 +660,7 @@ function createRollingRack(group, colliders, { x, z, colors, mats, rotation = 0,
   }
   rack.position.set(x, 0, z);
   rack.rotation.y = rotation;
-  group.add(rack);
-  const halfX = rotation ? 0.55 : 1.5;
-  const halfZ = rotation ? 1.5 : 0.55;
-  colliders.push({ minX: x - halfX, maxX: x + halfX, minY: 0, maxY: 1.9, minZ: z - halfZ, maxZ: z + halfZ });
+  group.add(markDestinationCollider(rack));
 }
 
 function createFoldedStack(group, x, y, z, colors, mats) {
@@ -662,7 +673,7 @@ function createFoldedStack(group, x, y, z, colors, mats) {
   }
 }
 
-function createDisplayTable(group, colliders, { x, z, colors, mats }) {
+function createDisplayTable(group, { x, z, colors, mats }) {
   const table = new THREE.Group();
   table.name = 'BINCO · mesa industrial de prendas';
   table.add(box(2.35, 0.13, 1.15, 0, 0.92, 0, mats.timber));
@@ -676,8 +687,7 @@ function createDisplayTable(group, colliders, { x, z, colors, mats }) {
   createFoldedStack(table, 0.05, 1.01, 0.17, colors.slice().reverse(), mats);
   createFoldedStack(table, 0.7, 1.01, -0.12, colors, mats);
   table.position.set(x, 0, z);
-  group.add(table);
-  colliders.push({ minX: x - 1.2, maxX: x + 1.2, minY: 0, maxY: 1.4, minZ: z - 0.62, maxZ: z + 0.62 });
+  group.add(markDestinationCollider(table));
 }
 
 function createShoe(group, x, y, z, color, mats, rotationY = 0) {
@@ -701,7 +711,7 @@ function createShoe(group, x, y, z, color, mats, rotationY = 0) {
   group.add(shoe);
 }
 
-function createShoeWall(group, colliders, { side, centerZ, colors, mats }) {
+function createShoeWall(group, { side, centerZ, colors, mats }) {
   const display = new THREE.Group();
   display.name = 'BINCO · pared de zapatillas';
   display.add(box(3.4, 2.45, 0.12, 0, 1.35, -0.05, new THREE.MeshStandardMaterial({ map: pegboardTexture(), roughness: 0.9 })));
@@ -720,18 +730,10 @@ function createShoeWall(group, colliders, { side, centerZ, colors, mats }) {
   const wallX = side === 'left' ? -5.72 : 5.72;
   display.position.set(wallX, 0, centerZ);
   display.rotation.y = side === 'left' ? Math.PI / 2 : -Math.PI / 2;
-  group.add(display);
-  colliders.push({
-    minX: side === 'left' ? -5.95 : 5.0,
-    maxX: side === 'left' ? -5.0 : 5.95,
-    minY: 0,
-    maxY: 2.7,
-    minZ: centerZ - 1.85,
-    maxZ: centerZ + 1.85,
-  });
+  group.add(markDestinationCollider(display));
 }
 
-function createMannequin(group, colliders, { x, z, rotation, shirtColor, pantsColor, mats, cap = false }) {
+function createMannequin(group, { x, z, rotation, shirtColor, pantsColor, mats, cap = false }) {
   const mannequin = new THREE.Group();
   mannequin.name = 'BINCO · maniquí anatómico';
   mannequin.add(new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, 0.08, 20), mats.darkSteel));
@@ -802,8 +804,7 @@ function createMannequin(group, colliders, { x, z, rotation, shirtColor, pantsCo
 
   mannequin.position.set(x, 0, z);
   mannequin.rotation.y = rotation;
-  group.add(mannequin);
-  colliders.push({ minX: x - 0.38, maxX: x + 0.38, minY: 0, maxY: 2.08, minZ: z - 0.38, maxZ: z + 0.38 });
+  group.add(markDestinationCollider(mannequin));
 }
 
 function addPhotoPoster(group, { path, x, y, z, rotationY, width, height, mats }) {
@@ -818,7 +819,7 @@ function addPhotoPoster(group, { path, x, y, z, rotationY, width, height, mats }
   group.add(poster);
 }
 
-function createFittingRooms(group, colliders, mats) {
+function createFittingRooms(group, mats) {
   const fitting = new THREE.Group();
   fitting.name = 'BINCO · probadores';
   const curtainMat = new THREE.MeshStandardMaterial({ map: curtainTexture(), roughness: 0.96, side: THREE.DoubleSide });
@@ -832,11 +833,10 @@ function createFittingRooms(group, colliders, mats) {
     fitting.add(curtain);
     fitting.add(rodBetween(new THREE.Vector3(x - 0.45, 2.38, 10.62), new THREE.Vector3(x + 0.45, 2.38, 10.62), 0.024, mats.wornSteel));
   }
-  group.add(fitting);
-  colliders.push({ minX: -5.95, maxX: -2.68, minY: 0, maxY: 2.55, minZ: 10.55, maxZ: 12.55 });
+  group.add(markDestinationCollider(fitting));
 }
 
-function createCounter(group, colliders, mats) {
+function createCounter(group, mats) {
   const counter = new THREE.Group();
   counter.name = 'BINCO · caja detallada';
   counter.add(box(3.25, 0.92, 0.88, 3.82, 0.46, 10.65, mats.timberDark));
@@ -856,21 +856,19 @@ function createCounter(group, colliders, mats) {
   counter.add(box(0.28, 0.09, 0.18, 4.0, 1.12, 10.45, mats.black));
   counter.add(box(0.09, 0.22, 0.12, 4.0, 1.24, 10.45, mats.black));
   createFoldedStack(counter, 4.72, 1.08, 10.63, [0x1c1c1c, 0xd96b2f, 0xf5f2ea], mats);
-  group.add(counter);
-  colliders.push({ minX: 2.15, maxX: 5.55, minY: 0, maxY: 1.48, minZ: 10.1, maxZ: 11.2 });
+  group.add(markDestinationCollider(counter));
 }
 
-function createBench(group, colliders, mats) {
+function createBench(group, mats) {
   const bench = new THREE.Group();
   bench.name = 'BINCO · banco de prueba';
   bench.add(box(2.15, 0.17, 0.72, -3.82, 0.54, 8.15, mats.timber));
   for (const x of [-4.65, -3.0]) bench.add(box(0.16, 0.5, 0.58, x, 0.25, 8.15, mats.darkSteel));
   bench.add(box(2.22, 0.05, 0.79, -3.82, 0.66, 8.15, mats.green));
-  group.add(bench);
-  colliders.push({ minX: -4.95, maxX: -2.7, minY: 0, maxY: 0.75, minZ: 7.75, maxZ: 8.55 });
+  group.add(markDestinationCollider(bench));
 }
 
-function createMirror(group, colliders, mats) {
+function createMirror(group, mats) {
   const mirror = new THREE.Group();
   mirror.name = 'BINCO · espejo de cuerpo entero';
   mirror.add(box(1.35, 2.5, 0.09, 0, 1.3, -0.05, mats.darkSteel));
@@ -878,8 +876,7 @@ function createMirror(group, colliders, mats) {
   mirror.add(box(1.18, 2.32, 0.035, 0, 1.3, 0.01, glass));
   mirror.position.set(5.78, 0, 8.45);
   mirror.rotation.y = -Math.PI / 2;
-  group.add(mirror);
-  colliders.push({ minX: 5.35, maxX: 5.95, minY: 0, maxY: 2.65, minZ: 7.75, maxZ: 9.15 });
+  group.add(markDestinationCollider(mirror));
 }
 
 function addHangingSign(group, texture, x, z, width, height, mats) {
@@ -898,10 +895,12 @@ function addHangingSign(group, texture, x, z, width, height, mats) {
   group.add(rodBetween(new THREE.Vector3(x + width * 0.32, 2.94, z), new THREE.Vector3(x + width * 0.32, ROOM_H - 0.08, z), 0.015, mats.darkSteel));
 }
 
-export function buildBincoShopSet(scene, collection) {
+export function buildBincoShopSet(scene, collection, {
+  productFloor = collection?.piso ?? 3,
+  sectionLabel = collection?.name ?? 'HOOP SEASON',
+} = {}) {
   const group = new THREE.Group();
   group.name = 'PRUEBA BINCO · tienda FOURTWENTY completa';
-  const colliders = [];
   const mats = materials();
   const colors = collection?.colors ?? [0xd96b2f, 0x1c1c1c, 0xf5f2ea, 0x4b2e83, 0xd4af37];
 
@@ -912,23 +911,23 @@ export function buildBincoShopSet(scene, collection) {
     group.add(box(0.32, 0.09, 0.52, x, 1.68, -3.55, mats.darkSteel));
   }
 
-  createWallBay(group, colliders, { side: 'left', centerZ: 0.1, colors, slotOffset: 0, mats });
-  createWallBay(group, colliders, { side: 'left', centerZ: 4.55, colors: colors.slice().reverse(), slotOffset: 2, mats });
-  createWallBay(group, colliders, { side: 'right', centerZ: 0.5, colors, slotOffset: 1, mats });
-  createShoeWall(group, colliders, { side: 'right', centerZ: 5.45, colors, mats });
+  createWallBay(group, { side: 'left', centerZ: 0.1, colors, slotOffset: 0, productFloor, mats });
+  createWallBay(group, { side: 'left', centerZ: 4.55, colors: colors.slice().reverse(), slotOffset: 2, productFloor, mats });
+  createWallBay(group, { side: 'right', centerZ: 0.5, colors, slotOffset: 1, productFloor, mats });
+  createShoeWall(group, { side: 'right', centerZ: 5.45, colors, mats });
 
-  createRollingRack(group, colliders, { x: -2.55, z: 3.4, colors, mats, slotOffset: 0 });
-  createRollingRack(group, colliders, { x: 2.55, z: 6.8, colors: colors.slice().reverse(), mats, rotation: Math.PI / 2, slotOffset: 2 });
-  createDisplayTable(group, colliders, { x: 2.35, z: 2.6, colors, mats });
+  createRollingRack(group, { x: -2.55, z: 3.4, colors, mats, productFloor, slotOffset: 0 });
+  createRollingRack(group, { x: 2.55, z: 6.8, colors: colors.slice().reverse(), mats, productFloor, rotation: Math.PI / 2, slotOffset: 2 });
+  createDisplayTable(group, { x: 2.35, z: 2.6, colors, mats });
 
-  createMannequin(group, colliders, { x: -4.4, z: -2.9, rotation: 0.08, shirtColor: colors[0], pantsColor: 0x232527, mats, cap: true });
-  createMannequin(group, colliders, { x: 4.4, z: -2.9, rotation: -0.12, shirtColor: colors[3], pantsColor: 0x1d1e20, mats });
-  createMannequin(group, colliders, { x: -1.35, z: 8.55, rotation: Math.PI, shirtColor: colors[2], pantsColor: colors[1], mats, cap: true });
+  createMannequin(group, { x: -4.4, z: -2.9, rotation: 0.08, shirtColor: colors[0], pantsColor: 0x232527, mats, cap: true });
+  createMannequin(group, { x: 4.4, z: -2.9, rotation: -0.12, shirtColor: colors[3], pantsColor: 0x1d1e20, mats });
+  createMannequin(group, { x: -1.35, z: 8.55, rotation: Math.PI, shirtColor: colors[2], pantsColor: colors[1], mats, cap: true });
 
-  createCounter(group, colliders, mats);
-  createFittingRooms(group, colliders, mats);
-  createBench(group, colliders, mats);
-  createMirror(group, colliders, mats);
+  createCounter(group, mats);
+  createFittingRooms(group, mats);
+  createBench(group, mats);
+  createMirror(group, mats);
 
   addPhotoPoster(group, {
     path: 'assets/ui/hoop-season-loading.png',
@@ -952,7 +951,7 @@ export function buildBincoShopSet(scene, collection) {
   );
   addHangingSign(
     group,
-    signTexture('HOOP SEASON', 'JERSEYS / TEES / STREET', { background: '#244b34', foreground: '#eee5d2', accent: '#d8aa42' }),
+    signTexture(sectionLabel, 'JERSEYS / TEES / STREET', { background: '#244b34', foreground: '#eee5d2', accent: '#d8aa42' }),
     0.1,
     9.1,
     3.2,
@@ -979,5 +978,5 @@ export function buildBincoShopSet(scene, collection) {
     object.receiveShadow = true;
   });
   scene.add(group);
-  return colliders;
+  return [];
 }

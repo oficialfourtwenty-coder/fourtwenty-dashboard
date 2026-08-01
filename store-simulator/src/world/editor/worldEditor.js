@@ -169,6 +169,11 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     panel.setStatus(message);
   }
 
+  function notifyWorldChanged() {
+    if (renderer.shadowMap) renderer.shadowMap.needsUpdate = true;
+    window.dispatchEvent(new CustomEvent('fourtwenty:world-edited'));
+  }
+
   function setScene(nextScene) {
     if (!nextScene || nextScene === currentScene) return;
     deselect();
@@ -303,6 +308,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     if (group === 'scale') state.selectedObject.scale.setComponent(index, Math.max(0.001, value));
     updateHelper();
     refreshPanel();
+    notifyWorldChanged();
     scheduleSave();
   }
 
@@ -315,6 +321,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       return;
     }
     refreshSelected();
+    notifyWorldChanged();
     scheduleSave();
     setStatus(`Color ${colorInfo.value} aplicado.`);
   }
@@ -328,6 +335,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       return;
     }
     refreshSelected();
+    notifyWorldChanged();
     scheduleSave();
     setStatus(`Rango de iluminacion ${rangeInfo.value} aplicado.`);
   }
@@ -339,7 +347,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
 
   function saveNow(message) {
     clearTimeout(saveTimer);
-    const ok = saveLocalLayout(serializeCurrentLayout());
+    const ok = saveLocalLayout(serializeCurrentLayout(), { preserveOtherDestinations: true });
     setStatus(ok ? message : 'No se pudo guardar local.');
   }
 
@@ -423,6 +431,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       return;
     }
     selectId(entry.id);
+    notifyWorldChanged();
     saveNow(`${entry.name} creado frente a BOB.`);
   }
 
@@ -462,6 +471,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       entry.type = 'furniture';
       entry.object3D.userData.editorCollider = true;
       selectId(entry.id);
+      notifyWorldChanged();
       saveNow(`${preset.name} agregado.`);
       return;
     }
@@ -484,6 +494,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       return;
     }
     selectId(id);
+    notifyWorldChanged();
     saveNow(`${preset.name} agregado.`);
   }
 
@@ -496,6 +507,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     clearLocalLayout();
     const base = await loadBaseLayout();
     applyLayout(base);
+    notifyWorldChanged();
     refreshPanel();
     updateHelper();
     setStatus('Layout local borrado y base aplicada. Refresca si agregaste o quitaste objetos.');
@@ -515,6 +527,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       }
       applyLayout(layout);
       saveLocalLayout(layout);
+      notifyWorldChanged();
       refreshPanel();
       updateHelper();
       setStatus('JSON importado y guardado localmente.');
@@ -546,6 +559,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       return;
     }
     selectId(entry.id);
+    notifyWorldChanged();
     saveNow(`Pegado: ${entry.name}.`);
   }
 
@@ -560,6 +574,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       return;
     }
     selectId(entry.id);
+    notifyWorldChanged();
     saveNow(`Duplicado: ${entry.name}.`);
   }
 
@@ -568,6 +583,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     const entry = getEditableById(state.selectedId);
     const result = removeEditable(state.selectedId);
     deselect();
+    notifyWorldChanged();
     if (result === 'removed') saveNow(`${entry.name} borrado.`);
     else if (result === 'hidden') saveNow(`${entry.name} oculto (en la lista podes volver a mostrarlo).`);
   }
@@ -577,6 +593,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     const entry = getEditableById(state.selectedId);
     const visible = setEditableVisible(state.selectedId, !isEditableEffectivelyVisible(state.selectedId));
     updateHelper();
+    notifyWorldChanged();
     saveNow(visible ? `${entry.name} visible.` : `${entry.name} oculto.`);
   }
 
@@ -693,6 +710,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   transformControls.addEventListener('objectChange', () => {
     updateHelper();
     refreshSelected(); // liviano: no reconstruye la lista en cada frame de drag
+    notifyWorldChanged();
     scheduleSave();
   });
 

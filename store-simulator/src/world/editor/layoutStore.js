@@ -1,5 +1,8 @@
 const BASE_LAYOUT_URL = '/assets/layouts/furniture-layout.json';
 const LOCAL_STORAGE_KEY = 'fourtwenty-editor-layout-burela-retro';
+const HOOP_BASE_MIGRATION_KEY = 'fourtwenty-editor-hoop-base-all-floors-v1';
+const HOOP_DESTINATION_ID = 2;
+const HOOP_BASE_TARGETS = [1, 3, 4, 5];
 
 function isLayout(value) {
   return Array.isArray(value);
@@ -53,15 +56,85 @@ export function getLocalLayout() {
   }
 }
 
+function destinationPrefix(destinationId) {
+  return `destino-${destinationId}:`;
+}
+
+function copyHoopBaseToAllFloors(layout) {
+  const sourcePrefix = destinationPrefix(HOOP_DESTINATION_ID);
+  const sourceItems = layout.filter((item) => item?.id?.startsWith(sourcePrefix));
+  if (!sourceItems.length) return null;
+
+  const targetPrefixes = HOOP_BASE_TARGETS.map(destinationPrefix);
+  const migrated = layout.filter((item) => !targetPrefixes.some((prefix) => item?.id?.startsWith(prefix)));
+
+  for (const targetId of HOOP_BASE_TARGETS) {
+    const targetPrefix = destinationPrefix(targetId);
+    for (const source of sourceItems) {
+      const copy = {
+        ...source,
+        id: `${targetPrefix}${source.id.slice(sourcePrefix.length)}`,
+      };
+      if (typeof source.type === 'string' && source.type === `destino-${HOOP_DESTINATION_ID}`) {
+        copy.type = `destino-${targetId}`;
+      }
+      if (source.cloneOf?.startsWith(sourcePrefix)) {
+        copy.cloneOf = `${targetPrefix}${source.cloneOf.slice(sourcePrefix.length)}`;
+      }
+      migrated.push(copy);
+    }
+  }
+  return migrated;
+}
+
+function migrateHoopBaseLayout(layout) {
+  try {
+    if (localStorage.getItem(HOOP_BASE_MIGRATION_KEY) === '1') return layout;
+    const migrated = copyHoopBaseToAllFloors(layout);
+    if (!migrated) return layout;
+    localStorage.setItem(LOCAL_STORAGE_KEY, formatLayoutJSON(migrated));
+    localStorage.setItem(HOOP_BASE_MIGRATION_KEY, '1');
+    console.info('FOURTWENTY editor: la base guardada de Hoop Season se copio a los demas pisos.');
+    return migrated;
+  } catch (error) {
+    console.warn('No se pudo copiar la base de Hoop Season a los demas pisos.', error);
+    return layout;
+  }
+}
+
 export async function loadInitialLayout() {
   const local = getLocalLayout();
-  if (local) return local;
+  if (local) return migrateHoopBaseLayout(local);
   return loadBaseLayout();
 }
 
-export function saveLocalLayout(layout) {
+function destinationScope(item) {
+  const id = String(item?.id ?? '');
+  const prefixed = id.match(/^destino-(\d+):/);
+  if (prefixed) return Number(prefixed[1]);
+  const elevator = id.match(/^elevator-destination-(\d+)$/);
+  if (elevator) return Number(elevator[1]);
+  const arcade = id.match(/^destination-(\d+)-minigame-arcade/);
+  if (arcade) return Number(arcade[1]);
+  if (id.startsWith('origin-minigame-arcade')) return 1;
+  return null;
+}
+
+function preserveUnloadedDestinations(layout) {
+  const previous = getLocalLayout();
+  if (!previous) return layout;
+  const loadedDestinations = new Set(layout.map(destinationScope).filter(Number.isFinite));
+  const preserved = previous.filter((item) => {
+    const scope = destinationScope(item);
+    return Number.isFinite(scope) && !loadedDestinations.has(scope);
+  });
+  return [...preserved, ...layout];
+}
+
+export function saveLocalLayout(layout, { preserveOtherDestinations = false } = {}) {
   try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, formatLayoutJSON(layout));
+    const layoutToSave = preserveOtherDestinations ? preserveUnloadedDestinations(layout) : layout;
+    localStorage.setItem(LOCAL_STORAGE_KEY, formatLayoutJSON(layoutToSave));
     console.info(`FOURTWENTY editor: layout guardado en ${LOCAL_STORAGE_KEY}. Para fijarlo en repo, exporta el JSON y reemplaza public/assets/layouts/furniture-layout.json.`);
     return true;
   } catch (error) {
@@ -73,6 +146,7 @@ export function saveLocalLayout(layout) {
 export function clearLocalLayout() {
   try {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
+    localStorage.removeItem(HOOP_BASE_MIGRATION_KEY);
     return true;
   } catch (error) {
     console.warn('No se pudo limpiar el layout local.', error);
