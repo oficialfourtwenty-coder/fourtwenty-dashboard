@@ -9,10 +9,14 @@ const DEFAULTS = Object.freeze({
   policeHealth: 3,
   policeSpeed: 2.05,
   policeAggroDistance: 10,
+  policeShootDistance: 15,
+  policeFireInterval: 2.8,
 });
 
 const DEFAULT_STATION = new THREE.Vector3(-12.9, -6, 75.6);
 const tempDirection = new THREE.Vector3();
+const tempShotStart = new THREE.Vector3();
+const tempShotEnd = new THREE.Vector3();
 
 function horizontalDistance(a, b) {
   return Math.hypot(a.x - b.x, a.z - b.z);
@@ -178,11 +182,37 @@ export function createPackageStationMission({
     carriedPackage.visible = false;
     player.rig.add(carriedPackage);
 
-    deliveryRing = new THREE.Mesh(
-      ownGeometry(new THREE.TorusGeometry(1.35, 0.08, 8, 36)),
-      ownMaterial(new THREE.MeshBasicMaterial({ color: 0xf0d34c, transparent: true, opacity: 0.88 })),
+    deliveryRing = new THREE.Group();
+    deliveryRing.name = 'MISION · zona amarilla de entrega';
+    const deliveryFill = new THREE.Mesh(
+      ownGeometry(new THREE.CircleGeometry(4.2, 40)),
+      ownMaterial(new THREE.MeshBasicMaterial({
+        color: 0xf0d34c,
+        transparent: true,
+        opacity: 0.22,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      })),
     );
-    deliveryRing.rotation.x = Math.PI / 2;
+    deliveryFill.rotation.x = -Math.PI / 2;
+    const deliveryOutline = new THREE.Mesh(
+      ownGeometry(new THREE.TorusGeometry(4.2, 0.11, 8, 48)),
+      ownMaterial(new THREE.MeshBasicMaterial({ color: 0xffdf38, transparent: true, opacity: 0.95 })),
+    );
+    deliveryOutline.rotation.x = Math.PI / 2;
+    deliveryOutline.position.y = 0.025;
+    deliveryRing.add(deliveryFill, deliveryOutline);
+    const beaconMaterial = ownMaterial(new THREE.MeshBasicMaterial({
+      color: 0xffd728,
+      transparent: true,
+      opacity: 0.48,
+      depthWrite: false,
+    }));
+    for (const x of [-3.8, 3.8]) {
+      const beacon = new THREE.Mesh(ownGeometry(new THREE.CylinderGeometry(0.07, 0.2, 3.4, 10)), beaconMaterial);
+      beacon.position.set(x, 1.7, 0);
+      deliveryRing.add(beacon);
+    }
     deliveryRing.position.copy(deliveryPosition);
     deliveryRing.visible = false;
     environment.add(deliveryRing);
@@ -217,6 +247,7 @@ export function createPackageStationMission({
       health: settings.policeHealth,
       dead: false,
       attackCooldown: 0,
+      shootCooldown: 0.9 + index * 0.38,
       hitFlash: 0,
       phase: index * 1.37,
       materials: [],
@@ -250,7 +281,11 @@ export function createPackageStationMission({
     visor.position.set(0, 1.61, 0.2);
     const badge = new THREE.Mesh(ownGeometry(new THREE.BoxGeometry(0.09, 0.12, 0.025)), badgeMaterial);
     badge.position.set(0.18, 1.08, 0.205);
-    enemy.visual.add(vest, cap, visor, badge);
+    const weaponMaterial = ownMaterial(new THREE.MeshStandardMaterial({ color: 0x17191b, roughness: 0.46, metalness: 0.35 }));
+    const weapon = new THREE.Mesh(ownGeometry(new THREE.BoxGeometry(0.11, 0.13, 0.42)), weaponMaterial);
+    weapon.position.set(0.31, 0.88, 0.3);
+    weapon.rotation.x = -0.16;
+    enemy.visual.add(vest, cap, visor, badge, weapon);
 
     const shadow = new THREE.Mesh(
       ownGeometry(new THREE.CircleGeometry(0.47, 16)),
@@ -278,6 +313,7 @@ export function createPackageStationMission({
         enemy.health = settings.policeHealth;
         enemy.dead = false;
         enemy.attackCooldown = 0;
+        enemy.shootCooldown = 0.9 + enemy.index * 0.38;
         enemy.hitFlash = 0;
         enemy.root.position.copy(enemy.spawnPosition);
         enemy.root.position.y = sampleGround(enemy.root.position.x, enemy.root.position.z);
@@ -333,7 +369,9 @@ export function createPackageStationMission({
   function updateHud() {
     timerEl.textContent = formatTime(timeLeft);
     healthEl.textContent = String(Math.max(0, health));
-    objectiveEl.textContent = hasPackage ? 'LLEVA EL PAQUETE A LA ESTACION' : 'ENCONTRA EL PAQUETE';
+    objectiveEl.textContent = hasPackage
+      ? 'LLEVA EL PAQUETE A LA ZONA AMARILLA DE LA ESTACION'
+      : 'ENCONTRA EL PAQUETE';
   }
 
   function reset() {
@@ -379,12 +417,40 @@ export function createPackageStationMission({
     updateHud();
   }
 
-  function addShotEffect(start, end, hit) {
+  function addShotEffect(start, end, hit, color = null, duration = 0.09) {
     const geometry = ownGeometry(new THREE.BufferGeometry().setFromPoints([start, end]));
-    const material = ownMaterial(new THREE.LineBasicMaterial({ color: hit ? 0xff493f : 0xf4df78, transparent: true, opacity: 0.9 }));
+    const material = ownMaterial(new THREE.LineBasicMaterial({
+      color: color ?? (hit ? 0xff493f : 0xf4df78),
+      transparent: true,
+      opacity: 0.9,
+    }));
     const line = new THREE.Line(geometry, material);
     effects.add(line);
-    shotEffects.push({ line, geometry, material, life: 0.09 });
+    shotEffects.push({ line, geometry, material, life: duration, duration });
+  }
+
+  function damagePlayer(message, cooldown) {
+    if (playerDamageCooldown > 0 || outcome) return;
+    health -= 1;
+    playerDamageCooldown = cooldown;
+    showToast(message);
+    updateHud();
+    if (health <= 0) finish('lose');
+  }
+
+  function firePoliceShot(enemy, distance) {
+    enemy.shootCooldown = settings.policeFireInterval + ((enemy.index * 0.47 + elapsed) % 0.9);
+    tempShotStart.copy(enemy.root.position).add(new THREE.Vector3(0.28, 1.05, 0));
+    tempShotEnd.copy(player.position).add(new THREE.Vector3(0, 1.02, 0));
+    const accuracy = THREE.MathUtils.clamp(0.22 + (1 - distance / settings.policeShootDistance) * 0.34, 0.22, 0.56);
+    const hit = Math.random() < accuracy;
+    if (!hit) {
+      tempShotEnd.x += (Math.random() - 0.5) * 4.5;
+      tempShotEnd.y += (Math.random() - 0.5) * 2.2;
+      tempShotEnd.z += (Math.random() - 0.5) * 3.5;
+    }
+    addShotEffect(tempShotStart.clone(), tempShotEnd.clone(), hit, 0xff332d, 0.18);
+    if (hit) damagePlayer('LA POLICIA LE DISPARO A BOB', 1.65);
   }
 
   function shoot(event) {
@@ -422,6 +488,7 @@ export function createPackageStationMission({
     playerDamageCooldown = Math.max(0, playerDamageCooldown - dt);
     for (const enemy of enemies) {
       enemy.attackCooldown = Math.max(0, enemy.attackCooldown - dt);
+      enemy.shootCooldown = Math.max(0, enemy.shootCooldown - dt);
       enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
       for (const material of enemy.materials) {
         if (material.color) material.emissive?.setHex(enemy.hitFlash > 0 ? 0x8f0909 : 0x000000);
@@ -434,15 +501,21 @@ export function createPackageStationMission({
 
       const distance = horizontalDistance(enemy.root.position, player.position);
       const shouldChase = hasPackage || distance <= settings.policeAggroDistance;
-      if (shouldChase && distance > 1.05) {
+      const approachDistance = hasPackage ? 4.2 : 2.4;
+      if (shouldChase) {
         tempDirection.set(
           player.position.x - enemy.root.position.x,
           0,
           player.position.z - enemy.root.position.z,
         ).normalize();
-        const speed = settings.policeSpeed * (hasPackage ? 1.12 : 1);
-        enemy.root.position.addScaledVector(tempDirection, speed * dt);
         enemy.root.rotation.y = Math.atan2(tempDirection.x, tempDirection.z);
+        if (distance > approachDistance) {
+          const speed = settings.policeSpeed * (hasPackage ? 1.12 : 1);
+          enemy.root.position.addScaledVector(tempDirection, speed * dt);
+        }
+        if (distance <= settings.policeShootDistance && enemy.shootCooldown <= 0) {
+          firePoliceShot(enemy, distance);
+        }
       }
       enemy.root.position.x = THREE.MathUtils.clamp(enemy.root.position.x, bounds.minX + 1, bounds.maxX - 1);
       enemy.root.position.z = THREE.MathUtils.clamp(enemy.root.position.z, bounds.minZ + 1, bounds.maxZ - 1);
@@ -450,9 +523,7 @@ export function createPackageStationMission({
       enemy.visual.position.y = Math.abs(Math.sin(elapsed * 7 + enemy.phase)) * (shouldChase ? 0.035 : 0.012);
 
       if (distance < 1.18 && enemy.attackCooldown <= 0 && playerDamageCooldown <= 0) {
-        health -= 1;
         enemy.attackCooldown = 1.15;
-        playerDamageCooldown = 1.05;
         tempDirection.set(
           enemy.root.position.x - player.position.x,
           0,
@@ -461,9 +532,7 @@ export function createPackageStationMission({
         if (tempDirection.lengthSq() > 0.001) {
           enemy.root.position.addScaledVector(tempDirection.normalize(), 0.8);
         }
-        showToast('BOB RECIBIO UN GOLPE');
-        updateHud();
-        if (health <= 0) finish('lose');
+        damagePlayer('BOB RECIBIO UN GOLPE', 1.05);
       }
     }
   }
@@ -472,7 +541,7 @@ export function createPackageStationMission({
     for (let index = shotEffects.length - 1; index >= 0; index--) {
       const effect = shotEffects[index];
       effect.life -= dt;
-      effect.material.opacity = Math.max(0, effect.life / 0.09);
+      effect.material.opacity = Math.max(0, effect.life / effect.duration);
       if (effect.life > 0) continue;
       effects.remove(effect.line);
       effect.geometry.dispose();
@@ -538,9 +607,12 @@ export function createPackageStationMission({
 
     packageRoot.rotation.y += dt * 1.3;
     packageRoot.position.y = packagePosition.y + Math.sin(elapsed * 3.2) * 0.08;
-    deliveryRing.rotation.z += dt * 0.65;
+    const deliveryPulse = 1 + Math.sin(elapsed * 3.4) * 0.045;
+    deliveryRing.scale.set(deliveryPulse, 1, deliveryPulse);
     if (!hasPackage && horizontalDistance(player.position, packageRoot.position) < 1.15) pickupPackage();
-    if (hasPackage && horizontalDistance(player.position, deliveryPosition) < 1.55) finish('win');
+    const reachedDelivery = horizontalDistance(player.position, deliveryPosition) < 5.6
+      || (player.position.z >= deliveryPosition.z - 2.2 && Math.abs(player.position.x - deliveryPosition.x) < 19);
+    if (hasPackage && reachedDelivery) finish('win');
 
     updatePolice(dt);
     updateEffects(dt);
