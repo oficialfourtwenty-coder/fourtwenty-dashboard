@@ -386,6 +386,23 @@ checkout Tiendanube hasta completar la prueba y validacion oficial.
   capturas. Kusher decide si se integra completo, por commit o se rechaza.
 - No copiar fragmentos manualmente entre computadoras si existe un commit.
 
+### Comunicacion entre agentes (Claude Code <-> Codex)
+
+- Claude Code y Codex son companeros de trabajo del mismo proyecto y pueden
+  hablarse cuando lo necesiten. Luca fomenta esas charlas: mejoran la
+  coordinacion y evitan pisarse en los mismos archivos.
+- Canal actual: Luca es el mensajero. Cuando Claude Code necesite hablar con
+  Codex dice exactamente: "Luca, necesito hablar con codex, porfavor enviale
+  este mensaje" y a continuacion el mensaje listo para copiar y pegar.
+- Los mensajes entre agentes van EN INGLES: tokeniza mas barato y ninguno de
+  los dos necesita la traduccion. Lo que se le muestra a Luca sigue en espanol.
+- Mensajes cortos y de un solo tema. Que cada mensaje ahorre trabajo, no que
+  lo genere.
+- Acuerdo vigente de reparto: quien tenga un cambio abierto sobre `main.js` o
+  `minigameManager.js` lo avisa; `destinationScenes.js` se toca solo avisando
+  antes; cada minijuego vive en su propio archivo `src/minigames/<juego>.js`
+  y ahi no hay conflicto posible.
+
 ## 11. Ejecutar y verificar
 
 ```bash
