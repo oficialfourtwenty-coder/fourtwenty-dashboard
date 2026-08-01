@@ -1,6 +1,6 @@
 # Simulador Bobilonia Maestro - contexto obligatorio
 
-Ultima actualizacion documental: 31 de julio de 2026.
+Ultima actualizacion documental: 1 de agosto de 2026.
 
 Este archivo es la fuente de contexto que deben leer Claude, Claude Code, Codex
 y cualquier colaborador antes de trabajar. El dueno no programa: explicar los
@@ -13,8 +13,13 @@ producto que no esten escritas aqui.
 - Raiz local de Kusher: `/Users/kusher/Desktop/fourtwenty-dashboard`.
 - Aplicacion: `store-simulator/`.
 - Rama oficial actual: `version-jueves-30`.
-- Ultimo checkpoint de codigo aprobado antes de esta actualizacion documental:
-  `dc8cd86` (`feat(simulator): consolidate Bobilonia web checkpoint`).
+- `version-jueves-30` es un nombre historico de rama, no una fecha limite.
+- Ultimo checkpoint funcional incluido antes de esta actualizacion documental:
+  `e6123bc` (`feat(simulator): add per-floor environment drop folders`).
+- Bitacora detallada vigente:
+  `store-simulator/design/ESTADO_ACTUAL_Y_BITACORA.md`.
+- Manual de vision y decisiones en Notion:
+  `https://www.notion.so/3aba25d04bd08107bb9bf70276a2e561`.
 - Checkpoint anterior: `version-lunes-13` en `551b429`.
 - Respaldo historico: `domingo-12`.
 - `codex/prueba-telefono` ya fue incorporada al checkpoint actual. No tratarla
@@ -32,8 +37,9 @@ git status --short --branch
 git pull --ff-only
 ```
 
-No empezar todavia el pase visual PS3. Kusher esta procesando el plan y dara la
-proxima indicacion. Esta actualizacion es solo documental.
+El pase visual ya comenzo mediante pruebas aprobadas como base, pero todavia no
+alcanzo el resultado final GTA V/PS3. Kusher decide el siguiente bloque de
+trabajo y puede cambiar el orden del plan cuando lo desee.
 
 ## 2. Vision actual del producto
 
@@ -57,12 +63,16 @@ Decisiones vigentes del dueno:
 - FT$ queda postergado. El dueno puede manejarlo manualmente si algun dia se
   usa; no construir ahora una economia ni una base de saldos.
 
-## 3. Calendario aprobado para agosto de 2026
+## 3. Prioridades de agosto de 2026
+
+Las fechas siguientes son metas orientativas para no olvidar la compra. No son
+un calendario rigido ni impiden que Kusher elija otra tarea. Ningun agente debe
+rechazar una instruccion directa porque estaba anotada para otra semana.
 
 ### 1 al 14 de agosto: pase visual web
 
 - Medir el estado actual antes de cambiarlo.
-- Crear una rama de prueba separada cuando Kusher autorice el comienzo.
+- Continuar las ramas de prueba visual que Kusher vaya autorizando.
 - Preparar una escena patron: BOB, un tramo de Calle Burela, fachada/entrada,
   interior visible, un auto y ciclo de luz.
 - Pasar del aspecto bloqueado/procedural actual a proporciones, modelos,
@@ -86,6 +96,10 @@ Decisiones vigentes del dueno:
   nunca el funcionamiento de compra.
 - No declarar la version lanzable sin una compra real verificada.
 
+Regla de trabajo real: Kusher trabaja por exploracion visual y funcional. Puede
+pedir ahora un piso, despues una revista, despues una esfera o un minijuego. La
+recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
+
 ### Despues de cerrar web
 
 - Adaptacion y optimizacion mobile.
@@ -100,13 +114,18 @@ Decisiones vigentes del dueno:
   geometria procedural simple, por eso el dueno la describe como Minecraft.
 - Se agregaron modelos GLB grandes y se escalaron para acercar las torres al
   tamano real. Al dueno le gusta esta direccion aunque siga incompleta.
+- El layout oficial incluye varias copias de City Map alrededor de los limites
+  y dos Tram Station para crear fondo urbano, desnivel y vias.
+- City Map y Tram Station fueron comprimidos con Draco sin perder su edicion
+  mediante `T`.
 - El interior del local es la replica actual aprobada por el dueno. Conservar
   posiciones, entrada, espejo, luces y cambios guardados en el editor.
 - El World Editor se abre con `T` o `Tab`: permite buscar, crear una copia
   delante de BOB, mover, rotar, escalar, duplicar, cambiar color y ajustar
   rango de luces.
-- Lo guardado solo en `localStorage` no es oficial. Para consolidar posiciones
-  se exporta `public/assets/layouts/furniture-layout.json`.
+- `Save Local` conserva cambios en el navegador de esa computadora. Para que
+  Claude, Codex, Fer y GitHub los reciban, Kusher debe exportar el JSON y se
+  debe revisar antes de reemplazar `public/assets/layouts/furniture-layout.json`.
 
 ### BOB
 
@@ -149,9 +168,27 @@ Decisiones vigentes del dueno:
 - Apertura inmediata, entrada, cierre y transicion de aproximadamente 1 s.
 - Cada destino es una escena separada. Solo debe existir la escena activa.
 - Los objetos de cada piso deben seguir siendo editables y movibles.
-- Falta definir la estetica, productos y minijuego de cada piso.
-- Estrategia: crear un piso patron y una mecanica de minijuego reutilizable
-  antes de multiplicar trabajo.
+- Los cinco pisos usan temporalmente la base visual Binco/Hoop: estructura de
+  tienda detallada, ladrillo, vidrio, techo panoramico, equipamiento comercial
+  y una esfera exterior 360.
+- La base comun no es la estetica final. Kusher la usara para personalizar cada
+  coleccion.
+- Cada piso tiene una carpeta donde se puede arrastrar una imagen 360 distinta:
+  `src/assets/environments/pisos/`.
+- La esfera se busca como `ESFERA 360` en el editor y puede moverse, rotarse o
+  escalarse.
+- La textura personalizada se libera al salir del piso.
+- Existe una capa generica de minijuegos y el prototipo BOB'S MAZE.
+- La maquina arcade esta temporalmente en todos los pisos y abre el mismo juego
+  para probar experiencia y rendimiento.
+- Error conocido aceptado: dos puntos inferiores derechos del laberinto pueden
+  quedar sin comerse. No corregir sin nuevo pedido.
+
+### Twenty Time
+
+- El puesto de Twenty Time permite abrir un lector de revista.
+- Hay cuatro dobles paginas provisionales y animacion al cambiar de pagina.
+- Imagenes y contenido se reemplazaran por la edicion final de FOURTWENTY.
 
 ### Local y luces
 
@@ -187,17 +224,23 @@ Principios:
   plantas, mobiliario y autos.
 - LOD, instancias, atlas de texturas, colisiones simples y carga diferida.
 
-Orden visual cuando Kusher autorice:
+Evolucion y criterio visual:
 
-1. Capturas y metricas base.
-2. Guia visual corta y presupuestos.
-3. Pipeline GLB/texturas comprimidas.
-4. Escena patron de Calle Burela.
-5. Rig y prenda piloto de BOB.
-6. Calle completa y exterior.
-7. Local y pisos, uno por uno.
-8. Ambiente, sonido, easter eggs y minijuegos.
-9. Pruebas de rendimiento y aprobacion antes de integrar a oficial.
+1. La primera prueba de Hoop con materiales y luces mejoro, pero siguio siendo
+   demasiado basica.
+2. La reconstruccion inspirada en Binco agrego densidad comercial y fue un gran
+   avance, aunque todavia no alcanza el objetivo GTA V/PS3.
+3. La imagen exterior 2D se descarto porque se notaba plana de cerca.
+4. La esfera HDRI 360 con vidrio fue aprobada como base mas abierta y agradable.
+5. La perspectiva del panorama todavia puede generar escalas o pendientes
+   irreales en los costados.
+6. La base se compartio entre pisos para que Kusher pueda editarla y cambiar su
+   panorama. Cada piso se diferenciara despues.
+7. Los siguientes pasos se eligen segun instruccion de Kusher: Burela, pisos,
+   prendas, juegos, celular, revista o compra.
+
+Leer el detalle de intentos y decisiones en
+`store-simulator/design/ESTADO_ACTUAL_Y_BITACORA.md`.
 
 ## 6. Prendas, productos y maniquies
 
@@ -249,15 +292,21 @@ checkout Tiendanube hasta completar la prueba y validacion oficial.
 
 ## 8. Rendimiento, peso y Cloudflare
 
-### Medicion conocida del 30/07
+### Medicion conocida del 01/08
 
-- `dist/`: aproximadamente 583 MB porque Vite copia todo `public/`.
-- Assets publicos: aproximadamente 555 MB.
+- `dist/`: aproximadamente 485 MB porque Vite todavia copia todo `public/`.
+- Assets publicos: aproximadamente 466 MB.
 - Musica WAV: aproximadamente 361 MB.
-- JS principal: aproximadamente 929 KB minificado / 253 KB gzip.
-- Tram Station: aproximadamente 85 MB, 833 meshes y 612k triangulos.
-- City Map: aproximadamente 23 MB y cientos de miles de triangulos.
+- JS principal: aproximadamente 1.02 MB minificado / 285 KB gzip.
+- Tram Station optimizado: aproximadamente 6.2 MB; antes 85.7 MB.
+- City Map optimizado: aproximadamente 1.2 MB; antes 6.1 MB en el archivo que
+  se incorporo a este checkpoint.
+- Entorno HDRI base: 7.0 MB en 2048 x 1024; antes 24.4 MB en 4K.
+- Revista Twenty Time: aproximadamente 520 KB.
+- Muebles GLB: aproximadamente 39 MB.
 - Autos: aproximadamente 4 MB cada uno.
+- El build detecta algunos muebles de 330k a 501k triangulos y reduce sombras y
+  postprocesado cuando mide bajo rendimiento.
 
 ### Objetivos iniciales
 
@@ -288,6 +337,8 @@ checkout Tiendanube hasta completar la prueba y validacion oficial.
 - `src/world/street.js`: Calle Burela, exterior y local base.
 - `src/world/building.js`: construccion interior anterior y luces.
 - `src/world/destinationScenes.js`: escenas aisladas de pisos y terraza.
+- `src/world/bincoShopTrial.js`: base comercial detallada compartida y esfera.
+- `src/world/floorEnvironmentCatalog.js`: imagen 360 elegida por carpeta/piso.
 - `src/world/dayNightCycle.js`: hora, paleta, sol y luna.
 - `src/world/editor/`: editor, catalogo, seleccion y persistencia.
 - `src/player/bob3d.js`: carga, movimiento y animacion de BOB.
@@ -295,6 +346,10 @@ checkout Tiendanube hasta completar la prueba y validacion oficial.
 - `src/ui/phone.js`: celular, musica, carrito, reloj y opcion 4.
 - `src/audio/musicPlayer.js`: estado musical compartido.
 - `src/data/cartStore.js`: estado del carrito entre escenas.
+- `src/minigames/`: capa generica y BOB'S MAZE.
+- `src/world/originArcade.js`: maquina arcade reemplazable/editable.
+- `src/interact/twentyTimeInteract.js`: interaccion del puesto Twenty Time.
+- `src/ui/twentyTimeReader.js`: lector y cambio animado de paginas.
 - `src/integrations/tiendanube/`: catalogo y futura integracion comercial.
 - `public/assets/layouts/furniture-layout.json`: posiciones oficiales del editor.
 - `public/assets/data/productos.json`: catalogo publicado del simulador.
@@ -302,10 +357,15 @@ checkout Tiendanube hasta completar la prueba y validacion oficial.
 ## 10. Flujo de trabajo obligatorio
 
 - Kusher conserva control total y decide que entra a la rama oficial.
+- Kusher puede elegir el siguiente bloque sin respetar un orden fijo. Las fechas
+  son recordatorios de prioridad, no limites para una tarea.
+- Una instruccion nueva y directa de Kusher manda sobre el plan anterior.
 - Experimentos grandes se hacen en una rama separada desde la oficial.
 - No perder posiciones, colores ni objetos guardados por Kusher.
 - No revertir cambios ajenos ni limpiar archivos sin autorizacion.
 - Un bloque por vez: implementar, probar, medir, mostrar y pedir aprobacion.
+- Crear primero un patron sigue siendo recomendable cuando evita mucho
+  retrabajo, pero no debe usarse para bloquear una instruccion del dueno.
 - Si al dueno no le gusta una prueba, se descarta la rama y la oficial queda
   exactamente como estaba.
 - Antes de integrar: `npm run build`, prueba web, consola sin errores y captura
@@ -360,12 +420,12 @@ lanzamiento web deben cumplirse todos estos puntos:
 
 ## 13. No hacer sin nueva aprobacion
 
-- No iniciar todavia el pase visual.
 - No optimizar mobile durante la fase web.
 - No construir FT$.
 - No construir la plataforma multi-marca 2027.
 - No asumir una arquitectura de pago como aprobada.
-- No reemplazar todo el mundo de una vez: primero escena patron.
+- No reemplazar todo el mundo de una vez sin pedido directo; normalmente mostrar
+  primero una prueba pequeña cuando el riesgo sea alto.
 - No subir musica sin permiso ni modelos sin revisar peso/licencia.
 - No cambiar rama oficial, nombre de version o fecha de lanzamiento por cuenta
   propia.

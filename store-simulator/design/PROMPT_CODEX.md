@@ -7,17 +7,25 @@ leer completo `/Users/kusher/Desktop/fourtwenty-dashboard/CLAUDE.md`.
 
 - Proyecto: Simulador Bobilonia Maestro, Three.js + Vite.
 - Rama oficial: `version-jueves-30`.
-- Ultimo checkpoint de codigo aprobado: `dc8cd86`.
+- El nombre de la rama es historico, no una fecha limite.
+- Ultimo checkpoint funcional incluido: `e6123bc`.
 - Prioridad: web/escritorio.
 - Objetivo visual: juego web inspirado en GTA V de PlayStation 3.
 - Mobile se adapta despues de cerrar web.
 - La compra real es condicion obligatoria de lanzamiento.
 - Plataforma para otras marcas y FT$ quedan pausados.
 
-## Regla inmediata
+## Estado y regla inmediata
 
-No empezar todavia el pase visual. Kusher esta revisando el plan y dara una
-indicacion concreta. Cuando la de:
+El pase visual ya comenzo y tiene una base Binco/Hoop con esfera 360, vidrio y
+estructura compartida entre pisos. Tambien existen BOB'S MAZE, la maquina
+arcade en todos los pisos y el lector de Twenty Time. Leer antes de trabajar:
+
+- `CLAUDE.md`.
+- `store-simulator/design/ESTADO_ACTUAL_Y_BITACORA.md`.
+
+Kusher elige el siguiente bloque. Las fechas son orientativas y no deben usarse
+para bloquear una instruccion. Cuando de una indicacion:
 
 1. Confirmar rama, commit y `git status`.
 2. Crear una rama experimental desde la oficial si el cambio es grande.
@@ -28,11 +36,14 @@ indicacion concreta. Cuando la de:
 7. Mostrar como probar y capturas si cambia lo visual.
 8. No integrar en oficial sin aprobacion explicita de Kusher.
 
-## Orden aprobado para agosto
+## Prioridades orientativas para agosto
 
 - 1–14/8: escena visual patron y pase web.
 - 15–23/8: mundo y experiencias posibles.
 - 24–31/8: congelar estetica y completar compra real.
 
+La compra sigue siendo obligatoria para publicar, pero Kusher puede alternar
+ahora entre mundo, pisos, revista, juegos, celular, prendas y estetica.
+
 Si una tarea contradice `CLAUDE.md`, detenerse y pedir confirmacion. GitHub es
-la fuente tecnica; el Plan Maestro de Notion contiene vision y calendario.
+la fuente tecnica; el Plan Maestro de Notion contiene vision y decisiones.
