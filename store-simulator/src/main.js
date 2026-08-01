@@ -42,13 +42,15 @@ import { createDayNightCycle } from './world/dayNightCycle.js';
 import { createMinigameManager } from './minigames/minigameManager.js';
 import { loadMinigame, getMinigameName } from './minigames/registry.js';
 
-const QUALITY = new URLSearchParams(location.search).get('q') === 'low' ? 'low' : 'high';
+const URL_PARAMS = new URLSearchParams(location.search);
+const QUALITY = URL_PARAMS.get('q') === 'low' ? 'low' : 'high';
+const PERF_AUDIT = URL_PARAMS.get('perfAudit') === '1';
 
 const canvas = document.getElementById('game');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: QUALITY === 'high' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, QUALITY === 'high' ? 2 : 1));
 renderer.shadowMap.enabled = QUALITY === 'high';
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.0;
 
@@ -71,8 +73,10 @@ const editableColliderBox = new THREE.Box3();
 const editableColliderPartBox = new THREE.Box3();
 const editableColliderSize = new THREE.Vector3();
 const streetRuntimeColliders = [];
+const streetEditableColliders = [];
 const streetRuntimeSteppables = [];
 const destinationRuntimeColliders = [];
+let streetEditablesDirty = true;
 
 // ---- Step-offset genérico (consciente de rotación) -------------------------
 // Un objeto "pared" bloquea con una caja alineada a los ejes del mundo — eso
@@ -161,17 +165,70 @@ if (QUALITY === 'high') {
   composer.addPass(new OutputPass());
 }
 
+const PERF_SAMPLE_COUNT = 240;
+const perfFrameTimes = new Float32Array(PERF_SAMPLE_COUNT);
+let perfFrameCursor = 0;
+let perfFrameTotal = 0;
+let perfSnapshotAt = 0;
+let cachedPerfSnapshot = null;
+
+function recordPerfFrame(dt) {
+  if (!PERF_AUDIT || !Number.isFinite(dt) || dt <= 0 || dt > 1) return;
+  perfFrameTimes[perfFrameCursor] = dt * 1000;
+  perfFrameCursor = (perfFrameCursor + 1) % PERF_SAMPLE_COUNT;
+  perfFrameTotal++;
+}
+
+function getPerfSnapshot() {
+  if (!PERF_AUDIT) return null;
+  const now = Date.now();
+  if (cachedPerfSnapshot && now - perfSnapshotAt < 500) return cachedPerfSnapshot;
+  const count = Math.min(perfFrameTotal, PERF_SAMPLE_COUNT);
+  const samples = Array.from(perfFrameTimes.slice(0, count)).filter((value) => value > 0);
+  samples.sort((left, right) => left - right);
+  const averageMs = samples.length
+    ? samples.reduce((total, value) => total + value, 0) / samples.length
+    : 0;
+  const percentile = (ratio) => samples.length
+    ? samples[Math.min(samples.length - 1, Math.floor(samples.length * ratio))]
+    : 0;
+  cachedPerfSnapshot = {
+    quality: QUALITY,
+    fps: averageMs ? Number((1000 / averageMs).toFixed(1)) : 0,
+    averageMs: Number(averageMs.toFixed(2)),
+    p95Ms: Number(percentile(0.95).toFixed(2)),
+    p99Ms: Number(percentile(0.99).toFixed(2)),
+    worstMs: Number((samples.at(-1) ?? 0).toFixed(2)),
+    framesOver25Ms: samples.filter((value) => value > 25).length,
+    framesOver50Ms: samples.filter((value) => value > 50).length,
+    samples: samples.length,
+    drawCalls: renderer.info.render.calls,
+    triangles: renderer.info.render.triangles,
+    geometries: renderer.info.memory.geometries,
+    textures: renderer.info.memory.textures,
+    pixelRatio: Number(renderer.getPixelRatio().toFixed(2)),
+    postProcessing: Boolean(composer),
+    shadows: renderer.shadowMap.enabled,
+  };
+  perfSnapshotAt = now;
+  return cachedPerfSnapshot;
+}
+
 // Tope de píxeles: en pantallas Retina/4K renderizar a DPR completo funde la
 // GPU (sobre todo en pantalla completa). Piso más alto que antes (0.85, no
 // 0.7) para que no se vea borroso/cuadriculado en pantallas grandes.
 const MAX_PIXELS = QUALITY === 'high' ? 2.6e6 : 1.3e6;
 const MIN_RATIO = 0.85;
+const MISSION_MAX_PIXELS = 1.3e6;
+let missionRenderBudget = false;
 
 function resize() {
   const w = Math.max(1, Math.round(canvas.clientWidth || window.innerWidth));
   const h = Math.max(1, Math.round(canvas.clientHeight || window.innerHeight));
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const ratio = Math.max(MIN_RATIO, Math.min(dpr, Math.sqrt(MAX_PIXELS / (w * h))));
+  const pixelBudget = missionRenderBudget ? Math.min(MAX_PIXELS, MISSION_MAX_PIXELS) : MAX_PIXELS;
+  const minimumRatio = missionRenderBudget ? 0.75 : MIN_RATIO;
+  const ratio = Math.max(minimumRatio, Math.min(dpr, Math.sqrt(pixelBudget / (w * h))));
   renderer.setPixelRatio(ratio);
   renderer.setSize(w, h, false);
   if (composer) {
@@ -182,6 +239,12 @@ function resize() {
   }
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+}
+
+function setMissionRenderBudget(enabled) {
+  if (missionRenderBudget === enabled) return;
+  missionRenderBudget = enabled;
+  resize();
 }
 window.addEventListener('resize', resize);
 window.visualViewport?.addEventListener('resize', resize);
@@ -199,7 +262,9 @@ function checkPerf(dt) {
   if (perfSlow > 40) { // ~40 cuadros lentos acumulados
     downgraded = true;
     renderer.shadowMap.enabled = false;
+    const previousComposer = composer;
     composer = null; // vuelve a renderer.render directo, sin bloom/grade
+    previousComposer?.dispose();
     console.info('FOURTWENTY: rendimiento bajo detectado — sombras y post-processing apagados automáticamente.');
   }
 }
@@ -208,7 +273,10 @@ const {
   colliders: streetColliders,
   outdoorLighting: streetOutdoorLighting,
   whiteLightSwitch: streetWhiteLightSwitch,
-} = buildStreet(scene);
+} = buildStreet(scene, {
+  reflectionSize: QUALITY === 'high' ? 512 : 256,
+  reflectionFrameInterval: QUALITY === 'high' ? 2 : 4,
+});
 let colliders = streetColliders;
 let world = 'street'; // 'street' | 'destination'
 let loading = false;
@@ -221,6 +289,7 @@ let currentDestinationId = 0;
 let activeDestinationRecord = null;
 
 window.addEventListener('fourtwenty:world-edited', () => {
+  streetEditablesDirty = true;
   renderer.shadowMap.needsUpdate = true;
   if (activeDestinationRecord) activeDestinationRecord.collidersDirty = true;
 });
@@ -447,6 +516,7 @@ function applySavedEditorLayout() {
   return loadInitialLayout().then((layout) => {
     applyLayout(layout);
     restoreClones(layout);
+    streetEditablesDirty = true;
     return layout;
   });
 }
@@ -501,6 +571,7 @@ function setupDestinationEditor(record) {
 
 applySavedEditorLayout();
 addFurniture(scene).then(() => {
+  streetEditablesDirty = true;
   renderer.shadowMap.needsUpdate = true;
   applySavedEditorLayout();
 });
@@ -617,6 +688,13 @@ function rebuildDestinationColliders(record) {
   record.collidersDirty = false;
 }
 
+function rebuildStreetEditableColliders() {
+  streetEditableColliders.length = 0;
+  streetRuntimeSteppables.length = 0;
+  appendEditableColliders(streetEditableColliders, streetRuntimeSteppables);
+  streetEditablesDirty = false;
+}
+
 function currentPlayerColliders() {
   if (isPackageMissionOpen()) {
     streetRuntimeColliders.length = 0;
@@ -639,10 +717,9 @@ function currentPlayerColliders() {
     }
     return destinationRuntimeColliders;
   }
+  if (streetEditablesDirty) rebuildStreetEditableColliders();
   streetRuntimeColliders.length = 0;
-  streetRuntimeColliders.push(...streetColliders);
-  streetRuntimeSteppables.length = 0;
-  appendEditableColliders(streetRuntimeColliders, streetRuntimeSteppables);
+  streetRuntimeColliders.push(...streetColliders, ...streetEditableColliders);
   streetRuntimeColliders.push(...streetElevator.getColliders());
   // los autos frenan al jugador (menos el que esté ocupando)
   if (carInteract) streetRuntimeColliders.push(...carInteract.getColliders());
@@ -1225,6 +1302,7 @@ async function startPackageStationMission() {
     ]);
 
     activateDestination(0);
+    setMissionRenderBudget(true);
     activePackageMission = createPackageStationMission({
       scene,
       camera,
@@ -1251,6 +1329,7 @@ async function startPackageStationMission() {
     activePackageMission = null;
     document.body.classList.remove('package-station-mission-open');
     restorePackageMissionReturnState();
+    setMissionRenderBudget(false);
     await elevatorPanel.fadeFromBlack(250);
     return false;
   } finally {
@@ -1272,6 +1351,7 @@ async function exitPackageStationMission() {
     activePackageMission = null;
     document.body.classList.remove('package-station-mission-open');
     restorePackageMissionReturnState();
+    setMissionRenderBudget(false);
     lastZone = null;
     renderer.shadowMap.needsUpdate = true;
     await elevatorPanel.fadeFromBlack(350);
@@ -1317,6 +1397,7 @@ window.__elevatorTest = {
     },
     scene: sceneStats(activeScene),
     dayNight: dayNight.getState(),
+    ...(PERF_AUDIT ? { performance: getPerfSnapshot() } : {}),
   }),
 };
 
@@ -1393,6 +1474,7 @@ let lastZone = null;
 renderer.setAnimationLoop(() => {
   timer.update();
   const rawDt = timer.getDelta();
+  recordPerfFrame(rawDt);
   checkPerf(rawDt);
   const dt = Math.min(rawDt, 0.05);
   elapsed += dt;

@@ -5,6 +5,7 @@ import { createOriginArcade } from './originArcade.js';
 import { addBincoShopLights, buildBincoShopSet, buildBincoShopShell } from './bincoShopTrial.js';
 import { environmentForDestination } from './floorEnvironmentCatalog.js';
 import { buildHoopArena } from './hoopArena.js';
+import { unbindProductVisuals } from './productVisuals.js';
 
 const ROOM_W = 12;
 const BASE_ROOM_D = 9;
@@ -91,16 +92,34 @@ export function disposeDestinationScene(record, player) {
   if (!record?.scene) return;
   record.scene.userData.disposed = true;
   record.elevator?.cancel();
-  record.arena?.dispose(); // las texturas de canvas del estadio no las suelta el traverse
+  record.arena?.dispose();
   record.scene.remove(player.rig, player.shadow);
+  unbindProductVisuals(record.scene);
+  const disposedGeometries = new Set();
+  const disposedMaterials = new Set();
+  const disposedTextures = new Set();
   record.scene.traverse((object) => {
-    if (!object.isMesh) return;
-    object.geometry?.dispose?.();
+    if (!object.userData?.sharedDestinationLight) object.shadow?.dispose?.();
+    if (object.geometry?.dispose && !disposedGeometries.has(object.geometry)) {
+      disposedGeometries.add(object.geometry);
+      object.geometry.dispose();
+    }
     const materials = Array.isArray(object.material) ? object.material : [object.material];
-    for (const material of materials) material?.dispose?.();
+    for (const material of materials) {
+      if (!material?.dispose || disposedMaterials.has(material)) continue;
+      disposedMaterials.add(material);
+      for (const value of Object.values(material)) {
+        if (!value?.isTexture || !value.userData?.destinationOwned || disposedTextures.has(value)) continue;
+        disposedTextures.add(value);
+        value.dispose();
+      }
+      material.dispose();
+    }
   });
   for (const texture of record.scene.userData.disposableEnvironmentTextures ?? []) texture.dispose();
   record.scene.userData.disposableEnvironmentTextures?.clear();
+  record.scene.background = null;
+  record.scene.environment = null;
   record.scene.clear();
 }
 

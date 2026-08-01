@@ -7,10 +7,13 @@ const DOOR_H = 2.34;
 const DOOR_W = 0.9;
 const DOOR_CLOSED_X = DOOR_W / 2;
 const DOOR_OPEN_SHIFT = 0.92;
+let sharedBrushedMetalTexture = null;
+const sharedSignTextures = new Map();
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function brushedMetalTexture() {
+  if (sharedBrushedMetalTexture) return sharedBrushedMetalTexture;
   const canvas = document.createElement('canvas');
   canvas.width = 256;
   canvas.height = 256;
@@ -33,10 +36,12 @@ function brushedMetalTexture() {
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(2, 2);
   texture.anisotropy = 8;
-  return texture;
+  sharedBrushedMetalTexture = texture;
+  return sharedBrushedMetalTexture;
 }
 
 function signTexture(text) {
+  if (sharedSignTextures.has(text)) return sharedSignTextures.get(text);
   const canvas = document.createElement('canvas');
   canvas.width = 512;
   canvas.height = 112;
@@ -54,6 +59,7 @@ function signTexture(text) {
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 8;
+  sharedSignTextures.set(text, texture);
   return texture;
 }
 

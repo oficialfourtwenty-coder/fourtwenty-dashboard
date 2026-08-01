@@ -8342,7 +8342,7 @@
       0.4894839510681678,
       0.5404932531272055
     ],
-    "castShadow": true,
+    "castShadow": false,
     "receiveShadow": true,
     "locked": false,
     "visible": true,
@@ -8369,7 +8369,7 @@
       1,
       1
     ],
-    "castShadow": true,
+    "castShadow": false,
     "receiveShadow": true,
     "locked": false,
     "visible": false,
@@ -8504,7 +8504,7 @@
       1.0025367486805254,
       1
     ],
-    "castShadow": true,
+    "castShadow": false,
     "receiveShadow": true,
     "locked": false,
     "visible": true,
@@ -8530,7 +8530,7 @@
       1,
       1
     ],
-    "castShadow": true,
+    "castShadow": false,
     "receiveShadow": true,
     "locked": false,
     "visible": true,
@@ -8557,7 +8557,7 @@
       0.9035304424062227,
       0.990231862408506
     ],
-    "castShadow": true,
+    "castShadow": false,
     "receiveShadow": true,
     "locked": false,
     "visible": true,
@@ -8584,7 +8584,7 @@
       0.9035304424062227,
       0.990231862408506
     ],
-    "castShadow": true,
+    "castShadow": false,
     "receiveShadow": true,
     "locked": false,
     "visible": true,
@@ -8611,7 +8611,7 @@
       1,
       1
     ],
-    "castShadow": true,
+    "castShadow": false,
     "receiveShadow": true,
     "locked": false,
     "visible": false,

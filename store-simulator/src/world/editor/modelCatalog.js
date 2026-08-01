@@ -9,6 +9,7 @@ export const ADDABLE_MODELS = Object.freeze({
     name: 'Edificio GLB Burela · apartment-building',
     model: 'assets/furniture/apartment-building.glb',
     height: 20,
+    castShadow: false,
   },
   'tram-station': {
     name: 'Tram Station · Estacion de tranvia GLB',
@@ -22,7 +23,7 @@ export const ADDABLE_MODELS = Object.freeze({
     name: 'B54 FTT Lowpoly Simulator',
     model: 'assets/furniture/b54-ftt-lowpoly-simulator.glb',
     height: 6,
-    castShadow: true,
+    castShadow: false,
     collidable: false,
     searchTerms: 'b54 ftt lowpoly simulator',
   },

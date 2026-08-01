@@ -182,7 +182,7 @@ function cannabisPlant(scene, x, z, y = 0, name = 'Planta FOURTWENTY') {
 }
 
 // ---- Construcción principal -------------------------------------------------
-export function buildStreet(scene) {
+export function buildStreet(scene, { reflectionSize = 512, reflectionFrameInterval = 2 } = {}) {
   const colliders = [];
   const g = new THREE.Group();
   g.name = 'Burela 2570 · local y galeria';
@@ -267,7 +267,7 @@ export function buildStreet(scene) {
   neonFT(scene, 0, facadeTop - 0.55, Z_FACADE + 0.9);
 
   // ---- Vidriera FOURTWENTY (verde inglés, cuadrícula) con puerta -----------
-  buildStorefront(g, colliders, inglesMat);
+  buildStorefront(g, colliders, inglesMat, reflectionSize, reflectionFrameInterval);
 
   // ---- Interior del local (elevado a PLAT, sin muebles) --------------------
   const selectors = buildLocalInterior(scene, g, colliders);
@@ -283,7 +283,7 @@ export function buildStreet(scene) {
   rearLeft.name = 'Edificio fondo paralelo izquierda';
   rearRight.name = 'Edificio fondo paralelo derecha';
   for (const b of [rearStrip, rearLeft, rearRight]) {
-    b.castShadow = true;
+    b.castShadow = false;
     b.receiveShadow = true;
     scene.add(b);
   }
@@ -463,7 +463,7 @@ function createWhiteLightSwitch(scene, g) {
 }
 
 // Vidriera del local: marco de cuadrícula verde inglés + vidrio + puerta.
-function buildStorefront(g, colliders, frameMat) {
+function buildStorefront(g, colliders, frameMat, reflectionSize, reflectionFrameInterval) {
   const y0 = PLAT + 0.9;                 // arriba del zócalo ciego
   const top = PLAT + H_LIBRE - 0.5;      // bajo el dintel
   const cristalH = top - y0;
@@ -477,12 +477,19 @@ function buildStorefront(g, colliders, frameMat) {
   glass.userData.editorCollider = true;
   const mirror = new Reflector(new THREE.PlaneGeometry(fixedW, cristalH), {
     clipBias: 0.003,
-    textureWidth: 1024,
-    textureHeight: 1024,
+    textureWidth: reflectionSize,
+    textureHeight: reflectionSize,
     color: 0x8899a0,
   });
   mirror.name = 'Vidriera FOURTWENTY espejo reflejo';
   mirror.position.x = (fixedX0 + x1) / 2;
+  const renderReflection = mirror.onBeforeRender.bind(mirror);
+  let reflectionFrame = 0;
+  mirror.onBeforeRender = (...args) => {
+    reflectionFrame = (reflectionFrame + 1) % reflectionFrameInterval;
+    if (reflectionFrame !== 0) return;
+    renderReflection(...args);
+  };
   const collider = new THREE.Mesh(
     new THREE.BoxGeometry(fixedW, cristalH, 0.06),
     new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, transparent: true, opacity: 0 }),

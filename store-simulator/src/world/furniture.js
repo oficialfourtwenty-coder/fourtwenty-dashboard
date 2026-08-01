@@ -12,6 +12,16 @@ dracoLoader.setDecoderPath('/assets/draco/');
 const loader = new GLTFLoader();
 loader.setDRACOLoader(dracoLoader);
 const modelCache = new Map();
+const BACKDROP_MODELS_WITHOUT_SHADOWS = [
+  'apartment-building.glb',
+  'tram-station.glb',
+  'city-map-free.glb',
+];
+
+function shouldCastShadows(item) {
+  return item.castShadow !== false
+    && !BACKDROP_MODELS_WITHOUT_SHADOWS.some((filename) => item.model?.endsWith(filename));
+}
 
 function cloneLayoutItem(item) {
   return {
@@ -86,7 +96,7 @@ function applyLayoutToObject(object, item) {
 }
 
 function applyShadows(object, item) {
-  const castShadow = item.castShadow !== false;
+  const castShadow = shouldCastShadows(item);
   const receiveShadow = item.receiveShadow !== false;
   object.traverse((child) => {
     if (child.isMesh) {
@@ -136,7 +146,7 @@ export async function addFurnitureItem(scene, item) {
       rotation: vec3(item.rotation, [0, 0, 0]),
       scale: vec3(item.scale, [1, 1, 1]),
       height: Number.isFinite(item.height) ? item.height : null,
-      castShadow: item.castShadow !== false,
+      castShadow: shouldCastShadows(item),
       receiveShadow: item.receiveShadow !== false,
       locked: item.locked === true,
       visible: item.visible !== false,

@@ -122,4 +122,14 @@ export function bindProductVisual(mesh, slot, fallbackMap = null) {
   return mesh;
 }
 
+export function unbindProductVisuals(root) {
+  root?.traverse?.((object) => {
+    const state = object.userData?.productVisual;
+    if (!state) return;
+    state.loadToken++;
+    registered.delete(object);
+    delete object.userData.productVisual;
+  });
+}
+
 onProductosChange(scheduleRefresh);

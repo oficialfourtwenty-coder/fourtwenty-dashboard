@@ -14,6 +14,12 @@ const ROOM_CENTER_Z = 4.5;
 const ROOM_HALF_W = ROOM_W / 2;
 const DEFAULT_ENVIRONMENT_URL = 'assets/environments/urban-alley-01-4k.exr';
 const sharedEnvironmentTextureCache = new Map();
+let sharedDestinationDaylight = null;
+
+function markDestinationTexture(texture) {
+  texture.userData.destinationOwned = true;
+  return texture;
+}
 
 function fileExtension(url) {
   return String(url).split(/[?#]/)[0].split('.').pop()?.toLowerCase() ?? '';
@@ -68,7 +74,7 @@ function canvasTexture(width, height, draw, { repeatX = 1, repeatY = 1 } = {}) {
   canvas.height = height;
   const context = canvas.getContext('2d');
   draw(context, width, height);
-  const texture = new THREE.CanvasTexture(canvas);
+  const texture = markDestinationTexture(new THREE.CanvasTexture(canvas));
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
@@ -78,7 +84,7 @@ function canvasTexture(width, height, draw, { repeatX = 1, repeatY = 1 } = {}) {
 }
 
 function loadTexture(path) {
-  const texture = new THREE.TextureLoader().load(path);
+  const texture = markDestinationTexture(new THREE.TextureLoader().load(path));
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 8;
   return texture;
@@ -518,12 +524,14 @@ export function buildBincoShopShell(scene, {
 export function addBincoShopLights(scene, shadows) {
   scene.add(new THREE.HemisphereLight(0xd9e5e4, 0x302a25, 0.64));
 
-  const daylight = new THREE.DirectionalLight(0xe6eef0, 1.22);
+  const daylight = sharedDestinationDaylight ?? new THREE.DirectionalLight(0xe6eef0, 1.22);
+  sharedDestinationDaylight = daylight;
+  daylight.userData.sharedDestinationLight = true;
   daylight.position.set(-1.5, 7.4, -8.5);
   daylight.target.position.set(0, 0.8, 4.8);
   daylight.castShadow = shadows;
   if (shadows) {
-    daylight.shadow.mapSize.set(1024, 1024);
+    daylight.shadow.mapSize.set(512, 512);
     daylight.shadow.camera.left = -8;
     daylight.shadow.camera.right = 8;
     daylight.shadow.camera.top = 9;

@@ -19,6 +19,12 @@ const VERDE = 0x39ff6a;      // el mismo verde del neón del local
 const NEGRO = 0x0a0b0c;
 const CENTRO_Z = 4.5;        // centro del local (ROOM_MIN_Z + ROOM_D / 2)
 const OVALO_Z = 1.32;        // el estadio es más largo que ancho, como uno real
+const sharedArenaTextures = new Map();
+
+function arenaTexture(key, create) {
+  if (!sharedArenaTextures.has(key)) sharedArenaTextures.set(key, create());
+  return sharedArenaTextures.get(key);
+}
 
 // Bandejas: [radio abajo, radio arriba, y abajo, y arriba]
 const BANDEJAS = [
@@ -133,8 +139,8 @@ const anillo = (rAbajo, rArriba, alto, segmentos = 64) =>
 
 /**
  * Construye el estadio y lo cuelga de la escena.
- * Devuelve { root, dispose } — dispose libera las texturas de canvas, que la
- * limpieza genérica de escenas no alcanza a soltar sola.
+ * Las seis texturas se comparten entre visitas para que volver al piso no
+ * reserve memoria nueva en cada viaje de ascensor.
  */
 export function buildHoopArena(scene) {
   const root = new THREE.Group();
@@ -142,29 +148,26 @@ export function buildHoopArena(scene) {
   root.position.set(0, 0, CENTRO_Z);
   root.scale.z = OVALO_Z;
 
-  const texturas = [];
-  const registrar = (t) => { texturas.push(t); return t; };
-
   const negroMate = new THREE.MeshStandardMaterial({ color: NEGRO, roughness: 0.92, metalness: 0.05 });
   const neon = new THREE.MeshBasicMaterial({ color: VERDE }); // Basic: brilla sin depender de luces
 
   // --- cancha -------------------------------------------------------------
   const cancha = new THREE.Mesh(
     new THREE.PlaneGeometry(58, 44),
-    new THREE.MeshStandardMaterial({ map: registrar(texturaCancha()), roughness: 0.34, metalness: 0.0 }),
+    new THREE.MeshStandardMaterial({ map: arenaTexture('cancha', texturaCancha), roughness: 0.34, metalness: 0.0 }),
   );
   cancha.rotation.x = -Math.PI / 2;
   cancha.position.y = -0.02; // apenas debajo del piso del local, para no pelearse con él
   root.add(cancha);
 
   // --- bandejas de tribuna ------------------------------------------------
-  const butacas = registrar(texturaButacas());
   BANDEJAS.forEach(([rAbajo, rArriba, yAbajo, yArriba], i) => {
     const alto = yArriba - yAbajo;
-    const mapa = butacas.clone();
-    mapa.needsUpdate = true;
-    mapa.repeat.set(46, Math.max(6, Math.round(alto * 1.6)));
-    registrar(mapa);
+    const mapa = arenaTexture(`butacas-${i}`, () => {
+      const texture = texturaButacas();
+      texture.repeat.set(46, Math.max(6, Math.round(alto * 1.6)));
+      return texture;
+    });
 
     const grada = new THREE.Mesh(
       anillo(rAbajo, rArriba, alto),
@@ -190,7 +193,7 @@ export function buildHoopArena(scene) {
   const cartelBajo = new THREE.Mesh(
     anillo(21.8, 21.8, 1.5),
     new THREE.MeshBasicMaterial({
-      map: registrar(texturaCartel(['FOURTWENTY', 'WE ROLL DIFFERENT', 'HOOP SEASON'])),
+      map: arenaTexture('cartel-bajo', () => texturaCartel(['FOURTWENTY', 'WE ROLL DIFFERENT', 'HOOP SEASON'])),
       side: THREE.BackSide,
     }),
   );
@@ -201,7 +204,7 @@ export function buildHoopArena(scene) {
   const cartelAlto = new THREE.Mesh(
     anillo(31.6, 31.6, 2.2),
     new THREE.MeshBasicMaterial({
-      map: registrar(texturaCartel(['HOOP SEASON', 'FOURTWENTY'], { alto: 160 })),
+      map: arenaTexture('cartel-alto', () => texturaCartel(['HOOP SEASON', 'FOURTWENTY'], { alto: 160 })),
       side: THREE.BackSide,
     }),
   );
@@ -213,7 +216,7 @@ export function buildHoopArena(scene) {
   jumbo.name = 'HOOP ARENA · jumbotron';
   // Las caras del jumbotron son planos vistos de frente: acá el texto NO va
   // espejado, así que se deshace el flip que traen los carteles cilíndricos.
-  const mapaJumbo = registrar(texturaCartel(['FOURTWENTY'], { alto: 256, ancho: 1024 }));
+  const mapaJumbo = arenaTexture('jumbotron', () => texturaCartel(['FOURTWENTY'], { alto: 256, ancho: 1024 }));
   mapaJumbo.repeat.x = 1;
   mapaJumbo.offset.x = 0;
   const pantalla = new THREE.MeshBasicMaterial({ map: mapaJumbo });
@@ -265,9 +268,6 @@ export function buildHoopArena(scene) {
 
   return {
     root,
-    dispose() {
-      texturas.forEach((t) => t.dispose());
-      texturas.length = 0;
-    },
+    dispose() {},
   };
 }
