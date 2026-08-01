@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { EXRLoader } from 'three/addons/loaders/EXRLoader.js';
 import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
 import { bindProductVisual } from './productVisuals.js';
@@ -251,6 +252,49 @@ function addFluorescent(group, x, z, length, mats) {
   ));
 }
 
+function addEditableHdriSphere(group, scene) {
+  const environmentRoot = new THREE.Group();
+  environmentRoot.name = 'ESFERA 360 · TAMAÑO EDITABLE';
+  environmentRoot.position.set(0, 1.55, ROOM_CENTER_Z);
+  environmentRoot.userData.editorSelectExisting = true;
+  environmentRoot.userData.editorHint = 'T · buscar ESFERA 360 · tecla 3 para cambiar escala · tecla 2 para rotar';
+
+  const material = new THREE.MeshBasicMaterial({
+    color: 0x202629,
+    side: THREE.BackSide,
+    fog: false,
+    depthWrite: false,
+    toneMapped: true,
+  });
+  const sphere = new THREE.Mesh(new THREE.SphereGeometry(42, 64, 32), material);
+  sphere.name = 'HDRI · Urban Alley 01 4K';
+  sphere.frustumCulled = false;
+  sphere.renderOrder = -100;
+  sphere.userData.skipShadow = true;
+  environmentRoot.add(sphere);
+  group.add(environmentRoot);
+
+  new EXRLoader().load(
+    'assets/environments/urban-alley-01-4k.exr',
+    (texture) => {
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      texture.colorSpace = THREE.LinearSRGBColorSpace;
+      texture.generateMipmaps = false;
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.needsUpdate = true;
+      material.map = texture;
+      material.color.setHex(0xffffff);
+      material.needsUpdate = true;
+
+      scene.environment = texture;
+      scene.environmentIntensity = 0.42;
+    },
+    undefined,
+    (error) => console.warn('No se pudo cargar el entorno HDRI Urban Alley.', error),
+  );
+}
+
 export function buildBincoShopShell(scene) {
   const group = new THREE.Group();
   group.name = 'PRUEBA BINCO · arquitectura completa';
@@ -268,58 +312,81 @@ export function buildBincoShopShell(scene) {
     color: 0xd0c8ba,
     roughness: 0.94,
   });
-  const plasterMaterial = new THREE.MeshStandardMaterial({
-    map: plasterTexture(5, 3),
-    color: 0xc7c2b8,
-    roughness: 0.92,
-  });
-  const ceilingMaterial = new THREE.MeshStandardMaterial({
-    map: plasterTexture(5, 7),
-    color: 0x424744,
-    roughness: 0.95,
-  });
-
-  group.add(box(ROOM_W, 0.3, ROOM_D, 0, -0.15, ROOM_CENTER_Z, floorMaterial));
-  group.add(box(ROOM_W, 0.18, ROOM_D, 0, ROOM_H + 0.09, ROOM_CENTER_Z, ceilingMaterial));
-  group.add(box(ROOM_W + WALL_T * 2, ROOM_H, WALL_T, 0, ROOM_H / 2, ROOM_MAX_Z + WALL_T / 2, brickMaterial));
-  group.add(box(WALL_T, ROOM_H, ROOM_D, -ROOM_HALF_W - WALL_T / 2, ROOM_H / 2, ROOM_CENTER_Z, brickMaterial));
-  group.add(box(WALL_T, ROOM_H, ROOM_D, ROOM_HALF_W + WALL_T / 2, ROOM_H / 2, ROOM_CENTER_Z, brickMaterial));
-
-  // Paredes con profundidad: paños pintados sobre ladrillo, como un local reacondicionado.
-  group.add(box(0.08, 1.75, 5.3, -ROOM_HALF_W + 0.01, 1.85, 1.1, plasterMaterial));
-  group.add(box(0.08, 1.75, 4.8, ROOM_HALF_W - 0.01, 1.85, 4.6, plasterMaterial));
-  group.add(box(4.15, 1.72, 0.08, -3.82, 1.86, ROOM_MAX_Z - 0.02, plasterMaterial));
-  group.add(box(4.15, 1.72, 0.08, 3.82, 1.86, ROOM_MAX_Z - 0.02, plasterMaterial));
-  group.add(box(0.1, 0.92, ROOM_D - 0.25, -ROOM_HALF_W + 0.03, 0.46, ROOM_CENTER_Z, mats.green));
-  group.add(box(0.1, 0.92, ROOM_D - 0.25, ROOM_HALF_W - 0.03, 0.46, ROOM_CENTER_Z, mats.green));
-
-  // Frente vidriado con un fondo fotográfico original de calle.
-  const streetTexture = loadTexture('assets/environments/binco-trial-street.jpg');
-  const street = new THREE.Mesh(
-    new THREE.PlaneGeometry(11.82, 3.25),
-    new THREE.MeshBasicMaterial({ map: streetTexture, toneMapped: false }),
-  );
-  street.position.set(0, 1.63, ROOM_MIN_Z - 0.34);
-  street.name = 'BINCO · calle fotográfica exterior';
-  group.add(street);
-
   const glassMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0xcfe0df,
+    color: 0xd5e4e4,
     transparent: true,
-    opacity: 0.19,
-    roughness: 0.08,
-    metalness: 0.08,
-    transmission: 0.16,
+    opacity: 0.16,
+    roughness: 0.06,
+    metalness: 0.12,
+    transmission: 0.32,
+    thickness: 0.025,
+    clearcoat: 0.55,
+    clearcoatRoughness: 0.12,
     depthWrite: false,
   });
-  group.add(box(ROOM_W, 0.32, 0.25, 0, 0.16, ROOM_MIN_Z, brickMaterial));
-  group.add(box(ROOM_W, 0.45, 0.25, 0, ROOM_H - 0.225, ROOM_MIN_Z, brickMaterial));
-  for (const x of [-5.92, -3, 0, 3, 5.92]) {
-    group.add(box(0.15, ROOM_H - 0.68, 0.18, x, 1.74, ROOM_MIN_Z + 0.01, mats.darkSteel));
+  const glassBottom = 0.52;
+  const glassTop = ROOM_H - 0.42;
+  const glassHeight = glassTop - glassBottom;
+  const glassY = glassBottom + glassHeight / 2;
+
+  group.add(box(ROOM_W, 0.3, ROOM_D, 0, -0.15, ROOM_CENTER_Z, floorMaterial));
+  addEditableHdriSphere(group, scene);
+
+  // Frente: una columna central de ladrillo y vidrio a ambos lados.
+  group.add(box(ROOM_W, glassBottom, 0.25, 0, glassBottom / 2, ROOM_MIN_Z, brickMaterial));
+  group.add(box(ROOM_W, ROOM_H - glassTop, 0.25, 0, glassTop + (ROOM_H - glassTop) / 2, ROOM_MIN_Z, brickMaterial));
+  group.add(box(0.48, ROOM_H, 0.34, 0, ROOM_H / 2, ROOM_MIN_Z, brickMaterial));
+  for (const x of [-5.86, 5.86]) group.add(box(0.28, ROOM_H, 0.32, x, ROOM_H / 2, ROOM_MIN_Z, brickMaterial));
+  for (const x of [-3.08, 3.08]) {
+    const glass = box(5.45, glassHeight, 0.045, x, glassY, ROOM_MIN_Z + 0.08, glassMaterial);
+    glass.name = 'VIDRIO · pared frontal';
+    group.add(glass);
   }
-  for (const x of [-4.5, -1.5, 1.5, 4.5]) {
-    group.add(box(2.82, ROOM_H - 0.82, 0.045, x, 1.73, ROOM_MIN_Z + 0.08, glassMaterial));
+
+  // Laterales: una columna en el centro de cada pared, con dos paños grandes.
+  for (const side of [-1, 1]) {
+    const wallX = side * ROOM_HALF_W;
+    group.add(box(0.25, glassBottom, ROOM_D, wallX, glassBottom / 2, ROOM_CENTER_Z, brickMaterial));
+    group.add(box(0.25, ROOM_H - glassTop, ROOM_D, wallX, glassTop + (ROOM_H - glassTop) / 2, ROOM_CENTER_Z, brickMaterial));
+    group.add(box(0.34, ROOM_H, 0.52, wallX, ROOM_H / 2, ROOM_CENTER_Z, brickMaterial));
+    for (const z of [ROOM_MIN_Z + 0.14, ROOM_MAX_Z - 0.14]) {
+      group.add(box(0.32, ROOM_H, 0.28, wallX, ROOM_H / 2, z, brickMaterial));
+    }
+    for (const z of [-0.05, 9.05]) {
+      const glass = box(0.045, glassHeight, 8.45, wallX - side * 0.08, glassY, z, glassMaterial);
+      glass.name = side < 0 ? 'VIDRIO · pared izquierda' : 'VIDRIO · pared derecha';
+      group.add(glass);
+    }
   }
+
+  // Fondo: el ascensor funciona como cuerpo central; el HDRI se ve a sus lados.
+  group.add(box(ROOM_W, glassBottom, 0.25, 0, glassBottom / 2, ROOM_MAX_Z, brickMaterial));
+  group.add(box(ROOM_W, ROOM_H - glassTop, 0.25, 0, glassTop + (ROOM_H - glassTop) / 2, ROOM_MAX_Z, brickMaterial));
+  group.add(box(2.65, ROOM_H, 0.34, 0, ROOM_H / 2, ROOM_MAX_Z, brickMaterial));
+  for (const x of [-5.86, 5.86]) group.add(box(0.28, ROOM_H, 0.32, x, ROOM_H / 2, ROOM_MAX_Z, brickMaterial));
+  for (const x of [-3.68, 3.68]) {
+    const glass = box(4.48, glassHeight, 0.045, x, glassY, ROOM_MAX_Z - 0.08, glassMaterial);
+    glass.name = 'VIDRIO · pared del ascensor';
+    group.add(glass);
+  }
+
+  // Techo completamente vidriado, dividido por una cruz estructural.
+  for (const x of [-3.04, 3.04]) {
+    for (const z of [-0.03, 9.03]) {
+      const roofGlass = box(5.7, 0.045, 8.58, x, ROOM_H + 0.015, z, glassMaterial);
+      roofGlass.name = 'VIDRIO · techo panorámico';
+      group.add(roofGlass);
+    }
+  }
+  group.add(box(0.24, 0.2, ROOM_D, 0, ROOM_H - 0.02, ROOM_CENTER_Z, mats.darkSteel));
+  group.add(box(ROOM_W, 0.2, 0.24, 0, ROOM_H - 0.02, ROOM_CENTER_Z, mats.darkSteel));
+  for (const x of [-ROOM_HALF_W + 0.1, ROOM_HALF_W - 0.1]) {
+    group.add(box(0.2, 0.2, ROOM_D, x, ROOM_H - 0.02, ROOM_CENTER_Z, mats.darkSteel));
+  }
+  for (const z of [ROOM_MIN_Z + 0.1, ROOM_MAX_Z - 0.1]) {
+    group.add(box(ROOM_W, 0.2, 0.2, 0, ROOM_H - 0.02, z, mats.darkSteel));
+  }
+
   group.add(box(2.3, 0.04, 0.58, 0, 0.03, ROOM_MIN_Z + 0.36, mats.rubber));
 
   // Vigas, conductos, cables y rociadores visibles.
@@ -362,6 +429,11 @@ export function buildBincoShopShell(scene) {
 
   group.traverse((object) => {
     if (!object.isMesh) return;
+    if (object.userData.skipShadow) {
+      object.castShadow = false;
+      object.receiveShadow = false;
+      return;
+    }
     object.castShadow = !object.material.transparent;
     object.receiveShadow = true;
   });

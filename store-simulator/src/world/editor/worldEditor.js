@@ -382,6 +382,12 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       return;
     }
 
+    if (source.object3D.userData?.editorSelectExisting === true) {
+      selectId(source.id);
+      setStatus(`${source.name} seleccionado para editar.`);
+      return;
+    }
+
     source.object3D.updateWorldMatrix(true, true);
     sourceBox.setFromObject(source.object3D);
     if (sourceBox.isEmpty()) sourceBox.setFromCenterAndSize(source.object3D.getWorldPosition(sourceCenter), sourceSize.set(1, 1, 1));
