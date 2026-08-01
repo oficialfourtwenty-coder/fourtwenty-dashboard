@@ -203,10 +203,7 @@ function ceilingLeds(g, Y) {
 }
 
 // ---- Galería por colección --------------------------------------------------
-export function buildGallery(scene, collection, {
-  floorY = FLOOR_YS[collection.piso - 1],
-  visualProfile = 'default',
-} = {}) {
+export function buildGallery(scene, collection, { floorY = FLOOR_YS[collection.piso - 1] } = {}) {
   const Y = floorY;
   const { colors, name, count, theme } = collection;
   const g = new THREE.Group();
@@ -282,7 +279,7 @@ export function buildGallery(scene, collection, {
   }
 
   // ---- Ambientación temática ----
-  if (theme === 'basket' && visualProfile !== 'hoop-ps3-trial') {
+  if (theme === 'basket') {
     // media cancha: piso de madera pintado + aro con tablero
     const court = new THREE.Mesh(
       new THREE.PlaneGeometry(4.6, 3.2),

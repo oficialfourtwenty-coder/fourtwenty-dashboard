@@ -7,7 +7,7 @@ import { whiteFloor, whitePlaster, lightCeiling, windowDaylight } from './textur
 import { ElevatorController } from './elevator.js';
 import { createMoonDisc, createSunDisc } from './dayNightCycle.js';
 import { createOriginArcade } from './originArcade.js';
-import { addHoopPs3Lights, buildHoopPs3Set, buildHoopPs3Shell } from './hoopPs3Trial.js';
+import { addBincoShopLights, buildBincoShopSet, buildBincoShopShell } from './bincoShopTrial.js';
 
 const ROOM_W = 12;
 const BASE_ROOM_D = 9;
@@ -98,31 +98,27 @@ function addSectionLights(scene, shadows) {
 
 function buildSectionScene(destination, { environment, shadows, onElevatorEnter, onArcadeInteract }) {
   const scene = new THREE.Scene();
-  const isHoopPs3Trial = destination.sourceFloor === 3;
+  const isBincoTrial = destination.sourceFloor === 3;
   scene.name = `Escena unica · ${destination.hudLabel}`;
   scene.userData.destinationId = destination.id;
   scene.userData.loadedSourceFloor = destination.sourceFloor;
   scene.userData.floorSize = { width: ROOM_W, depth: ROOM_D, areaScale: 2 };
-  scene.userData.visualProfile = isHoopPs3Trial ? 'hoop-ps3-trial' : 'default';
-  scene.background = new THREE.Color(isHoopPs3Trial ? 0x3f4749 : 0xcfd2d6);
-  scene.fog = new THREE.Fog(isHoopPs3Trial ? 0x3f4749 : 0xcfd2d6, isHoopPs3Trial ? 17 : 18, isHoopPs3Trial ? 38 : 54);
+  scene.userData.visualProfile = isBincoTrial ? 'binco-shop-trial' : 'default';
+  scene.background = new THREE.Color(isBincoTrial ? 0x777d7b : 0xcfd2d6);
+  scene.fog = new THREE.Fog(isBincoTrial ? 0x777d7b : 0xcfd2d6, isBincoTrial ? 20 : 18, isBincoTrial ? 46 : 54);
   scene.environment = environment;
-  scene.environmentIntensity = isHoopPs3Trial ? 0.34 : 0.22;
+  scene.environmentIntensity = isBincoTrial ? 0.38 : 0.22;
 
-  const colliders = isHoopPs3Trial ? buildHoopPs3Shell(scene) : addRoomShell(scene);
-  if (isHoopPs3Trial) addHoopPs3Lights(scene, shadows);
+  const colliders = isBincoTrial ? buildBincoShopShell(scene) : addRoomShell(scene);
+  if (isBincoTrial) addBincoShopLights(scene, shadows);
   else addSectionLights(scene, shadows);
   const collection = COLLECTIONS.find((item) => item.piso === destination.sourceFloor);
-  if (collection) colliders.push(...buildGallery(scene, collection, {
-    floorY: 0,
-    visualProfile: isHoopPs3Trial ? 'hoop-ps3-trial' : 'default',
-  }));
-  colliders.push(...buildRetail(scene, {
-    selectedFloor: destination.sourceFloor,
-    floorY: 0,
-    visualProfile: isHoopPs3Trial ? 'hoop-ps3-trial' : 'default',
-  }));
-  if (isHoopPs3Trial) colliders.push(...buildHoopPs3Set(scene));
+  if (isBincoTrial) {
+    colliders.push(...buildBincoShopSet(scene, collection));
+  } else {
+    if (collection) colliders.push(...buildGallery(scene, collection, { floorY: 0 }));
+    colliders.push(...buildRetail(scene, { selectedFloor: destination.sourceFloor, floorY: 0 }));
+  }
 
   const elevator = new ElevatorController(scene, {
     id: `elevator-destination-${destination.id}`,

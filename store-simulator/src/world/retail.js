@@ -324,21 +324,11 @@ function spinDisplay(g, colliders, Y, x, z, tex) {
 const deg = (d) => (d * Math.PI) / 180;
 
 // ---- Vestido por piso: lee el plano editable de layout.js -------------------
-export function buildRetail(scene, {
-  selectedFloor = null,
-  floorY = null,
-  visualProfile = 'default',
-} = {}) {
+export function buildRetail(scene, { selectedFloor = null, floorY = null } = {}) {
   const g = new THREE.Group();
   const colliders = [];
   const pools = makePools();
   const LOBBY_COLORS = [0x1f4d2e, 0x6d1f2c, 0xe8dfc9, 0x1c1c1c, 0xd96b2f];
-  const hoopFixtureMaterial = visualProfile === 'hoop-ps3-trial'
-    ? new THREE.MeshStandardMaterial({ color: 0x6d6a60, roughness: 0.86, metalness: 0.08 })
-    : null;
-  const hoopCounterTopMaterial = visualProfile === 'hoop-ps3-trial'
-    ? new THREE.MeshStandardMaterial({ color: 0x554331, roughness: 0.72, metalness: 0.02 })
-    : null;
 
   for (const [pisoStr, items] of Object.entries(LAYOUT)) {
     const piso = Number(pisoStr);
@@ -397,8 +387,6 @@ export function buildRetail(scene, {
 
   g.traverse((m) => {
     if (m.isMesh && !m.material.isMeshBasicMaterial) {
-      if (hoopFixtureMaterial && m.material === white) m.material = hoopFixtureMaterial;
-      if (hoopCounterTopMaterial && m.material === woodTop) m.material = hoopCounterTopMaterial;
       m.castShadow = true;
       m.receiveShadow = true;
     }
