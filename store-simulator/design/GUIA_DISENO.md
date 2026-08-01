@@ -1,4 +1,11 @@
-# 🎨 Guía para rediseñar la tienda 3D — cómo darme la info para que la ejecute bien
+# Guia para comunicar el rediseño visual
+
+> Estado: guia complementaria para que Kusher entregue referencias, fotos y
+> planos. No define ramas, calendario ni arquitectura. Para decisiones vigentes
+> manda el `CLAUDE.md` de la raiz. Blender y otros programas 3D estan permitidos
+> cuando ayuden a llegar al objetivo GTA V de PS3 sin perder rendimiento.
+
+# Rediseñar la tienda 3D: como dar la informacion
 
 Esta guía es para vos (el dueño, que no programás). Te explica **qué archivos
 crear, cómo ordenarlos y cómo entregármelos** para que yo (Claude) pueda

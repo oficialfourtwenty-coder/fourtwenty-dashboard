@@ -1,48 +1,42 @@
-# Música del simulador
+# Musica del Simulador Bobilonia
 
-La música suena en todo el simulador. Los autos estacionados en Burela son las
-dos radios:
+La musica se comparte entre el celular y las radios de los autos.
 
-- Volkswagen up! Pepper TSI de Luca: `luca/`
-- Toyota Corolla 2019 de Fer: `fer/`
+## Estado actual
 
-## Cómo cargar temas
+- Volkswagen up! Pepper de Luca: `luca/`.
+- Toyota Corolla: `fer/`.
+- El manifiesto `playlists.json` se genera al correr dev/build. No editarlo a
+  mano salvo una tarea tecnica especifica.
+- Los archivos actuales son principalmente WAV y ocupan demasiado para
+  produccion.
 
-Arrastrá el MP3 a la carpeta del auto y recargá el juego.
+## Objetivo aprobado
+
+- Llegar a 33 canciones totales, incluyendo beats.
+- Rediseñar el celular para navegar primero por artista y luego por tema/beat.
+- Mantener play, pausa, anterior y siguiente sincronizados entre auto y celular.
+- Cargar el audio solamente cuando se reproduce.
+
+## Agregar musica durante desarrollo
+
+Guardar el archivo en la carpeta correspondiente y reiniciar el servidor:
 
 ```text
-public/assets/musica/luca/mi_tema.mp3
-public/assets/musica/fer/artista_local.mp3
+public/assets/musica/luca/nombre_tema.ext
+public/assets/musica/fer/nombre_tema.ext
 ```
 
-No edites `playlists.json`: ahora se genera solo cuando corre `npm run dev` o
-`npm run build`.
-
-## Nombres recomendados
-
-Usá nombres simples, sin acentos raros:
-
-```text
-luca_01.mp3
-fer_taus_01.mp3
-pal_coliseo_ft_ff42.mp3
-```
-
-El nombre del archivo se convierte en el título que muestra la radio. Por
-ejemplo, `pal_coliseo_ft_ff42.mp3` aparece como `Pal Coliseo Ft Ff42`.
+Usar nombres simples. Antes de produccion, convertir los WAV a un formato web
+comprimido. Conservar los masters fuera del build publicado.
 
 ## Permisos
 
-En la carpeta de Fer va música de otros artistas. Tené permiso por escrito antes
-de subir cada tema. Alcanza un WhatsApp:
+Cada artista debe autorizar por escrito el uso del tema en el simulador. Guardar
+el permiso fuera del repositorio. No subir musica descargada de plataformas ni
+material sin autorizacion.
 
-```text
-Te doy permiso para usar [tema] en el simulador de FOURTWENTY.
-```
+## Rendimiento
 
-No subas música de Spotify, YouTube o artistas sin permiso.
-
-## Peso
-
-Recomendación: MP3 a 192 kbps, 6 a 8 temas en total. Más que eso hace que el
-juego tarde más en abrir, sobre todo en celular.
+Treinta y tres temas son viables si no se descargan al inicio. Registrar peso,
+duracion, artista y permiso de cada archivo antes de publicar.

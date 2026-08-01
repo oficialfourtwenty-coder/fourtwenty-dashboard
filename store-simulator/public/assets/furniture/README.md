@@ -1,29 +1,24 @@
-# Muebles propios (modelos 3D)
+# Modelos 3D editables
 
-Acá van los archivos `.glb` de muebles que generás vos con tu herramienta de
-conversión imagen → 3D (la misma que usaste para el perchero y para BOB).
+Esta carpeta contiene modelos que aparecen en el catalogo del World Editor.
 
-## Cómo agregar un mueble nuevo
+## Flujo actual
 
-1. Generá el `.glb` con tu herramienta y guardalo acá, con nombre simple sin
-   espacios: `perchero_remeras.glb`, `mesa_exhibicion.glb`, etc.
-2. **Si pesa mucho** (tu herramienta suele exportar 300-500 mil triángulos y
-   15-20 MB), pedime que lo optimice antes de usarlo — lo dejo liviano sin
-   que se note la diferencia. Si ya está liviano, saltealo.
-3. Abrí `src/world/layout.js` y agregá una línea donde quieras que aparezca:
-   ```js
-   { tipo: 'modelo', x: 0, z: -1.6, archivo: 'perchero_remeras.glb', alto: 1.5 },
-   ```
-4. Guardá. Con `npm run dev` corriendo, se actualiza solo. Ajustá `x`/`z`
-   (posición) y `alto` (metros que mide) hasta que quede como querés.
+1. Guardar el `.glb` con un nombre simple.
+2. Revisar licencia, peso, cantidad de mallas y triangulos.
+3. Agregar o confirmar su preset en `src/world/editor/modelCatalog.js`.
+4. Abrir el juego y presionar `T` o `Tab`.
+5. Buscar el modelo y seleccionarlo: se crea una copia delante de BOB.
+6. Mover, rotar, escalar y configurar colision/luz.
+7. Exportar `public/assets/layouts/furniture-layout.json` para hacerlo oficial.
 
-El mueble se escala, se apoya en el piso y calcula su propio espacio de
-colisión automáticamente — no hace falta calcular nada a mano. Ver los
-comentarios de `layout.js` para todas las opciones (`rot` para girarlo).
+No considerar oficial una posicion que exista solo en `localStorage`.
 
-## Reemplazando muebles placeholder
+## Modelos pesados conocidos
 
-Los muebles "de prueba" (percheros circulares, mesas, maniquíes dibujados
-por código) siguen funcionando igual — están para no dejar ningún hueco
-vacío mientras vas generando los tuyos. Cambiá una línea `{ tipo: 'perchero', ... }`
-por `{ tipo: 'modelo', archivo: '...', ... }` y listo, sin tocar nada más.
+- Tram Station: aproximadamente 85 MB, 833 mallas y 612k triangulos.
+- City Map: aproximadamente 23 MB y cientos de miles de triangulos.
+- B54 FTT: aproximadamente 1.2 MB.
+
+Los modelos pesados deben ser opcionales, cargarse bajo demanda y optimizarse
+antes de produccion. No usar una unica caja de colision para un mapa completo.

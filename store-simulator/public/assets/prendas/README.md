@@ -1,19 +1,30 @@
-# Fotos reales de prendas
+# Prendas y productos
 
-Acá van los PNG de las prendas que se cuelgan en las paredes de cada piso.
+## Estado actual
 
-Requisitos de cada archivo:
-- **PNG con fondo transparente** (la prenda recortada, sin fondo)
-- Proporción aproximada 4:5 (más alto que ancho), mínimo ~512px de alto
-- Nombre simple sin espacios: `origen_01.png`, `hoop_03.png`, etc.
+Las imagenes PNG recortadas siguen sirviendo para catalogo, paredes, paneles y
+productos mientras se construyen prendas 3D.
 
-Para activarlas: abrí `src/world/collections.js` y anotá los nombres en la
-lista `fotos` de la colección, en orden. Ejemplo:
+Requisitos recomendados:
 
-```js
-fotos: ['origen_01.png', 'origen_02.png'],
-```
+- PNG transparente.
+- Proporcion aproximada 4:5.
+- Minimo 512 px de alto.
+- Nombre simple sin espacios.
 
-La prenda 1 del piso usa la primera foto, la 2 la segunda… las que no tengan
-foto siguen mostrando la silueta dibujada. En la Fase 5 estas fotos van a
-salir solas de TiendaNube.
+## Objetivo visual
+
+Las prendas y maniquies deben acercarse a una tienda de ropa de GTA V en PS3.
+No se resolvera toda la coleccion de una vez.
+
+Orden:
+
+1. Rig definitivo de BOB.
+2. Zonas: cabeza, torso, piernas y calzado.
+3. Una remera piloto con el skeleton definitivo.
+4. Prueba de clipping en idle, caminar y correr.
+5. Un maniqui optimizado como patron del local.
+6. Recién despues variantes, colores y colecciones.
+
+Cada producto debe conservar el ID y la variante comercial real para el
+carrito. El nombre del archivo visual no puede ser la unica identidad de venta.

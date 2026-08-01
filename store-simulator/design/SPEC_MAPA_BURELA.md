@@ -1,4 +1,10 @@
-# Spec de mapa 3D — Complejo Burela 2570 (FourTwenty)
+# Spec de referencia: Complejo Burela 2570
+
+> Estado: referencia de escala, materiales y distribucion. El mundo actual
+> `Burela Base`, las posiciones exportadas por el World Editor y las decisiones
+> directas de Kusher tienen prioridad sobre las medidas estimadas de este
+> documento. Los autos reales ya forman parte del mundo, aunque el brief
+> historico de abajo diga que no deben modelarse.
 
 Brief de art-direction para reconstruir en **three.js** el exterior real de un complejo de
 4 torres en Villa Urquiza, CABA. El jugador spawnea en la vereda de Burela, se mueve solo

@@ -1,13 +1,26 @@
-# Assets de BOB
+# BOB 3D
 
-Cuando tengas el arte real de BOB, guardá acá estos PNG (fondo transparente,
-misma resolución entre sí, proporción vertical tipo 2:3):
+## Modelo activo
 
-- `bob_idle.png` — BOB parado
-- `bob_walk_0.png` … `bob_walk_3.png` — 4 frames de caminata
+- Archivo: `bob.glb`.
+- Peso aproximado: 1.3 MB.
+- Lo carga `src/player/bob3d.js`.
+- Tiene skeleton y un clip de caminata.
 
-El juego los detecta solo y reemplaza el placeholder automáticamente.
-No hace falta tocar código.
+El rig actual funciona con un compromiso: luego de varias reparaciones de
+pesos, las piernas quedaron sin animacion para evitar deformaciones y se mueven
+principalmente brazos/manos. No reemplazar ni reexportar `bob.glb` como cambio
+menor.
 
-Más adelante (Fase 2) acá también van las capas de prendas:
-`prendas/<id>.png` dibujadas sobre la pose de BOB.
+## Siguiente etapa aprobada
+
+Antes de crear la coleccion de ropa 3D:
+
+1. Crear un rig definitivo en una rama de prueba.
+2. Congelar nombres de huesos y proporciones.
+3. Verificar idle, caminar y correr.
+4. Probar una sola remera durante todas las animaciones.
+5. Recién despues producir mas prendas.
+
+Los GLB `bob.sin-animacion-previo.glb` y `bob.sin-rig-o-previo.glb` son backups
+de trabajo y no deben formar parte del build final.
