@@ -8,7 +8,7 @@ leer completo `/Users/kusher/Desktop/fourtwenty-dashboard/CLAUDE.md`.
 - Proyecto: Simulador Bobilonia Maestro, Three.js + Vite.
 - Rama oficial: `version-final-final-final`.
 - Respaldo anterior: `version-jueves-30` en `234e8e2`.
-- Ultimo checkpoint funcional incluido: `e6123bc`.
+- Ultimo checkpoint funcional incluido: `ae33f2a`.
 - Prioridad: web/escritorio.
 - Objetivo visual: juego web inspirado en GTA V de PlayStation 3.
 - Mobile se adapta despues de cerrar web.

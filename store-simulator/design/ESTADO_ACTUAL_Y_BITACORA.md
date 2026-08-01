@@ -25,7 +25,7 @@ colaborador antes de proponer cambios.
 - Respaldo anterior a esta sesion: `version-jueves-30` en `234e8e2`.
 - No integrar automaticamente cambios en el respaldo ni usarlo como base nueva.
 - Checkpoint de codigo que contiene todo el trabajo funcional de esta bitacora:
-  `e6123bc`.
+  `ae33f2a`.
 - El commit documental que publique este archivo puede ser posterior.
 - Si Notion y GitHub difieren sobre codigo, archivos o commits, manda GitHub.
 - Si difieren sobre una decision creativa reciente, confirmar la instruccion mas
@@ -171,9 +171,10 @@ Flujo:
 
 ## Rendimiento medido despues de esta sesion
 
-- `dist/`: aproximadamente 485 MB.
-- `public/`: aproximadamente 466 MB.
-- Musica: aproximadamente 361 MB, principal causa del peso.
+- `dist/`: aproximadamente 150 MB.
+- `public/`: aproximadamente 135 MB.
+- Musica: 11 temas MP3 mono a 44.1 kHz y 96 kbps, aproximadamente 26 MB. Antes
+  ocupaban 361 MB en WAV: reduccion aproximada del 93%, unas 14 veces menos.
 - Muebles GLB: aproximadamente 39 MB.
 - Entorno HDRI compartido: aproximadamente 7 MB.
 - Revista Twenty Time: aproximadamente 520 KB.
@@ -184,7 +185,8 @@ Flujo:
 
 Prioridades tecnicas de optimizacion:
 
-1. Convertir WAV a audio web comprimido y cargar cada tema bajo demanda.
+1. Comprimir toda musica nueva antes de publicarla y mantener la carga bajo
+   demanda.
 2. Evitar que modelos grandes entren en la primera carga.
 3. Continuar con escenas separadas por piso.
 4. Usar panoramas 2K WebP/JPG cuando no se necesite iluminacion HDR.

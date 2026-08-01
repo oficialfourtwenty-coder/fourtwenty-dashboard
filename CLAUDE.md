@@ -16,7 +16,7 @@ producto que no esten escritas aqui.
 - Respaldo anterior a todo el trabajo de esta noche: `version-jueves-30` en
   `234e8e2`. No desarrollar sobre ese respaldo salvo pedido de Kusher.
 - Ultimo checkpoint funcional incluido antes de esta actualizacion documental:
-  `e6123bc` (`feat(simulator): add per-floor environment drop folders`).
+  `ae33f2a` (`perf(audio): compress simulator music for web`).
 - Bitacora detallada vigente:
   `store-simulator/design/ESTADO_ACTUAL_Y_BITACORA.md`.
 - Manual de vision y decisiones en Notion:
@@ -150,8 +150,9 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 - Playlists actuales por carpetas: `musica/fer/` y `musica/luca/`.
 - Objetivo futuro: 33 canciones totales, incluyendo beats, presentadas por
   artista y tema en una interfaz de celular redisenada.
-- Los WAV actuales son demasiado pesados para produccion. Convertir a formato
-  web comprimido y conservar originales fuera del build.
+- Los 11 temas activos estan en MP3 mono, 44.1 kHz y 96 kbps: aproximadamente
+  26 MB en total. Los masters WAV quedan fuera del build publicado.
+- Toda musica nueva debe comprimirse antes de incorporarla a la rama oficial.
 - Cada artista debe dar permiso por escrito.
 
 ### Celular
@@ -297,9 +298,10 @@ checkout Tiendanube hasta completar la prueba y validacion oficial.
 
 ### Medicion conocida del 01/08
 
-- `dist/`: aproximadamente 485 MB porque Vite todavia copia todo `public/`.
-- Assets publicos: aproximadamente 466 MB.
-- Musica WAV: aproximadamente 361 MB.
+- `dist/`: aproximadamente 150 MB despues de comprimir la musica.
+- Assets publicos: aproximadamente 135 MB.
+- Musica MP3: aproximadamente 26 MB; antes eran 361 MB en WAV. La reduccion es
+  de aproximadamente 93%, unas 14 veces menos peso.
 - JS principal: aproximadamente 1.02 MB minificado / 285 KB gzip.
 - Tram Station optimizado: aproximadamente 6.2 MB; antes 85.7 MB.
 - City Map optimizado: aproximadamente 1.2 MB; antes 6.1 MB en el archivo que

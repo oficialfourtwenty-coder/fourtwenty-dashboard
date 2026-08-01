@@ -8,8 +8,8 @@ La musica se comparte entre el celular y las radios de los autos.
 - Toyota Corolla: `fer/`.
 - El manifiesto `playlists.json` se genera al correr dev/build. No editarlo a
   mano salvo una tarea tecnica especifica.
-- Los archivos actuales son principalmente WAV y ocupan demasiado para
-  produccion.
+- Los 11 temas activos estan en MP3 mono, 44.1 kHz y 96 kbps. Ocupan unos
+  26 MB en total; antes ocupaban unos 361 MB en WAV.
 
 ## Objetivo aprobado
 
@@ -27,8 +27,10 @@ public/assets/musica/luca/nombre_tema.ext
 public/assets/musica/fer/nombre_tema.ext
 ```
 
-Usar nombres simples. Antes de produccion, convertir los WAV a un formato web
-comprimido. Conservar los masters fuera del build publicado.
+Usar nombres simples. El formato publicado recomendado es MP3 mono a 44.1 kHz y
+96 kbps. Si se agrega un WAV durante desarrollo, convertirlo antes de llevarlo
+a la rama oficial y retirar el WAV de `public/`. Conservar los masters fuera del
+build publicado.
 
 ## Permisos
 
