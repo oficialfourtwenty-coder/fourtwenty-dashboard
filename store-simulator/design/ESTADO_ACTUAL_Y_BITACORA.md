@@ -24,9 +24,11 @@ colaborador antes de proponer cambios.
 - Rama oficial: `version-final-final-final`.
 - Respaldo anterior a esta sesion: `version-jueves-30` en `234e8e2`.
 - No integrar automaticamente cambios en el respaldo ni usarlo como base nueva.
-- Checkpoint de codigo que contiene todo el trabajo funcional de esta bitacora:
-  `ae33f2a`.
-- El commit documental que publique este archivo puede ser posterior.
+- La rama oficial ya incluye audio comprimido, minijuegos dinamicos, la mision
+  de la estacion, la auditoria de rendimiento, la Terraza PS3 aprobada y la
+  esfera optimizada de CULTURA.
+- Para conocer el commit exacto vigente usar
+  `git rev-parse origin/version-final-final-final`.
 - Si Notion y GitHub difieren sobre codigo, archivos o commits, manda GitHub.
 - Si difieren sobre una decision creativa reciente, confirmar la instruccion mas
   nueva de Kusher.
@@ -111,11 +113,15 @@ Se hicieron varios intentos. Es importante conservar tambien lo aprendido:
 9. Las primeras columnas y vidrios quedaron mal ubicados respecto de la esfera.
    Kusher borro varios con el editor. Se corrigieron colisiones, sombras y
    seleccion para que los espacios eliminados no sigan bloqueando.
-10. La base visual de Hoop se compartio con ORIGEN, CULTURA, BOB y Terraza para
-    que Kusher parta de una estructura comun y personalice cada piso.
+10. La base visual de Hoop se compartio inicialmente con los demas pisos para
+    que Kusher parta de una estructura comun y personalice cada uno.
+11. Terraza recibio un pase independiente aprobado: materiales PBR, vidrio,
+    cubierta industrial, mobiliario comercial, mejor iluminacion y panorama
+    fotografico realista. Ya forma parte de la rama oficial.
 
-Estado actual: los cinco pisos comparten temporalmente la base Binco/Hoop y una
-maquina arcade. No interpretar esto como diseño final de todos los pisos.
+Estado actual: ORIGEN, HOOP, CULTURA y BOB conservan temporalmente la base
+Binco/Hoop. Terraza usa su escena PS3 propia. Todos conservan maquina arcade.
+No interpretar la base compartida de los otros cuatro como su diseno final.
 
 ### 5. Esferas 360 reemplazables por carpeta
 
@@ -141,6 +147,10 @@ Flujo:
 - WebP o JPG suele pesar mucho menos que EXR.
 - Si un piso no tiene imagen propia usa el panorama base.
 - La esfera base se redujo de 24.4 MB a 7.0 MB manteniendo HDR en 2K.
+- CULTURA usa `cultura-evening-sky.webp`: 2048 x 1024 y aproximadamente
+  50 KB, derivada de Evening Sky HDRI 005 B de ambientCG (CC0).
+- Terraza usa `terrace-rooftop-real.webp`: 2048 x 1024 y aproximadamente
+  144 KB, derivada de Rooftop Day de Poly Haven (CC0).
 - Al salir de un piso, su textura personalizada se libera de memoria.
 - Si una imagen falla, el piso vuelve automaticamente al entorno base.
 
@@ -178,7 +188,7 @@ Flujo:
 - Muebles GLB: aproximadamente 39 MB.
 - Entorno HDRI compartido: aproximadamente 7 MB.
 - Revista Twenty Time: aproximadamente 520 KB.
-- JavaScript principal: aproximadamente 1.02 MB minificado / 285 KB gzip.
+- JavaScript principal: aproximadamente 1.04 MB minificado / 293 KB gzip.
 - El build termina correctamente, con advertencia por bundle mayor a 500 KB.
 - Tambien aparecen advertencias por algunos GLB de 330k a 501k triangulos.
 - El sistema reduce calidad automaticamente cuando detecta rendimiento bajo.

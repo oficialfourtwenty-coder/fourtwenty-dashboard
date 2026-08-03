@@ -1,21 +1,23 @@
-# Prueba Terraza PS3
+# Terraza PS3 aprobada
 
-## Versiones activas
+## Estado de versiones
 
 Para el trabajo diario se consideran activas solamente estas dos ramas:
 
-- Final aprobada: `version-final-final-final` en `0d85939`.
-- Prueba actual: `codex/prueba-terraza-ps3`, iniciada desde `9ca1f33`.
+- Final aprobada: `version-final-final-final`, promocionada con esta escena y la
+  esfera optimizada de CULTURA.
+- Rama de origen conservada como historial: `codex/prueba-terraza-ps3`.
 
 Las ramas anteriores quedan como historial. No deben usarse como punto de
 partida ni borrarse sin autorizacion explicita de Kusher.
 
-## Regla de esta prueba
+## Resultado aprobado
 
-- La version final no se modifica.
-- Solo cambia el piso 5, Terraza.
+- La implementacion fue probada primero sin modificar la final y despues Kusher
+  pidio promoverla a `version-final-final-final`.
+- El pase grafico cambia el piso 5, Terraza.
 - ORIGEN, HOOP SEASON, CULTURA y BOB conservan la base Binco anterior.
-- Kusher prueba el resultado y decide si se integra, se corrige o se descarta.
+- CULTURA conserva su arquitectura y suma su panorama propio optimizado.
 - No copiar modelos ni texturas propietarias de GTA. Binco se usa solamente
   como referencia de densidad, materiales, iluminacion y lenguaje comercial.
 
@@ -33,8 +35,8 @@ La Terraza busca una lectura cercana a un juego de PlayStation 3:
 - sin edificios geometricos de fondo que compitan con la fotografia;
 - piezas principales editables con `T`.
 
-No es una copia de GTA V ni un piso final. Es el patron visual que Kusher debe
-evaluar antes de repetir trabajo en los otros pisos.
+No es una copia de GTA V. Es el primer patron visual PS3 aprobado para orientar
+el trabajo de los otros pisos; sus productos y contenido aun pueden evolucionar.
 
 ## Rendimiento de referencia
 

@@ -1,6 +1,6 @@
 # Simulador Bobilonia Maestro - contexto obligatorio
 
-Ultima actualizacion documental: 1 de agosto de 2026.
+Ultima actualizacion documental: 3 de agosto de 2026.
 
 Este archivo es la fuente de contexto que deben leer Claude, Claude Code, Codex
 y cualquier colaborador antes de trabajar. El dueno no programa: explicar los
@@ -15,8 +15,12 @@ producto que no esten escritas aqui.
 - Rama oficial actual: `version-final-final-final`.
 - Respaldo anterior a todo el trabajo de esta noche: `version-jueves-30` en
   `234e8e2`. No desarrollar sobre ese respaldo salvo pedido de Kusher.
-- Ultimo checkpoint funcional incluido antes de esta actualizacion documental:
-  `ae33f2a` (`perf(audio): compress simulator music for web`).
+- La rama oficial incluye el audio comprimido, el registro dinamico de juegos,
+  la mision de la estacion, la auditoria de rendimiento, la Terraza PS3
+  aprobada y la esfera optimizada de CULTURA.
+- Para conocer el commit exacto vigente usar
+  `git rev-parse origin/version-final-final-final`; no partir de un hash viejo
+  escrito en una conversacion.
 - Bitacora detallada vigente:
   `store-simulator/design/ESTADO_ACTUAL_Y_BITACORA.md`.
 - Manual de vision y decisiones en Notion:
@@ -40,9 +44,10 @@ git switch version-final-final-final
 git pull --ff-only
 ```
 
-El pase visual ya comenzo mediante pruebas aprobadas como base, pero todavia no
-alcanzo el resultado final GTA V/PS3. Kusher decide el siguiente bloque de
-trabajo y puede cambiar el orden del plan cuando lo desee.
+El pase visual ya comenzo. La Terraza PS3 fue aprobada e integrada como patron
+oficial; los otros pisos todavia necesitan su propio pase completo. El conjunto
+aun no alcanzo el resultado final GTA V/PS3. Kusher decide el siguiente bloque
+de trabajo y puede cambiar el orden del plan cuando lo desee.
 
 ## 2. Vision actual del producto
 
