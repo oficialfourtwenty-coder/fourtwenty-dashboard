@@ -6,6 +6,7 @@ import { addBincoShopLights, buildBincoShopSet, buildBincoShopShell } from './bi
 import { environmentForDestination } from './floorEnvironmentCatalog.js';
 import { buildHoopArena } from './hoopArena.js';
 import { unbindProductVisuals } from './productVisuals.js';
+import { buildTerracePs3Trial, TERRACE_PS3_PROFILE } from './terracePs3Trial.js';
 
 const ROOM_W = 12;
 const BASE_ROOM_D = 9;
@@ -28,39 +29,52 @@ export function getDestination(id) {
 }
 
 function buildSectionScene(destination, { environment, shadows, onElevatorEnter, onArcadeInteract }) {
+  const isTerracePs3Trial = destination.id === 5;
   const scene = new THREE.Scene();
   scene.name = `Escena unica · ${destination.hudLabel}`;
   scene.userData.destinationId = destination.id;
   scene.userData.loadedSourceFloor = destination.sourceFloor;
-  scene.userData.floorSize = { width: ROOM_W, depth: ROOM_D, areaScale: 2 };
-  scene.userData.visualProfile = 'binco-shop-base';
+  scene.userData.floorSize = isTerracePs3Trial
+    ? { width: TERRACE_PS3_PROFILE.width, depth: TERRACE_PS3_PROFILE.depth, areaScale: 2.6 }
+    : { width: ROOM_W, depth: ROOM_D, areaScale: 2 };
+  scene.userData.visualProfile = isTerracePs3Trial ? 'terrace-ps3-trial' : 'binco-shop-base';
   scene.userData.disposed = false;
-  scene.background = new THREE.Color(0x777d7b);
-  scene.fog = new THREE.Fog(0x777d7b, 20, 46);
+  scene.background = new THREE.Color(isTerracePs3Trial ? 0x586a72 : 0x777d7b);
+  scene.fog = new THREE.Fog(isTerracePs3Trial ? 0x586a72 : 0x777d7b, isTerracePs3Trial ? 34 : 20, isTerracePs3Trial ? 84 : 46);
   scene.environment = environment;
-  scene.environmentIntensity = 0.38;
+  scene.environmentIntensity = isTerracePs3Trial ? 0.5 : 0.38;
 
   const environmentConfig = environmentForDestination(destination.id);
   scene.userData.environmentFile = environmentConfig.filename;
-  const colliders = buildBincoShopShell(scene, {
-    environmentConfig,
-  });
-  addBincoShopLights(scene, shadows);
+  let colliders;
+  if (isTerracePs3Trial) {
+    colliders = buildTerracePs3Trial(scene, { environmentConfig, shadows }).colliders;
+  } else {
+    colliders = buildBincoShopShell(scene, { environmentConfig });
+    addBincoShopLights(scene, shadows);
+  }
 
   const collection = COLLECTIONS.find((item) => item.piso === destination.sourceFloor);
-  colliders.push(...buildBincoShopSet(scene, collection, {
-    productFloor: destination.sourceFloor ?? 3,
-    sectionLabel: destination.hudLabel,
-  }));
+  if (!isTerracePs3Trial) {
+    colliders.push(...buildBincoShopSet(scene, collection, {
+      productFloor: destination.sourceFloor ?? 3,
+      sectionLabel: destination.hudLabel,
+    }));
+  }
 
   const elevator = new ElevatorController(scene, {
     id: `elevator-destination-${destination.id}`,
     name: `Ascensor · ${destination.hudLabel}`,
-    position: [0, 0, ROOM_MAX_Z - 1.45],
+    position: isTerracePs3Trial
+      ? TERRACE_PS3_PROFILE.elevatorPosition
+      : [0, 0, ROOM_MAX_Z - 1.45],
     rotationY: Math.PI,
     onEnter: onElevatorEnter,
   });
-  const minigameArcade = createOriginArcade({ onInteract: onArcadeInteract });
+  const minigameArcade = createOriginArcade({
+    onInteract: onArcadeInteract,
+    config: isTerracePs3Trial ? TERRACE_PS3_PROFILE.arcadeConfig : undefined,
+  });
   scene.add(minigameArcade.root);
 
   // HOOP SEASON queda en el medio de un estadio NBA: se ve por el vidrio del
@@ -76,8 +90,10 @@ function buildSectionScene(destination, { environment, shadows, onElevatorEnter,
     colliders,
     dynamicColliders: [],
     collidersDirty: true,
-    bounds: { minX: -5.85, maxX: 5.85, minZ: ROOM_MIN_Z + 0.15, maxZ: ROOM_MAX_Z - 0.15 },
-    ceiling: ROOM_H,
+    bounds: isTerracePs3Trial
+      ? TERRACE_PS3_PROFILE.bounds
+      : { minX: -5.85, maxX: 5.85, minZ: ROOM_MIN_Z + 0.15, maxZ: ROOM_MAX_Z - 0.15 },
+    ceiling: isTerracePs3Trial ? TERRACE_PS3_PROFILE.height : ROOM_H,
     sampleGround: () => 0,
   };
 }

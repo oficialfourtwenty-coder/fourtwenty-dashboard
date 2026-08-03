@@ -299,7 +299,7 @@ function addFluorescent(group, x, z, length, mats) {
   ));
 }
 
-function addEditableHdriSphere(group, scene, {
+export function addEditableHdriSphere(group, scene, {
   backgroundUrl = DEFAULT_ENVIRONMENT_URL,
   lightingUrl = DEFAULT_ENVIRONMENT_URL,
   filename = 'urban-alley-01-4k.exr',
@@ -368,6 +368,7 @@ function addEditableHdriSphere(group, scene, {
   };
 
   applyEnvironment().catch((error) => console.warn('No se pudo preparar la esfera 360.', error));
+  return environmentRoot;
 }
 
 export function buildBincoShopShell(scene, {
