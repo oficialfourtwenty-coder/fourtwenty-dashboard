@@ -1,11 +1,20 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { addEditableHdriSphere } from './bincoShopTrial.js';
+import { garmentTexture } from './gallery.js';
+import { bindProductVisual } from './productVisuals.js';
 
 const MATERIAL_ROOT = 'assets/materials/terrace-ps3';
 const textureLoader = new THREE.TextureLoader();
+const originArtworkAssets = import.meta.glob(
+  '../assets/artworks/pisos/1-origen/*.{jpg,jpeg,png,webp}',
+  { eager: true, query: '?url', import: 'default' },
+);
+const ORIGIN_ARTWORK_URLS = Object.entries(originArtworkAssets)
+  .sort(([left], [right]) => left.localeCompare(right))
+  .map(([, url]) => url);
 
-export const TERRACE_PS3_PROFILE = Object.freeze({
+export const PS3_FLOOR_PROFILE = Object.freeze({
   width: 14,
   depth: 20,
   height: 4.35,
@@ -21,6 +30,93 @@ export const TERRACE_PS3_PROFILE = Object.freeze({
     interactionDistance: 2.5,
   }),
 });
+export const TERRACE_PS3_PROFILE = PS3_FLOOR_PROFILE;
+
+const FLOOR_THEMES = Object.freeze({
+  1: Object.freeze({
+    id: 1,
+    key: 'origen',
+    editorLabel: 'ORIGEN PS3',
+    title: 'ORIGEN',
+    subtitle: 'ROOTS / BURELA / 1992',
+    posterTitle: 'DESDE ABAJO',
+    posterSubtitle: 'RAICES FOURTWENTY',
+    accentCss: '#5f9665',
+    accentHex: 0x5f9665,
+    secondaryHex: 0x742f3c,
+    darkHex: 0x18251d,
+    outfitA: 'green',
+    outfitB: 'cream',
+  }),
+  2: Object.freeze({
+    id: 2,
+    key: 'hoop',
+    editorLabel: 'HOOP SEASON PS3',
+    title: 'HOOP SEASON',
+    subtitle: 'FOURTWENTY BASKETBALL DEPT.',
+    posterTitle: 'GAME DAY',
+    posterSubtitle: 'BURELA LEAGUE 420',
+    accentCss: '#df6d2d',
+    accentHex: 0xdf6d2d,
+    secondaryHex: 0x5d438d,
+    darkHex: 0x17181b,
+    outfitA: 'cream',
+    outfitB: 'green',
+  }),
+  3: Object.freeze({
+    id: 3,
+    key: 'cultura',
+    editorLabel: 'CULTURA PS3',
+    title: 'CULTURA',
+    subtitle: 'MUSICA / ARTE / TWENTY TIME',
+    posterTitle: 'SONIDO LOCAL',
+    posterSubtitle: 'BURELA CULTURE CLUB',
+    accentCss: '#d0ad4b',
+    accentHex: 0xd0ad4b,
+    secondaryHex: 0x355a66,
+    darkHex: 0x171719,
+    outfitA: 'green',
+    outfitB: 'cream',
+  }),
+  4: Object.freeze({
+    id: 4,
+    key: 'bob',
+    editorLabel: 'BOBILONIA PS3',
+    title: 'BOBILONIA',
+    subtitle: 'BOB MERCH / TOYS / OBJECTS',
+    posterTitle: 'BOB WORLD',
+    posterSubtitle: 'WE ROLL DIFFERENT',
+    accentCss: '#d46a31',
+    accentHex: 0xd46a31,
+    secondaryHex: 0x315b42,
+    darkHex: 0x2b1d17,
+    outfitA: 'cream',
+    outfitB: 'green',
+  }),
+  5: Object.freeze({
+    id: 5,
+    key: 'terraza',
+    editorLabel: 'TERRAZA PS3',
+    title: 'FOURTWENTY',
+    subtitle: 'BURELA ROOFTOP / 2026',
+    posterTitle: 'TERRAZA',
+    posterSubtitle: 'ROOFTOP DROP',
+    accentCss: '#e7b94c',
+    accentHex: 0xe7b94c,
+    secondaryHex: 0x315b42,
+    darkHex: 0x171d1c,
+    outfitA: 'green',
+    outfitB: 'cream',
+  }),
+});
+
+export function ps3ThemeForDestination(destinationId) {
+  return FLOOR_THEMES[Number(destinationId)] ?? FLOOR_THEMES[5];
+}
+
+function themedName(theme, label) {
+  return `${theme.editorLabel} · ${label}`;
+}
 
 function destinationTexture(texture) {
   texture.userData.destinationOwned = true;
@@ -122,28 +218,28 @@ function signTexture(title, subtitle, accent = '#e7b94c') {
   });
 }
 
-function saleTexture() {
+function campaignTexture(theme) {
   return canvasTexture(512, 640, (ctx, width, height) => {
     ctx.fillStyle = '#ded4bd';
     ctx.fillRect(0, 0, width, height);
-    ctx.fillStyle = '#df5f2c';
+    ctx.fillStyle = theme.accentCss;
     ctx.fillRect(0, 0, width, 86);
     ctx.fillStyle = '#181c1c';
-    ctx.font = '900 92px Arial, sans-serif';
+    ctx.font = '900 72px Arial, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('TERRAZA', width / 2, 200);
+    ctx.fillText(theme.posterTitle, width / 2, 190, width - 50);
     ctx.font = '900 148px Arial, sans-serif';
-    ctx.fillStyle = '#264c38';
+    ctx.fillStyle = `#${theme.secondaryHex.toString(16).padStart(6, '0')}`;
     ctx.fillText('420', width / 2, 380);
     ctx.fillStyle = '#181c1c';
-    ctx.font = '700 34px Courier New, monospace';
-    ctx.fillText('ROOFTOP DROP', width / 2, 490);
-    ctx.fillStyle = '#df5f2c';
+    ctx.font = '700 30px Courier New, monospace';
+    ctx.fillText(theme.posterSubtitle, width / 2, 490, width - 58);
+    ctx.fillStyle = theme.accentCss;
     ctx.fillRect(58, 535, width - 116, 18);
   });
 }
 
-function buildMaterials() {
+function buildMaterials(theme) {
   const brickColor = loadMap('brick-diff.webp', { color: true, repeat: [5, 2] });
   const brickNormal = loadMap('brick-normal.webp', { repeat: [5, 2] });
   const brickArm = loadMap('brick-arm.webp', { repeat: [5, 2] });
@@ -200,10 +296,10 @@ function buildMaterials() {
     brass: new THREE.MeshStandardMaterial({ color: 0xb78b3b, roughness: 0.38, metalness: 0.72 }),
     black: new THREE.MeshStandardMaterial({ color: 0x111514, roughness: 0.84, metalness: 0.12 }),
     cream: new THREE.MeshStandardMaterial({ color: 0xe7e2d7, roughness: 0.91 }),
-    green: new THREE.MeshStandardMaterial({ color: 0x244f38, roughness: 0.87 }),
-    yellow: new THREE.MeshStandardMaterial({ color: 0xd4aa42, roughness: 0.78 }),
-    orange: new THREE.MeshStandardMaterial({ color: 0xc95a2f, roughness: 0.8 }),
-    fabric: new THREE.MeshStandardMaterial({ color: 0x233d33, roughness: 0.97, side: THREE.DoubleSide }),
+    green: new THREE.MeshStandardMaterial({ color: theme.secondaryHex, roughness: 0.87 }),
+    yellow: new THREE.MeshStandardMaterial({ color: theme.accentHex, roughness: 0.78 }),
+    orange: new THREE.MeshStandardMaterial({ color: theme.accentHex, roughness: 0.8 }),
+    fabric: new THREE.MeshStandardMaterial({ color: theme.darkHex, roughness: 0.97, side: THREE.DoubleSide }),
     garment: new THREE.MeshStandardMaterial({
       color: 0xffffff,
       roughness: 0.97,
@@ -211,6 +307,8 @@ function buildMaterials() {
       vertexColors: true,
     }),
     skin: new THREE.MeshStandardMaterial({ color: 0x9e765c, roughness: 0.84 }),
+    bobBrown: new THREE.MeshStandardMaterial({ color: 0x6f3d25, roughness: 0.94 }),
+    bobFace: new THREE.MeshStandardMaterial({ color: 0xc47a3b, roughness: 0.9 }),
     glass: new THREE.MeshBasicMaterial({
       color: 0xc9dddd,
       transparent: true,
@@ -246,15 +344,15 @@ function addParapetSection(root, { width, depth, x, z, mats, name }) {
   root.add(section);
 }
 
-function addPerimeter(root, mats) {
+function addPerimeter(root, mats, theme) {
   addParapetSection(root, {
     width: 13.55, depth: 0.26, x: 0, z: TERRACE_PS3_PROFILE.minZ + 0.14, mats,
-    name: 'TERRAZA · baranda panoramica frontal',
+    name: themedName(theme, 'vidriera panoramica frontal'),
   });
   for (const side of [-1, 1]) {
     addParapetSection(root, {
       width: 0.26, depth: 19.45, x: side * 6.86, z: TERRACE_PS3_PROFILE.centerZ, mats,
-      name: side < 0 ? 'TERRAZA · baranda izquierda' : 'TERRAZA · baranda derecha',
+      name: themedName(theme, side < 0 ? 'vidriera izquierda' : 'vidriera derecha'),
     });
   }
 
@@ -265,17 +363,17 @@ function addPerimeter(root, mats) {
   ]) {
     const column = cylinder(0.19, 0.22, TERRACE_PS3_PROFILE.height, mats.concreteDark, 14);
     column.position.set(x, TERRACE_PS3_PROFILE.height / 2, z);
-    column.name = 'TERRAZA · columna facetada';
+    column.name = themedName(theme, 'columna facetada');
     column.userData.destinationCollider = true;
     root.add(column);
   }
 }
 
-function addBackCore(root, mats) {
+function addBackCore(root, mats, theme) {
   for (const side of [-1, 1]) {
     const wall = unit(new THREE.Group(), side < 0
-      ? 'TERRAZA · muro de ladrillo izquierdo'
-      : 'TERRAZA · muro de ladrillo derecho', { collider: true });
+      ? themedName(theme, 'muro de ladrillo izquierdo')
+      : themedName(theme, 'muro de ladrillo derecho'), { collider: true });
     const panel = roundedBox(5.28, 4.25, 0.38, mats.brick, 0.1, 3);
     panel.position.set(side * 4.2, 2.12, 0);
     wall.add(panel);
@@ -285,12 +383,12 @@ function addBackCore(root, mats) {
 
   const lintel = roundedBox(3.25, 0.48, 0.48, mats.concreteDark, 0.12, 3);
   lintel.position.set(0, 4.02, 14.2);
-  lintel.name = 'TERRAZA · dintel del ascensor';
+  lintel.name = themedName(theme, 'dintel del ascensor');
   root.add(lintel);
 
   const arch = new THREE.Mesh(new THREE.TorusGeometry(2.28, 0.17, 10, 36, Math.PI), mats.brass);
   arch.position.set(0, 1.36, 12.2);
-  arch.name = 'TERRAZA · arco metalico central';
+  arch.name = themedName(theme, 'arco metalico central');
   root.add(arch);
   for (const side of [-1, 1]) {
     const post = cylinder(0.17, 0.19, 1.36, mats.brass, 14);
@@ -299,8 +397,8 @@ function addBackCore(root, mats) {
   }
 }
 
-function addCanopy(root, mats) {
-  const canopy = unit(new THREE.Group(), 'TERRAZA · cubierta industrial');
+function addCanopy(root, mats, theme) {
+  const canopy = unit(new THREE.Group(), themedName(theme, 'cubierta industrial'));
   const y = TERRACE_PS3_PROFILE.height - 0.12;
   for (const x of [-5.8, 0, 5.8]) {
     const beam = roundedBox(0.18, 0.22, 15.5, mats.steel, 0.07, 2);
@@ -316,7 +414,7 @@ function addCanopy(root, mats) {
   for (const x of [-3.02, 3.02]) {
     const glass = box(5.5, 0.045, 14.8, mats.glass);
     glass.position.set(x, y + 0.08, 4.2);
-    glass.name = 'TERRAZA · vidrio de cubierta';
+    glass.name = themedName(theme, 'vidrio de cubierta');
     glass.userData.skipShadow = true;
     canopy.add(glass);
   }
@@ -330,17 +428,17 @@ function addCanopy(root, mats) {
     slats.setMatrixAt(index, dummy.matrix);
   }
   slats.instanceMatrix.needsUpdate = true;
-  slats.name = 'TERRAZA · listones de madera del techo';
+  slats.name = themedName(theme, 'listones de madera del techo');
   canopy.add(slats);
   root.add(canopy);
 }
 
-function addCeilingServices(root, mats) {
-  const services = unit(new THREE.Group(), 'TERRAZA · instalaciones de techo');
+function addCeilingServices(root, mats, theme) {
+  const services = unit(new THREE.Group(), themedName(theme, 'instalaciones de techo'));
   const duct = cylinder(0.27, 0.27, 12.8, mats.wornSteel, 16);
   duct.rotation.x = Math.PI / 2;
   duct.position.set(5.2, 3.78, 4.4);
-  duct.name = 'TERRAZA · conducto de ventilacion';
+  duct.name = themedName(theme, 'conducto de ventilacion');
   services.add(duct);
   for (const z of [-0.8, 3.5, 7.8, 10.6]) {
     const joint = new THREE.Mesh(new THREE.TorusGeometry(0.275, 0.027, 8, 18), mats.steel);
@@ -402,23 +500,16 @@ function createHangerLines(count, spacing, material) {
   return new THREE.LineSegments(geometry, material);
 }
 
-function createGarmentGeometry() {
-  const shape = new THREE.Shape();
-  shape.moveTo(-0.15, 0.3);
-  shape.lineTo(-0.34, 0.2);
-  shape.lineTo(-0.28, 0.04);
-  shape.lineTo(-0.2, 0.08);
-  shape.lineTo(-0.17, -0.42);
-  shape.quadraticCurveTo(0, -0.47, 0.17, -0.42);
-  shape.lineTo(0.2, 0.08);
-  shape.lineTo(0.28, 0.04);
-  shape.lineTo(0.34, 0.2);
-  shape.lineTo(0.15, 0.3);
-  shape.quadraticCurveTo(0, 0.19, -0.15, 0.3);
-  return withUv1(new THREE.ShapeGeometry(shape, 2));
-}
-
-function createRetailRail(root, { x, z, rotation = 0, mats, name }) {
+function createRetailRail(root, {
+  x,
+  z,
+  rotation = 0,
+  mats,
+  name,
+  theme,
+  productFloor = null,
+  slotOffset = 0,
+}) {
   const rail = unit(new THREE.Group(), name, { collider: true });
   rail.add(rodBetween(new THREE.Vector3(-1.35, 1.62, 0), new THREE.Vector3(1.35, 1.62, 0), 0.038, mats.steel));
   for (const side of [-1, 1]) {
@@ -438,32 +529,44 @@ function createRetailRail(root, { x, z, rotation = 0, mats, name }) {
   hangers.position.y = 1.48;
   rail.add(hangers);
 
-  const garments = new THREE.InstancedMesh(createGarmentGeometry(), mats.garment, 9);
-  const garmentDummy = new THREE.Object3D();
   const garmentColors = [
-    0x263d32, 0xd5cfbd, 0x9b4b35,
-    0x1c2425, 0xc6a64e, 0x405e62,
-    0xe2ddd0, 0x6f352e, 0x273d2f,
+    theme.darkHex, 0xd5cfbd, theme.secondaryHex,
+    0x1c2425, theme.accentHex, 0x405e62,
+    0xe2ddd0, theme.secondaryHex, theme.darkHex,
   ];
   for (let index = 0; index < 9; index++) {
-    garmentDummy.position.set((index - 4) * 0.27, 1.12, 0.015 + (index % 3) * 0.012);
-    garmentDummy.rotation.set(0, (index - 4) * 0.018, (index % 2 ? 1 : -1) * 0.018);
-    garmentDummy.scale.setScalar(0.88 + (index % 3) * 0.035);
-    garmentDummy.updateMatrix();
-    garments.setMatrixAt(index, garmentDummy.matrix);
-    garments.setColorAt(index, new THREE.Color(garmentColors[index]));
+    const color = garmentColors[index];
+    const type = theme.key === 'hoop' ? 'jersey' : (index % 3 === 0 ? 'hoodie' : 'tee');
+    const fallback = garmentTexture(color, type, {
+      number: theme.key === 'hoop' ? [4, 2, 0, 20, 24, 7, 13, 91, 5][index] : undefined,
+      monkeyFace: theme.key === 'bob',
+    });
+    const garment = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.7, 0.88),
+      new THREE.MeshStandardMaterial({
+        map: fallback,
+        transparent: true,
+        alphaTest: 0.3,
+        roughness: 0.96,
+        side: THREE.DoubleSide,
+      }),
+    );
+    garment.position.set((index - 4) * 0.27, 1.11, 0.018 + (index % 3) * 0.012);
+    garment.rotation.set(0, (index - 4) * 0.018, (index % 2 ? 1 : -1) * 0.018);
+    garment.scale.setScalar(0.86 + (index % 3) * 0.035);
+    garment.name = `${name} · producto ${index + 1}`;
+    if (Number.isFinite(productFloor)) {
+      bindProductVisual(garment, { piso: productFloor, index: (slotOffset + index) % 4 }, fallback);
+    }
+    rail.add(garment);
   }
-  garments.instanceMatrix.needsUpdate = true;
-  if (garments.instanceColor) garments.instanceColor.needsUpdate = true;
-  garments.name = `${name} · prendas de muestra`;
-  rail.add(garments);
   rail.position.set(x, 0, z);
   rail.rotation.y = rotation;
   root.add(rail);
 }
 
-function createCentralPlinth(root, mats) {
-  const plinth = unit(new THREE.Group(), 'TERRAZA · isla oval central', { collider: true });
+function createCentralPlinth(root, mats, theme) {
+  const plinth = unit(new THREE.Group(), themedName(theme, 'isla oval central'), { collider: true });
   const base = cylinder(2.05, 2.18, 0.22, mats.concreteDark, 48);
   base.scale.x = 1.42;
   base.position.y = 0.11;
@@ -488,8 +591,8 @@ function createCentralPlinth(root, mats) {
   root.add(plinth);
 }
 
-function createMannequin(root, { x, z, rotation, mats, outfit }) {
-  const mannequin = unit(new THREE.Group(), 'TERRAZA · maniqui de escala', { collider: true });
+function createMannequin(root, { x, z, rotation, mats, outfit, theme }) {
+  const mannequin = unit(new THREE.Group(), themedName(theme, 'maniqui de escala'), { collider: true });
   const outfitMaterial = outfit === 'green' ? mats.green : mats.cream;
   const pantsMaterial = outfit === 'green' ? mats.black : mats.green;
   const base = cylinder(0.28, 0.34, 0.08, mats.steel, 24);
@@ -531,8 +634,8 @@ function createMannequin(root, { x, z, rotation, mats, outfit }) {
   root.add(mannequin);
 }
 
-function createWallDisplay(root, mats) {
-  const display = unit(new THREE.Group(), 'TERRAZA · pared modular de producto', { collider: true });
+function createWallDisplay(root, mats, theme) {
+  const display = unit(new THREE.Group(), themedName(theme, 'pared modular de producto'), { collider: true });
   const backing = roundedBox(0.22, 2.75, 5.6, mats.wood, 0.08, 3);
   backing.position.set(0, 1.55, 0);
   display.add(backing);
@@ -560,8 +663,8 @@ function createWallDisplay(root, mats) {
   root.add(display);
 }
 
-function createFittingPod(root, mats) {
-  const fitting = unit(new THREE.Group(), 'TERRAZA · probador curvo', { collider: true });
+function createFittingPod(root, mats, theme) {
+  const fitting = unit(new THREE.Group(), themedName(theme, 'probador curvo'), { collider: true });
   const shell = new THREE.Mesh(
     withUv1(new THREE.CylinderGeometry(1.62, 1.62, 2.75, 32, 1, true, 0.2, Math.PI * 1.72)),
     mats.brick,
@@ -581,8 +684,8 @@ function createFittingPod(root, mats) {
   root.add(fitting);
 }
 
-function createCounter(root, mats) {
-  const counter = unit(new THREE.Group(), 'TERRAZA · caja curva detallada', { collider: true });
+function createCounter(root, mats, theme) {
+  const counter = unit(new THREE.Group(), themedName(theme, 'caja curva detallada'), { collider: true });
   const body = roundedBox(3.6, 0.9, 1.08, mats.wood, 0.22, 4);
   body.position.y = 0.47;
   counter.add(body);
@@ -610,7 +713,7 @@ function createCounter(root, mats) {
   counter.add(screen);
   const screenFace = new THREE.Mesh(
     new THREE.PlaneGeometry(0.58, 0.36),
-    new THREE.MeshBasicMaterial({ map: signTexture('FT', 'CHECKOUT', '#6cb780') }),
+    new THREE.MeshBasicMaterial({ map: signTexture('FT', 'CHECKOUT', theme.accentCss) }),
   );
   screenFace.position.set(-0.72, 1.31, 0.075);
   screenFace.rotation.x = -0.16;
@@ -620,8 +723,8 @@ function createCounter(root, mats) {
   root.add(counter);
 }
 
-function createPlanter(root, { x, z, scale = 1, mats }) {
-  const planter = unit(new THREE.Group(), 'TERRAZA · macetero urbano', { collider: true });
+function createPlanter(root, { x, z, scale = 1, mats, theme }) {
+  const planter = unit(new THREE.Group(), themedName(theme, 'macetero urbano'), { collider: true });
   const pot = cylinder(0.42, 0.5, 0.62, mats.concreteDark, 18);
   pot.position.y = 0.31;
   planter.add(pot);
@@ -644,25 +747,25 @@ function createPlanter(root, { x, z, scale = 1, mats }) {
   root.add(planter);
 }
 
-function addBranding(root, mats) {
-  const mainSign = unit(new THREE.Group(), 'TERRAZA · cartel FOURTWENTY');
+function addBranding(root, mats, theme) {
+  const mainSign = unit(new THREE.Group(), themedName(theme, `cartel ${theme.title}`));
   const frame = roundedBox(4.7, 1.28, 0.13, mats.steel, 0.09, 3);
   mainSign.add(frame);
   const face = new THREE.Mesh(
     new THREE.PlaneGeometry(4.46, 1.06),
-    new THREE.MeshBasicMaterial({ map: signTexture('FOURTWENTY', 'BURELA ROOFTOP / 2026') }),
+    new THREE.MeshBasicMaterial({ map: signTexture(theme.title, theme.subtitle, theme.accentCss) }),
   );
   face.position.z = 0.071;
   mainSign.add(face);
   mainSign.position.set(4.12, 3.03, 14.055);
   root.add(mainSign);
 
-  const poster = unit(new THREE.Group(), 'TERRAZA · poster de campaña');
+  const poster = unit(new THREE.Group(), themedName(theme, 'poster de campana'));
   const posterFrame = roundedBox(1.82, 2.35, 0.11, mats.steel, 0.06, 2);
   poster.add(posterFrame);
   const posterFace = new THREE.Mesh(
     new THREE.PlaneGeometry(1.66, 2.18),
-    new THREE.MeshBasicMaterial({ map: saleTexture() }),
+    new THREE.MeshBasicMaterial({ map: campaignTexture(theme) }),
   );
   posterFace.position.z = 0.061;
   poster.add(posterFace);
@@ -671,7 +774,518 @@ function addBranding(root, mats) {
   root.add(poster);
 }
 
-function addLights(scene, shadows, mats) {
+function cssHex(value) {
+  return `#${value.toString(16).padStart(6, '0')}`;
+}
+
+function graffitiTexture(theme, variant = 0) {
+  return canvasTexture(1536, 768, (ctx, width, height) => {
+    ctx.fillStyle = variant ? '#242827' : '#d0c5b1';
+    ctx.fillRect(0, 0, width, height);
+    for (let x = 0; x < width; x += 96) {
+      ctx.fillStyle = variant ? 'rgba(255,255,255,0.025)' : 'rgba(40,30,24,0.055)';
+      ctx.fillRect(x, 0, 5, height);
+    }
+    const colors = [theme.accentCss, cssHex(theme.secondaryHex), '#171b1a', '#f0e4c9'];
+    ctx.lineCap = 'round';
+    for (let index = 0; index < 18; index++) {
+      const color = colors[index % colors.length];
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.32 + (index % 4) * 0.12;
+      ctx.lineWidth = 12 + (index % 5) * 6;
+      ctx.beginPath();
+      const y = 90 + ((index * 137 + variant * 71) % 590);
+      ctx.moveTo(-80 + index * 74, y);
+      ctx.bezierCurveTo(
+        width * 0.28, y - 180 + (index % 3) * 70,
+        width * 0.64, y + 170 - (index % 4) * 55,
+        width + 100, 120 + ((index * 83) % 520),
+      );
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.save();
+    ctx.translate(width * 0.5, height * 0.5);
+    ctx.rotate(variant ? 0.035 : -0.045);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    ctx.font = '900 250px Impact, Arial Black, sans-serif';
+    ctx.lineWidth = 32;
+    ctx.strokeStyle = variant ? '#efe4cc' : '#111716';
+    ctx.strokeText(variant ? 'BURELA' : 'ORIGEN', 0, -20, width - 120);
+    ctx.fillStyle = variant ? theme.accentCss : cssHex(theme.secondaryHex);
+    ctx.fillText(variant ? 'BURELA' : 'ORIGEN', 0, -20, width - 120);
+    ctx.font = '900 72px Arial Black, sans-serif';
+    ctx.fillStyle = variant ? '#ece2cd' : '#171b1a';
+    ctx.fillText(variant ? 'FOURTWENTY  /  GALICIA' : 'ROOTS  /  1992  /  420', 0, 188);
+    ctx.restore();
+  });
+}
+
+function artworkPlaceholder(index, theme) {
+  return canvasTexture(800, 1000, (ctx, width, height) => {
+    ctx.fillStyle = index % 2 ? '#161a19' : '#d9cfb8';
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = index % 2 ? theme.accentCss : cssHex(theme.secondaryHex);
+    ctx.fillRect(52, 52, width - 104, 18);
+    ctx.fillRect(52, height - 70, width - 104, 18);
+    ctx.strokeStyle = index % 2 ? '#e8dec8' : '#171b1a';
+    ctx.lineWidth = 24;
+    ctx.beginPath();
+    ctx.arc(width / 2, 390, 210, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(width / 2 - 72, 370, 16, 0, Math.PI * 2);
+    ctx.arc(width / 2 + 72, 370, 16, 0, Math.PI * 2);
+    ctx.fillStyle = index % 2 ? '#e8dec8' : '#171b1a';
+    ctx.fill();
+    ctx.font = '900 112px Arial Black, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(['ORIGEN', 'BURELA', 'FOUR20'][index % 3], width / 2, 760);
+    ctx.font = '700 34px Courier New, monospace';
+    ctx.fillText('REEMPLAZA ESTA FOTO EN LA CARPETA', width / 2, 840, width - 100);
+  });
+}
+
+function loadArtworkTexture(url) {
+  if (!url) return null;
+  const texture = destinationTexture(textureLoader.load(url));
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  return texture;
+}
+
+function createArtworkFrame(root, {
+  texture,
+  x,
+  y,
+  z,
+  rotationY,
+  index,
+  mats,
+  theme,
+}) {
+  const frame = unit(new THREE.Group(), themedName(theme, `cuadro reemplazable ${index + 1}`), { collider: true });
+  const backing = roundedBox(1.18, 1.52, 0.1, mats.black, 0.05, 2);
+  frame.add(backing);
+  const face = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.02, 1.36),
+    new THREE.MeshBasicMaterial({ map: texture, color: 0xffffff, toneMapped: false }),
+  );
+  face.position.z = 0.056;
+  frame.add(face);
+  for (const side of [-1, 1]) {
+    const bar = roundedBox(0.055, 1.48, 0.13, mats.brass, 0.025, 2);
+    bar.position.x = side * 0.56;
+    frame.add(bar);
+  }
+  for (const side of [-1, 1]) {
+    const bar = roundedBox(1.16, 0.055, 0.13, mats.brass, 0.025, 2);
+    bar.position.y = side * 0.73;
+    frame.add(bar);
+  }
+  frame.position.set(x, y, z);
+  frame.rotation.y = rotationY;
+  root.add(frame);
+}
+
+function addOriginDetails(root, mats, theme) {
+  for (const [side, variant] of [[-1, 0], [1, 1]]) {
+    const wall = unit(new THREE.Group(), themedName(theme, variant ? 'mural Burela' : 'mural Origen'), { collider: true });
+    const backing = roundedBox(0.18, 2.82, 5.55, mats.concreteDark, 0.07, 2);
+    backing.position.y = 1.55;
+    wall.add(backing);
+    const face = new THREE.Mesh(
+      new THREE.PlaneGeometry(5.3, 2.58),
+      new THREE.MeshBasicMaterial({ map: graffitiTexture(theme, variant), toneMapped: false }),
+    );
+    face.position.set(side < 0 ? 0.096 : -0.096, 1.55, 0);
+    face.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+    wall.add(face);
+    wall.position.set(side * 6.48, 0, variant ? 7.35 : 7.15);
+    root.add(wall);
+  }
+
+  const frameTextures = [0, 1, 2].map((index) => (
+    loadArtworkTexture(ORIGIN_ARTWORK_URLS[index]) ?? artworkPlaceholder(index, theme)
+  ));
+  frameTextures.forEach((texture, index) => {
+    createArtworkFrame(root, {
+      texture,
+      x: 6.32,
+      y: 1.82,
+      z: -2.5 + index * 1.65,
+      rotationY: -Math.PI / 2,
+      index,
+      mats,
+      theme,
+    });
+  });
+
+  const crates = unit(new THREE.Group(), themedName(theme, 'cajones y latas de pintura'));
+  for (let index = 0; index < 5; index++) {
+    const crate = roundedBox(0.72, 0.42, 0.55, mats.wood, 0.06, 2);
+    crate.position.set((index % 2) * 0.58, 0.21 + Math.floor(index / 2) * 0.42, (index % 3) * 0.08);
+    crate.rotation.y = (index - 2) * 0.08;
+    crates.add(crate);
+  }
+  for (let index = 0; index < 4; index++) {
+    const can = cylinder(0.11, 0.11, 0.25, index % 2 ? mats.orange : mats.green, 14);
+    can.position.set(-0.48 + index * 0.28, 0.13, 0.55);
+    crates.add(can);
+  }
+  crates.position.set(-5.55, 0, 10.9);
+  root.add(crates);
+}
+
+function courtTexture(theme) {
+  return canvasTexture(1024, 1024, (ctx, width, height) => {
+    ctx.fillStyle = '#9b6a3d';
+    ctx.fillRect(0, 0, width, height);
+    for (let x = 0; x < width; x += 42) {
+      ctx.fillStyle = x % 84 ? 'rgba(255,224,167,0.10)' : 'rgba(55,24,11,0.09)';
+      ctx.fillRect(x, 0, 38, height);
+    }
+    ctx.strokeStyle = '#f4ead7';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(52, 52, width - 104, height - 104);
+    ctx.beginPath();
+    ctx.arc(width / 2, height / 2, 145, 0, Math.PI * 2);
+    ctx.stroke();
+    for (const y of [52, height - 320]) ctx.strokeRect(width / 2 - 155, y, 310, 268);
+    ctx.fillStyle = theme.accentCss;
+    ctx.beginPath();
+    ctx.arc(width / 2, height / 2, 102, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#111515';
+    ctx.font = '900 92px Arial Black, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('420', width / 2, height / 2 + 8);
+  });
+}
+
+function scoreboardTexture(theme) {
+  return canvasTexture(1024, 420, (ctx, width, height) => {
+    ctx.fillStyle = '#070909';
+    ctx.fillRect(0, 0, width, height);
+    ctx.strokeStyle = theme.accentCss;
+    ctx.lineWidth = 14;
+    ctx.strokeRect(16, 16, width - 32, height - 32);
+    ctx.fillStyle = '#f5eee2';
+    ctx.font = '900 72px Arial Black, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BURELA LEAGUE', width / 2, 92);
+    ctx.fillStyle = theme.accentCss;
+    ctx.font = '900 156px Courier New, monospace';
+    ctx.fillText('42  -  0', width / 2, 270);
+    ctx.fillStyle = '#d6c7a8';
+    ctx.font = '700 34px Courier New, monospace';
+    ctx.fillText('HOOP SEASON  /  FOURTWENTY', width / 2, 356);
+  });
+}
+
+function createBasketball(mats) {
+  const ball = new THREE.Group();
+  const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.18, 20, 14),
+    new THREE.MeshStandardMaterial({ color: 0xc65d24, roughness: 0.9 }),
+  );
+  ball.add(sphere);
+  for (const rotation of [[0, 0, 0], [Math.PI / 2, 0, 0], [0, Math.PI / 2, 0]]) {
+    const seam = new THREE.Mesh(new THREE.TorusGeometry(0.181, 0.008, 6, 24), mats.black);
+    seam.rotation.set(...rotation);
+    ball.add(seam);
+  }
+  return ball;
+}
+
+function addHoopDetails(root, mats, theme) {
+  const court = new THREE.Mesh(
+    new THREE.PlaneGeometry(8.4, 11.8),
+    new THREE.MeshStandardMaterial({ map: courtTexture(theme), roughness: 0.5, metalness: 0.02 }),
+  );
+  court.rotation.x = -Math.PI / 2;
+  court.position.set(0, 0.04, 4.0);
+  court.name = themedName(theme, 'media cancha de exhibicion');
+  court.receiveShadow = true;
+  root.add(court);
+
+  const hoop = unit(new THREE.Group(), themedName(theme, 'aro de basket completo'), { collider: true });
+  const base = roundedBox(1.5, 0.22, 1.05, mats.black, 0.14, 3);
+  base.position.y = 0.11;
+  hoop.add(base);
+  const pole = roundedBox(0.22, 2.75, 0.24, mats.steel, 0.08, 3);
+  pole.position.set(0, 1.52, 0.32);
+  hoop.add(pole);
+  const boardFrame = roundedBox(2.05, 1.24, 0.12, mats.steel, 0.1, 3);
+  boardFrame.position.set(0, 2.72, 0.18);
+  hoop.add(boardFrame);
+  const backboardGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.84, 1.03), mats.glass);
+  backboardGlass.position.set(0, 2.72, 0.115);
+  hoop.add(backboardGlass);
+  const square = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.PlaneGeometry(0.7, 0.48)),
+    new THREE.LineBasicMaterial({ color: 0xf1eee7 }),
+  );
+  square.position.set(0, 2.57, 0.052);
+  hoop.add(square);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.035, 10, 28), mats.orange);
+  rim.rotation.x = Math.PI / 2;
+  rim.position.set(0, 2.25, -0.2);
+  hoop.add(rim);
+  const netPoints = [];
+  for (let index = 0; index < 12; index++) {
+    const angle = (index / 12) * Math.PI * 2;
+    netPoints.push(
+      Math.cos(angle) * 0.34, 2.23, -0.2 + Math.sin(angle) * 0.34,
+      Math.cos(angle) * 0.22, 1.78, -0.2 + Math.sin(angle) * 0.22,
+    );
+  }
+  const netGeometry = new THREE.BufferGeometry();
+  netGeometry.setAttribute('position', new THREE.Float32BufferAttribute(netPoints, 3));
+  hoop.add(new THREE.LineSegments(netGeometry, new THREE.LineBasicMaterial({ color: 0xdad7cb })));
+  hoop.position.set(0, 0, -4.35);
+  root.add(hoop);
+
+  const rack = unit(new THREE.Group(), themedName(theme, 'carro de pelotas'), { collider: true });
+  for (const y of [0.35, 0.78]) {
+    rack.add(rodBetween(new THREE.Vector3(-0.85, y, -0.22), new THREE.Vector3(0.85, y, -0.22), 0.025, mats.steel));
+    rack.add(rodBetween(new THREE.Vector3(-0.85, y, 0.22), new THREE.Vector3(0.85, y, 0.22), 0.025, mats.steel));
+  }
+  for (const x of [-0.82, 0.82]) rack.add(rodBetween(new THREE.Vector3(x, 0.12, 0), new THREE.Vector3(x, 1.02, 0), 0.03, mats.steel));
+  for (let index = 0; index < 6; index++) {
+    const ball = createBasketball(mats);
+    ball.position.set(-0.62 + (index % 3) * 0.62, 0.4 + Math.floor(index / 3) * 0.43, 0);
+    rack.add(ball);
+  }
+  rack.position.set(-4.9, 0, 8.8);
+  root.add(rack);
+
+  const scoreboard = unit(new THREE.Group(), themedName(theme, 'marcador Burela League'));
+  scoreboard.add(roundedBox(4.28, 1.5, 0.14, mats.steel, 0.08, 3));
+  const face = new THREE.Mesh(
+    new THREE.PlaneGeometry(4.05, 1.27),
+    new THREE.MeshBasicMaterial({ map: scoreboardTexture(theme), toneMapped: false }),
+  );
+  face.position.z = 0.076;
+  scoreboard.add(face);
+  scoreboard.position.set(-3.85, 3.0, 14.04);
+  root.add(scoreboard);
+}
+
+function culturePosterTexture(theme) {
+  return canvasTexture(900, 900, (ctx, width, height) => {
+    ctx.fillStyle = '#0f1112';
+    ctx.fillRect(0, 0, width, height);
+    for (let index = 0; index < 18; index++) {
+      const barHeight = 80 + ((index * 73) % 600);
+      ctx.fillStyle = index % 3 === 0 ? theme.accentCss : (index % 2 ? '#375d66' : '#e6dfcf');
+      ctx.fillRect(46 + index * 45, height - 95 - barHeight, 25, barHeight);
+    }
+    ctx.fillStyle = '#f2eadc';
+    ctx.font = '900 112px Arial Black, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('CULTURA', width / 2, 150);
+    ctx.font = '700 38px Courier New, monospace';
+    ctx.fillText('BURELA SOUNDS / ISSUE 420', width / 2, 215);
+  });
+}
+
+function addSpeaker(group, x, z, rotationY, mats, theme, name) {
+  const speaker = unit(new THREE.Group(), themedName(theme, name), { collider: true });
+  speaker.add(roundedBox(0.82, 1.62, 0.68, mats.black, 0.1, 3));
+  for (const [y, radius] of [[0.48, 0.24], [-0.28, 0.31]]) {
+    const cone = cylinder(radius, radius * 0.72, 0.08, mats.wornSteel, 24);
+    cone.rotation.x = Math.PI / 2;
+    cone.position.set(0, y, -0.37);
+    speaker.add(cone);
+    const center = cylinder(radius * 0.32, radius * 0.32, 0.09, mats.orange, 18);
+    center.rotation.x = Math.PI / 2;
+    center.position.set(0, y, -0.42);
+    speaker.add(center);
+  }
+  speaker.position.set(x, 0.82, z);
+  speaker.rotation.y = rotationY;
+  group.add(speaker);
+}
+
+function addCultureDetails(root, mats, theme) {
+  const recordWall = unit(new THREE.Group(), themedName(theme, 'archivo de vinilos'), { collider: true });
+  const backing = roundedBox(0.2, 2.75, 5.4, mats.wood, 0.08, 3);
+  backing.position.y = 1.52;
+  recordWall.add(backing);
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 5; col++) {
+      const vinyl = cylinder(0.3, 0.3, 0.025, mats.black, 28);
+      vinyl.rotation.z = Math.PI / 2;
+      vinyl.position.set(-0.13, 0.72 + row * 0.78, -1.9 + col * 0.94);
+      recordWall.add(vinyl);
+      const label = cylinder(0.09, 0.09, 0.03, (row + col) % 2 ? mats.orange : mats.yellow, 20);
+      label.rotation.z = Math.PI / 2;
+      label.position.set(-0.15, 0.72 + row * 0.78, -1.9 + col * 0.94);
+      recordWall.add(label);
+    }
+  }
+  recordWall.position.set(-6.38, 0, 6.8);
+  root.add(recordWall);
+
+  const booth = unit(new THREE.Group(), themedName(theme, 'cabina DJ y turntables'), { collider: true });
+  booth.add(roundedBox(3.25, 0.88, 1.22, mats.wood, 0.16, 4));
+  const deck = roundedBox(3.42, 0.11, 1.34, mats.steel, 0.08, 3);
+  deck.position.y = 0.48;
+  booth.add(deck);
+  for (const x of [-0.95, 0.95]) {
+    const platter = cylinder(0.38, 0.38, 0.035, mats.black, 32);
+    platter.position.set(x, 0.56, 0);
+    booth.add(platter);
+    const label = cylinder(0.1, 0.1, 0.04, x < 0 ? mats.orange : mats.yellow, 20);
+    label.position.set(x, 0.58, 0);
+    booth.add(label);
+  }
+  for (let index = 0; index < 6; index++) {
+    const fader = roundedBox(0.035, 0.025, 0.32, mats.cream, 0.01, 1);
+    fader.position.set(-0.35 + index * 0.14, 0.59, 0);
+    booth.add(fader);
+  }
+  booth.position.set(0, 0.45, 8.65);
+  root.add(booth);
+  addSpeaker(root, -2.25, 8.75, 0, mats, theme, 'monitor izquierdo');
+  addSpeaker(root, 2.25, 8.75, 0, mats, theme, 'monitor derecho');
+
+  const poster = unit(new THREE.Group(), themedName(theme, 'poster ecualizador'));
+  poster.add(roundedBox(2.42, 2.42, 0.12, mats.steel, 0.07, 2));
+  const face = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.23, 2.23),
+    new THREE.MeshBasicMaterial({ map: culturePosterTexture(theme), toneMapped: false }),
+  );
+  face.position.z = 0.066;
+  poster.add(face);
+  poster.position.set(5.8, 1.65, 1.15);
+  poster.rotation.y = -Math.PI / 2;
+  root.add(poster);
+}
+
+function createBobToy(mats, scale = 1) {
+  const toy = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.2, 5, 10), mats.bobBrown);
+  body.position.y = 0.28;
+  toy.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 18, 12), mats.bobBrown);
+  head.position.y = 0.57;
+  toy.add(head);
+  for (const side of [-1, 1]) {
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.085, 14, 10), mats.bobFace);
+    ear.position.set(side * 0.2, 0.58, 0);
+    toy.add(ear);
+  }
+  const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 10), mats.bobFace);
+  muzzle.scale.set(1.05, 0.72, 0.62);
+  muzzle.position.set(0, 0.52, -0.15);
+  toy.add(muzzle);
+  for (const side of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.025, 10, 7), mats.black);
+    eye.position.set(side * 0.07, 0.63, -0.17);
+    toy.add(eye);
+    const shoe = roundedBox(0.12, 0.07, 0.17, mats.orange, 0.04, 2);
+    shoe.position.set(side * 0.09, 0.04, -0.035);
+    toy.add(shoe);
+  }
+  toy.scale.setScalar(scale);
+  toy.userData.editorSelectExisting = true;
+  return toy;
+}
+
+function bobLogoTexture(theme) {
+  return canvasTexture(900, 900, (ctx, width, height) => {
+    ctx.fillStyle = '#151817';
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = '#6f3d25';
+    ctx.beginPath();
+    ctx.arc(width / 2, 390, 245, 0, Math.PI * 2);
+    ctx.fill();
+    for (const x of [230, 670]) {
+      ctx.beginPath();
+      ctx.arc(x, 380, 115, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#c47a3b';
+    ctx.beginPath();
+    ctx.ellipse(width / 2, 460, 180, 130, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#111514';
+    ctx.beginPath();
+    ctx.arc(385, 350, 22, 0, Math.PI * 2);
+    ctx.arc(515, 350, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = theme.accentCss;
+    ctx.font = '900 112px Arial Black, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BOBILONIA', width / 2, 785, width - 80);
+  });
+}
+
+function addBobDetails(root, mats, theme) {
+  const toyTable = unit(new THREE.Group(), themedName(theme, 'mesa de juguetes BOB'), { collider: true });
+  toyTable.add(roundedBox(3.7, 0.18, 1.45, mats.wood, 0.14, 3));
+  for (const x of [-1.55, 1.55]) {
+    const leg = roundedBox(0.16, 0.84, 1.1, mats.steel, 0.05, 2);
+    leg.position.set(x, -0.48, 0);
+    toyTable.add(leg);
+  }
+  for (let index = 0; index < 8; index++) {
+    const toy = createBobToy(mats, 0.82 + (index % 3) * 0.08);
+    toy.position.set(-1.42 + (index % 4) * 0.95, 0.18, -0.36 + Math.floor(index / 4) * 0.72);
+    toy.rotation.y = Math.PI + (index - 3.5) * 0.12;
+    toyTable.add(toy);
+  }
+  toyTable.position.set(0, 0.98, 8.2);
+  root.add(toyTable);
+
+  const display = unit(new THREE.Group(), themedName(theme, 'vitrina de Bob Toys'), { collider: true });
+  display.add(roundedBox(0.22, 2.85, 5.5, mats.wood, 0.08, 3));
+  for (const y of [0.58, 1.35, 2.12]) {
+    const shelf = roundedBox(0.62, 0.08, 5.05, mats.brass, 0.035, 2);
+    shelf.position.set(-0.27, y - 1.42, 0);
+    display.add(shelf);
+  }
+  for (let index = 0; index < 9; index++) {
+    const toy = createBobToy(mats, 0.62);
+    toy.position.set(-0.58, -1.15 + Math.floor(index / 3) * 0.78, -1.55 + (index % 3) * 1.55);
+    toy.rotation.y = Math.PI / 2;
+    display.add(toy);
+  }
+  display.position.set(6.3, 1.45, 4.8);
+  root.add(display);
+
+  const logo = unit(new THREE.Group(), themedName(theme, 'retrato BOBILONIA'));
+  logo.add(roundedBox(2.65, 2.65, 0.13, mats.steel, 0.1, 3));
+  const face = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.45, 2.45),
+    new THREE.MeshBasicMaterial({ map: bobLogoTexture(theme), toneMapped: false }),
+  );
+  face.position.z = 0.071;
+  logo.add(face);
+  logo.position.set(-5.8, 1.7, 6.25);
+  logo.rotation.y = Math.PI / 2;
+  root.add(logo);
+
+  const heroToy = createBobToy(mats, 2.15);
+  heroToy.name = themedName(theme, 'figura BOB central');
+  heroToy.position.set(0, 1.15, 3.25);
+  heroToy.rotation.y = Math.PI;
+  root.add(heroToy);
+}
+
+function addThemeDetails(root, mats, theme) {
+  if (theme.key === 'origen') addOriginDetails(root, mats, theme);
+  else if (theme.key === 'hoop') addHoopDetails(root, mats, theme);
+  else if (theme.key === 'cultura') addCultureDetails(root, mats, theme);
+  else if (theme.key === 'bob') addBobDetails(root, mats, theme);
+}
+
+function addLights(scene, shadows, mats, theme) {
   scene.add(new THREE.HemisphereLight(0xcde1e2, 0x3f352d, 1.08));
   scene.add(new THREE.AmbientLight(0xfff7ea, 0.22));
 
@@ -708,20 +1322,24 @@ function addLights(scene, shadows, mats) {
     scene.add(spot, spot.target);
   }
 
-  const signGlow = new THREE.PointLight(0xe6ae4d, 1.8, 5.5, 2);
+  const signGlow = new THREE.PointLight(theme.accentHex, 1.8, 5.5, 2);
   signGlow.position.set(0, 2.8, 12.2);
   scene.add(signGlow);
 
-  scene.userData.terraceLightMaterial = mats.light;
+  scene.userData.ps3FloorLightMaterial = mats.light;
 }
 
-export function buildTerracePs3Trial(scene, {
+export function buildPs3FloorScene(scene, {
+  destinationId = 5,
   environmentConfig,
   shadows = true,
+  productFloor = null,
 } = {}) {
+  const theme = ps3ThemeForDestination(destinationId);
   const root = new THREE.Group();
-  root.name = 'TERRAZA PS3 · FOURTWENTY ROOFTOP';
-  const mats = buildMaterials();
+  root.name = `${theme.editorLabel} · FOURTWENTY`;
+  const mats = buildMaterials(theme);
+  scene.userData.ps3Theme = theme.key;
 
   const environmentRoot = addEditableHdriSphere(root, scene, environmentConfig);
   environmentRoot.scale.setScalar(1.5);
@@ -736,31 +1354,56 @@ export function buildTerracePs3Trial(scene, {
     4,
   );
   floor.position.set(0, -0.16, TERRACE_PS3_PROFILE.centerZ);
-  floor.name = 'TERRAZA · piso PBR de hormigon';
+  floor.name = themedName(theme, 'piso PBR de hormigon');
   floor.receiveShadow = true;
   root.add(floor);
 
   const floorInset = roundedBox(11.7, 0.04, 13.9, mats.concreteDark, 0.3, 3);
   floorInset.position.set(0, 0.012, 4.15);
-  floorInset.name = 'TERRAZA · alfombra mineral central';
+  floorInset.name = themedName(theme, 'superficie central');
   floorInset.receiveShadow = true;
   root.add(floorInset);
 
-  addPerimeter(root, mats);
-  addBackCore(root, mats);
-  addCanopy(root, mats);
-  addCeilingServices(root, mats);
-  addBranding(root, mats);
-  createCentralPlinth(root, mats);
-  createRetailRail(root, { x: -2.65, z: 0.25, rotation: 0.08, mats, name: 'TERRAZA · perchero izquierdo' });
-  createRetailRail(root, { x: 2.85, z: 6.65, rotation: -0.12, mats, name: 'TERRAZA · perchero derecho' });
-  createWallDisplay(root, mats);
-  createFittingPod(root, mats);
-  createCounter(root, mats);
-  createMannequin(root, { x: -1.1, z: 3.25, rotation: -0.2, mats, outfit: 'green' });
-  createMannequin(root, { x: 1.05, z: 3.25, rotation: 0.2, mats, outfit: 'cream' });
-  createPlanter(root, { x: -5.72, z: -3.85, scale: 0.9, mats });
-  createPlanter(root, { x: 5.72, z: -3.85, scale: 0.9, mats });
+  addPerimeter(root, mats, theme);
+  addBackCore(root, mats, theme);
+  addCanopy(root, mats, theme);
+  addCeilingServices(root, mats, theme);
+  addBranding(root, mats, theme);
+  createCentralPlinth(root, mats, theme);
+  createRetailRail(root, {
+    x: -2.65,
+    z: 0.25,
+    rotation: 0.08,
+    mats,
+    theme,
+    productFloor,
+    slotOffset: 0,
+    name: themedName(theme, 'perchero izquierdo'),
+  });
+  createRetailRail(root, {
+    x: 2.85,
+    z: 6.65,
+    rotation: -0.12,
+    mats,
+    theme,
+    productFloor,
+    slotOffset: 2,
+    name: themedName(theme, 'perchero derecho'),
+  });
+  if (!['origen', 'bob'].includes(theme.key)) createWallDisplay(root, mats, theme);
+  createFittingPod(root, mats, theme);
+  createCounter(root, mats, theme);
+  if (theme.key !== 'bob') {
+    createMannequin(root, {
+      x: -1.1, z: 3.25, rotation: -0.2, mats, outfit: theme.outfitA, theme,
+    });
+    createMannequin(root, {
+      x: 1.05, z: 3.25, rotation: 0.2, mats, outfit: theme.outfitB, theme,
+    });
+  }
+  createPlanter(root, { x: -5.72, z: -3.85, scale: 0.9, mats, theme });
+  createPlanter(root, { x: 5.72, z: -3.85, scale: 0.9, mats, theme });
+  addThemeDetails(root, mats, theme);
 
   root.traverse((object) => {
     if (!object.isMesh && !object.isInstancedMesh) return;
@@ -774,6 +1417,10 @@ export function buildTerracePs3Trial(scene, {
   });
 
   scene.add(root);
-  addLights(scene, shadows, mats);
+  addLights(scene, shadows, mats, theme);
   return { root, colliders: [] };
+}
+
+export function buildTerracePs3Trial(scene, options = {}) {
+  return buildPs3FloorScene(scene, { ...options, destinationId: 5 });
 }

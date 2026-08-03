@@ -1,19 +1,14 @@
 import * as THREE from 'three';
-import { COLLECTIONS } from './collections.js';
 import { ElevatorController } from './elevator.js';
 import { createOriginArcade } from './originArcade.js';
-import { addBincoShopLights, buildBincoShopSet, buildBincoShopShell } from './bincoShopTrial.js';
 import { environmentForDestination } from './floorEnvironmentCatalog.js';
 import { buildHoopArena } from './hoopArena.js';
 import { unbindProductVisuals } from './productVisuals.js';
-import { buildTerracePs3Trial, TERRACE_PS3_PROFILE } from './terracePs3Trial.js';
-
-const ROOM_W = 12;
-const BASE_ROOM_D = 9;
-const ROOM_D = BASE_ROOM_D * 2;
-const ROOM_H = 3.4;
-const ROOM_MIN_Z = -BASE_ROOM_D / 2;
-const ROOM_MAX_Z = ROOM_MIN_Z + ROOM_D;
+import {
+  buildPs3FloorScene,
+  PS3_FLOOR_PROFILE,
+  ps3ThemeForDestination,
+} from './terracePs3Trial.js';
 
 export const ELEVATOR_DESTINATIONS = Object.freeze([
   { id: 0, label: 'Calle Burela', hudLabel: 'CALLE BURELA', kind: 'street' },
@@ -29,51 +24,42 @@ export function getDestination(id) {
 }
 
 function buildSectionScene(destination, { environment, shadows, onElevatorEnter, onArcadeInteract }) {
-  const isTerracePs3Trial = destination.id === 5;
+  const theme = ps3ThemeForDestination(destination.id);
   const scene = new THREE.Scene();
   scene.name = `Escena unica · ${destination.hudLabel}`;
   scene.userData.destinationId = destination.id;
   scene.userData.loadedSourceFloor = destination.sourceFloor;
-  scene.userData.floorSize = isTerracePs3Trial
-    ? { width: TERRACE_PS3_PROFILE.width, depth: TERRACE_PS3_PROFILE.depth, areaScale: 2.6 }
-    : { width: ROOM_W, depth: ROOM_D, areaScale: 2 };
-  scene.userData.visualProfile = isTerracePs3Trial ? 'terrace-ps3-trial' : 'binco-shop-base';
+  scene.userData.floorSize = {
+    width: PS3_FLOOR_PROFILE.width,
+    depth: PS3_FLOOR_PROFILE.depth,
+    areaScale: 2.6,
+  };
+  scene.userData.visualProfile = `ps3-${theme.key}`;
   scene.userData.disposed = false;
-  scene.background = new THREE.Color(isTerracePs3Trial ? 0x586a72 : 0x777d7b);
-  scene.fog = new THREE.Fog(isTerracePs3Trial ? 0x586a72 : 0x777d7b, isTerracePs3Trial ? 34 : 20, isTerracePs3Trial ? 84 : 46);
+  scene.background = new THREE.Color(0x586a72);
+  scene.fog = new THREE.Fog(0x586a72, 34, 84);
   scene.environment = environment;
-  scene.environmentIntensity = isTerracePs3Trial ? 0.5 : 0.38;
+  scene.environmentIntensity = 0.5;
 
   const environmentConfig = environmentForDestination(destination.id);
   scene.userData.environmentFile = environmentConfig.filename;
-  let colliders;
-  if (isTerracePs3Trial) {
-    colliders = buildTerracePs3Trial(scene, { environmentConfig, shadows }).colliders;
-  } else {
-    colliders = buildBincoShopShell(scene, { environmentConfig });
-    addBincoShopLights(scene, shadows);
-  }
-
-  const collection = COLLECTIONS.find((item) => item.piso === destination.sourceFloor);
-  if (!isTerracePs3Trial) {
-    colliders.push(...buildBincoShopSet(scene, collection, {
-      productFloor: destination.sourceFloor ?? 3,
-      sectionLabel: destination.hudLabel,
-    }));
-  }
+  const colliders = buildPs3FloorScene(scene, {
+    destinationId: destination.id,
+    environmentConfig,
+    shadows,
+    productFloor: destination.sourceFloor,
+  }).colliders;
 
   const elevator = new ElevatorController(scene, {
     id: `elevator-destination-${destination.id}`,
     name: `Ascensor · ${destination.hudLabel}`,
-    position: isTerracePs3Trial
-      ? TERRACE_PS3_PROFILE.elevatorPosition
-      : [0, 0, ROOM_MAX_Z - 1.45],
+    position: PS3_FLOOR_PROFILE.elevatorPosition,
     rotationY: Math.PI,
     onEnter: onElevatorEnter,
   });
   const minigameArcade = createOriginArcade({
     onInteract: onArcadeInteract,
-    config: isTerracePs3Trial ? TERRACE_PS3_PROFILE.arcadeConfig : undefined,
+    config: PS3_FLOOR_PROFILE.arcadeConfig,
   });
   scene.add(minigameArcade.root);
 
@@ -90,10 +76,8 @@ function buildSectionScene(destination, { environment, shadows, onElevatorEnter,
     colliders,
     dynamicColliders: [],
     collidersDirty: true,
-    bounds: isTerracePs3Trial
-      ? TERRACE_PS3_PROFILE.bounds
-      : { minX: -5.85, maxX: 5.85, minZ: ROOM_MIN_Z + 0.15, maxZ: ROOM_MAX_Z - 0.15 },
-    ceiling: isTerracePs3Trial ? TERRACE_PS3_PROFILE.height : ROOM_H,
+    bounds: PS3_FLOOR_PROFILE.bounds,
+    ceiling: PS3_FLOOR_PROFILE.height,
     sampleGround: () => 0,
   };
 }
