@@ -49,7 +49,9 @@ export function environmentForDestination(destinationId) {
 
   return {
     backgroundUrl: selected.url,
-    lightingUrl: isHdr(selected.path) ? selected.url : DEFAULT_ENVIRONMENT_URL,
+    // Las panoramicas JPG/WebP usan la iluminacion HDR que la escena ya tiene.
+    // Asi no se descarga ni decodifica un segundo entorno al entrar al piso.
+    lightingUrl: isHdr(selected.path) ? selected.url : null,
     filename: selected.filename,
     custom: true,
   };

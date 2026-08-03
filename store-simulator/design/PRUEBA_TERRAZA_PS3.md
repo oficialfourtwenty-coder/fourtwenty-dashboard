@@ -29,8 +29,8 @@ La Terraza busca una lectura cercana a un juego de PlayStation 3:
 - techo industrial con vigas, conductos, tuberias y luces;
 - mobiliario curvo, caja, probador, exhibidores y maniquies;
 - prendas provisionales reemplazables por productos reales;
-- ciudad nocturna de bajo costo alrededor del local;
-- panorama 360 propio del piso;
+- panorama fotografico 360 de una terraza real, visible a traves del vidrio;
+- sin edificios geometricos de fondo que compitan con la fotografia;
 - piezas principales editables con `T`.
 
 No es una copia de GTA V ni un piso final. Es el patron visual que Kusher debe
@@ -42,10 +42,15 @@ Medido en la vista de diagnostico de la misma computadora:
 
 - Terraza nueva: cerca de 260 draw calls y 116k triangulos.
 - Piso ORIGEN anterior: cerca de 886 draw calls y 114k triangulos.
-- Texturas nuevas: aproximadamente 1.3 MB en WebP.
-- Panorama de Terraza: aproximadamente 3.5 MB en EXR.
+- Texturas PBR nuevas: aproximadamente 1.3 MB en WebP.
+- Panorama de Terraza: aproximadamente 144 KB en WebP, reemplazando el EXR
+  anterior de 3.5 MB.
+- Total visual nuevo de la prueba: aproximadamente 1.45 MB.
 - Los recursos del piso se cargan cuando se entra a Terraza y se liberan al
   salir de la escena.
+- El boton del ascensor confirma el piso durante 450 ms y la transicion usa
+  350 ms por lado, reduciendo la espera percibida sin mostrar la escena a medio
+  construir.
 
 La prueba agrega mas detalle visual con muchas menos llamadas de dibujo que la
 base anterior. La medicion de FPS del navegador integrado no representa por si
@@ -58,7 +63,10 @@ condiciones.
 - `src/world/destinationScenes.js`
 - `src/world/bincoShopTrial.js`
 - `public/assets/materials/terrace-ps3/`
-- `src/assets/environments/pisos/5-terraza/terrace-evening.exr`
+- `src/assets/environments/pisos/5-terraza/terrace-rooftop-real.webp`
+
+El panorama deriva de `Rooftop Day` de Poly Haven (licencia CC0):
+`https://polyhaven.com/a/rooftop_day`.
 
 ## Prueba minima antes de integrar
 

@@ -353,8 +353,10 @@ export function addEditableHdriSphere(group, scene, {
     material.color.setHex(0xffffff);
     material.needsUpdate = true;
 
-    let lighting = background;
-    if (customTextureLoaded && lightingUrl !== backgroundUrl) {
+    let lighting = customTextureLoaded && lightingUrl === backgroundUrl
+      ? background
+      : (scene.environment ?? background);
+    if (customTextureLoaded && lightingUrl && lightingUrl !== backgroundUrl) {
       try {
         lighting = await loadSharedEnvironmentTexture(lightingUrl);
       } catch (error) {
@@ -363,7 +365,7 @@ export function addEditableHdriSphere(group, scene, {
       }
     }
     if (scene.userData.disposed) return;
-    scene.environment = lighting;
+    scene.environment = lighting ?? background;
     scene.environmentIntensity = 0.42;
   };
 

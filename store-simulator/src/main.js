@@ -1233,10 +1233,10 @@ async function travelToDestination(destinationId) {
   input.keys.clear();
 
   try {
-    await elevatorPanel.fadeToBlack(500);
+    await elevatorPanel.fadeToBlack(350);
     elevatorPanel.hide();
     activateDestination(destination.id);
-    await elevatorPanel.fadeFromBlack(500);
+    await elevatorPanel.fadeFromBlack(350);
   } catch (error) {
     console.error('No se pudo completar el viaje en ascensor.', error);
     bob.rig.visible = true;

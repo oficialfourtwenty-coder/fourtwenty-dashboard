@@ -83,14 +83,6 @@ function rodBetween(start, end, radius, material, segments = 10) {
   return rod;
 }
 
-function seededRandom(seed) {
-  let state = seed >>> 0;
-  return () => {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
-}
-
 function canvasTexture(width, height, draw) {
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -101,36 +93,6 @@ function canvasTexture(width, height, draw) {
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 4;
   return texture;
-}
-
-function facadeTexture(seed, color = '#111718') {
-  return canvasTexture(256, 512, (ctx, width, height) => {
-    const random = seededRandom(seed);
-    ctx.fillStyle = color;
-    ctx.fillRect(0, 0, width, height);
-    const cols = 5;
-    const rows = 13;
-    const marginX = 16;
-    const marginY = 18;
-    const cellW = (width - marginX * 2) / cols;
-    const cellH = (height - marginY * 2) / rows;
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const lit = random() > 0.56;
-        ctx.fillStyle = lit
-          ? (random() > 0.35 ? '#d8b676' : '#89a8aa')
-          : (random() > 0.5 ? '#273133' : '#1a2325');
-        ctx.fillRect(
-          marginX + col * cellW + 5,
-          marginY + row * cellH + 7,
-          cellW - 10,
-          cellH - 13,
-        );
-      }
-    }
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-    for (let y = 0; y < height; y += cellH) ctx.fillRect(0, y, width, 3);
-  });
 }
 
 function signTexture(title, subtitle, accent = '#e7b94c') {
@@ -249,17 +211,13 @@ function buildMaterials() {
       vertexColors: true,
     }),
     skin: new THREE.MeshStandardMaterial({ color: 0x9e765c, roughness: 0.84 }),
-    glass: new THREE.MeshPhysicalMaterial({
-      color: 0xc6d6d7,
+    glass: new THREE.MeshBasicMaterial({
+      color: 0xc9dddd,
       transparent: true,
-      opacity: 0.18,
-      roughness: 0.08,
-      metalness: 0.08,
-      transmission: 0.3,
-      thickness: 0.035,
-      clearcoat: 0.7,
-      clearcoatRoughness: 0.13,
+      opacity: 0.1,
+      side: THREE.DoubleSide,
       depthWrite: false,
+      toneMapped: false,
     }),
     light: new THREE.MeshStandardMaterial({
       color: 0xf4eee0,
@@ -268,78 +226,6 @@ function buildMaterials() {
       roughness: 0.26,
     }),
   };
-}
-
-function addDistantSkyline(root) {
-  const skyline = new THREE.Group();
-  skyline.name = 'TERRAZA · ciudad lejana optimizada';
-  skyline.userData.editorHelper = true;
-  const random = seededRandom(4202026);
-  const batches = [
-    { specs: [], texture: facadeTexture(420, '#12191a') },
-    { specs: [], texture: facadeTexture(2026, '#181a1f') },
-  ];
-
-  for (let index = 0; index < 34; index++) {
-    const angle = (index / 34) * Math.PI * 2 + (random() - 0.5) * 0.08;
-    const radius = 23 + random() * 12;
-    const width = 2.5 + random() * 5.2;
-    const depth = 2.5 + random() * 4.5;
-    const height = 7 + random() * 18;
-    batches[index % 2].specs.push({
-      x: Math.sin(angle) * radius,
-      y: -2.1 + height / 2,
-      z: TERRACE_PS3_PROFILE.centerZ + Math.cos(angle) * radius,
-      width,
-      depth,
-      height,
-      rotation: angle * 0.17,
-      tint: new THREE.Color().setHSL(0.5 + random() * 0.08, 0.08, 0.23 + random() * 0.13),
-    });
-  }
-
-  const matrix = new THREE.Matrix4();
-  const quaternion = new THREE.Quaternion();
-  const position = new THREE.Vector3();
-  const scale = new THREE.Vector3();
-  const rotation = new THREE.Euler();
-  for (const [batchIndex, batch] of batches.entries()) {
-    const geometry = withUv1(new THREE.BoxGeometry(1, 1, 1));
-    const material = new THREE.MeshStandardMaterial({
-      map: batch.texture,
-      emissiveMap: batch.texture,
-      emissive: batchIndex ? 0x5f5547 : 0x495c5d,
-      emissiveIntensity: 0.36,
-      color: 0xffffff,
-      roughness: 0.92,
-      metalness: 0.02,
-      vertexColors: true,
-    });
-    const buildings = new THREE.InstancedMesh(geometry, material, batch.specs.length);
-    buildings.name = `TERRAZA · edificios lejanos ${batchIndex + 1}`;
-    batch.specs.forEach((spec, index) => {
-      position.set(spec.x, spec.y, spec.z);
-      rotation.set(0, spec.rotation, 0);
-      quaternion.setFromEuler(rotation);
-      scale.set(spec.width, spec.height, spec.depth);
-      matrix.compose(position, quaternion, scale);
-      buildings.setMatrixAt(index, matrix);
-      buildings.setColorAt(index, spec.tint);
-    });
-    buildings.instanceMatrix.needsUpdate = true;
-    if (buildings.instanceColor) buildings.instanceColor.needsUpdate = true;
-    buildings.castShadow = false;
-    buildings.receiveShadow = false;
-    skyline.add(buildings);
-  }
-
-  const horizon = box(76, 0.4, 76, new THREE.MeshStandardMaterial({
-    color: 0x161b1c,
-    roughness: 1,
-  }));
-  horizon.position.set(0, -2.35, TERRACE_PS3_PROFILE.centerZ);
-  skyline.add(horizon);
-  root.add(skyline);
 }
 
 function addParapetSection(root, { width, depth, x, z, mats, name }) {
@@ -837,8 +723,9 @@ export function buildTerracePs3Trial(scene, {
   root.name = 'TERRAZA PS3 · FOURTWENTY ROOFTOP';
   const mats = buildMaterials();
 
-  addEditableHdriSphere(root, scene, environmentConfig);
-  addDistantSkyline(root);
+  const environmentRoot = addEditableHdriSphere(root, scene, environmentConfig);
+  environmentRoot.scale.setScalar(1.5);
+  environmentRoot.rotation.y = -0.18;
 
   const floor = roundedBox(
     TERRACE_PS3_PROFILE.width,

@@ -1,4 +1,5 @@
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const FLOOR_SELECTION_HOLD_MS = 450;
 
 const ROW_TOPS = new Map([
   [5, 12.0],
@@ -133,7 +134,7 @@ export function initElevatorPanel({ destinations, onSelect }) {
     selectTimer = window.setTimeout(() => {
       selectTimer = 0;
       onSelect(id);
-    }, 1000);
+    }, FLOOR_SELECTION_HOLD_MS);
   }
 
   function onKeyDown(event) {
