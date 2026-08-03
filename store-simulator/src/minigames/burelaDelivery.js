@@ -371,13 +371,17 @@ function isBlocked(city, x, y, radius) {
 }
 
 function moveCircle(city, actor, dx, dy, radius) {
+  let blockedX = false;
+  let blockedY = false;
   const nextX = actor.x + dx;
   if (!isBlocked(city, nextX, actor.y, radius)) actor.x = nextX;
-  else if ('speed' in actor) actor.speed *= -0.2;
+  else blockedX = true;
 
   const nextY = actor.y + dy;
   if (!isBlocked(city, actor.x, nextY, radius)) actor.y = nextY;
-  else if ('speed' in actor) actor.speed *= -0.2;
+  else blockedY = true;
+
+  return { blockedX, blockedY };
 }
 
 function drawBob(ctx, bob, time, invulnerable) {
@@ -420,7 +424,7 @@ function drawCorolla(ctx, car, { passenger = false, invulnerable = false, time =
   if (invulnerable && Math.floor(time * 12) % 2 === 0) return;
   ctx.save();
   ctx.translate(car.x, car.y);
-  ctx.rotate(car.angle);
+  ctx.rotate(car.angle + Math.PI / 2);
   ctx.fillStyle = 'rgba(0, 0, 0, 0.34)';
   roundedRectPath(ctx, -31 + 4, -17 + 5, 62, 34, 8);
   ctx.fill();
@@ -459,7 +463,7 @@ function drawCorolla(ctx, car, { passenger = false, invulnerable = false, time =
 function drawPoliceCar(ctx, police, time) {
   ctx.save();
   ctx.translate(police.x, police.y);
-  ctx.rotate(police.angle);
+  ctx.rotate(police.angle + Math.PI / 2);
   ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
   roundedRectPath(ctx, -29 + 4, -16 + 5, 58, 32, 7);
   ctx.fill();
@@ -621,7 +625,14 @@ export function createBurelaDeliveryGame() {
       elapsed: 0,
       lastAlertToast: -10,
       bob: { x: START.x, y: START.y, angle: -Math.PI / 2 },
-      car: { x: COROLLA_START.x, y: COROLLA_START.y, angle: COROLLA_START.angle, speed: 0 },
+      car: {
+        x: COROLLA_START.x,
+        y: COROLLA_START.y,
+        angle: COROLLA_START.angle,
+        speed: 0,
+        vx: 0,
+        vy: 0,
+      },
       police: POLICE_SPAWNS.map(createPolice),
       particles: [],
       camera: { x: START.x, y: START.y, zoom: 1.18, shake: 0 },
@@ -711,6 +722,8 @@ export function createBurelaDeliveryGame() {
       state.bob.angle = state.car.angle;
       state.inCar = false;
       state.car.speed = 0;
+      state.car.vx = 0;
+      state.car.vy = 0;
       announce('BAJASTE DEL COROLLA');
       return;
     }
@@ -761,25 +774,39 @@ export function createBurelaDeliveryGame() {
 
   function updateCar(dt, horizontal, vertical) {
     const car = state.car;
-    const throttle = clamp(-vertical, -1, 1);
-    if (Math.abs(throttle) > 0.05) car.speed += throttle * 305 * dt;
-    else car.speed *= Math.exp(-2.45 * dt);
-    car.speed = clamp(car.speed, -118, 292);
-    if (Math.abs(car.speed) < 1.2 && Math.abs(throttle) < 0.05) car.speed = 0;
+    const forward = vertical < -0.05;
+    const reverse = vertical > 0.05;
+
+    if (forward) car.speed += (car.speed < -8 ? 470 : 325) * dt;
+    else if (reverse) car.speed -= (car.speed > 8 ? 470 : 215) * dt;
+    else car.speed *= Math.exp(-2.3 * dt);
+
+    car.speed = clamp(car.speed, -105, 285);
+    if (Math.abs(car.speed) < 1.2 && !forward && !reverse) car.speed = 0;
 
     if (Math.abs(horizontal) > 0.04) {
-      const speedFactor = Math.max(0.25, Math.min(1, Math.abs(car.speed) / 155));
-      const reverse = car.speed < 0 ? -1 : 1;
-      car.angle += horizontal * reverse * 2.25 * speedFactor * dt;
+      const speedRatio = clamp(Math.abs(car.speed) / 285, 0, 1);
+      const movingFactor = clamp(Math.abs(car.speed) / 34, 0, 1);
+      const steeringRate = (2.05 - speedRatio * 0.5) * movingFactor;
+      const direction = car.speed < -1 ? -1 : 1;
+      car.angle += horizontal * direction * steeringRate * dt;
     }
 
-    const dx = Math.sin(car.angle) * car.speed * dt;
-    const dy = -Math.cos(car.angle) * car.speed * dt;
-    const beforeX = car.x;
-    const beforeY = car.y;
-    moveCircle(city, car, dx, dy, 25);
-    if (Math.abs(car.x - beforeX) < Math.abs(dx) * 0.2 && Math.abs(dx) > 0.5) state.camera.shake = Math.max(state.camera.shake, 4);
-    if (Math.abs(car.y - beforeY) < Math.abs(dy) * 0.2 && Math.abs(dy) > 0.5) state.camera.shake = Math.max(state.camera.shake, 4);
+    const desiredVx = Math.sin(car.angle) * car.speed;
+    const desiredVy = -Math.cos(car.angle) * car.speed;
+    const speedRatio = clamp(Math.abs(car.speed) / 285, 0, 1);
+    const grip = Math.max(4.2, 8.2 - speedRatio * 2.3 - Math.abs(horizontal) * 1.5);
+    const gripBlend = 1 - Math.exp(-grip * dt);
+    car.vx += (desiredVx - car.vx) * gripBlend;
+    car.vy += (desiredVy - car.vy) * gripBlend;
+
+    const movement = moveCircle(city, car, car.vx * dt, car.vy * dt, 25);
+    if (movement.blockedX) car.vx *= -0.14;
+    if (movement.blockedY) car.vy *= -0.14;
+    if (movement.blockedX || movement.blockedY) {
+      car.speed *= -0.18;
+      state.camera.shake = Math.max(state.camera.shake, 4);
+    }
   }
 
   function choosePatrolTarget(police) {
@@ -844,7 +871,11 @@ export function createBurelaDeliveryGame() {
     state.hitCooldown = 1.45;
     state.policeGrace = 2.8;
     state.camera.shake = 18;
-    if (state.inCar) state.car.speed *= -0.36;
+    if (state.inCar) {
+      state.car.speed *= -0.36;
+      state.car.vx *= -0.28;
+      state.car.vy *= -0.28;
+    }
     if (police) {
       const target = activeActor();
       const dx = police.x - target.x;
