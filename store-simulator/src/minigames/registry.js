@@ -11,10 +11,8 @@
 // (mount/destroy obligatorios, start/pause/resize opcionales) queda simple y no
 // tiene que saber nada de carga.
 //
-// ⚠️ Estado actual (pedido de Kusher): los cinco destinos abren BOB'S MAZE a
-// propósito, para probar recorrido y rendimiento con la máquina repetida en
-// todos los pisos. El mapa de abajo ya está listo para que cada piso apunte a su
-// propio juego cuando se aprueben los diseños — se cambia una línea por piso.
+// Cada piso puede apuntar a un juego distinto sin sumar ese codigo a la carga
+// inicial. TERRAZA usa la prueba 2D de Burela y conserva el resto de los juegos.
 
 // destino → cómo cargar su juego. La función devuelve la factory del juego.
 const LOADERS = {
@@ -22,7 +20,7 @@ const LOADERS = {
   2: loadBobsMaze, // HOOP SEASON  → futuro: básquet
   3: loadFtGrow,   // CULTURA      → FT GROW
   4: loadBobsMaze, // BOB
-  5: loadBobsMaze, // TERRAZA
+  5: loadBurelaDelivery, // TERRAZA → BURELA DELIVERY
 };
 
 async function loadBobsMaze() {
@@ -35,6 +33,11 @@ async function loadFtGrow() {
   return createFtGrowGame;
 }
 
+async function loadBurelaDelivery() {
+  const { createBurelaDeliveryGame } = await import('./burelaDelivery.js');
+  return createBurelaDeliveryGame;
+}
+
 // Nombre que muestra el cartel "E · JUGAR ..." al acercarse al arcade. Vive acá
 // para que agregar un juego sea un solo lugar a tocar.
 const NAMES = {
@@ -42,7 +45,7 @@ const NAMES = {
   2: "BOB'S MAZE",
   3: 'FT GROW',
   4: "BOB'S MAZE",
-  5: "BOB'S MAZE",
+  5: 'BURELA DELIVERY',
 };
 
 export function getMinigameName(destinationId) {
