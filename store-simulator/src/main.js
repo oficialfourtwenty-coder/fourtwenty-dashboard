@@ -750,6 +750,7 @@ const loadingTitleSub = document.getElementById('loading-title-sub');
 const loadingBarFill = document.getElementById('loading-bar-fill');
 const bobLoadingVideo = document.getElementById('bob-loading-video');
 const culturaIntroVideo = document.getElementById('cultura-intro-video');
+const terraceIntroVideo = document.getElementById('terrace-intro-video');
 const bobLoadingBarFill = document.getElementById('bob-loading-bar-fill');
 const loadingMessage = document.getElementById('loading-message');
 const shirtTip = document.getElementById('shirt-tip');
@@ -757,7 +758,7 @@ const shirtTip = document.getElementById('shirt-tip');
 function finishLoadingUi() {
   loadingEl.classList.remove('show');
   requestAnimationFrame(() => {
-    loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro');
+    loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro');
     bobLoadingVideo.pause();
     bobLoadingVideo.onended = null;
     bobLoadingVideo.onerror = null;
@@ -771,6 +772,14 @@ function finishLoadingUi() {
       culturaIntroVideo.onstalled = null;
       culturaIntroVideo.onabort = null;
       try { culturaIntroVideo.currentTime = 0; } catch {}
+    }
+    if (terraceIntroVideo) {
+      terraceIntroVideo.pause();
+      terraceIntroVideo.onended = null;
+      terraceIntroVideo.onerror = null;
+      terraceIntroVideo.onstalled = null;
+      terraceIntroVideo.onabort = null;
+      try { terraceIntroVideo.currentTime = 0; } catch {}
     }
     bobLoadingBarFill.style.width = '0%';
   });
@@ -907,6 +916,8 @@ const SHOP_BOUNDS = {
   minZ: -INTERIOR.z, maxZ: INTERIOR.z,
 };
 const CULTURA_PISO = 5;
+const CULTURA_DESTINATION_ID = 3;
+const TERRACE_DESTINATION_ID = 5;
 let culturaIntroPlayed = false;
 
 function startLoading(piso, label) {
@@ -1093,6 +1104,75 @@ function playCulturaIntro(ready, piso) {
   if (playPromise?.catch) playPromise.catch(finish);
 }
 
+function showElevatorIntroFrame(video, className) {
+  if (!video) return false;
+  loadingEl.style.backgroundImage = '';
+  loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro');
+  loadingEl.classList.add(className, 'show');
+  video.controls = false;
+  video.muted = false;
+  video.volume = 1;
+  try { video.currentTime = 0; } catch {}
+  return true;
+}
+
+function playElevatorIntro(video, className) {
+  if (!video || !loadingEl.classList.contains(className)) {
+    return Promise.resolve();
+  }
+
+  music?.duck(true);
+  return new Promise((resolve) => {
+    let done = false;
+
+    const cleanup = () => {
+      window.removeEventListener('keydown', onKeyDown, true);
+      loadingEl.removeEventListener('click', skipIntro, true);
+      video.onended = null;
+      video.onerror = null;
+      video.onstalled = null;
+      video.onabort = null;
+      video.pause();
+      music?.duck(false);
+    };
+
+    const finish = () => {
+      if (done) return;
+      done = true;
+      cleanup();
+      input.keys.clear();
+      loadingEl.classList.remove('show');
+      requestAnimationFrame(() => {
+        if (!loadingEl.classList.contains('show')) {
+          loadingEl.classList.remove(className);
+        }
+      });
+      try { video.currentTime = 0; } catch {}
+      resolve();
+    };
+
+    const skipIntro = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      finish();
+    };
+
+    const onKeyDown = (event) => {
+      if (event.code !== 'Escape') return;
+      skipIntro(event);
+    };
+
+    window.addEventListener('keydown', onKeyDown, true);
+    loadingEl.addEventListener('click', skipIntro, true);
+    video.onended = finish;
+    video.onerror = finish;
+    video.onstalled = finish;
+    video.onabort = finish;
+    const playPromise = video.play();
+    if (playPromise?.catch) playPromise.catch(finish);
+  });
+}
+
 function buildShopping() {
   const s = new THREE.Scene();
   s.background = new THREE.Color(0xcfd2d6);
@@ -1235,10 +1315,23 @@ async function travelToDestination(destinationId) {
   try {
     await elevatorPanel.fadeToBlack(350);
     elevatorPanel.hide();
+    const intro = destination.id === CULTURA_DESTINATION_ID
+      ? { video: culturaIntroVideo, className: 'cultura-intro' }
+      : (destination.id === TERRACE_DESTINATION_ID
+        ? { video: terraceIntroVideo, className: 'terrace-intro' }
+        : null);
+    const introReady = intro && showElevatorIntroFrame(intro.video, intro.className);
     activateDestination(destination.id);
-    await elevatorPanel.fadeFromBlack(350);
+    await elevatorPanel.fadeFromBlack(introReady ? 250 : 350);
+    if (introReady) {
+      await playElevatorIntro(intro.video, intro.className);
+    }
   } catch (error) {
     console.error('No se pudo completar el viaje en ascensor.', error);
+    loadingEl.classList.remove('show', 'cultura-intro', 'terrace-intro');
+    culturaIntroVideo?.pause();
+    terraceIntroVideo?.pause();
+    music?.duck(false);
     bob.rig.visible = true;
     bob.shadow.visible = true;
     elevatorPanel.hide();

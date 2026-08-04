@@ -174,15 +174,21 @@
   #loading-screen.cultura-intro::before,
   #loading-screen.cultura-intro::after,
   #loading-screen.cultura-intro .loading-hud,
-  #loading-screen.cultura-intro .bob-loading-ui {
+  #loading-screen.cultura-intro .bob-loading-ui,
+  #loading-screen.terrace-intro::before,
+  #loading-screen.terrace-intro::after,
+  #loading-screen.terrace-intro .loading-hud,
+  #loading-screen.terrace-intro .bob-loading-ui {
     display: none;
   }
-  #loading-screen.cultura-intro {
+  #loading-screen.cultura-intro,
+  #loading-screen.terrace-intro {
     background: #000;
     cursor: pointer;
   }
   #loading-screen.bob-collection #bob-loading-video,
-  #loading-screen.cultura-intro #cultura-intro-video {
+  #loading-screen.cultura-intro #cultura-intro-video,
+  #loading-screen.terrace-intro #terrace-intro-video {
     display: block; position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover; background: #030303;
   }
@@ -342,6 +348,9 @@
   </video>
   <video id="cultura-intro-video" class="loading-video" playsinline preload="none">
     <source src="/assets/ui/cultura-intro.mp4" type="video/mp4">
+  </video>
+  <video id="terrace-intro-video" class="loading-video" playsinline preload="none">
+    <source src="/assets/ui/terrace-intro.mp4" type="video/mp4">
   </video>
   <div class="bob-loading-ui">
     <div class="bob-loading-bar"><div id="bob-loading-bar-fill"></div></div>
