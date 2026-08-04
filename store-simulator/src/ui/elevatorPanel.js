@@ -2,12 +2,12 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const FLOOR_SELECTION_HOLD_MS = 450;
 
 const ROW_TOPS = new Map([
-  [5, 12.0],
-  [4, 20.4],
-  [3, 28.6],
-  [2, 36.9],
-  [1, 45.1],
-  [0, 53.1],
+  [5, 25.4],
+  [4, 33.0],
+  [3, 40.6],
+  [2, 48.1],
+  [1, 55.6],
+  [0, 63.2],
 ]);
 
 function ledLines(destination) {

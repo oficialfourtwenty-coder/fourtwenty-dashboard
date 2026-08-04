@@ -14,6 +14,10 @@ const DEFAULTS = Object.freeze({
 });
 
 const DEFAULT_STATION = new THREE.Vector3(-12.9, -6, 75.6);
+const LOCAL_PLATFORM_Y = 0.45;
+const LOCAL_FACADE_Z = -4.46;
+const LOCAL_BACK_Z = -10.46;
+const PACKAGE_PICKUP_DISTANCE = 1.75;
 const tempDirection = new THREE.Vector3();
 const tempShotStart = new THREE.Vector3();
 const tempShotEnd = new THREE.Vector3();
@@ -43,9 +47,9 @@ export function createPackageStationMission({
   const rampEndZ = Math.max(rampStartZ + 14, station.z - 12);
   const lowerY = Math.min(-1.5, station.y);
   const routeEndZ = Math.max(rampEndZ + 18, station.z + 10);
-  const bounds = Object.freeze({ minX: -24, maxX: 24, minZ: -2, maxZ: routeEndZ });
+  const bounds = Object.freeze({ minX: -24, maxX: 24, minZ: LOCAL_BACK_Z - 0.6, maxZ: routeEndZ });
   const deliveryPosition = new THREE.Vector3(0, lowerY + 0.08, station.z - 14);
-  const packagePosition = new THREE.Vector3(10.5, 0.45, 33.4);
+  const packagePosition = new THREE.Vector3(-0.6, 1.66, -8.78);
 
   const root = new THREE.Group();
   root.name = 'MISION · paquete a la estacion';
@@ -72,6 +76,16 @@ export function createPackageStationMission({
   let resultEl = null;
   let resultTitle = null;
   let reticle = null;
+  let bananaBlaster = null;
+  let firePoseTimer = 0;
+  let shotAudioContext = null;
+  let blasterAnchor = null;
+  let upperArmBone = null;
+  let foreArmBone = null;
+  let handBone = null;
+  let upperArmBaseRotation = null;
+  let foreArmBaseRotation = null;
+  let handBaseRotation = null;
   let toastTimer = 0;
   let reticleTimer = 0;
   let active = false;
@@ -103,6 +117,7 @@ export function createPackageStationMission({
   }
 
   function sampleGround(_x, z) {
+    if (z <= LOCAL_FACADE_Z) return LOCAL_PLATFORM_Y;
     if (z <= rampStartZ) return 0;
     if (z >= rampEndZ) return lowerY;
     return THREE.MathUtils.lerp(0, lowerY, (z - rampStartZ) / (rampEndZ - rampStartZ));
@@ -153,16 +168,8 @@ export function createPackageStationMission({
       { minX: -24.5, maxX: 24.5, minY: lowerY - 1, maxY: 4, minZ: routeEndZ, maxZ: routeEndZ + 0.8 },
     );
 
-    const crateMaterial = ownMaterial(new THREE.MeshStandardMaterial({ color: 0x4d3926, roughness: 0.88 }));
-    makeBox(3.2, 2.25, 0.9, packagePosition.x, 1.125, 31.9, crateMaterial);
-    colliders.push({
-      minX: packagePosition.x - 1.6,
-      maxX: packagePosition.x + 1.6,
-      minY: 0,
-      maxY: 2.25,
-      minZ: 31.45,
-      maxZ: 32.35,
-    });
+    // El paquete se apoya en el mostrador real del local construido a mano
+    // en Calle Burela; no se agrega una mesa nueva dentro de la misión.
   }
 
   function buildPackageAndDelivery() {
@@ -216,6 +223,110 @@ export function createPackageStationMission({
     deliveryRing.position.copy(deliveryPosition);
     deliveryRing.visible = false;
     environment.add(deliveryRing);
+  }
+
+  function findPlayerBone(name) {
+    let found = null;
+    player.model?.traverse?.((object) => {
+      if (!found && object.isBone && object.name === name) found = object;
+    });
+    return found;
+  }
+
+  function buildBananaBlaster() {
+    const yellow = ownMaterial(new THREE.MeshStandardMaterial({ color: 0xffcf25, roughness: 0.54 }));
+    const yellowDark = ownMaterial(new THREE.MeshStandardMaterial({ color: 0xd99a16, roughness: 0.72 }));
+    const black = ownMaterial(new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.62, metalness: 0.18 }));
+    const glow = ownMaterial(new THREE.MeshBasicMaterial({ color: 0x8fe9ff, transparent: true, opacity: 0.86 }));
+
+    function blasterMesh(geometry, material) {
+      const mesh = new THREE.Mesh(ownGeometry(geometry), material);
+      mesh.castShadow = false;
+      mesh.receiveShadow = false;
+      mesh.frustumCulled = false;
+      return mesh;
+    }
+
+    upperArmBone = findPlayerBone('R_Upperarm');
+    foreArmBone = findPlayerBone('R_Forearm');
+    handBone = findPlayerBone('R_Hand');
+    if (upperArmBone) upperArmBaseRotation = upperArmBone.rotation.clone();
+    if (foreArmBone) foreArmBaseRotation = foreArmBone.rotation.clone();
+    if (handBone) handBaseRotation = handBone.rotation.clone();
+
+    bananaBlaster = new THREE.Group();
+    bananaBlaster.name = 'MISION · banana blaster';
+    bananaBlaster.visible = false;
+
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.09, -0.01, 0.11),
+      new THREE.Vector3(-0.04, 0.035, -0.02),
+      new THREE.Vector3(0.06, 0.018, -0.15),
+      new THREE.Vector3(0.13, -0.035, -0.26),
+    ]);
+    const body = blasterMesh(new THREE.TubeGeometry(curve, 20, 0.024, 9, false), yellow);
+    const stripe = blasterMesh(new THREE.TubeGeometry(curve, 20, 0.0075, 7, false), yellowDark);
+    stripe.position.y = -0.02;
+    const tip = blasterMesh(new THREE.SphereGeometry(0.03, 10, 8), yellowDark);
+    tip.position.set(0.135, -0.035, -0.265);
+    const back = blasterMesh(new THREE.SphereGeometry(0.025, 10, 8), yellow);
+    back.position.set(-0.09, -0.01, 0.11);
+
+    const muzzle = blasterMesh(new THREE.CylinderGeometry(0.014, 0.018, 0.07, 10), black);
+    muzzle.rotation.x = Math.PI / 2;
+    muzzle.position.set(0.145, -0.035, -0.305);
+    const lens = blasterMesh(new THREE.SphereGeometry(0.014, 10, 8), glow);
+    lens.position.set(0.145, -0.035, -0.348);
+
+    const handle = blasterMesh(new THREE.BoxGeometry(0.04, 0.12, 0.05), black);
+    handle.position.set(0.025, -0.09, -0.1);
+    handle.rotation.x = -0.34;
+    const triggerGuard = blasterMesh(new THREE.TorusGeometry(0.025, 0.0045, 6, 12), black);
+    triggerGuard.position.set(0.045, -0.045, -0.13);
+    triggerGuard.rotation.x = Math.PI / 2;
+    const sight = blasterMesh(new THREE.BoxGeometry(0.055, 0.012, 0.02), black);
+    sight.position.set(0.02, 0.055, -0.12);
+
+    bananaBlaster.add(body, stripe, tip, back, muzzle, lens, handle, triggerGuard, sight);
+    blasterAnchor = handBone ?? player.rig;
+    blasterAnchor.add(bananaBlaster);
+    if (handBone) {
+      bananaBlaster.position.set(0.025, 0.02, 0.02);
+      bananaBlaster.rotation.set(1.48, 0.2, -1.52);
+    } else {
+      bananaBlaster.position.set(0.34, 1.05, 0.22);
+      bananaBlaster.rotation.set(-0.18, -0.18, -0.28);
+    }
+  }
+
+  function updateBananaBlaster(dt) {
+    if (!bananaBlaster) return;
+    bananaBlaster.visible = active && !paused && !outcome;
+    const pose = firePoseTimer > 0 ? Math.min(1, firePoseTimer / 0.16) : 0;
+    firePoseTimer = Math.max(0, firePoseTimer - dt);
+    if (!upperArmBone && !foreArmBone && !handBone) return;
+
+    if (upperArmBone && upperArmBaseRotation) {
+      upperArmBone.rotation.set(
+        upperArmBaseRotation.x - 0.82 * pose,
+        upperArmBaseRotation.y + 0.12 * pose,
+        upperArmBaseRotation.z - 0.32 * pose,
+      );
+    }
+    if (foreArmBone && foreArmBaseRotation) {
+      foreArmBone.rotation.set(
+        foreArmBaseRotation.x - 0.55 * pose,
+        foreArmBaseRotation.y,
+        foreArmBaseRotation.z - 0.12 * pose,
+      );
+    }
+    if (handBone && handBaseRotation) {
+      handBone.rotation.set(
+        handBaseRotation.x,
+        handBaseRotation.y + 0.18 * pose,
+        handBaseRotation.z,
+      );
+    }
   }
 
   function tagEnemyMeshes(group, enemy) {
@@ -382,6 +493,7 @@ export function createPackageStationMission({
     playerDamageCooldown = 1.25;
     elapsed = 0;
     toastTimer = 0;
+    firePoseTimer = 0;
     resultEl.hidden = true;
     packageRoot.visible = true;
     carriedPackage.visible = false;
@@ -402,6 +514,7 @@ export function createPackageStationMission({
     if (outcome) return;
     outcome = result;
     active = false;
+    if (bananaBlaster) bananaBlaster.visible = false;
     resultTitle.textContent = result === 'win' ? 'PAQUETE ENTREGADO' : 'MISION FALLIDA';
     resultEl.querySelector('[data-result-kicker]').textContent = result === 'win' ? 'OBJETIVO CUMPLIDO' : 'INTENTALO DE NUEVO';
     resultEl.hidden = false;
@@ -453,8 +566,50 @@ export function createPackageStationMission({
     if (hit) damagePlayer('LA POLICIA LE DISPARO A BOB', 1.65);
   }
 
+  function playPlayerShotSound() {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    if (!shotAudioContext) shotAudioContext = new AudioContextClass();
+    const context = shotAudioContext;
+    if (context.state === 'suspended') context.resume();
+
+    const now = context.currentTime;
+    const master = context.createGain();
+    const filter = context.createBiquadFilter();
+    const laser = context.createOscillator();
+    const sparkle = context.createOscillator();
+
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.linearRampToValueAtTime(0.16, now + 0.008);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1600, now);
+    filter.frequency.exponentialRampToValueAtTime(360, now + 0.18);
+    filter.Q.setValueAtTime(5.8, now);
+
+    laser.type = 'sawtooth';
+    laser.frequency.setValueAtTime(980, now);
+    laser.frequency.exponentialRampToValueAtTime(130, now + 0.2);
+
+    sparkle.type = 'square';
+    sparkle.frequency.setValueAtTime(1840, now);
+    sparkle.frequency.exponentialRampToValueAtTime(520, now + 0.11);
+
+    laser.connect(filter);
+    sparkle.connect(filter);
+    filter.connect(master);
+    master.connect(context.destination);
+    laser.start(now);
+    sparkle.start(now + 0.006);
+    laser.stop(now + 0.24);
+    sparkle.stop(now + 0.13);
+  }
+
   function shoot(event) {
     if (!active || paused || outcome || event.button !== 0) return false;
+    playPlayerShotSound();
+    firePoseTimer = 0.28;
     const rect = canvas.getBoundingClientRect();
     pointer.set(
       ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -581,6 +736,7 @@ export function createPackageStationMission({
     scene.add(root);
     buildRoute();
     buildPackageAndDelivery();
+    buildBananaBlaster();
     buildUi();
     canvas.addEventListener('click', onCanvasClick);
     canvas.addEventListener('pointermove', onPointerMove);
@@ -592,6 +748,7 @@ export function createPackageStationMission({
   }
 
   function update(dt) {
+    updateBananaBlaster(dt);
     if (!active || paused) {
       updateEffects(dt);
       return;
@@ -605,11 +762,11 @@ export function createPackageStationMission({
       return;
     }
 
-    packageRoot.rotation.y += dt * 1.3;
-    packageRoot.position.y = packagePosition.y + Math.sin(elapsed * 3.2) * 0.08;
+    packageRoot.rotation.y += dt * 1.05;
+    packageRoot.position.y = packagePosition.y;
     const deliveryPulse = 1 + Math.sin(elapsed * 3.4) * 0.045;
     deliveryRing.scale.set(deliveryPulse, 1, deliveryPulse);
-    if (!hasPackage && horizontalDistance(player.position, packageRoot.position) < 1.15) pickupPackage();
+    if (!hasPackage && horizontalDistance(player.position, packageRoot.position) < PACKAGE_PICKUP_DISTANCE) pickupPackage();
     const reachedDelivery = horizontalDistance(player.position, deliveryPosition) < 5.6
       || (player.position.z >= deliveryPosition.z - 2.2 && Math.abs(player.position.x - deliveryPosition.x) < 19);
     if (hasPackage && reachedDelivery) finish('win');
@@ -634,8 +791,13 @@ export function createPackageStationMission({
     window.removeEventListener('keydown', onKeyDown, true);
     ui?.removeEventListener('click', onUiClick);
     ui?.remove();
+    if (upperArmBone && upperArmBaseRotation) upperArmBone.rotation.copy(upperArmBaseRotation);
+    if (foreArmBone && foreArmBaseRotation) foreArmBone.rotation.copy(foreArmBaseRotation);
+    if (handBone && handBaseRotation) handBone.rotation.copy(handBaseRotation);
+    bananaBlaster?.removeFromParent();
     carriedPackage?.removeFromParent();
     root.removeFromParent();
+    if (shotAudioContext?.state !== 'closed') shotAudioContext.close?.().catch?.(() => {});
     for (const geometry of ownedGeometries) geometry.dispose();
     for (const material of ownedMaterials) material.dispose();
     enemies.length = 0;

@@ -1,5 +1,7 @@
 const PHONE_ID = 'ft-phone';
 const STYLE_ID = 'ft-phone-style';
+const BANAPOD_CLOSED_URL = '/assets/ui/banapod/banapod-closed-small.png';
+const BANAPOD_OPEN_URL = '/assets/ui/banapod/banapod-open.png';
 const PLAYLISTS = [
   { id: 'fer', label: 'Corolla', mark: 'C' },
   { id: 'luca', label: 'Pepper', mark: 'P' },
@@ -12,131 +14,180 @@ function injectStyles() {
   style.textContent = `
     #${PHONE_ID} {
       position: fixed; inset: 0; z-index: 92; pointer-events: none;
-      font-family: "Courier New", monospace; color: #f4f1e8;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; color: #f4f1e8;
+      contain: layout style paint;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #${PHONE_ID} .phone-launcher {
+      position: absolute; right: 18px; bottom: 16px; width: 48px; min-height: 92px;
+      padding: 0; border: 0; display: grid; justify-items: center; align-content: end; gap: 2px;
+      pointer-events: auto; cursor: pointer; color: #fff; background: transparent;
+      font: 700 10px/1.1 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.75);
+      transition: opacity 160ms ease, transform 180ms ease;
+    }
+    #${PHONE_ID} .phone-launcher:hover,
+    #${PHONE_ID} .phone-launcher:focus-visible {
+      outline: none; transform: translateY(-2px);
+    }
+    #${PHONE_ID}.is-open .phone-launcher {
+      opacity: 0; pointer-events: none; transform: translateY(12px) scale(0.92);
+    }
+    #${PHONE_ID} .phone-launcher img {
+      width: 34px; height: auto; display: block; object-fit: contain;
     }
     #${PHONE_ID} .phone-shell {
-      position: absolute; right: 24px; bottom: 18px;
-      width: min(326px, calc(100vw - 24px)); height: min(600px, calc(100vh - 28px));
-      box-sizing: border-box; padding: 10px; overflow: hidden; pointer-events: auto;
-      background: #111318; border: 1px solid #62676f; border-radius: 24px;
-      box-shadow: 0 24px 70px rgba(0,0,0,0.62), inset 0 0 0 2px #24272d;
-      transform: translateY(calc(100% + 48px)); opacity: 0;
-      transition: transform 260ms cubic-bezier(.2,.82,.25,1), opacity 180ms ease;
+      position: absolute; right: 20px; bottom: 14px;
+      height: min(790px, calc(100dvh - 28px)); max-width: calc(100vw - 24px);
+      aspect-ratio: 530 / 1215; overflow: hidden; pointer-events: none; visibility: hidden;
+      background: transparent; border: 0; border-radius: 0;
+      transform: translateY(calc(100% + 48px)) scale(0.98); opacity: 0;
+      transition: transform 220ms cubic-bezier(.2,.82,.25,1), opacity 160ms ease, visibility 0s linear 220ms;
+      contain: layout style paint;
     }
-    #${PHONE_ID}.is-open .phone-shell { transform: translateY(0); opacity: 1; }
-    #${PHONE_ID} .phone-screen {
-      height: 100%; overflow: hidden; display: grid; grid-template-rows: 30px minmax(0,1fr);
-      background: #171a20; border: 1px solid #070809; border-radius: 16px;
+    #${PHONE_ID}.is-open .phone-shell {
+      transform: translateY(0) scale(1); opacity: 1; pointer-events: auto; visibility: visible;
+      transition: transform 220ms cubic-bezier(.2,.82,.25,1), opacity 160ms ease;
     }
-    #${PHONE_ID} .phone-status {
-      min-width: 0; padding: 0 13px; display: flex; align-items: center; justify-content: space-between;
-      color: rgba(244,241,232,0.72); background: #0b0d10; font-size: 10px; font-weight: 900;
+    #${PHONE_ID} .phone-open-bg {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+      user-select: none; pointer-events: none;
     }
-    #${PHONE_ID} .phone-view { min-height: 0; overflow: auto; padding: 14px; }
+    #${PHONE_ID} .phone-view { position: absolute; inset: 0; min-height: 0; }
     #${PHONE_ID} .phone-view[hidden] { display: none; }
-    #${PHONE_ID} .phone-brand { margin: 4px 0 15px; font-size: 19px; font-weight: 900; }
-    #${PHONE_ID} .phone-app-grid {
-      display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px;
-    }
     #${PHONE_ID} .phone-app {
-      aspect-ratio: 1; min-width: 0; padding: 12px; display: grid; align-content: space-between;
-      text-align: left; cursor: pointer; color: #f7f4ec; border: 1px solid rgba(255,255,255,0.24);
-      border-radius: 7px; font: inherit; font-weight: 900; background: #242832;
+      position: absolute; margin: 0; padding: 0; cursor: pointer; color: transparent;
+      border: 0; border-radius: 999px; background: transparent; outline: none;
+      -webkit-tap-highlight-color: transparent; user-select: none;
     }
-    #${PHONE_ID} .phone-app[data-app="music"] { background: #a83c31; }
-    #${PHONE_ID} .phone-app[data-app="cart"] { background: #1f7255; }
-    #${PHONE_ID} .phone-app[data-app="clock"] { background: #315374; }
-    #${PHONE_ID} .phone-app[data-app="option4"] { background: #786326; }
-    #${PHONE_ID} .phone-app:not([disabled]):hover,
-    #${PHONE_ID} .phone-app:not([disabled]):focus-visible { border-color: #fff; outline: 2px solid #fff; outline-offset: 1px; }
-    #${PHONE_ID} .phone-app[disabled] { cursor: default; }
-    #${PHONE_ID} .phone-app-mark { font-size: 32px; line-height: 1; }
-    #${PHONE_ID} .phone-app-name { min-width: 0; font-size: 12px; line-height: 1.25; overflow-wrap: anywhere; }
+    #${PHONE_ID} .phone-app:hover,
+    #${PHONE_ID} .phone-app:active,
+    #${PHONE_ID} .phone-app:focus-visible {
+      outline: none; border: 0; box-shadow: none; background: transparent;
+    }
+    #${PHONE_ID} .phone-home-time-button {
+      left: 21.5%; top: 56.9%; width: 24.5%; height: 16.5%;
+    }
+    #${PHONE_ID} .phone-home-time-button strong,
+    #${PHONE_ID} .phone-home-time-button span { display: none; }
+    #${PHONE_ID} .phone-home-music-button { left: 21.5%; top: 40.6%; width: 24.5%; height: 16.5%; }
+    #${PHONE_ID} .phone-home-cart-button { left: 49.2%; top: 40.6%; width: 24.5%; height: 16.5%; }
+    #${PHONE_ID} .phone-home-club-button {
+      left: 49.2%; top: 56.9%; width: 24.5%; height: 16.5%;
+      cursor: default; opacity: 1;
+    }
+    #${PHONE_ID} .phone-home-club-button:hover,
+    #${PHONE_ID} .phone-home-club-button:focus-visible {
+      border-color: transparent; box-shadow: none;
+    }
     #${PHONE_ID} .phone-badge {
-      min-width: 20px; height: 20px; padding: 0 5px; display: inline-grid; place-items: center;
-      justify-self: end; border-radius: 10px; color: #111; background: #fff; font-size: 10px;
+      position: absolute; left: 66.5%; top: 40.9%; min-width: 21px; height: 21px; padding: 0 5px;
+      display: inline-grid; place-items: center; border-radius: 11px; color: #111;
+      background: #fff; font-size: 11px; font-weight: 800; box-shadow: 0 2px 8px rgba(0,0,0,0.36);
     }
     #${PHONE_ID} .phone-badge[hidden] { display: none; }
-    #${PHONE_ID} .phone-view-head { display: grid; grid-template-columns: 34px minmax(0,1fr) 34px; align-items: center; margin-bottom: 14px; }
-    #${PHONE_ID} .phone-view-title { text-align: center; font-size: 15px; font-weight: 900; }
+    #${PHONE_ID} .phone-panel {
+      position: absolute; left: 20.5%; top: 27.2%; width: 49.5%; height: 48.5%;
+      box-sizing: border-box; padding: 42px 23px 30px 25px; overflow: auto;
+      color: #f8f8f8; background: #050606;
+      border-radius: 28px 30px 36px 34px;
+      clip-path: polygon(
+        5% 0%, 95% 0%, 100% 6%, 100% 92%,
+        92% 100%, 20% 100%, 11% 96%, 6% 88%,
+        3% 74%, 0% 56%, 0% 17%, 4% 5%
+      );
+    }
+    #${PHONE_ID} .phone-view-head {
+      display: grid; grid-template-columns: 30px minmax(0,1fr) 30px; align-items: center;
+      gap: 7px; margin-bottom: 14px;
+    }
+    #${PHONE_ID} .phone-view-title { text-align: center; font-size: 13px; font-weight: 800; }
     #${PHONE_ID} .phone-icon-button {
-      width: 34px; height: 34px; padding: 0; display: grid; place-items: center; cursor: pointer;
-      color: #f4f1e8; background: #0d0f13; border: 1px solid #555b65; border-radius: 50%;
-      font: 900 18px/1 Arial, sans-serif;
+      width: 30px; height: 30px; padding: 0; display: grid; place-items: center; cursor: pointer;
+      color: #f8f8f8; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 50%; font: 800 16px/1 Arial, sans-serif;
     }
     #${PHONE_ID} .phone-icon-button:hover,
     #${PHONE_ID} .phone-icon-button:focus-visible { border-color: #fff; outline: none; }
-    #${PHONE_ID} .phone-source-switch { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 14px; border: 1px solid #565b63; }
+    #${PHONE_ID} .phone-source-switch { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 13px; border: 1px solid rgba(255,255,255,0.18); border-radius: 14px; overflow: hidden; }
     #${PHONE_ID} .phone-source {
-      min-width: 0; min-height: 38px; padding: 8px; cursor: pointer; border: 0;
-      color: #d8d5ce; background: #111318; font: inherit; font-size: 11px; font-weight: 900;
+      min-width: 0; min-height: 34px; padding: 7px 5px; cursor: pointer; border: 0;
+      color: rgba(255,255,255,0.74); background: rgba(255,255,255,0.04);
+      font: 800 10px/1 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
     }
-    #${PHONE_ID} .phone-source + .phone-source { border-left: 1px solid #565b63; }
-    #${PHONE_ID} .phone-source.is-selected { color: #111; background: #f2eee4; }
+    #${PHONE_ID} .phone-source + .phone-source { border-left: 1px solid rgba(255,255,255,0.18); }
+    #${PHONE_ID} .phone-source.is-selected { color: #111; background: #f7f4ec; }
     #${PHONE_ID} .phone-now {
-      min-height: 154px; padding: 16px; display: grid; align-content: end; gap: 7px;
-      border: 1px solid #3e444d; background: #222630;
+      min-height: 126px; padding: 14px; display: grid; align-content: end; gap: 7px;
+      border: 1px solid rgba(255,255,255,0.16); border-radius: 22px;
+      background: linear-gradient(160deg, rgba(235,44,111,0.42), rgba(68,92,228,0.24));
     }
-    #${PHONE_ID} .phone-now-source { color: #f0a24a; font-size: 10px; font-weight: 900; text-transform: uppercase; }
-    #${PHONE_ID} .phone-track { font-size: 17px; font-weight: 900; line-height: 1.25; overflow-wrap: anywhere; }
-    #${PHONE_ID} .phone-artist { color: rgba(244,241,232,0.68); font-size: 11px; }
+    #${PHONE_ID} .phone-now-source { color: #ffd8e8; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    #${PHONE_ID} .phone-track { font-size: 15px; font-weight: 800; line-height: 1.22; overflow-wrap: anywhere; }
+    #${PHONE_ID} .phone-artist { color: rgba(255,255,255,0.68); font-size: 11px; }
     #${PHONE_ID} .phone-player-controls { margin-top: 14px; display: flex; justify-content: center; gap: 14px; }
-    #${PHONE_ID} .phone-player-controls .phone-icon-button { width: 50px; height: 50px; }
+    #${PHONE_ID} .phone-player-controls .phone-icon-button { width: 48px; height: 48px; }
     #${PHONE_ID} .phone-icon-button[disabled] { opacity: 0.35; cursor: not-allowed; }
     #${PHONE_ID} .phone-clock-display {
-      min-height: 150px; display: grid; place-content: center; gap: 7px; text-align: center;
-      border-top: 1px solid #485260; border-bottom: 1px solid #485260; background: #101a26;
+      min-height: 120px; display: grid; place-content: center; gap: 7px; text-align: center;
+      border: 1px solid rgba(255,255,255,0.16); border-radius: 22px;
+      background: rgba(255,255,255,0.06);
     }
-    #${PHONE_ID} .phone-clock-time { font: 900 48px/1 "Courier New", monospace; }
-    #${PHONE_ID} .phone-clock-phase { min-height: 14px; color: #f2bd54; font-size: 10px; font-weight: 900; }
-    #${PHONE_ID} .phone-clock-mode { color: rgba(244,241,232,0.58); font-size: 9px; }
-    #${PHONE_ID} .phone-clock-controls { margin-top: 18px; display: grid; gap: 13px; }
-    #${PHONE_ID} .phone-clock-label { display: grid; gap: 7px; color: rgba(244,241,232,0.7); font-size: 9px; font-weight: 900; }
-    #${PHONE_ID} .phone-clock-range { width: 100%; margin: 0; accent-color: #f2bd54; }
+    #${PHONE_ID} .phone-clock-time { font: 300 44px/1 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
+    #${PHONE_ID} .phone-clock-phase { min-height: 14px; color: #ffd65b; font-size: 10px; font-weight: 800; }
+    #${PHONE_ID} .phone-clock-mode { color: rgba(255,255,255,0.58); font-size: 9px; }
+    #${PHONE_ID} .phone-clock-controls { margin-top: 16px; display: grid; gap: 12px; }
+    #${PHONE_ID} .phone-clock-label { display: grid; gap: 7px; color: rgba(255,255,255,0.72); font-size: 9px; font-weight: 800; }
+    #${PHONE_ID} .phone-clock-range { width: 100%; margin: 0; accent-color: #ffd65b; }
     #${PHONE_ID} .phone-clock-input {
       box-sizing: border-box; width: 100%; min-height: 42px; padding: 8px 10px;
-      color: #f4f1e8; color-scheme: dark; background: #0d0f13; border: 1px solid #596371;
-      font: 900 16px/1 "Courier New", monospace;
+      color: #f8f8f8; color-scheme: dark; background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.18); border-radius: 14px;
+      font: 800 16px/1 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
     }
     #${PHONE_ID} .phone-clock-now {
-      min-height: 38px; padding: 8px 12px; cursor: pointer; color: #111820; background: #f2bd54;
-      border: 1px solid #ffe09a; font: 900 10px/1 "Courier New", monospace;
+      min-height: 38px; padding: 8px 12px; cursor: pointer; color: #111820; background: #ffd65b;
+      border: 1px solid #ffe48a; border-radius: 14px;
+      font: 800 10px/1 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
     }
     #${PHONE_ID} .phone-cart-list { display: grid; gap: 8px; }
-    #${PHONE_ID} .phone-cart-empty { padding: 48px 12px; text-align: center; color: rgba(244,241,232,0.56); font-size: 11px; }
+    #${PHONE_ID} .phone-cart-empty { padding: 45px 12px; text-align: center; color: rgba(255,255,255,0.56); font-size: 11px; }
     #${PHONE_ID} .phone-cart-item {
-      min-width: 0; padding: 8px; display: grid; grid-template-columns: 58px minmax(0,1fr); gap: 9px;
-      border: 1px solid #3e444d; background: #20242b;
+      min-width: 0; padding: 8px; display: grid; grid-template-columns: 52px minmax(0,1fr); gap: 9px;
+      border: 1px solid rgba(255,255,255,0.16); border-radius: 18px; background: rgba(255,255,255,0.06);
     }
-    #${PHONE_ID} .phone-cart-media { width: 58px; height: 70px; object-fit: cover; background: #111318; }
+    #${PHONE_ID} .phone-cart-media { width: 52px; height: 64px; object-fit: cover; background: #111318; border-radius: 10px; }
     #${PHONE_ID} .phone-cart-copy { min-width: 0; display: grid; align-content: space-between; gap: 7px; }
-    #${PHONE_ID} .phone-cart-name { font-size: 11px; font-weight: 900; line-height: 1.25; overflow-wrap: anywhere; }
-    #${PHONE_ID} .phone-cart-price { color: #68db9b; font-size: 11px; }
+    #${PHONE_ID} .phone-cart-name { font-size: 11px; font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
+    #${PHONE_ID} .phone-cart-price { color: #91b4ff; font-size: 11px; }
     #${PHONE_ID} .phone-cart-actions { display: flex; align-items: center; gap: 5px; }
     #${PHONE_ID} .phone-cart-actions button {
-      width: 26px; height: 26px; padding: 0; cursor: pointer; color: #f4f1e8;
-      background: #0d0f13; border: 1px solid #555b65; font: 900 14px/1 Arial, sans-serif;
+      width: 25px; height: 25px; padding: 0; cursor: pointer; color: #f8f8f8;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 50%; font: 800 14px/1 Arial, sans-serif;
     }
     #${PHONE_ID} .phone-cart-qty { min-width: 23px; text-align: center; font-size: 11px; }
     #${PHONE_ID} .phone-cart-remove { margin-left: auto; }
     #${PHONE_ID} .phone-cart-foot {
-      position: sticky; bottom: -14px; margin: 12px -14px -14px; padding: 12px 14px;
+      position: sticky; bottom: -28px; margin: 12px -20px -28px; padding: 12px 20px 18px;
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      border-top: 1px solid #474c55; background: #101217; font-size: 12px; font-weight: 900;
+      border-top: 1px solid rgba(255,255,255,0.15); background: rgba(5,5,5,0.88);
+      font-size: 12px; font-weight: 800;
     }
     #${PHONE_ID} .phone-clear {
-      padding: 7px 9px; cursor: pointer; color: #e8e4dc; background: transparent;
-      border: 1px solid #646a74; font: inherit; font-size: 9px; font-weight: 900;
+      padding: 7px 9px; cursor: pointer; color: #f8f8f8; background: transparent;
+      border: 1px solid rgba(255,255,255,0.22); border-radius: 12px;
+      font: inherit; font-size: 9px; font-weight: 800;
     }
-    @media (max-width: 520px) {
-      #${PHONE_ID} .phone-shell { right: 10px; bottom: 10px; width: min(326px, calc(100vw - 20px)); height: min(590px, calc(100dvh - 20px)); }
+    @media (max-width: 520px), (max-height: 700px) {
+      #${PHONE_ID} .phone-shell { right: 10px; bottom: 10px; height: min(680px, calc(100dvh - 20px)); }
+      #${PHONE_ID} .phone-panel { padding: 36px 20px 28px 22px; }
     }
     @media (pointer: coarse) {
       #${PHONE_ID} .phone-shell {
         right: max(10px, env(safe-area-inset-right));
         bottom: max(10px, env(safe-area-inset-bottom));
-        width: min(326px, calc(100vw - 20px - env(safe-area-inset-left) - env(safe-area-inset-right)));
-        height: min(590px, calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+        height: min(680px, calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
       }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -156,34 +207,37 @@ function priceText(value, currency = 'ARS') {
   return `$ ${number.toLocaleString('es-AR')} ${currency || ''}`.trim();
 }
 
+function shortDateText(date = new Date()) {
+  const weekdays = ['Dom', 'Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab'];
+  const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  return `${weekdays[date.getDay()]}, ${date.getDate()} de ${months[date.getMonth()]}`;
+}
+
 export function createPhone({ music, cart, clock, isBlocked = () => false, onBeforeOpen = () => {} }) {
   injectStyles();
   const root = document.createElement('div');
   root.id = PHONE_ID;
-  root.setAttribute('aria-hidden', 'true');
+  root.setAttribute('aria-hidden', 'false');
   root.innerHTML = `
-    <section class="phone-shell" role="dialog" aria-label="Celular FOURTWENTY">
-      <div class="phone-screen">
-        <div class="phone-status"><span>FOURTWENTY</span><span data-field="clock"></span></div>
-        <div class="phone-view" data-view="home">
-          <div class="phone-brand">CELULAR</div>
-          <div class="phone-app-grid">
-            <button type="button" class="phone-app" data-app="music">
-              <span class="phone-app-mark">M</span><span class="phone-app-name">MUSICA</span>
-            </button>
-            <button type="button" class="phone-app" data-app="cart">
-              <span class="phone-badge" data-field="cart-badge" hidden></span>
-              <span class="phone-app-mark">C</span><span class="phone-app-name">CARRITO</span>
-            </button>
-            <button type="button" class="phone-app" data-app="clock">
-              <span class="phone-app-mark">12</span><span class="phone-app-name">RELOJ</span>
-            </button>
-            <button type="button" class="phone-app" data-app="option4" disabled>
-              <span class="phone-app-mark">4</span><span class="phone-app-name">OPCION 4</span>
-            </button>
-          </div>
-        </div>
-        <div class="phone-view" data-view="music" hidden>
+    <button type="button" class="phone-launcher" data-action="phone-toggle" aria-label="Abrir Banapod">
+      <img src="${BANAPOD_CLOSED_URL}" alt="">
+      <span>Banapod</span>
+    </button>
+    <section class="phone-shell" role="dialog" aria-label="Banapod">
+      <img class="phone-open-bg" src="${BANAPOD_OPEN_URL}" alt="">
+      <span data-field="clock" hidden></span>
+      <div class="phone-view" data-view="home">
+        <button type="button" class="phone-app phone-home-time-button" data-app="clock" aria-label="Elegir hora">
+          <strong data-field="home-clock"></strong>
+          <span data-field="home-date"></span>
+        </button>
+        <button type="button" class="phone-app phone-home-music-button" data-app="music" aria-label="Abrir Musica"></button>
+        <button type="button" class="phone-app phone-home-cart-button" data-app="cart" aria-label="Abrir Tienda"></button>
+        <button type="button" class="phone-app phone-home-club-button" data-app="club" aria-label="Club" disabled></button>
+        <span class="phone-badge" data-field="cart-badge" hidden></span>
+      </div>
+      <div class="phone-view" data-view="music" hidden>
+        <div class="phone-panel">
           <div class="phone-view-head">
             <button type="button" class="phone-icon-button" data-action="home" aria-label="Volver" title="Volver">&#8592;</button>
             <div class="phone-view-title">MUSICA</div><span></span>
@@ -202,10 +256,12 @@ export function createPhone({ music, cart, clock, isBlocked = () => false, onBef
             <button type="button" class="phone-icon-button" data-action="next" aria-label="Siguiente tema" title="Siguiente tema">&#8811;</button>
           </div>
         </div>
-        <div class="phone-view" data-view="cart" hidden>
+      </div>
+      <div class="phone-view" data-view="cart" hidden>
+        <div class="phone-panel">
           <div class="phone-view-head">
             <button type="button" class="phone-icon-button" data-action="home" aria-label="Volver" title="Volver">&#8592;</button>
-            <div class="phone-view-title">CARRITO</div><span></span>
+            <div class="phone-view-title">TIENDA</div><span></span>
           </div>
           <div class="phone-cart-list" data-field="cart-list"></div>
           <div class="phone-cart-foot">
@@ -213,10 +269,12 @@ export function createPhone({ music, cart, clock, isBlocked = () => false, onBef
             <span data-field="cart-total"></span>
           </div>
         </div>
-        <div class="phone-view" data-view="clock" hidden>
+      </div>
+      <div class="phone-view" data-view="clock" hidden>
+        <div class="phone-panel">
           <div class="phone-view-head">
             <button type="button" class="phone-icon-button" data-action="home" aria-label="Volver" title="Volver">&#8592;</button>
-            <div class="phone-view-title">RELOJ</div><span></span>
+            <div class="phone-view-title">HORA</div><span></span>
           </div>
           <div class="phone-clock-display">
             <div class="phone-clock-time" data-field="clock-display"></div>
@@ -265,7 +323,10 @@ export function createPhone({ music, cart, clock, isBlocked = () => false, onBef
   }
 
   function updateClock() {
-    field('clock').textContent = getClockState().hour;
+    const state = getClockState();
+    field('clock').textContent = state.hour;
+    field('home-clock').textContent = state.hour;
+    field('home-date').textContent = shortDateText();
     if (currentView === 'clock') renderClock();
   }
   updateClock();
@@ -397,7 +458,8 @@ export function createPhone({ music, cart, clock, isBlocked = () => false, onBef
     const playlist = event.target.closest('[data-playlist]');
     if (playlist) { selectPlaylist(playlist.dataset.playlist); return; }
     const action = event.target.closest('[data-action]')?.dataset.action;
-    if (action === 'home') showView('home');
+    if (action === 'phone-toggle') toggle();
+    else if (action === 'home') showView('home');
     else if (action === 'play') toggleMusic();
     else if (action === 'next') nextTrack();
     else if (action === 'clear-cart') cart.clear();
@@ -435,7 +497,6 @@ export function createPhone({ music, cart, clock, isBlocked = () => false, onBef
     open = true;
     showView('home');
     root.classList.add('is-open');
-    root.setAttribute('aria-hidden', 'false');
     return true;
   }
 
@@ -443,7 +504,6 @@ export function createPhone({ music, cart, clock, isBlocked = () => false, onBef
     if (!open) return;
     open = false;
     root.classList.remove('is-open');
-    root.setAttribute('aria-hidden', 'true');
     showView('home');
     previousFocus?.focus?.({ preventScroll: true });
     previousFocus = null;
