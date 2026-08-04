@@ -196,6 +196,21 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
   en el CSS de `#loading-screen`, y una linea en `ELEVATOR_INTROS` de
   `main.js`. Los originales sin comprimir van a `store-simulator/source-assets/ui/`
   (esa carpeta no se publica) y el comprimido a `public/assets/ui/`.
+- ⚠️ **`stalled` y `abort` NO deben cortar un video de intro** (`playElevatorIntro`
+  en `main.js`). Los dos son falsos positivos: `stalled` salta mientras el
+  navegador todavia buffferea (los mp4 son `preload="none"`), y `abort` lo
+  dispara el propio `video.load()` de `showElevatorIntroFrame` cuando ya habia
+  una carga en curso — el video moria en el frame 0 y la escena siguiente se
+  abria de una. Solo `error` corta; el jugador siempre puede saltear con `Esc`
+  o click. Se detecto el 03/08 instrumentando los eventos del `<video>` con
+  Playwright, no se veia leyendo el codigo.
+- ⚠️ **El Chromium headless de las pruebas NO trae H.264**: cualquier mp4 falla
+  ahi con `DEMUXER_ERROR_NO_SUPPORTED_STREAMS` aunque ande perfecto en el
+  navegador real. Para probar la logica de un video, generar una copia corta en
+  VP9/WebM y apuntar el `<source>` ahi (cambiando tambien su `type`), o el test
+  miente. Ademas un video CON audio no arranca solo sin gesto real del usuario:
+  disparar la interaccion con una tecla de verdad (`page.keyboard.press`), no
+  llamando a la funcion por JS.
 - Comando de compresion usado (4K HEVC 18.5 MB -> 1080p H.264 2.4 MB). El HEVC
   NO se reproduce en Chrome/Firefox: siempre convertir a H.264.
 
@@ -226,6 +241,14 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 ### Twenty Time
 
 - El puesto de Twenty Time permite abrir un lector de revista.
+- **Al interactuar se reproduce primero `assets/ui/twenty-time-intro.mp4`**
+  (BOB en el kiosco, 10s, 3.6 MB) y despues abre la revista. Se ve UNA sola vez
+  por sesion: dura 10s y verlo cada vez cansaria. Se saltea con `Esc` o click,
+  y si el archivo faltara la revista abre igual.
+- Como esta hecho: `initTwentyTimeInteract` recibe un `beforeOpen` opcional; si
+  devuelve una promesa, el lector espera. El video vive en `main.js`, no en
+  `twentyTimeInteract.js` — ese archivo no sabe nada de video, solo que hay
+  algo que ocurre antes.
 - Hay cuatro dobles paginas provisionales y animacion al cambiar de pagina.
 - Imagenes y contenido se reemplazaran por la edicion final de FOURTWENTY.
 

@@ -40,6 +40,11 @@ export function initTwentyTimeInteract({
   getScene,
   isBlocked = () => false,
   onOpenChange = () => {},
+  // Paso opcional ANTES de abrir la revista (hoy: el video del kiosco). Si
+  // devuelve una promesa, el lector espera a que termine. Vive afuera de este
+  // archivo a propósito: acá no sabemos nada de video, solo que hay algo que
+  // ocurre primero.
+  beforeOpen = null,
 } = {}) {
   const reader = createTwentyTimeReader({ onOpenChange });
   const anchorPosition = new THREE.Vector3();
@@ -98,9 +103,20 @@ export function initTwentyTimeInteract({
     return Boolean(nearestTarget(playerPosition));
   }
 
+  // Si hay `beforeOpen`, primero corre eso y el lector aparece cuando termina.
+  // Devuelve true igual (la interacción se considera atendida) para que quien
+  // llama no siga probando otras interacciones mientras corre el video.
+  function openReader() {
+    if (!beforeOpen) return reader.show();
+    const pendiente = beforeOpen();
+    if (!pendiente?.then) return reader.show();
+    pendiente.then(() => reader.show()).catch(() => reader.show());
+    return true;
+  }
+
   function interact(playerPosition) {
     if (!canInteract(playerPosition)) return false;
-    return reader.show();
+    return openReader();
   }
 
   function hitTarget(raycaster, playerPosition) {
@@ -113,7 +129,7 @@ export function initTwentyTimeInteract({
 
   function interactFromRay(raycaster, playerPosition) {
     if (!hitTarget(raycaster, playerPosition)) return false;
-    return reader.show();
+    return openReader();
   }
 
   function destroy() {

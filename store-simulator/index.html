@@ -182,19 +182,25 @@
   #loading-screen.hoop-intro::before,
   #loading-screen.hoop-intro::after,
   #loading-screen.hoop-intro .loading-hud,
-  #loading-screen.hoop-intro .bob-loading-ui {
+  #loading-screen.hoop-intro .bob-loading-ui,
+  #loading-screen.twenty-time-intro::before,
+  #loading-screen.twenty-time-intro::after,
+  #loading-screen.twenty-time-intro .loading-hud,
+  #loading-screen.twenty-time-intro .bob-loading-ui {
     display: none;
   }
   #loading-screen.cultura-intro,
   #loading-screen.terrace-intro,
-  #loading-screen.hoop-intro {
+  #loading-screen.hoop-intro,
+  #loading-screen.twenty-time-intro {
     background: #000;
     cursor: pointer;
   }
   #loading-screen.bob-collection #bob-loading-video,
   #loading-screen.cultura-intro #cultura-intro-video,
   #loading-screen.terrace-intro #terrace-intro-video,
-  #loading-screen.hoop-intro #hoop-intro-video {
+  #loading-screen.hoop-intro #hoop-intro-video,
+  #loading-screen.twenty-time-intro #twenty-time-intro-video {
     display: block; position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover; background: #030303;
   }
@@ -360,6 +366,9 @@
   </video>
   <video id="hoop-intro-video" class="loading-video" playsinline preload="none">
     <source src="/assets/ui/hoop-season-intro.mp4" type="video/mp4">
+  </video>
+  <video id="twenty-time-intro-video" class="loading-video" playsinline preload="none">
+    <source src="/assets/ui/twenty-time-intro.mp4" type="video/mp4">
   </video>
   <div class="bob-loading-ui">
     <div class="bob-loading-bar"><div id="bob-loading-bar-fill"></div></div>

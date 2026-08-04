@@ -431,6 +431,17 @@ twentyTimeInteract = initTwentyTimeInteract({
     || minigameManager.isOpen() || !!phone?.isOpen() || !!adminPanel?.isOpen()
     || productClicks.panel.isOpen() || !!carInteract?.isRadioOpen() || world !== 'street'
     || isPackageMissionOpen(),
+  // Video del kiosco antes de abrir la revista. Se ve UNA vez por sesión: dura
+  // 10s y verlo cada vez que abrís Twenty Time cansaría. Se saltea con Esc o
+  // click, y si el archivo faltara la revista abre igual.
+  beforeOpen: () => {
+    if (twentyTimeIntroPlayed || !twentyTimeIntroVideo) return null;
+    twentyTimeIntroPlayed = true;
+    if (!showElevatorIntroFrame(twentyTimeIntroVideo, 'twenty-time-intro')) return null;
+    loading = true; // BOB queda quieto detrás del video
+    return playElevatorIntro(twentyTimeIntroVideo, 'twenty-time-intro')
+      .finally(() => { loading = false; });
+  },
   onOpenChange: () => {
     input.keys.clear();
     input.clearVirtualAxes();
@@ -755,6 +766,7 @@ const bobLoadingVideo = document.getElementById('bob-loading-video');
 const culturaIntroVideo = document.getElementById('cultura-intro-video');
 const terraceIntroVideo = document.getElementById('terrace-intro-video');
 const hoopIntroVideo = document.getElementById('hoop-intro-video');
+const twentyTimeIntroVideo = document.getElementById('twenty-time-intro-video');
 const bobLoadingBarFill = document.getElementById('bob-loading-bar-fill');
 const loadingMessage = document.getElementById('loading-message');
 const shirtTip = document.getElementById('shirt-tip');
@@ -762,7 +774,7 @@ const shirtTip = document.getElementById('shirt-tip');
 function finishLoadingUi() {
   loadingEl.classList.remove('show');
   requestAnimationFrame(() => {
-    loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro', 'hoop-intro');
+    loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro', 'hoop-intro', 'twenty-time-intro');
     bobLoadingVideo.pause();
     bobLoadingVideo.onended = null;
     bobLoadingVideo.onerror = null;
@@ -931,6 +943,9 @@ const ELEVATOR_INTROS = {
   [HOOP_DESTINATION_ID]: { video: hoopIntroVideo, className: 'hoop-intro' },
 };
 let culturaIntroPlayed = false;
+// El video del kiosco Twenty Time se ve una sola vez por sesión (ver beforeOpen
+// en initTwentyTimeInteract).
+let twentyTimeIntroPlayed = false;
 
 function startLoading(piso, label) {
   phone?.hide();
@@ -1119,7 +1134,7 @@ function playCulturaIntro(ready, piso) {
 function showElevatorIntroFrame(video, className) {
   if (!video) return false;
   loadingEl.style.backgroundImage = '';
-  loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro', 'hoop-intro');
+  loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro', 'hoop-intro', 'twenty-time-intro');
   loadingEl.classList.add(className, 'show');
   video.controls = false;
   video.muted = false;
@@ -1179,8 +1194,16 @@ function playElevatorIntro(video, className) {
     loadingEl.addEventListener('click', skipIntro, true);
     video.onended = finish;
     video.onerror = finish;
+    // `stalled` y `abort` NO cortan el video: los dos son falsos positivos.
+    // `stalled` salta mientras el navegador todavia esta buffereando (los mp4
+    // son preload="none", asi que al abrirlos siempre hay un rato sin datos).
+    // `abort` lo disparamos NOSOTROS: showElevatorIntroFrame llama a
+    // video.load(), y si habia una carga en curso el navegador emite `abort`
+    // justo cuando este handler ya esta puesto — el video moria en el frame 0
+    // y la escena siguiente se abria de una. Un fallo de verdad emite `error`,
+    // que si corta, y el jugador siempre puede saltear con Esc o click.
     video.onstalled = null;
-    video.onabort = finish;
+    video.onabort = null;
     const playPromise = video.play();
     if (playPromise?.catch) playPromise.catch(finish);
   });
