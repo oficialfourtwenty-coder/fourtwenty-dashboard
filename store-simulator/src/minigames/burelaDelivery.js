@@ -5,6 +5,20 @@ const ROAD_WIDTH = 116;
 const ROAD_X = Object.freeze([100, 470, 840, 1210, 1580, 1950, 2320]);
 const ROAD_Y = Object.freeze([100, 450, 800, 1150, 1500]);
 const MAP_SCALE = 0.5;
+const CURVED_ROADS = Object.freeze([
+  Object.freeze({
+    start: Object.freeze({ x: 1580, y: 100 }),
+    control: Object.freeze({ x: 1900, y: 105 }),
+    end: Object.freeze({ x: 1950, y: 450 }),
+    width: 104,
+  }),
+  Object.freeze({
+    start: Object.freeze({ x: 470, y: 1150 }),
+    control: Object.freeze({ x: 475, y: 1455 }),
+    end: Object.freeze({ x: 840, y: 1500 }),
+    width: 104,
+  }),
+]);
 
 const START = Object.freeze({ x: 1210, y: 445 });
 const PAKA_POSITION = Object.freeze({ x: 1160, y: 445 });
@@ -23,6 +37,9 @@ const POLICE_SPAWNS = Object.freeze([1, 5, 8, 13, 14, 20, 25, 31]);
 const CONTROL_CODES = new Set([
   'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
   'KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyE',
+]);
+const PEDESTRIAN_OUTFITS = Object.freeze([
+  '#5f9665', '#d0643d', '#d1ad4c', '#557b9b', '#8b5b92', '#d7d0bd', '#2d7566', '#b44545',
 ]);
 
 const ROAD_NODES = ROAD_Y.flatMap((y, row) => (
@@ -64,6 +81,30 @@ function circleHitsRect(x, y, radius, rect) {
   const nearestX = clamp(x, rect.x, rect.x + rect.w);
   const nearestY = clamp(y, rect.y, rect.y + rect.h);
   return Math.hypot(x - nearestX, y - nearestY) < radius;
+}
+
+function quadraticPoint(road, progress) {
+  const inverse = 1 - progress;
+  return {
+    x: inverse * inverse * road.start.x
+      + 2 * inverse * progress * road.control.x
+      + progress * progress * road.end.x,
+    y: inverse * inverse * road.start.y
+      + 2 * inverse * progress * road.control.y
+      + progress * progress * road.end.y,
+  };
+}
+
+function traceCurvedRoad(ctx, road) {
+  ctx.beginPath();
+  ctx.moveTo(road.start.x, road.start.y);
+  ctx.quadraticCurveTo(road.control.x, road.control.y, road.end.x, road.end.y);
+}
+
+function parkedCarBounds(car) {
+  return car.vertical
+    ? { x: car.x - 12, y: car.y - 25, w: 24, h: 50 }
+    : { x: car.x - 25, y: car.y - 12, w: 50, h: 24 };
 }
 
 function angleDelta(from, to) {
@@ -125,6 +166,9 @@ function createCityModel() {
   const buildings = [];
   const trees = [];
   const parkedCars = [];
+  const bins = [];
+  const pedestrianRoutes = [];
+  const curvedRoads = CURVED_ROADS.map((road) => ({ ...road }));
   const roofColors = ['#a68168', '#668589', '#8f765f', '#a6a39a', '#7b8d78', '#9b6c58'];
 
   function addBuilding(x, y, w, h, options = {}) {
@@ -133,6 +177,7 @@ function createCityModel() {
       color: options.color ?? roofColors[Math.floor(random() * roofColors.length)],
       trim: options.trim ?? (random() > 0.5 ? '#d6c9b2' : '#454f4d'),
       rotation: options.rotation ?? 0,
+      rounding: options.rounding ?? (6 + Math.floor(random() * 18)),
       tower: Boolean(options.tower),
       industrial: Boolean(options.industrial),
     });
@@ -144,6 +189,12 @@ function createCityModel() {
       const right = ROAD_X[col + 1] - ROAD_WIDTH / 2;
       const top = ROAD_Y[row] + ROAD_WIDTH / 2;
       const bottom = ROAD_Y[row + 1] - ROAD_WIDTH / 2;
+      let kind = 'residential';
+      if (col === 2 && row === 0) kind = 'towers';
+      else if (col === 3 && row === 0) kind = 'industrial';
+      else if ((col === 4 && row === 0) || (col === 1 && row === 3)) kind = 'parkway';
+      else if (col === 0 && row === 2) kind = 'plaza';
+
       const block = {
         row,
         col,
@@ -151,7 +202,8 @@ function createCityModel() {
         y: top,
         w: right - left,
         h: bottom - top,
-        kind: col === 2 && row === 0 ? 'towers' : (col === 3 && row === 0 ? 'industrial' : 'residential'),
+        kind,
+        rounding: kind === 'parkway' || kind === 'plaza' ? 54 : 28 + ((row + col) % 3) * 8,
       };
       blocks.push(block);
 
@@ -184,6 +236,29 @@ function createCityModel() {
           color: '#a4a6a2',
           trim: '#65716f',
           industrial: true,
+          rounding: 18,
+        });
+      } else if (block.kind === 'parkway') {
+        addBuilding(x + 2, y + h * 0.56, w * 0.36, h * 0.34, {
+          color: '#7f8f82',
+          trim: '#d1c4a7',
+          rounding: 28,
+        });
+        addBuilding(x + w * 0.64, y + 6, w * 0.31, h * 0.3, {
+          color: '#a77f68',
+          trim: '#4f5e58',
+          rounding: 30,
+        });
+      } else if (block.kind === 'plaza') {
+        addBuilding(x + 12, y + 18, w * 0.38, h * 0.34, {
+          color: '#8a796c',
+          trim: '#d2c5ab',
+          rounding: 34,
+        });
+        addBuilding(x + w * 0.56, y + h * 0.52, w * 0.35, h * 0.34, {
+          color: '#718884',
+          trim: '#d8c4a5',
+          rounding: 38,
         });
       } else {
         const gap = 16;
@@ -217,25 +292,97 @@ function createCityModel() {
           : top + 20 + random() * (block.h - 40);
         trees.push({ x: treeX, y: treeY, r: 8 + random() * 7, tone: random() });
       }
+
+      if ((row * 5 + col) % 2 === 0) {
+        const inset = 13;
+        const corner = Math.min(42, block.w * 0.2, block.h * 0.2);
+        pedestrianRoutes.push({
+          loop: true,
+          points: [
+            { x: left + inset + corner, y: top + inset },
+            { x: right - inset - corner, y: top + inset },
+            { x: right - inset, y: top + inset + corner },
+            { x: right - inset, y: bottom - inset - corner },
+            { x: right - inset - corner, y: bottom - inset },
+            { x: left + inset + corner, y: bottom - inset },
+            { x: left + inset, y: bottom - inset - corner },
+            { x: left + inset, y: top + inset + corner },
+          ],
+        });
+      }
+
+      if ((row + col) % 2 === 1) {
+        const cornerIndex = (row * 3 + col) % 4;
+        const corners = [
+          [left + 14, top + 14],
+          [right - 14, top + 14],
+          [right - 14, bottom - 14],
+          [left + 14, bottom - 14],
+        ];
+        const [binX, binY] = corners[cornerIndex];
+        bins.push({ x: binX, y: binY, radius: 8, tone: (row + col) % 3 });
+      }
     }
   }
 
-  for (let index = 0; index < 30; index++) {
+  const reserved = [START, PAKA_POSITION, COROLLA_START, NOTA_POSITION, DELIVERY_POSITION];
+  function canPark(candidate) {
+    if (reserved.some((point) => distance(candidate, point) < 105)) return false;
+    if (ROAD_NODES.some((node) => distance(candidate, node) < 92)) return false;
+    if (parkedCars.some((car) => distance(candidate, car) < 68)) return false;
+    const bounds = parkedCarBounds(candidate);
+    return !buildings.some((building) => (
+      bounds.x < building.x + building.w
+      && bounds.x + bounds.w > building.x
+      && bounds.y < building.y + building.h
+      && bounds.y + bounds.h > building.y
+    ));
+  }
+
+  for (let attempt = 0; attempt < 260 && parkedCars.length < 32; attempt++) {
     const vertical = random() > 0.52;
+    let candidate;
     if (vertical) {
       const x = ROAD_X[Math.floor(random() * ROAD_X.length)] + (random() > 0.5 ? -32 : 32);
-      parkedCars.push({ x, y: 180 + random() * (WORLD.height - 360), vertical: true, color: roofColors[index % roofColors.length] });
+      candidate = {
+        x,
+        y: 155 + random() * (WORLD.height - 310),
+        vertical: true,
+        color: roofColors[parkedCars.length % roofColors.length],
+      };
     } else {
-      parkedCars.push({
+      candidate = {
         x: 180 + random() * (WORLD.width - 360),
         y: ROAD_Y[Math.floor(random() * ROAD_Y.length)] + (random() > 0.5 ? -32 : 32),
         vertical: false,
-        color: roofColors[index % roofColors.length],
-      });
+        color: roofColors[parkedCars.length % roofColors.length],
+      };
     }
+    if (canPark(candidate)) parkedCars.push(candidate);
   }
 
-  return { blocks, buildings, trees, parkedCars };
+  curvedRoads.forEach((road, roadIndex) => {
+    const route = [];
+    for (let index = 0; index <= 12; index++) {
+      const progress = index / 12;
+      const point = quadraticPoint(road, progress);
+      const ahead = quadraticPoint(road, Math.min(1, progress + 0.02));
+      const behind = quadraticPoint(road, Math.max(0, progress - 0.02));
+      const tangentX = ahead.x - behind.x;
+      const tangentY = ahead.y - behind.y;
+      const tangentLength = Math.max(1, Math.hypot(tangentX, tangentY));
+      const side = roadIndex % 2 ? -1 : 1;
+      const offset = road.width / 2 + 10;
+      route.push({
+        x: point.x - (tangentY / tangentLength) * offset * side,
+        y: point.y + (tangentX / tangentLength) * offset * side,
+      });
+    }
+    if (roadIndex % 2) route.reverse();
+    pedestrianRoutes.push({ loop: false, points: route });
+  });
+
+  return { blocks, buildings, trees, parkedCars, bins, pedestrianRoutes, curvedRoads };
 }
 
 function createMapCanvas(city) {
@@ -280,11 +427,43 @@ function createMapCanvas(city) {
   }
 
   for (const block of city.blocks) {
-    ctx.fillStyle = block.kind === 'towers' ? '#557454' : '#a4a39a';
-    ctx.fillRect(block.x, block.y, block.w, block.h);
+    if (block.kind === 'towers') ctx.fillStyle = '#557454';
+    else if (block.kind === 'parkway') ctx.fillStyle = '#63765f';
+    else if (block.kind === 'plaza') ctx.fillStyle = '#8e9287';
+    else ctx.fillStyle = '#a4a39a';
+    roundedRectPath(ctx, block.x, block.y, block.w, block.h, block.rounding);
+    ctx.fill();
     ctx.strokeStyle = 'rgba(31, 36, 34, 0.42)';
     ctx.lineWidth = 4;
-    ctx.strokeRect(block.x + 2, block.y + 2, block.w - 4, block.h - 4);
+    roundedRectPath(ctx, block.x + 2, block.y + 2, block.w - 4, block.h - 4, block.rounding - 2);
+    ctx.stroke();
+  }
+
+  for (const road of city.curvedRoads) {
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#aaa89e';
+    ctx.lineWidth = road.width + 24;
+    traceCurvedRoad(ctx, road);
+    ctx.stroke();
+    ctx.strokeStyle = '#30363a';
+    ctx.lineWidth = road.width;
+    traceCurvedRoad(ctx, road);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(230, 222, 190, 0.24)';
+    ctx.lineWidth = road.width - 14;
+    traceCurvedRoad(ctx, road);
+    ctx.stroke();
+    ctx.strokeStyle = '#30363a';
+    ctx.lineWidth = road.width - 20;
+    traceCurvedRoad(ctx, road);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(224, 199, 112, 0.55)';
+    ctx.lineWidth = 4;
+    ctx.setLineDash([24, 28]);
+    traceCurvedRoad(ctx, road);
+    ctx.stroke();
+    ctx.restore();
   }
 
   for (const building of city.buildings) {
@@ -294,12 +473,29 @@ function createMapCanvas(city) {
     ctx.translate(centerX, centerY);
     ctx.rotate(building.rotation);
     ctx.fillStyle = 'rgba(15, 19, 18, 0.36)';
-    ctx.fillRect(-building.w / 2 + 10, -building.h / 2 + 12, building.w, building.h);
+    roundedRectPath(
+      ctx,
+      -building.w / 2 + 10,
+      -building.h / 2 + 12,
+      building.w,
+      building.h,
+      building.rounding,
+    );
+    ctx.fill();
     ctx.fillStyle = building.color;
-    ctx.fillRect(-building.w / 2, -building.h / 2, building.w, building.h);
+    roundedRectPath(ctx, -building.w / 2, -building.h / 2, building.w, building.h, building.rounding);
+    ctx.fill();
     ctx.strokeStyle = building.trim;
     ctx.lineWidth = building.tower ? 8 : 5;
-    ctx.strokeRect(-building.w / 2 + 4, -building.h / 2 + 4, building.w - 8, building.h - 8);
+    roundedRectPath(
+      ctx,
+      -building.w / 2 + 4,
+      -building.h / 2 + 4,
+      building.w - 8,
+      building.h - 8,
+      Math.max(3, building.rounding - 4),
+    );
+    ctx.stroke();
     ctx.fillStyle = 'rgba(238, 234, 218, 0.19)';
     for (let x = -building.w / 2 + 16; x < building.w / 2 - 8; x += 26) {
       ctx.fillRect(x, -building.h / 2 + 14, 10, building.h - 28);
@@ -337,13 +533,41 @@ function createMapCanvas(city) {
     ctx.translate(car.x, car.y);
     if (car.vertical) ctx.rotate(Math.PI / 2);
     ctx.fillStyle = 'rgba(8, 10, 10, 0.35)';
-    roundedRectPath(ctx, -13 + 3, -7 + 3, 26, 14, 3);
+    roundedRectPath(ctx, -25 + 4, -12 + 4, 50, 24, 6);
     ctx.fill();
     ctx.fillStyle = car.color;
-    roundedRectPath(ctx, -13, -7, 26, 14, 3);
+    roundedRectPath(ctx, -25, -12, 50, 24, 6);
     ctx.fill();
     ctx.fillStyle = '#263034';
-    ctx.fillRect(-5, -6, 10, 12);
+    roundedRectPath(ctx, -10, -10, 21, 20, 4);
+    ctx.fill();
+    ctx.fillStyle = '#d9d7bb';
+    ctx.fillRect(-22, -9, 3, 6);
+    ctx.fillRect(-22, 3, 3, 6);
+    ctx.fillStyle = '#8f262b';
+    ctx.fillRect(19, -9, 3, 6);
+    ctx.fillRect(19, 3, 3, 6);
+    ctx.restore();
+  }
+
+  for (const bin of city.bins) {
+    ctx.save();
+    ctx.translate(bin.x, bin.y);
+    ctx.fillStyle = 'rgba(8, 12, 11, 0.34)';
+    ctx.beginPath();
+    ctx.arc(3, 3, bin.radius + 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = bin.tone === 0 ? '#2c4f40' : (bin.tone === 1 ? '#4a5250' : '#315b62');
+    roundedRectPath(ctx, -bin.radius, -bin.radius, bin.radius * 2, bin.radius * 2, 3);
+    ctx.fill();
+    ctx.strokeStyle = '#a1a995';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-bin.radius + 2, -bin.radius + 3);
+    ctx.lineTo(bin.radius - 2, -bin.radius + 3);
+    ctx.stroke();
+    ctx.fillStyle = '#111715';
+    ctx.fillRect(-3, -bin.radius - 2, 6, 3);
     ctx.restore();
   }
 
@@ -367,7 +591,9 @@ function isBlocked(city, x, y, radius) {
   if (x - radius < 26 || y - radius < 26 || x + radius > WORLD.width - 26 || y + radius > WORLD.height - 26) {
     return true;
   }
-  return city.buildings.some((building) => circleHitsRect(x, y, radius, building));
+  if (city.buildings.some((building) => circleHitsRect(x, y, radius, building))) return true;
+  if (city.parkedCars.some((car) => circleHitsRect(x, y, radius, parkedCarBounds(car)))) return true;
+  return city.bins.some((bin) => Math.hypot(x - bin.x, y - bin.y) < radius + bin.radius);
 }
 
 function moveCircle(city, actor, dx, dy, radius) {
@@ -417,6 +643,67 @@ function drawBob(ctx, bob, time, invulnerable) {
   ctx.fillStyle = '#e28742';
   ctx.fillRect(-11, 18, 8, 5);
   ctx.fillRect(3, 18, 8, 5);
+  ctx.restore();
+}
+
+function createPedestrians(city) {
+  const pedestrians = [];
+  const count = Math.min(20, city.pedestrianRoutes.length * 2);
+  for (let index = 0; index < count; index++) {
+    const routeIndex = index % city.pedestrianRoutes.length;
+    const route = city.pedestrianRoutes[routeIndex];
+    const waypoint = (index * 3) % route.points.length;
+    const point = route.points[waypoint];
+    pedestrians.push({
+      id: index,
+      routeIndex,
+      waypoint,
+      direction: index % 3 === 0 ? -1 : 1,
+      x: point.x,
+      y: point.y,
+      angle: index % 2 ? Math.PI / 2 : 0,
+      speed: 30 + (index % 5) * 4,
+      scale: 0.86 + (index % 3) * 0.08,
+      outfit: PEDESTRIAN_OUTFITS[index % PEDESTRIAN_OUTFITS.length],
+      skin: index % 4 === 0 ? '#9a5c32' : '#bf7641',
+      phase: index * 0.73,
+      walk: index * 0.41,
+    });
+  }
+  return pedestrians;
+}
+
+function drawPixelBobPedestrian(ctx, pedestrian, time) {
+  const stride = Math.floor((pedestrian.walk + time * 1.4) % 2) ? 2 : -2;
+  ctx.save();
+  ctx.translate(Math.round(pedestrian.x), Math.round(pedestrian.y));
+  ctx.rotate(pedestrian.angle);
+  ctx.scale(pedestrian.scale, pedestrian.scale);
+
+  ctx.fillStyle = 'rgba(6, 9, 8, 0.28)';
+  ctx.fillRect(-8, 10, 18, 6);
+
+  ctx.fillStyle = '#2a1a13';
+  ctx.fillRect(-7 + stride, 7, 5, 8);
+  ctx.fillRect(2 - stride, 7, 5, 8);
+
+  ctx.fillStyle = pedestrian.outfit;
+  ctx.fillRect(-8, -1, 16, 11);
+  ctx.fillStyle = '#efe6cf';
+  ctx.fillRect(-7, 1, 3, 7);
+
+  ctx.fillStyle = '#663820';
+  ctx.fillRect(-8, -13, 16, 13);
+  ctx.fillRect(-12, -10, 4, 7);
+  ctx.fillRect(8, -10, 4, 7);
+  ctx.fillStyle = pedestrian.skin;
+  ctx.fillRect(-6, -10, 12, 8);
+  ctx.fillRect(-3, -3, 6, 3);
+  ctx.fillStyle = '#121313';
+  ctx.fillRect(-4, -9, 2, 2);
+  ctx.fillRect(2, -9, 2, 2);
+  ctx.fillStyle = '#e5a15a';
+  ctx.fillRect(-2, -5, 4, 2);
   ctx.restore();
 }
 
@@ -562,6 +849,167 @@ function drawDeliveryZone(ctx, position, time) {
   ctx.restore();
 }
 
+function createCityAudio() {
+  let context = null;
+  let master = null;
+  let ambienceSource = null;
+  let engineOscillator = null;
+  let engineGain = null;
+  let sirenOscillator = null;
+  let sirenGain = null;
+  let sirenLfo = null;
+  let active = false;
+  let sirenActive = false;
+
+  function ensureContext() {
+    if (context) return true;
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return false;
+
+    context = new AudioContextClass();
+    const compressor = context.createDynamicsCompressor();
+    compressor.threshold.value = -18;
+    compressor.knee.value = 16;
+    compressor.ratio.value = 5;
+    compressor.attack.value = 0.006;
+    compressor.release.value = 0.22;
+    compressor.connect(context.destination);
+
+    master = context.createGain();
+    master.gain.value = 0;
+    master.connect(compressor);
+
+    const ambienceGain = context.createGain();
+    ambienceGain.gain.value = 0.018;
+    const ambienceFilter = context.createBiquadFilter();
+    ambienceFilter.type = 'bandpass';
+    ambienceFilter.frequency.value = 240;
+    ambienceFilter.Q.value = 0.42;
+    const ambienceBuffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate);
+    const channel = ambienceBuffer.getChannelData(0);
+    let noise = 0;
+    for (let index = 0; index < channel.length; index++) {
+      noise = noise * 0.965 + (Math.random() * 2 - 1) * 0.035;
+      channel[index] = noise;
+    }
+    ambienceSource = context.createBufferSource();
+    ambienceSource.buffer = ambienceBuffer;
+    ambienceSource.loop = true;
+    ambienceSource.connect(ambienceFilter);
+    ambienceFilter.connect(ambienceGain);
+    ambienceGain.connect(master);
+
+    engineOscillator = context.createOscillator();
+    engineOscillator.type = 'sawtooth';
+    engineOscillator.frequency.value = 48;
+    const engineFilter = context.createBiquadFilter();
+    engineFilter.type = 'lowpass';
+    engineFilter.frequency.value = 260;
+    engineGain = context.createGain();
+    engineGain.gain.value = 0;
+    engineOscillator.connect(engineFilter);
+    engineFilter.connect(engineGain);
+    engineGain.connect(master);
+
+    sirenOscillator = context.createOscillator();
+    sirenOscillator.type = 'sine';
+    sirenOscillator.frequency.value = 760;
+    sirenGain = context.createGain();
+    sirenGain.gain.value = 0;
+    sirenLfo = context.createOscillator();
+    sirenLfo.type = 'sine';
+    sirenLfo.frequency.value = 0.78;
+    const sirenSweep = context.createGain();
+    sirenSweep.gain.value = 185;
+    sirenLfo.connect(sirenSweep);
+    sirenSweep.connect(sirenOscillator.frequency);
+    sirenOscillator.connect(sirenGain);
+    sirenGain.connect(master);
+
+    ambienceSource.start();
+    engineOscillator.start();
+    sirenOscillator.start();
+    sirenLfo.start();
+    return true;
+  }
+
+  function resume() {
+    if (!ensureContext()) return;
+    active = true;
+    context.resume().catch(() => {});
+    master.gain.setTargetAtTime(0.18, context.currentTime, 0.08);
+  }
+
+  function update({ inCar, speed, alerted }) {
+    if (!context || !master) return;
+    sirenActive = Boolean(alerted);
+    const now = context.currentTime;
+    const normalizedSpeed = clamp(Math.abs(speed) / 285, 0, 1);
+    engineOscillator.frequency.setTargetAtTime(48 + normalizedSpeed * 74, now, 0.05);
+    engineGain.gain.setTargetAtTime(inCar ? 0.018 + normalizedSpeed * 0.035 : 0, now, 0.08);
+    sirenGain.gain.setTargetAtTime(alerted ? 0.082 : 0, now, alerted ? 0.08 : 0.18);
+    master.gain.setTargetAtTime(active ? 0.18 : 0, now, 0.08);
+  }
+
+  function honk() {
+    if (!context || context.state !== 'running' || !active) return;
+    const now = context.currentTime;
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.05, now + 0.018);
+    gain.gain.exponentialRampToValueAtTime(0.022, now + 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
+    gain.connect(master);
+
+    for (const [frequency, type] of [[188, 'square'], [244, 'triangle']]) {
+      const oscillator = context.createOscillator();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, now);
+      oscillator.connect(gain);
+      oscillator.start(now);
+      oscillator.stop(now + 0.36);
+    }
+  }
+
+  function pause() {
+    active = false;
+    sirenActive = false;
+    if (!context || !master) return;
+    const now = context.currentTime;
+    engineGain?.gain.setTargetAtTime(0, now, 0.04);
+    sirenGain?.gain.setTargetAtTime(0, now, 0.04);
+    master.gain.setTargetAtTime(0, now, 0.05);
+  }
+
+  function destroy() {
+    active = false;
+    for (const source of [ambienceSource, engineOscillator, sirenOscillator, sirenLfo]) {
+      try { source?.stop(); } catch {}
+    }
+    context?.close().catch(() => {});
+    context = null;
+    master = null;
+    ambienceSource = null;
+    engineOscillator = null;
+    engineGain = null;
+    sirenOscillator = null;
+    sirenGain = null;
+    sirenLfo = null;
+    sirenActive = false;
+  }
+
+  function getState() {
+    return {
+      available: Boolean(context),
+      running: context?.state === 'running',
+      active,
+      siren: active && sirenActive,
+    };
+  }
+
+  return { resume, update, honk, pause, destroy, getState };
+}
+
 export function createBurelaDeliveryGame() {
   let root = null;
   let canvas = null;
@@ -577,6 +1025,7 @@ export function createBurelaDeliveryGame() {
   let resizeObserver = null;
   let city = null;
   let mapCanvas = null;
+  let cityAudio = null;
   let reportResult = () => {};
   let state = null;
   let animationFrame = 0;
@@ -623,6 +1072,7 @@ export function createBurelaDeliveryGame() {
       hasPaka: false,
       notaOnboard: false,
       elapsed: 0,
+      nextHornAt: 4.5 + random() * 4.5,
       lastAlertToast: -10,
       bob: { x: START.x, y: START.y, angle: -Math.PI / 2 },
       car: {
@@ -634,6 +1084,7 @@ export function createBurelaDeliveryGame() {
         vy: 0,
       },
       police: POLICE_SPAWNS.map(createPolice),
+      pedestrians: createPedestrians(city),
       particles: [],
       camera: { x: START.x, y: START.y, zoom: 1.18, shake: 0 },
     };
@@ -731,6 +1182,7 @@ export function createBurelaDeliveryGame() {
 
   function interact() {
     if (!state || state.ended) return;
+    cityAudio?.resume();
     const actor = activeActor();
 
     if (state.phase === 'findNota' && distance(actor, NOTA_POSITION) < 88) {
@@ -928,6 +1380,54 @@ export function createBurelaDeliveryGame() {
     }
   }
 
+  function advancePedestrian(pedestrian, route) {
+    let next = pedestrian.waypoint + pedestrian.direction;
+    if (route.loop) {
+      next = (next + route.points.length) % route.points.length;
+    } else if (next < 0 || next >= route.points.length) {
+      pedestrian.direction *= -1;
+      next = pedestrian.waypoint + pedestrian.direction;
+    }
+    pedestrian.waypoint = next;
+  }
+
+  function updatePedestrians(dt) {
+    const actor = activeActor();
+    for (const pedestrian of state.pedestrians) {
+      const route = city.pedestrianRoutes[pedestrian.routeIndex];
+      const target = route.points[pedestrian.waypoint];
+      const dx = target.x - pedestrian.x;
+      const dy = target.y - pedestrian.y;
+      const length = Math.hypot(dx, dy);
+      if (length < 5) {
+        advancePedestrian(pedestrian, route);
+        continue;
+      }
+
+      const nearbyAlert = state.police.some((police) => police.alert && distance(police, pedestrian) < 165);
+      const speed = pedestrian.speed * (nearbyAlert ? 1.42 : 1);
+      let directionX = dx / length;
+      let directionY = dy / length;
+      const actorDistance = distance(actor, pedestrian);
+      if (actorDistance < 44) {
+        const push = (44 - actorDistance) / 44;
+        const awayX = (pedestrian.x - actor.x) / Math.max(1, actorDistance);
+        const awayY = (pedestrian.y - actor.y) / Math.max(1, actorDistance);
+        directionX += awayX * push * 1.3;
+        directionY += awayY * push * 1.3;
+        const normalized = Math.max(1, Math.hypot(directionX, directionY));
+        directionX /= normalized;
+        directionY /= normalized;
+      }
+
+      pedestrian.x += directionX * speed * dt;
+      pedestrian.y += directionY * speed * dt;
+      const desiredAngle = Math.atan2(directionX, -directionY);
+      pedestrian.angle += angleDelta(pedestrian.angle, desiredAngle) * Math.min(1, dt * 9);
+      pedestrian.walk += dt * speed * 0.15;
+    }
+  }
+
   function updateCamera(dt) {
     const target = activeActor();
     const camera = state.camera;
@@ -962,6 +1462,7 @@ export function createBurelaDeliveryGame() {
     else updateOnFoot(dt, horizontal, vertical);
 
     updateMission();
+    updatePedestrians(dt);
     const target = activeActor();
     const policeEnabled = state.phase === 'findNota' || state.phase === 'transportNota';
     const policeCanEngage = policeEnabled && state.policeGrace <= 0;
@@ -974,6 +1475,12 @@ export function createBurelaDeliveryGame() {
         registerHit(police);
         break;
       }
+    }
+    const alerted = state.police.some((police) => police.alert);
+    cityAudio?.update({ inCar: state.inCar, speed: state.car.speed, alerted });
+    if (!alerted && state.elapsed >= state.nextHornAt) {
+      cityAudio?.honk();
+      state.nextHornAt = state.elapsed + 7 + random() * 9;
     }
     updateParticles(dt);
     updateCamera(dt);
@@ -1070,6 +1577,7 @@ export function createBurelaDeliveryGame() {
     if (state.phase === 'findNota') drawNota(ctx, NOTA_POSITION, time);
     if (state.phase === 'transportNota') drawDeliveryZone(ctx, DELIVERY_POSITION, time);
 
+    for (const pedestrian of state.pedestrians) drawPixelBobPedestrian(ctx, pedestrian, time);
     for (const police of state.police) drawPoliceDetection(ctx, police, time);
     drawCorolla(ctx, state.car, {
       passenger: state.notaOnboard,
@@ -1101,6 +1609,7 @@ export function createBurelaDeliveryGame() {
   function finish(result, message) {
     if (state.ended) return;
     state.ended = true;
+    cityAudio?.pause();
     setPrompt('');
     announce(message, result === 'lose');
     clearTimeout(resultTimer);
@@ -1129,6 +1638,7 @@ export function createBurelaDeliveryGame() {
     if (!CONTROL_CODES.has(event.code)) return;
     event.preventDefault();
     event.stopPropagation();
+    cityAudio?.resume();
     if (event.code === 'KeyE' && !event.repeat) interact();
     else setKey(event.code, true);
   }
@@ -1165,6 +1675,7 @@ export function createBurelaDeliveryGame() {
   }
 
   function onStickDown(event) {
+    cityAudio?.resume();
     touchPointerId = event.pointerId;
     stickEl.setPointerCapture?.(event.pointerId);
     updateTouchStick(event);
@@ -1223,6 +1734,7 @@ export function createBurelaDeliveryGame() {
     actionEl = root.querySelector('.burela-delivery__action');
     city = createCityModel();
     mapCanvas = createMapCanvas(city);
+    cityAudio = createCityAudio();
 
     window.addEventListener('keydown', onKeyDown, { capture: true });
     window.addEventListener('keyup', onKeyUp, { capture: true });
@@ -1241,6 +1753,7 @@ export function createBurelaDeliveryGame() {
     clearTimeout(resultTimer);
     clearTimeout(toastTimer);
     resetState();
+    cityAudio?.resume();
     resize();
     running = true;
     previousTime = performance.now();
@@ -1252,6 +1765,7 @@ export function createBurelaDeliveryGame() {
     running = false;
     cancelAnimationFrame(animationFrame);
     clearInputs();
+    cityAudio?.pause();
   }
 
   function destroy() {
@@ -1271,11 +1785,13 @@ export function createBurelaDeliveryGame() {
       mapCanvas.width = 1;
       mapCanvas.height = 1;
     }
+    cityAudio?.destroy();
     root?.remove();
     root = null;
     canvas = null;
     ctx = null;
     mapCanvas = null;
+    cityAudio = null;
     city = null;
     state = null;
   }
@@ -1291,6 +1807,8 @@ export function createBurelaDeliveryGame() {
       hasPaka: state.hasPaka,
       notaOnboard: state.notaOnboard,
       alertedPolice: state.police.filter((police) => police.alert).length,
+      pedestrians: state.pedestrians.length,
+      audio: cityAudio?.getState() ?? { available: false, running: false, active: false },
       bob: { x: Math.round(state.bob.x), y: Math.round(state.bob.y) },
       car: { x: Math.round(state.car.x), y: Math.round(state.car.y), speed: Math.round(state.car.speed) },
     };
@@ -1309,10 +1827,41 @@ export function createBurelaDeliveryGame() {
     render(state.elapsed);
   }
 
+  function debugTriggerPursuit() {
+    if (!state || state.ended) return;
+    state.hasPaka = true;
+    state.inCar = true;
+    state.bob.x = state.car.x;
+    state.bob.y = state.car.y;
+    state.phase = 'findNota';
+    state.policeGrace = 0;
+    const police = state.police[0];
+    police.x = state.car.x;
+    police.y = state.car.y + 240;
+    police.alert = true;
+    police.path = [];
+    updateHud();
+    announce('LA POLICIA TE VIO', true);
+    render(state.elapsed);
+  }
+
+  function debugTeleport(x, y) {
+    if (!state || state.ended) return;
+    const actor = activeActor();
+    actor.x = clamp(x, 40, WORLD.width - 40);
+    actor.y = clamp(y, 40, WORLD.height - 40);
+    state.camera.x = actor.x;
+    state.camera.y = actor.y;
+    state.camera.shake = 0;
+    render(state.elapsed);
+  }
+
   const api = { mount, start, pause, destroy, resize, getState };
   if (import.meta.env.DEV) {
     api.debug = {
       teleportToObjective: debugTeleportToObjective,
+      teleport: debugTeleport,
+      triggerPursuit: debugTriggerPursuit,
       interact,
       takeHit: () => registerHit(),
     };
