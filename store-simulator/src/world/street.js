@@ -425,10 +425,41 @@ function createWhiteLightSwitch(scene, g) {
     return candidate;
   }
 
+  // Solo 1 de cada 2 luminarias enciende su PointLight real (pedido del dueño
+  // 03/08: con las 15 prendidas el juego se trababa). Las lentes de TODAS
+  // siguen brillando, así que el techo se ve igual: no falta ningún foco, solo
+  // ilumina la mitad. Poner 1 para volver a encenderlas todas.
+  const LUCES_UNA_DE_CADA = 2;
+
+  // Reparte cuáles encienden: se ordenan por posición (fondo→frente,
+  // izquierda→derecha) y se toma una sí, una no. Al ordenar por posición y no
+  // por orden de creación, la mitad encendida queda repartida por todo el
+  // local en vez de amontonarse de un lado, y el reparto es siempre el mismo
+  // aunque el editor recree las luminarias duplicadas en otro orden.
+  function lucesQueEnciende() {
+    const encontradas = [];
+    const posicion = new THREE.Vector3();
+    scene.traverse((object) => {
+      if (!object.userData.whiteInteriorLight) return;
+      object.updateWorldMatrix(true, false);
+      object.getWorldPosition(posicion);
+      encontradas.push({ luz: object, z: posicion.z, x: posicion.x });
+    });
+    encontradas.sort((a, b) => (a.z - b.z) || (a.x - b.x));
+    const enciende = new Set();
+    encontradas.forEach((entrada, i) => {
+      if (i % LUCES_UNA_DE_CADA === 0) enciende.add(entrada.luz);
+    });
+    return enciende;
+  }
+
   function setEnabled(enabled) {
     lightsEnabled = !!enabled;
+    const enciende = lightsEnabled ? lucesQueEnciende() : null;
     scene.traverse((object) => {
-      if (object.userData.whiteInteriorLight) object.visible = lightsEnabled;
+      if (object.userData.whiteInteriorLight) {
+        object.visible = lightsEnabled && enciende.has(object);
+      }
       if (object.userData.whiteInteriorLightLens) {
         const materials = Array.isArray(object.material) ? object.material : [object.material];
         for (const material of materials) {

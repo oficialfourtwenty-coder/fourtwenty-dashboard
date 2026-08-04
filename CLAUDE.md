@@ -10,7 +10,21 @@ producto que no esten escritas aqui.
 ## 1. Fuente de verdad y version oficial
 
 - Repositorio: `oficialfourtwenty-coder/fourtwenty-dashboard`.
-- Raiz local de Kusher: `/Users/kusher/Desktop/fourtwenty-dashboard`.
+- **Carpeta de trabajo real: `/Users/kusher/Documents/simulador/auditoria-rendimiento`.**
+  Es un worktree de git y es donde trabaja Codex y donde Kusher prueba
+  (`http://127.0.0.1:5201/`). Ahi vive la rama oficial.
+- ⚠️ `/Users/kusher/Desktop/fourtwenty-dashboard` es el clon original pero
+  quedo en una rama vieja. `git switch` a la rama oficial FALLA ahi con
+  "already checked out at .../auditoria-rendimiento" — git no permite la misma
+  rama en dos worktrees. El 03/08 se perdio mas de una hora por esto: se
+  probaba en la carpeta del Desktop creyendo que era la version nueva y faltaban
+  el Banapod, el BOB rerenderizado y los pisos PS3. **Antes de dar por
+  incompleta una version, correr `git worktree list` y confirmar en que carpeta
+  se esta parado.** Mismo tipo de error que el lio de los dos `bob.glb` de
+  julio.
+- Otros worktrees sueltos (solo pruebas viejas, ninguno tiene trabajo unico):
+  `Desktop/ft-probar-0bbbb13`, `ft-probar-a209171`, `ft-probar-interior`,
+  `ft-probar-layout`.
 - Aplicacion: `store-simulator/`.
 - Rama oficial actual: `version-lunes-3-de-agosto` (etiqueta `lunes-3-de-agosto`).
   Reemplaza a `version-final-final-final`, que queda como checkpoint anterior y
@@ -230,10 +244,21 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
   `restoreClones` fuerza `visible = true` en TODOS los hijos de una luminaria
   duplicada, incluida su PointLight: sin esa llamada las copias se prendian
   solas aunque el interruptor estuviera apagado.
-- PENDIENTE DE DECISION DE KUSHER: con las 15 prendidas a la vez el interior se
-  quema a blanco (se suman todas en un ambiente chico). No se toco la intensidad
-  ni se borro ninguna luminaria porque son posiciones que guardo Kusher en el
-  editor. Si quiere, se baja `intensity` o se apagan algunas.
+- **Solo enciende 1 de cada 2 (decision de Kusher, 03/08).** Con las 15
+  prendidas seguia trabando un poco y la version final no puede trabar en
+  ningun momento. Ahora al prender el interruptor se encienden 8 en vez de 15.
+  Las lentes de TODAS siguen brillando, asi que el techo se ve igual: no falta
+  ningun foco, solo ilumina la mitad. Bonus: tambien arreglo que el interior se
+  quemara a blanco (15 PointLight sumadas en un ambiente chico saturaban).
+- Se controla con `LUCES_UNA_DE_CADA` en `createWhiteLightSwitch`
+  (`world/street.js`). Poner 1 vuelve a encenderlas todas; 3 dejaria un tercio.
+- Cuales encienden se decide ordenando por posicion (fondo->frente,
+  izquierda->derecha) y tomando una si, una no. Se ordena por posicion y no por
+  orden de creacion para que la mitad encendida quede repartida por todo el
+  local y el reparto no cambie cuando el editor recrea las luminarias
+  duplicadas en otro orden.
+- No se borro ninguna luminaria ni se cambio su intensidad: las posiciones son
+  las que guardo Kusher en el editor.
 - El neon verde y el texto amarillo `WE ROLL DIFFERENT` permanecen encendidos.
 - Ciclo de sol/luna interpolado por hora, tambien visible en terraza.
 
