@@ -372,7 +372,12 @@ function createWhiteLightSwitch(scene, g) {
   g.add(root);
 
   const worldPosition = new THREE.Vector3();
-  let lightsEnabled = true;
+  // Arrancan APAGADAS a propósito. Cada luminaria blanca es una PointLight y hoy
+  // hay muchas prendidas a la vez en el local: encenderlas durante la carga
+  // inicial obliga a compilar los shaders de toda la escena con todas esas luces
+  // y ahí se produce el tirón del arranque. De noche se prenden con el
+  // interruptor rosa (tecla E al lado, o click sobre el botón).
+  let lightsEnabled = false;
 
   function isEffectivelyVisible(object) {
     for (let current = object; current; current = current.parent) {
@@ -444,6 +449,11 @@ function createWhiteLightSwitch(scene, g) {
     return nearestSwitch(playerPosition, maxDistance) !== null;
   }
 
+  // Aplica el estado apagado inicial sobre las luces que ya construyó el
+  // interior (esta función corre después de buildLocalInterior): apaga las
+  // PointLight, deja los focos como lentes opacas y el botón en posición "off".
+  setEnabled(false);
+
   return {
     root,
     canInteract,
@@ -459,6 +469,12 @@ function createWhiteLightSwitch(scene, g) {
     },
     isEnabled: () => lightsEnabled,
     setEnabled,
+    // Vuelve a imponer el estado actual (encendido o apagado) sobre la escena.
+    // Hace falta después de restaurar el layout del editor: al recrear una
+    // luminaria duplicada, `restoreClones` fuerza visible=true en TODOS los
+    // hijos del clon — incluida su PointLight — así que las copias se
+    // prendían solas aunque el interruptor estuviera en apagado.
+    reapply: () => setEnabled(lightsEnabled),
   };
 }
 

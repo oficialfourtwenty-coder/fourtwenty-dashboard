@@ -12,14 +12,16 @@ producto que no esten escritas aqui.
 - Repositorio: `oficialfourtwenty-coder/fourtwenty-dashboard`.
 - Raiz local de Kusher: `/Users/kusher/Desktop/fourtwenty-dashboard`.
 - Aplicacion: `store-simulator/`.
-- Rama oficial actual: `version-final-final-final`.
+- Rama oficial actual: `version-lunes-3-de-agosto` (etiqueta `lunes-3-de-agosto`).
+  Reemplaza a `version-final-final-final`, que queda como checkpoint anterior y
+  esta incluida entera dentro de la rama nueva.
 - Respaldo anterior a todo el trabajo de esta noche: `version-jueves-30` en
   `234e8e2`. No desarrollar sobre ese respaldo salvo pedido de Kusher.
 - La rama oficial incluye el audio comprimido, el registro dinamico de juegos,
   la mision de la estacion, la auditoria de rendimiento, la Terraza PS3
   aprobada y la esfera optimizada de CULTURA.
 - Para conocer el commit exacto vigente usar
-  `git rev-parse origin/version-final-final-final`; no partir de un hash viejo
+  `git rev-parse origin/version-lunes-3-de-agosto`; no partir de un hash viejo
   escrito en una conversacion.
 - Bitacora detallada vigente:
   `store-simulator/design/ESTADO_ACTUAL_Y_BITACORA.md`.
@@ -40,7 +42,7 @@ Antes de tocar codigo:
 cd /Users/kusher/Desktop/fourtwenty-dashboard
 git status --short --branch
 git fetch origin
-git switch version-final-final-final
+git switch version-lunes-3-de-agosto
 git pull --ff-only
 ```
 
@@ -174,6 +176,20 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 
 - Destinos: 0 Calle Burela, 1 ORIGEN, 2 HOOP SEASON, 3 CULTURA, 4 BOB,
   5 Terraza.
+- Videos de entrada por piso: CULTURA, Terraza y HOOP SEASON (este ultimo
+  sumado el 03/08). Se saltean con `Esc` o click. Para sumar el video de otro
+  piso hay tres lugares y ninguno mas: el `<video>` en `index.html`, su clase
+  en el CSS de `#loading-screen`, y una linea en `ELEVATOR_INTROS` de
+  `main.js`. Los originales sin comprimir van a `store-simulator/source-assets/ui/`
+  (esa carpeta no se publica) y el comprimido a `public/assets/ui/`.
+- Comando de compresion usado (4K HEVC 18.5 MB -> 1080p H.264 2.4 MB). El HEVC
+  NO se reproduce en Chrome/Firefox: siempre convertir a H.264.
+
+  ```bash
+  ffmpeg -i original.mp4 -vf "scale=1920:1080:flags=lanczos" \
+    -c:v libx264 -crf 24 -preset slow -profile:v high -level 4.0 \
+    -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 128k salida.mp4
+  ```
 - Apertura inmediata, entrada, cierre y transicion de aproximadamente 1 s.
 - Cada destino es una escena separada. Solo debe existir la escena activa.
 - Los objetos de cada piso deben seguir siendo editables y movibles.
@@ -203,6 +219,21 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 
 - Luminarias interiores editables con rango 1, 2 o 3.
 - Interruptor rosa apaga/prende luces blancas.
+- **Arrancan APAGADAS a proposito (03/08).** Hay 15 PointLight blancas dentro
+  del local; encenderlas durante la carga inicial obliga a compilar los shaders
+  de toda la escena con esas 15 luces y ahi se producia el tiron del arranque
+  que reporto Kusher. Al abrir el juego quedan 5 luces activas en total en vez
+  de 18. Se prenden a mano con el interruptor rosa (tecla `E` al lado, o click
+  sobre el boton) cuando se quiere ambiente de noche.
+- El estado se reimpone despues de restaurar el layout del editor
+  (`whiteLightSwitch.reapply()` en `applySavedEditorLayout`). Hace falta porque
+  `restoreClones` fuerza `visible = true` en TODOS los hijos de una luminaria
+  duplicada, incluida su PointLight: sin esa llamada las copias se prendian
+  solas aunque el interruptor estuviera apagado.
+- PENDIENTE DE DECISION DE KUSHER: con las 15 prendidas a la vez el interior se
+  quema a blanco (se suman todas en un ambiente chico). No se toco la intensidad
+  ni se borro ninguna luminaria porque son posiciones que guardo Kusher en el
+  editor. Si quiere, se baja `intensity` o se apagan algunas.
 - El neon verde y el texto amarillo `WE ROLL DIFFERENT` permanecen encendidos.
 - Ciclo de sol/luna interpolado por hora, tambien visible en terraza.
 
@@ -412,7 +443,7 @@ checkout Tiendanube hasta completar la prueba y validacion oficial.
 
 ```bash
 cd /Users/kusher/Desktop/fourtwenty-dashboard
-git switch version-final-final-final
+git switch version-lunes-3-de-agosto
 git pull --ff-only
 cd store-simulator
 npm install

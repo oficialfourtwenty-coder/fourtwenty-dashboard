@@ -517,6 +517,9 @@ function applySavedEditorLayout() {
     applyLayout(layout);
     restoreClones(layout);
     streetEditablesDirty = true;
+    // Después de restaurar clones hay que re-imponer el estado del interruptor:
+    // las luminarias duplicadas vuelven con su PointLight encendida.
+    streetWhiteLightSwitch.reapply();
     return layout;
   });
 }
@@ -751,6 +754,7 @@ const loadingBarFill = document.getElementById('loading-bar-fill');
 const bobLoadingVideo = document.getElementById('bob-loading-video');
 const culturaIntroVideo = document.getElementById('cultura-intro-video');
 const terraceIntroVideo = document.getElementById('terrace-intro-video');
+const hoopIntroVideo = document.getElementById('hoop-intro-video');
 const bobLoadingBarFill = document.getElementById('bob-loading-bar-fill');
 const loadingMessage = document.getElementById('loading-message');
 const shirtTip = document.getElementById('shirt-tip');
@@ -758,7 +762,7 @@ const shirtTip = document.getElementById('shirt-tip');
 function finishLoadingUi() {
   loadingEl.classList.remove('show');
   requestAnimationFrame(() => {
-    loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro');
+    loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro', 'hoop-intro');
     bobLoadingVideo.pause();
     bobLoadingVideo.onended = null;
     bobLoadingVideo.onerror = null;
@@ -918,6 +922,14 @@ const SHOP_BOUNDS = {
 const CULTURA_PISO = 5;
 const CULTURA_DESTINATION_ID = 3;
 const TERRACE_DESTINATION_ID = 5;
+const HOOP_DESTINATION_ID = 2;
+// Pisos que abren con video en vez de pantalla de carga. Para sumar otro:
+// grabar el <video> en index.html, su clase en el CSS y agregarlo acá.
+const ELEVATOR_INTROS = {
+  [CULTURA_DESTINATION_ID]: { video: culturaIntroVideo, className: 'cultura-intro' },
+  [TERRACE_DESTINATION_ID]: { video: terraceIntroVideo, className: 'terrace-intro' },
+  [HOOP_DESTINATION_ID]: { video: hoopIntroVideo, className: 'hoop-intro' },
+};
 let culturaIntroPlayed = false;
 
 function startLoading(piso, label) {
@@ -1107,7 +1119,7 @@ function playCulturaIntro(ready, piso) {
 function showElevatorIntroFrame(video, className) {
   if (!video) return false;
   loadingEl.style.backgroundImage = '';
-  loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro');
+  loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro', 'hoop-intro');
   loadingEl.classList.add(className, 'show');
   video.controls = false;
   video.muted = false;
@@ -1315,11 +1327,7 @@ async function travelToDestination(destinationId) {
   try {
     await elevatorPanel.fadeToBlack(350);
     elevatorPanel.hide();
-    const intro = destination.id === CULTURA_DESTINATION_ID
-      ? { video: culturaIntroVideo, className: 'cultura-intro' }
-      : (destination.id === TERRACE_DESTINATION_ID
-        ? { video: terraceIntroVideo, className: 'terrace-intro' }
-        : null);
+    const intro = ELEVATOR_INTROS[destination.id] ?? null;
     const introReady = intro && showElevatorIntroFrame(intro.video, intro.className);
     activateDestination(destination.id);
     await elevatorPanel.fadeFromBlack(introReady ? 250 : 350);
@@ -1328,9 +1336,10 @@ async function travelToDestination(destinationId) {
     }
   } catch (error) {
     console.error('No se pudo completar el viaje en ascensor.', error);
-    loadingEl.classList.remove('show', 'cultura-intro', 'terrace-intro');
+    loadingEl.classList.remove('show', 'cultura-intro', 'terrace-intro', 'hoop-intro');
     culturaIntroVideo?.pause();
     terraceIntroVideo?.pause();
+    hoopIntroVideo?.pause();
     music?.duck(false);
     bob.rig.visible = true;
     bob.shadow.visible = true;
