@@ -1124,6 +1124,7 @@ function showElevatorIntroFrame(video, className) {
   video.controls = false;
   video.muted = false;
   video.volume = 1;
+  video.load();
   try { video.currentTime = 0; } catch {}
   return true;
 }
@@ -1178,7 +1179,7 @@ function playElevatorIntro(video, className) {
     loadingEl.addEventListener('click', skipIntro, true);
     video.onended = finish;
     video.onerror = finish;
-    video.onstalled = finish;
+    video.onstalled = null;
     video.onabort = finish;
     const playPromise = video.play();
     if (playPromise?.catch) playPromise.catch(finish);
