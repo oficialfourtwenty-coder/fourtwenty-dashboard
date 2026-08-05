@@ -19,6 +19,7 @@
 // devuelve `mesh`, asi que `bindProductVisual` funciona igual que antes.
 
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const geometryCache = new Map();
 let fabricNormalCache = null;
@@ -228,8 +229,11 @@ function garmentGeometry(type) {
   if (cacheado) return cacheado;
 
   const perfil = PERFILES[type] ?? PERFILES.tee;
-  const COLUMNAS = 20; // vuelta completa a la seccion
-  const FILAS = 22;    // de hombros a ruedo
+  // 16x18 = 576 triangulos por prenda. Con 20x22 (880) no se notaba diferencia
+  // a la distancia real a la que se mira un perchero, y eran 5.500 triangulos
+  // de mas por piso. Las normales suavizadas hacen el trabajo.
+  const COLUMNAS = 16; // vuelta completa a la seccion
+  const FILAS = 18;    // de hombros a ruedo
   const anchoMaximo = Math.max(...perfil.ancho.map(([, v]) => v));
 
   const posiciones = [];
@@ -281,9 +285,16 @@ function garmentGeometry(type) {
 // Antes las perchas eran `LineSegments`: lineas de 1 pixel que no reciben luz
 // ni proyectan sombra, se veian como alambre de wireframe. Ahora son tubos
 // reales de ~1 cm con material metalico.
-function createHanger(material, ancho = 0.34) {
-  const group = new THREE.Group();
-  group.name = 'Percha';
+// Las 4 piezas (cuerpo, travesaño, gancho y cuello) se fusionan en UNA sola
+// geometria. Si se dejan como 4 mallas, cada percha cuesta 4 llamadas de
+// dibujo: con 9 prendas por perchero son 36 llamadas para un objeto de 30 cm
+// que casi no se ve. Las llamadas de dibujo pesan mas que los triangulos,
+// sobre todo en celular. La geometria se cachea: todas las perchas comparten
+// la misma.
+let hangerGeometryCache = null;
+
+function hangerGeometry(ancho = 0.34) {
+  if (hangerGeometryCache) return hangerGeometryCache;
 
   const cuerpo = new THREE.TubeGeometry(
     new THREE.CatmullRomCurve3([
@@ -293,26 +304,22 @@ function createHanger(material, ancho = 0.34) {
       new THREE.Vector3(ancho / 4, 0.075, 0),
       new THREE.Vector3(ancho / 2, -0.005, 0),
     ]),
-    18, 0.0075, 6, false,
+    12, 0.0075, 5, false,
   );
-  group.add(new THREE.Mesh(cuerpo, material));
 
-  // travesaño de abajo
-  const travesano = new THREE.CylinderGeometry(0.006, 0.006, ancho, 6);
+  const travesano = new THREE.CylinderGeometry(0.006, 0.006, ancho, 5);
   travesano.rotateZ(Math.PI / 2);
   travesano.translate(0, -0.005, 0);
-  group.add(new THREE.Mesh(travesano, material));
 
-  // gancho
-  const gancho = new THREE.TorusGeometry(0.032, 0.0065, 6, 14, Math.PI * 1.55);
+  const gancho = new THREE.TorusGeometry(0.032, 0.0065, 5, 10, Math.PI * 1.55);
   gancho.rotateY(Math.PI / 2);
   gancho.translate(0, 0.137, 0);
-  group.add(new THREE.Mesh(gancho, material));
-  const cuello = new THREE.CylinderGeometry(0.0065, 0.0065, 0.04, 6);
-  cuello.translate(0, 0.118, 0);
-  group.add(new THREE.Mesh(cuello, material));
 
-  return group;
+  const cuello = new THREE.CylinderGeometry(0.0065, 0.0065, 0.04, 5);
+  cuello.translate(0, 0.118, 0);
+
+  hangerGeometryCache = mergeGeometries([cuerpo, travesano, gancho, cuello], false);
+  return hangerGeometryCache;
 }
 
 // ---------------------------------------------------------------------------
@@ -358,7 +365,8 @@ export function createHangingGarment({
   mesh.receiveShadow = true;
   group.add(mesh);
 
-  const hanger = createHanger(hangerMaterial);
+  const hanger = new THREE.Mesh(hangerGeometry(), hangerMaterial);
+  hanger.name = 'Percha';
   hanger.position.y = 0.045;
   group.add(hanger);
 

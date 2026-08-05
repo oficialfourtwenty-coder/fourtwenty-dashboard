@@ -354,6 +354,17 @@ Leer el detalle de intentos y decisiones en
   `bindProductVisual` la malla de tela (`mesh`), no el grupo.
 - Perchas: tubos reales de ~1 cm. Antes eran `LineSegments` de 1 px, que no
   reciben luz ni proyectan sombra y se veian como alambre de wireframe.
+- **Costo medido en ORIGEN (04/08):** de 210 mallas / 77.118 triangulos a
+  228 mallas / 92.130. Son +18 mallas y +15.012 triangulos (+19%) por 18
+  prendas.
+- ⚠️ La primera version costaba +72 mallas porque cada percha eran 4 mallas
+  sueltas (cuerpo, travesaño, gancho, cuello). Se fusionan con
+  `mergeGeometries` en una sola. **En este proyecto las llamadas de dibujo
+  pesan mas que los triangulos**, sobre todo en celular: fusionar bajo el
+  costo un 75% sin cambiar un pixel. Misma logica para cualquier objeto
+  chico que se repita muchas veces.
+- La malla de tela es 16x18 (576 triangulos). Con 20x22 (880) no se ve
+  diferencia a la distancia real a la que se mira un perchero.
 - PENDIENTE en ORIGEN: maniquies, pilas de ropa doblada y exhibidores de pared
   siguen con el estilo viejo. `createFoldedStack` ya existe en `garments.js`
   pero todavia no esta conectado.
