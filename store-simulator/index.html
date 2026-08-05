@@ -40,16 +40,53 @@
     color: #d4af37; letter-spacing: 4px; font-family: 'Courier New', monospace;
   }
   #zone-title.show { opacity: 1; }
+  /* Entrada: primer frame del video de Bobilonia como fondo. Es una webp de
+     70 KB, asi que la pantalla se ve completa al instante; el video (5.6 MB)
+     recien se descarga cuando el jugador aprieta ENTRAR. */
   #start-overlay {
     position: fixed; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 14px;
-    background: #12100bdd; color: #f2e8c9; cursor: pointer;
+    align-items: center; justify-content: center; gap: 18px;
+    color: #f2e8c9; cursor: pointer; z-index: 40;
     font-family: 'Courier New', monospace; text-align: center;
+    background:
+      linear-gradient(rgba(6,8,10,0.32), rgba(6,8,10,0.86)),
+      url('/assets/ui/bobilonia-intro-poster.webp') center / cover no-repeat,
+      #12100b;
   }
-  #start-overlay h1 { font-size: 22px; letter-spacing: 6px; margin: 0; color: #f2e8c9; }
-  #start-overlay p  { font-size: 12px; letter-spacing: 2px; margin: 0; color: #d4af37; }
+  #start-overlay h1 {
+    font-size: clamp(30px, 6vw, 62px); letter-spacing: 10px; margin: 0;
+    color: #f4efe2; font-family: Impact, 'Arial Black', sans-serif;
+    text-shadow: 0 4px 26px rgba(0,0,0,0.85);
+  }
+  #start-overlay p  { font-size: 12px; letter-spacing: 3px; margin: 0; color: #d4af37; }
+  #start-overlay .start-cta {
+    margin-top: 10px; padding: 14px 34px; border: 2px solid #e7b94c;
+    border-radius: 6px; background: rgba(12,14,10,0.6); color: #e7b94c;
+    font-size: clamp(13px, 1.6vw, 17px); font-weight: bold; letter-spacing: 4px;
+    transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+    backdrop-filter: blur(2px);
+  }
+  #start-overlay:hover .start-cta {
+    background: #e7b94c; color: #14170f; transform: translateY(-2px);
+  }
   #start-overlay .blink { animation: blink 1.1s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
+  #loading-screen.bobilonia-intro::before,
+  #loading-screen.bobilonia-intro::after,
+  #loading-screen.bobilonia-intro .loading-hud,
+  #loading-screen.bobilonia-intro .bob-loading-ui { display: none; }
+  #loading-screen.bobilonia-intro { background: #000; cursor: pointer; }
+  #loading-screen.bobilonia-intro #bobilonia-intro-video {
+    display: block; position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; background: #000;
+  }
+  /* aviso de que se puede saltear, discreto abajo */
+  #loading-screen.bobilonia-intro .intro-skip {
+    display: block; position: absolute; right: 22px; bottom: 18px; z-index: 3;
+    font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 2px;
+    color: rgba(255,255,255,0.6); text-shadow: 0 2px 8px #000;
+  }
+  .intro-skip { display: none; }
   /* Pantalla de carga BOBILONIA (selector de colecciones del stock). */
   #loading-screen {
     position: fixed; inset: 0; display: none; z-index: 30;
@@ -350,9 +387,11 @@
   <div id="zone-title"><span id="zone-name"></span><span class="sub">FOURTWENTY STORE</span></div>
 </div>
 <div id="start-overlay">
-  <h1>FOURTWENTY</h1>
-  <p>STORE SIMULATOR — LOCAL EN OBRA</p>
-  <p class="blink">CLICK PARA ENTRAR</p>
+  <h1>BOBILONIA</h1>
+  <p>FOURTWENTY STORE SIMULATOR</p>
+  <!-- sin parpadeo: un boton que se apaga la mitad del tiempo se lee como
+       un error, no como una invitacion -->
+  <div class="start-cta">ENTRAR A BOBILONIA</div>
 </div>
 <div id="loading-screen">
   <video id="bob-loading-video" class="loading-video" playsinline preload="none">
@@ -370,6 +409,11 @@
   <video id="twenty-time-intro-video" class="loading-video" playsinline preload="none">
     <source src="/assets/ui/twenty-time-intro.mp4" type="video/mp4">
   </video>
+  <video id="bobilonia-intro-video" class="loading-video" playsinline preload="none"
+         poster="/assets/ui/bobilonia-intro-poster.webp">
+    <source src="/assets/ui/bobilonia-intro.mp4" type="video/mp4">
+  </video>
+  <span class="intro-skip">ESC · SALTEAR</span>
   <div class="bob-loading-ui">
     <div class="bob-loading-bar"><div id="bob-loading-bar-fill"></div></div>
     <div class="bob-loading-caption">Bobilonia</div>

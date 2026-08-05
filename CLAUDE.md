@@ -186,6 +186,23 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 - Falta el rediseño visual definitivo de artistas, beats, canciones y carrito.
 - No hay un sistema meteorologico completo; existe control horario y de luz.
 
+### Entrada al simulador
+
+- La pantalla de inicio muestra **BOBILONIA** sobre el primer frame del video
+  de intro (`assets/ui/bobilonia-intro-poster.webp`, 70 KB) y un boton
+  **ENTRAR A BOBILONIA**.
+- Al apretarlo se reproduce `assets/ui/bobilonia-intro.mp4` (59 s, 11 MB) y
+  despues arranca el simulador. Se saltea con `Esc` o click.
+- **El video NO entra en la primera carga**: es `preload="none"` y recien se
+  pide al apretar el boton. Antes de eso solo se baja el poster. Verificado
+  midiendo las descargas: el mp4 no aparece hasta el click.
+- Sus 59 segundos son ademas tiempo gratis para que el mundo termine de
+  cargar detras.
+- Comprimido de 24 MB (1080p HEVC .MOV) a 11 MB con
+  `-crf 30 -maxrate 1500k -bufsize 3000k`. Se comparo contra CRF 26 (18 MB)
+  recortando el mismo frame de las dos: no se ve diferencia, ni en el texto
+  chico de la bolsa del delivery. No bajar mas sin volver a comparar.
+
 ### Ascensor y pisos
 
 - Destinos: 0 Calle Burela, 1 ORIGEN, 2 HOOP SEASON, 3 CULTURA, 4 BOB,

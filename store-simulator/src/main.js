@@ -380,7 +380,16 @@ const elevatorPanel = initElevatorPanel({
 });
 
 // SIN pointer lock: el overlay de inicio solo se cierra con el primer click.
-hud.onStart(() => hud.showOverlay(false));
+// ENTRADA: el video de Bobilonia se reproduce al apretar "ENTRAR A BOBILONIA".
+// Recien ahi se descarga (preload="none"); antes solo se ve su primer frame,
+// que es una webp de 70 KB. Sus ~59 segundos son ademas tiempo gratis para que
+// termine de cargar el mundo detras. Se saltea con Esc o click.
+hud.onStart(() => {
+  hud.showOverlay(false);
+  if (!bobiloniaIntroVideo || !showElevatorIntroFrame(bobiloniaIntroVideo, 'bobilonia-intro')) return;
+  loading = true;
+  playElevatorIntro(bobiloniaIntroVideo, 'bobilonia-intro').finally(() => { loading = false; });
+});
 
 // PRODUCTOS: catálogo (productos.json / panel admin) + click en prendas.
 // Capa aislada: raycaster propio contra meshes tageados userData.productSlot.
@@ -780,6 +789,7 @@ const culturaIntroVideo = document.getElementById('cultura-intro-video');
 const terraceIntroVideo = document.getElementById('terrace-intro-video');
 const hoopIntroVideo = document.getElementById('hoop-intro-video');
 const twentyTimeIntroVideo = document.getElementById('twenty-time-intro-video');
+const bobiloniaIntroVideo = document.getElementById('bobilonia-intro-video');
 const bobLoadingBarFill = document.getElementById('bob-loading-bar-fill');
 const loadingMessage = document.getElementById('loading-message');
 const shirtTip = document.getElementById('shirt-tip');
@@ -787,7 +797,7 @@ const shirtTip = document.getElementById('shirt-tip');
 function finishLoadingUi() {
   loadingEl.classList.remove('show');
   requestAnimationFrame(() => {
-    loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro', 'hoop-intro', 'twenty-time-intro');
+    loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro', 'hoop-intro', 'twenty-time-intro', 'bobilonia-intro');
     bobLoadingVideo.pause();
     bobLoadingVideo.onended = null;
     bobLoadingVideo.onerror = null;
@@ -1147,7 +1157,7 @@ function playCulturaIntro(ready, piso) {
 function showElevatorIntroFrame(video, className) {
   if (!video) return false;
   loadingEl.style.backgroundImage = '';
-  loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro', 'hoop-intro', 'twenty-time-intro');
+  loadingEl.classList.remove('hoop-season', 'bob-collection', 'cultura-intro', 'terrace-intro', 'hoop-intro', 'twenty-time-intro', 'bobilonia-intro');
   loadingEl.classList.add(className, 'show');
   video.controls = false;
   video.muted = false;
