@@ -884,22 +884,6 @@ function addOriginDetails(root, mats, theme) {
     root.add(wall);
   }
 
-  const frameTextures = [0, 1, 2].map((index) => (
-    loadArtworkTexture(ORIGIN_ARTWORK_URLS[index]) ?? artworkPlaceholder(index, theme)
-  ));
-  frameTextures.forEach((texture, index) => {
-    createArtworkFrame(root, {
-      texture,
-      x: 6.32,
-      y: 1.82,
-      z: -2.5 + index * 1.65,
-      rotationY: -Math.PI / 2,
-      index,
-      mats,
-      theme,
-    });
-  });
-
   const crates = unit(new THREE.Group(), themedName(theme, 'cajones y latas de pintura'));
   for (let index = 0; index < 5; index++) {
     const crate = roundedBox(0.72, 0.42, 0.55, mats.wood, 0.06, 2);
@@ -1255,6 +1239,40 @@ function addBobDetails(root, mats, theme) {
   root.add(heroToy);
 }
 
+// Los tres cuadros editables existen en TODOS los pisos, no solo en ORIGEN.
+// La pared derecha es la misma en los cinco (el cuarto es compartido), pero
+// cada piso ya tiene cosas colgadas ahi, asi que la posicion en Z se elige por
+// tema para no encimar nada: CULTURA tiene un poster en z=1.15 y BOB una
+// vitrina de juguetes en z=4.8.
+const CUADROS_POR_PISO = {
+  origen: { z0: -2.5, paso: 1.65 },
+  hoop: { z0: -2.5, paso: 1.65 },
+  cultura: { z0: -3.6, paso: 1.4 },   // el poster de la cabina esta en z=1.15
+  bob: { z0: -2.5, paso: 1.65 },      // la vitrina de juguetes esta en z=4.8
+  terraza: { z0: -2.5, paso: 1.65 },
+};
+
+function addArtworkFrames(root, mats, theme) {
+  const config = CUADROS_POR_PISO[theme.key] ?? CUADROS_POR_PISO.origen;
+  for (let index = 0; index < 3; index++) {
+    // ORIGEN ademas puede tomar fotos de su carpeta; los otros pisos arrancan
+    // con el afiche provisional y se personalizan con el editor (tecla T).
+    const texture = (theme.key === 'origen'
+      ? loadArtworkTexture(ORIGIN_ARTWORK_URLS[index])
+      : null) ?? artworkPlaceholder(index, theme);
+    createArtworkFrame(root, {
+      texture,
+      x: 6.32,
+      y: 1.82,
+      z: config.z0 + index * config.paso,
+      rotationY: -Math.PI / 2,
+      index,
+      mats,
+      theme,
+    });
+  }
+}
+
 function addThemeDetails(root, mats, theme) {
   if (theme.key === 'origen') addOriginDetails(root, mats, theme);
   else if (theme.key === 'hoop') addHoopDetails(root, mats, theme);
@@ -1381,6 +1399,7 @@ export function buildPs3FloorScene(scene, {
   createPlanter(root, { x: -5.72, z: -3.85, scale: 0.9, mats, theme });
   createPlanter(root, { x: 5.72, z: -3.85, scale: 0.9, mats, theme });
   addThemeDetails(root, mats, theme);
+  addArtworkFrames(root, mats, theme);
 
   root.traverse((object) => {
     if (!object.isMesh && !object.isInstancedMesh) return;

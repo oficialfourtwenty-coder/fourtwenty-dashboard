@@ -240,6 +240,17 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 
 ### Cuadros editables por piso
 
+- **Los tres cuadros existen en los CINCO pisos** (04/08). Antes se creaban
+  dentro de `addOriginDetails`, o sea solo en ORIGEN; ahora los crea
+  `addArtworkFrames`, que llama `buildPs3FloorScene` para todos.
+- La pared derecha es la misma en los cinco, pero cada piso ya tiene cosas
+  colgadas ahi, asi que la posicion en Z se elige por tema en
+  `CUADROS_POR_PISO`: CULTURA tiene un poster en z=1.15 y BOB una vitrina de
+  juguetes en z=4.8, por eso sus cuadros van corridos.
+- ORIGEN ademas sigue pudiendo tomar fotos de su carpeta; los otros pisos
+  arrancan con el afiche provisional y se personalizan con el editor.
+- Cada piso guarda sus diseños por separado: la clave incluye el nombre del
+  piso (`HOOP SEASON PS3 · cuadro reemplazable 1`).
 - Cada piso tiene cuadros que Kusher puede diseñar desde adentro del juego:
   abrir el editor de mundo con `T` y clickear un cuadro. A la izquierda se abre
   **EDITOR DE CUADRO** (`src/ui/frameEditor.js`).
@@ -358,7 +369,10 @@ Leer el detalle de intentos y decisiones en
 
 - El objetivo visual son prendas y maniquies del nivel de una tienda de ropa
   de GTA V, no siluetas planas permanentes.
-- **Prendas colgadas de los percheros: hechas (04/08), `src/world/garments.js`.**
+- **Prendas colgadas de los percheros: hechas (04/08) y en los CINCO pisos**
+  (`createRetailRail` lo llama el constructor comun `buildPs3FloorScene`, asi
+  que ORIGEN, HOOP, CULTURA, BOB y TERRAZA las tienen todas).
+  `src/world/garments.js`.
   Antes cada prenda era un `PlaneGeometry` con textura recortada: una
   calcomania que desaparecia de costado. Ahora es una malla parametrica: la
   seccion transversal cambia de ancho y de fondo segun la altura, con ondas
