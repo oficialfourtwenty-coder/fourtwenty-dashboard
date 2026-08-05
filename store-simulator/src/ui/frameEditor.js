@@ -31,6 +31,21 @@ export function esCuadro(objeto) {
   return RE_CUADRO.test(objeto?.name ?? '');
 }
 
+/**
+ * Devuelve el grupo del cuadro a partir de CUALQUIER pieza suya.
+ *
+ * Hace falta porque el editor de mundo registra como editable cada pieza por
+ * separado: al clickear un cuadro se selecciona el vidrio o un perfil de
+ * bronce, no el grupo. Sin subir por los padres, el panel no se abria nunca al
+ * clickear — solo al elegir el cuadro desde la lista.
+ */
+export function cuadroDesde(objeto) {
+  for (let actual = objeto; actual; actual = actual.parent) {
+    if (esCuadro(actual)) return actual;
+  }
+  return null;
+}
+
 // La cara del cuadro es el unico hijo con PlaneGeometry: el resto son el marco
 // y los perfiles de bronce.
 function caraDelCuadro(grupo) {

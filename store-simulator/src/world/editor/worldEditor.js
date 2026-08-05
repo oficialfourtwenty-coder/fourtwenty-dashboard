@@ -3,7 +3,7 @@ import { TransformControls } from 'three/examples/jsm/controls/TransformControls
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { addFurnitureItem } from '../furniture.js';
 import { createEditorPanel } from './editorPanel.js';
-import { createFrameEditor, esCuadro } from '../../ui/frameEditor.js';
+import { createFrameEditor, cuadroDesde } from '../../ui/frameEditor.js';
 import { ADDABLE_MODELS, searchableModelPresets } from './modelCatalog.js';
 import {
   applyLayout,
@@ -143,11 +143,13 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
 
   // Abre o cierra el editor de cuadros segun lo que este seleccionado.
   function sincronizarEditorDeCuadro(entry) {
-    const objeto = entry?.object3D ?? null;
-    if (objeto && esCuadro(objeto)) {
-      if (cuadroSeleccionado !== objeto) {
-        cuadroSeleccionado = objeto;
-        frameEditor.abrir(objeto.name);
+    // Se busca hacia arriba: al clickear se selecciona la pieza tocada (el
+    // vidrio, un perfil), no el grupo del cuadro.
+    const cuadro = cuadroDesde(entry?.object3D ?? null);
+    if (cuadro) {
+      if (cuadroSeleccionado !== cuadro) {
+        cuadroSeleccionado = cuadro;
+        frameEditor.abrir(cuadro.name);
       }
       return;
     }
