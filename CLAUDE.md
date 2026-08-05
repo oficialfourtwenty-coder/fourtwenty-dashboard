@@ -316,6 +316,26 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
   `GAP_STUB` mueve la geometria que se construye, pero los objetos que Kusher
   ya movio con `T` vuelven a su posicion guardada al aplicar el layout. Si algo
   no se movio despues de tocar una medida, es por esto.
+- ⚠️ **Un objeto bajo solo cuenta como escalon si ademas se puede SUBIR a el.**
+  Antes `isSteppable` miraba solo el alto propio: cualquier pieza fina que
+  quedara a media altura (una tapa de mesa, un estante, una tabla escalada con
+  `T`) se clasificaba como escalon y se atravesaba caminando. Era el caso del
+  mostrador del local. Ahora tambien se mira el borde de abajo contra el suelo:
+  si esta mas arriba de `STEP_UP_ALLOWANCE`, no es escalon, es obstaculo.
+- Junto con eso se bajo el minimo de altura para generar caja (de 0.2 m a
+  0.03): existia para que una pieza fina no se volviera pared, pero dejaba sin
+  colision justo a las tablas flotando. Lo bajo se sigue pisando via
+  `isSteppable`, y solo entran objetos marcados como solidos, asi que una
+  manija o un tirador siguen sin bloquear. Medido en el local: el mostrador
+  paso de 2 a 6 cajas (tiene 6 piezas).
+- **Borrar u ocultar SI saca la colision.** Verificado leyendo la lista de
+  cajas: al ocultar el mostrador pasa de 6 a 0. Si algo invisible frena, es una
+  copia que sigue visible, no un fantasma — se la encuentra con `K`.
+- ⚠️ **Como probar una colision de verdad:** leer la lista con
+  `window.__colliders()`. Mover a BOB seteando `bob.position` TELETRANSPORTA
+  (saltea la colision) y el teclado no llega en el navegador headless de las
+  pruebas, asi que esos dos metodos dan resultados falsos. Se perdio tiempo el
+  05/08 confiando en ellos.
 - **Tecla `K`: visor de colisiones.** Dibuja en rojo todas las cajas de
   colision activas y, al pararse contra una, un cartel arriba dice el NOMBRE
   del objeto que frena (en verde). Con ese nombre se lo busca en la lista del
@@ -407,6 +427,9 @@ Leer el detalle de intentos y decisiones en
 
 - El objetivo visual son prendas y maniquies del nivel de una tienda de ropa
   de GTA V, no siluetas planas permanentes.
+- **Tambien en el LOCAL de Burela (05/08):** las 4 del barral izquierdo y las
+  5 del Stock selector del fondo usan la misma malla. El barral izquierdo se
+  mira justo de costado al entrar, que es donde el plano viejo desaparecia.
 - **Prendas colgadas de los percheros: hechas (04/08) y en los CINCO pisos**
   (`createRetailRail` lo llama el constructor comun `buildPs3FloorScene`, asi
   que ORIGEN, HOOP, CULTURA, BOB y TERRAZA las tienen todas).

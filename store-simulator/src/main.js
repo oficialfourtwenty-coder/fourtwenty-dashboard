@@ -110,8 +110,26 @@ function localHeightOf(object) {
   return height;
 }
 
+// Un objeto bajo solo cuenta como escalon si ademas se puede SUBIR a el desde
+// el piso. Sin esa segunda condicion, cualquier pieza fina que Kusher deje a
+// media altura con el editor —una tabla, una tapa de mesa, un estante— se
+// clasificaba como escalon y se podia atravesar caminando: era el caso del
+// mostrador del local, escalado fino y flotando a 1.4 m.
+// La medida se toma del borde de ABAJO en el mundo: si esta mas arriba de lo
+// que BOB puede levantar el pie, no es un escalon, es un obstaculo.
+const stepFloatBox = new THREE.Box3();
+
 function isSteppable(object) {
-  return object.userData?.walkStep === true || localHeightOf(object) <= STEP_MAX_HEIGHT;
+  if (object.userData?.walkStep === true) return true;      // tageado a mano: manda
+  if (localHeightOf(object) > STEP_MAX_HEIGHT) return false;
+  object.updateWorldMatrix(true, false);
+  stepFloatBox.setFromObject(object);
+  if (stepFloatBox.isEmpty()) return true;
+  const suelo = streetSampleGround(
+    (stepFloatBox.min.x + stepFloatBox.max.x) / 2,
+    (stepFloatBox.min.z + stepFloatBox.max.z) / 2,
+  );
+  return stepFloatBox.min.y - suelo <= STEP_UP_ALLOWANCE;
 }
 
 // Altura de piso agregada de los "escalones" bajo (x,z): el más alto que esté
@@ -507,6 +525,11 @@ window.__phone = phone;
 window.__mobileControls = mobileControls;
 window.__whiteLightSwitch = streetWhiteLightSwitch;
 window.__minigameManager = minigameManager;
+// Lista de cajas de colision activas. Sirve para verificar desde afuera si un
+// mueble frena de verdad, sin depender de poder caminar: mover a BOB a mano
+// teletransporta (saltea la colision) y el teclado no siempre llega en pruebas
+// automatizadas, asi que mirar los datos es lo unico confiable.
+window.__colliders = () => currentPlayerColliders();
 
 registerEditableObject({
   id: 'elevator-street',
@@ -642,7 +665,15 @@ function appendEditableColliders(targetColliders, targetSteppables) {
     setVisibleColliderBox(editableColliderBox, object);
     if (editableColliderBox.isEmpty()) continue;
     editableColliderBox.getSize(editableColliderSize);
-    if (editableColliderSize.y < 0.2) continue;
+    // Antes se descartaba todo lo de menos de 20 cm de alto para que una pieza
+    // fina no se volviera pared. Ya no hace falta y ademas tapaba un agujero:
+    // una tabla fina A MEDIA ALTURA (una tapa de mesa, un estante) no la agarra
+    // isSteppable —porque no se puede subir a ella— y tampoco entraba aca, asi
+    // que quedaba sin colision y se atravesaba caminando. Lo bajo se sigue
+    // pisando via isSteppable; lo que llega hasta aca es alto o esta flotando,
+    // y en los dos casos tiene que frenar. Solo entran objetos marcados como
+    // solidos, asi que una manija o un tirador siguen sin bloquear.
+    if (editableColliderSize.y < 0.03) continue;
 
     targetColliders.push({
       id: entry.id,

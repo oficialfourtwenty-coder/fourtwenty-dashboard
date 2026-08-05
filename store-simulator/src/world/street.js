@@ -16,6 +16,7 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 import { towerFacade, veredaTile, hexPaver, greenShutter, whiteFloor, lightWood } from './textures.js';
 import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
+import { createHangingGarment } from './garments.js';
 import { bindProductVisual } from './productVisuals.js';
 import { createMoonDisc, createSunDisc } from './dayNightCycle.js';
 
@@ -702,15 +703,27 @@ function buildRealInterior(scene, g, colliders, H) {
     { color: 0x141414, tipo: 'tee' }, { color: 0xf5f2ea, tipo: 'tee' },
     { color: 0xf5f2ea, tipo: 'tee' }, { color: 0x2a3550, tipo: 'hoodie' },
   ];
+  // Prendas con volumen real, las mismas que los percheros de los pisos
+  // (world/garments.js). Antes eran planos con textura recortada: de costado
+  // desaparecian, y este barral se mira justo de costado al entrar al local.
   shirtDefs.forEach((d, i) => {
-    const tex = garmentTexture(d.color, d.tipo);
-    const s = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.62),
-      new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide }));
-    s.name = `Interior local · prenda colgada izquierda ${i + 1}`;
-    bindProductVisual(s, { piso: 'local', index: i }, tex); // clickeable como producto
-    s.position.set(-2.72 + i * 0.02, PLAT + 1.58, -6.85 + i * 0.42);
-    s.rotation.y = Math.PI / 2;
-    g.add(s);
+    const { group: prenda, mesh } = createHangingGarment({
+      color: d.color,
+      type: d.tipo,
+      hangerMaterial: chrome,
+      variacion: i,
+    });
+    prenda.name = `Interior local · prenda colgada izquierda ${i + 1}`;
+    mesh.name = `${prenda.name} · tela`;
+    // La foto real del producto entra por la malla de tela, no por el grupo.
+    bindProductVisual(mesh, { piso: 'local', index: i }, mesh.material.map);
+    // Cuelga del barral (y = PLAT + 1.95) mirando hacia el centro del local.
+    prenda.position.set(-2.74, PLAT + 1.9, -6.85 + i * 0.42);
+    // += y no =: createHangingGarment ya le puso un giro chico distinto a cada
+    // una para que el barral no se lea como un sello repetido.
+    prenda.rotation.y += Math.PI / 2;
+    prenda.scale.setScalar(0.88);
+    g.add(prenda);
   });
 
   // — Exhibidor del jean blanco (adelante-izquierda, como la foto) —
@@ -845,16 +858,22 @@ function buildStockSelector(scene, g) {
   const selectors = [];
   defs.forEach((d, i) => {
     const x = GAP_X0 + 0.32 + i * ((W - 0.64) / (defs.length - 1));
-    const tex = garmentTexture(d.color, d.tipo, d.cara ? { monkeyFace: true } : {});
-    const shirt = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.46, 0.55),
-      new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.4, roughness: 0.9, side: THREE.DoubleSide, emissive: 0x111111 }),
-    );
-    shirt.name = `Stock selector · remera ${d.label}`;
-    shirt.position.set(x, PLAT + 1.72, zShirt);
-    shirt.userData = { piso: d.piso, label: d.label, baseScale: 1 };
-    g.add(shirt);
-    selectors.push(shirt);
+    // Volumen real, igual que los percheros de los pisos (world/garments.js).
+    const { group: prenda, mesh: shirt } = createHangingGarment({
+      color: d.color,
+      type: d.tipo,
+      monkeyFace: Boolean(d.cara),
+      hangerMaterial: mat(0xb9bcc2, 0.3, 0.9),
+      variacion: i,
+    });
+    prenda.name = `Stock selector · remera ${d.label}`;
+    shirt.name = `${prenda.name} · tela`;
+    // Cuelga del barral cromado, que esta en PLAT + 2.05.
+    prenda.position.set(x, PLAT + 2.0, zShirt);
+    prenda.scale.setScalar(0.8);
+    prenda.userData = { piso: d.piso, label: d.label, baseScale: 0.8 };
+    g.add(prenda);
+    selectors.push(prenda);
     // etiqueta chica bajo cada remera
     const c = document.createElement('canvas'); c.width = 256; c.height = 48;
     const ctx = c.getContext('2d');
