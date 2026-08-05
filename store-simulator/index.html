@@ -40,9 +40,12 @@
     color: #d4af37; letter-spacing: 4px; font-family: 'Courier New', monospace;
   }
   #zone-title.show { opacity: 1; }
-  /* Entrada: primer frame del video de Bobilonia como fondo. Es una webp de
-     70 KB, asi que la pantalla se ve completa al instante; el video (5.6 MB)
-     recien se descarga cuando el jugador aprieta ENTRAR. */
+  /* Entrada: primer frame del video de Bobilonia como fondo. Es un JPG de
+     ~150 KB, asi que la pantalla se ve completa al instante; el video (10 MB)
+     recien se descarga cuando el jugador aprieta ENTRAR.
+     JPG y no WebP a proposito: el ffmpeg que trae Homebrew en la Mac de
+     Kusher viene sin el codificador de WebP, y el poster lo regenera el
+     cada vez que cambia el video. */
   #start-overlay {
     position: fixed; inset: 0; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 18px;
@@ -50,7 +53,7 @@
     font-family: 'Courier New', monospace; text-align: center;
     background:
       linear-gradient(rgba(6,8,10,0.32), rgba(6,8,10,0.86)),
-      url('/assets/ui/bobilonia-intro-poster.webp') center / cover no-repeat,
+      url('/assets/ui/bobilonia-intro-poster.jpg') center / cover no-repeat,
       #12100b;
   }
   #start-overlay h1 {
@@ -410,7 +413,7 @@
     <source src="/assets/ui/twenty-time-intro.mp4" type="video/mp4">
   </video>
   <video id="bobilonia-intro-video" class="loading-video" playsinline preload="none"
-         poster="/assets/ui/bobilonia-intro-poster.webp">
+         poster="/assets/ui/bobilonia-intro-poster.jpg">
     <source src="/assets/ui/bobilonia-intro.mp4" type="video/mp4">
   </video>
   <span class="intro-skip">ESC · SALTEAR</span>
