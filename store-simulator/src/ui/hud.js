@@ -27,6 +27,10 @@ export class Hud {
 
   showOverlay(show) {
     this.overlay.style.display = show ? 'flex' : 'none';
+    // Marca en el body para que el CSS pueda esconder cosas (el Banapod)
+    // mientras se ve la portada. No alcanza con mirar #start-overlay desde
+    // CSS: el nodo siempre existe, solo se le cambia el display.
+    document.body.classList.toggle('ft-portada', Boolean(show));
   }
 
   // Cartel de zona estilo GTA V: aparece al entrar a un piso y se desvanece.

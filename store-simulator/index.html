@@ -83,13 +83,31 @@
     display: block; position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover; background: #000;
   }
-  /* aviso de que se puede saltear, discreto abajo */
-  #loading-screen.bobilonia-intro .intro-skip {
+  /* "SKIPEAR VIDEO": chiquito abajo a la derecha, en TODOS los videos.
+     No es un boton: cualquier click sobre la pantalla ya saltea, asi que
+     alcanza con avisar que se puede. */
+  .intro-skip { display: none; }
+  #loading-screen.show.bobilonia-intro .intro-skip,
+  #loading-screen.show.cultura-intro .intro-skip,
+  #loading-screen.show.terrace-intro .intro-skip,
+  #loading-screen.show.hoop-intro .intro-skip,
+  #loading-screen.show.twenty-time-intro .intro-skip,
+  #loading-screen.show.bob-collection .intro-skip {
     display: block; position: absolute; right: 22px; bottom: 18px; z-index: 3;
     font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 2px;
-    color: rgba(255,255,255,0.6); text-shadow: 0 2px 8px #000;
+    color: rgba(255,255,255,0.62); text-shadow: 0 2px 8px #000;
+    padding: 5px 10px; border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 4px; background: rgba(0,0,0,0.35);
   }
-  .intro-skip { display: none; }
+
+  /* El Banapod queda tapando los videos: se esconde mientras haya una
+     pantalla de carga o un video en pantalla. Se hace con :has() y no con
+     una clase en el body para que valga para CUALQUIER video, incluidos los
+     que se sumen despues, sin tener que acordarse de tocar el JS. */
+  body:has(#loading-screen.show) #ft-phone,
+  body.ft-portada #ft-phone {
+    display: none !important;
+  }
   /* Pantalla de carga BOBILONIA (selector de colecciones del stock). */
   #loading-screen {
     position: fixed; inset: 0; display: none; z-index: 30;
@@ -381,7 +399,7 @@
   #elevator-test-state { max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>
 </head>
-<body>
+<body class="ft-portada">
 <canvas id="game"></canvas>
 <div id="hud">
   <div class="hud-title">FOURTWENTY</div>
@@ -416,7 +434,7 @@
          poster="/assets/ui/bobilonia-intro-poster.jpg">
     <source src="/assets/ui/bobilonia-intro.mp4" type="video/mp4">
   </video>
-  <span class="intro-skip">ESC · SALTEAR</span>
+  <span class="intro-skip">SKIPEAR VIDEO · ESC</span>
   <div class="bob-loading-ui">
     <div class="bob-loading-bar"><div id="bob-loading-bar-fill"></div></div>
     <div class="bob-loading-caption">Bobilonia</div>
