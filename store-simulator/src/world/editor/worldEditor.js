@@ -3,6 +3,7 @@ import { TransformControls } from 'three/examples/jsm/controls/TransformControls
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { addFurnitureItem } from '../furniture.js';
 import { createEditorPanel } from './editorPanel.js';
+import { createFrameEditor, esCuadro } from '../../ui/frameEditor.js';
 import { ADDABLE_MODELS, searchableModelPresets } from './modelCatalog.js';
 import {
   applyLayout,
@@ -111,6 +112,51 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   orbit.maxDistance = 80;
 
   let saveTimer = 0;
+
+  // Editor de cuadros: aparece solo cuando el objeto seleccionado ES un cuadro.
+  // Se cuelga de la seleccion del editor de mundo en vez de tener su propia
+  // tecla o su propia interaccion, porque "cambiar como se ve el mundo" ya es
+  // lo que hace la tecla T y no hacia falta un modo nuevo que aprender.
+  let cuadroSeleccionado = null;
+  const frameEditor = createFrameEditor({
+    onAplicar: (_nombre, canvas) => {
+      if (!cuadroSeleccionado) return;
+      aplicarCanvasACuadro(cuadroSeleccionado, canvas);
+      notifyWorldChanged();
+    },
+  });
+
+  function aplicarCanvasACuadro(grupo, canvas) {
+    let cara = null;
+    grupo.traverse((o) => {
+      if (!cara && o.isMesh && o.geometry?.type === 'PlaneGeometry') cara = o;
+    });
+    if (!cara) return;
+    const anterior = cara.material.map;
+    const textura = new THREE.CanvasTexture(canvas);
+    textura.colorSpace = THREE.SRGBColorSpace;
+    textura.anisotropy = 4;
+    cara.material.map = textura;
+    cara.material.needsUpdate = true;
+    if (anterior && anterior !== textura) anterior.dispose?.();
+  }
+
+  // Abre o cierra el editor de cuadros segun lo que este seleccionado.
+  function sincronizarEditorDeCuadro(entry) {
+    const objeto = entry?.object3D ?? null;
+    if (objeto && esCuadro(objeto)) {
+      if (cuadroSeleccionado !== objeto) {
+        cuadroSeleccionado = objeto;
+        frameEditor.abrir(objeto.name);
+      }
+      return;
+    }
+    if (cuadroSeleccionado) {
+      cuadroSeleccionado = null;
+      frameEditor.cerrar();
+    }
+  }
+
   const panel = createEditorPanel({
     modelPresets: searchableModelPresets(),
     onMode: setMode,
@@ -153,6 +199,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       selected ? getEditableColorInfo(selected.id) : null,
       selected ? getEditableLightRangeInfo(selected.id) : null,
     );
+    sincronizarEditorDeCuadro(selected);
   }
 
   // refresco liviano (mientras se arrastra el gizmo): no reconstruye la lista
@@ -163,6 +210,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       selected ? getEditableColorInfo(selected.id) : null,
       selected ? getEditableLightRangeInfo(selected.id) : null,
     );
+    sincronizarEditorDeCuadro(selected);
   }
 
   function setStatus(message) {
@@ -206,6 +254,8 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       setStatus('Edit Mode activo. Click izq: orbitar / seleccionar · click der: pan · rueda: zoom.');
     } else {
       deselect();
+      frameEditor.cerrar();
+      cuadroSeleccionado = null;
       orbit.enabled = false;
       if (player?.rig && typeof player.modelYaw === 'number') {
         player.modelYaw = player.rig.rotation.y;

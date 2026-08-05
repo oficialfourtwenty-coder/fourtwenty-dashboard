@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { addEditableHdriSphere } from './bincoShopTrial.js';
 import { createHangingGarment } from './garments.js';
+import { applySavedFrameDesigns } from '../ui/frameEditor.js';
 import { bindProductVisual } from './productVisuals.js';
 
 const MATERIAL_ROOT = 'assets/materials/terrace-ps3';
@@ -1394,6 +1395,10 @@ export function buildPs3FloorScene(scene, {
 
   scene.add(root);
   addLights(scene, shadows, mats, theme);
+  // Diseños de cuadros hechos con el editor (tecla T). Es asincrono porque una
+  // foto guardada tarda en decodificar; mientras tanto el cuadro muestra el
+  // afiche provisional, que es exactamente lo que corresponde.
+  applySavedFrameDesigns(scene);
   return { root, colliders: [] };
 }
 

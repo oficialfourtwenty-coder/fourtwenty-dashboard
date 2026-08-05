@@ -238,6 +238,30 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 - Error conocido aceptado: dos puntos inferiores derechos del laberinto pueden
   quedar sin comerse. No corregir sin nuevo pedido.
 
+### Cuadros editables por piso
+
+- Cada piso tiene cuadros que Kusher puede diseñar desde adentro del juego:
+  abrir el editor de mundo con `T` y clickear un cuadro. A la izquierda se abre
+  **EDITOR DE CUADRO** (`src/ui/frameEditor.js`).
+- Permite titulo, subtitulo, 4 tipografias, tamaño y color por texto,
+  alineacion, altura del bloque, logo (FT / FOURTWENTY / hoja), color de fondo,
+  y subir una foto real con zoom y encuadre. Todo se ve en vivo.
+- El cuadro no muestra un archivo: muestra un `<canvas>` que se dibuja por
+  capas (fondo -> foto -> logo -> textos) y se vuelca a una `CanvasTexture`.
+- Los diseños se guardan **por NOMBRE del cuadro** (`ORIGEN PS3 · cuadro
+  reemplazable 1`), no por id del editor. El nombre lo pone el constructor del
+  piso y no cambia; el id se genera al registrar la escena y puede correrse si
+  cambia el orden de creacion.
+- `applySavedFrameDesigns(scene)` se llama al final de `buildPs3FloorScene`:
+  sin eso los cuadros vuelven al afiche provisional cada vez que se entra.
+- Guardar deja el diseño en el navegador. Para que llegue al repo hay que usar
+  **EXPORTAR JSON** y pasarlo, igual que el layout del editor de mundo.
+- Las fotos se achican a 1280 px y se guardan como dataURL. El limite real es
+  el de localStorage (~5 MB en total): por eso se achican, y si no entra el
+  panel avisa en vez de fallar en silencio.
+- Sigue funcionando la via vieja: dejar imagenes en
+  `src/assets/artworks/pisos/1-origen/` (ver su LEEME).
+
 ### Twenty Time
 
 - El puesto de Twenty Time permite abrir un lector de revista.
@@ -465,6 +489,8 @@ checkout Tiendanube hasta completar la prueba y validacion oficial.
   (`buildPs3FloorScene`). De este archivo solo sigue viva la esfera 360.
 - `src/world/garments.js`: prendas colgadas con volumen real (malla parametrica
   + normal map de trama) y perchas. Ver seccion de prendas mas abajo.
+- `src/ui/frameEditor.js`: editor de cuadros (texto, tipografia, logo y foto)
+  que se abre al seleccionar un cuadro con `T`. Ver mas abajo.
 - `src/world/floorEnvironmentCatalog.js`: imagen 360 elegida por carpeta/piso.
 - `src/world/dayNightCycle.js`: hora, paleta, sol y luna.
 - `src/world/editor/`: editor, catalogo, seleccion y persistencia.
