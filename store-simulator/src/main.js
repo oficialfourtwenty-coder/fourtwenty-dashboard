@@ -35,6 +35,7 @@ import { buildCars } from './world/cars.js';
 import { createMusicPlayer } from './audio/musicPlayer.js';
 import { initCarInteract } from './interact/carInteract.js';
 import { initTwentyTimeInteract } from './interact/twentyTimeInteract.js';
+import { initFrameInteract } from './interact/frameInteract.js';
 import { createCartStore } from './data/cartStore.js';
 import { createPhone } from './ui/phone.js';
 import { initMobileControls } from './ui/mobileControls.js';
@@ -394,6 +395,18 @@ const productClicks = initProductClicks({
     || !!phone?.isOpen() || !!adminPanel?.isOpen() || isPackageMissionOpen(),
   onAddToCart: (product) => cart.add(product),
 });
+// CUADROS: click derecho sobre un cuadro abre su editor de diseño (texto,
+// tipografia, logo y foto). Capa aparte, ver src/interact/frameInteract.js
+const frameInteract = initFrameInteract({
+  canvas,
+  camera,
+  getScene: () => activeScene,
+  isBlocked: () => loading || elevatorPanel.isVisible()
+    || minigameManager.isOpen() || !!twentyTimeInteract?.isOpen() || !!carInteract?.isRadioOpen()
+    || !!phone?.isOpen() || !!adminPanel?.isOpen() || isPackageMissionOpen(),
+});
+window.__frameInteract = frameInteract;
+
 // ADMIN de prendas (tecla P; en build online requiere ?admin=1): carga manual
 // de imagen/nombre/precio/descripcion/link por percha — ver src/ui/adminPanel.js
 adminPanel = initAdminPanel({

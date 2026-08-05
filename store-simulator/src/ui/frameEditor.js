@@ -258,7 +258,9 @@ const CSS = `
   box-shadow: 0 12px 40px rgba(0,0,0,0.6);
 }
 #${PANEL_ID}.is-open { display: block; }
-#${PANEL_ID} h3 { margin: 0 0 2px; font-size: 13px; letter-spacing: 2px; color: #e7b94c; }
+#${PANEL_ID} h3 { margin: 0 0 2px; font-size: 13px; letter-spacing: 2px; color: #e7b94c;
+  display: flex; justify-content: space-between; align-items: center; }
+#${PANEL_ID} h3 button { padding: 1px 7px; font-size: 13px; line-height: 1; }
 #${PANEL_ID} .ft-sub { margin: 0 0 10px; opacity: 0.6; font-size: 10px; }
 #${PANEL_ID} label { display: block; margin: 9px 0 3px; opacity: 0.75; font-size: 10px; letter-spacing: 1px; }
 #${PANEL_ID} input[type="text"], #${PANEL_ID} select {
@@ -326,13 +328,15 @@ export async function applySavedFrameDesigns(scene) {
 }
 
 /**
- * Editor de cuadros.
+ * Editor de cuadros. Es UNO SOLO para todo el juego (ver `getFrameEditor`):
+ * si hubiera dos instancias, el click derecho y el editor de mundo abririan
+ * cada uno su panel y se pisarian.
  *
- * @param {object} opciones
- * @param {Function} opciones.onAplicar  recibe (frameId, canvas) cada vez que
- *        el diseño cambia; el mundo se encarga de volcarlo a la textura.
+ * Guarda el Object3D del cuadro y le aplica la textura el mismo, en vez de
+ * avisarle a quien lo abrio. Asi los dos caminos que lo abren no repiten la
+ * logica de encontrar la cara y liberar la textura vieja.
  */
-export function createFrameEditor({ onAplicar } = {}) {
+export function createFrameEditor() {
   inyectarCss();
 
   const panel = document.createElement('div');
@@ -345,7 +349,8 @@ export function createFrameEditor({ onAplicar } = {}) {
   const ctx = canvas.getContext('2d');
 
   let todos = leerGuardado();
-  let frameIdActual = null;
+  let cuadroActual = null;   // Object3D del cuadro abierto
+  let frameIdActual = null;  // su nombre, que es la clave de guardado
   let diseño = diseñoPorDefecto();
   let imagenFoto = null;
 
@@ -356,7 +361,7 @@ export function createFrameEditor({ onAplicar } = {}) {
 
   function render() {
     panel.innerHTML = `
-      <h3>EDITOR DE CUADRO</h3>
+      <h3>EDITOR DE CUADRO <button data-accion="cerrar" title="Cerrar (Esc)">✕</button></h3>
       <p class="ft-sub">${frameIdActual ?? ''}</p>
 
       <label>TITULO</label>
@@ -441,7 +446,7 @@ export function createFrameEditor({ onAplicar } = {}) {
 
   function repintar() {
     dibujarCuadro(ctx, diseño, imagenFoto);
-    if (frameIdActual) onAplicar?.(frameIdActual, canvas);
+    if (cuadroActual) volcarCanvas(cuadroActual, canvas);
   }
 
   function cargarFoto(dataUrl) {
@@ -489,7 +494,11 @@ export function createFrameEditor({ onAplicar } = {}) {
   panel.addEventListener('click', async (event) => {
     const accion = event.target.dataset.accion;
     if (!accion) return;
-    if (accion === 'guardar') {
+    if (accion === 'cerrar') {
+      panel.classList.remove('is-open');
+      cuadroActual = null;
+      frameIdActual = null;
+    } else if (accion === 'guardar') {
       todos[frameIdActual] = diseño;
       if (guardar(todos)) avisar('Guardado en esta computadora.');
       else avisar('No entro: el navegador se quedo sin espacio. Usa una foto mas chica.', true);
@@ -519,8 +528,10 @@ export function createFrameEditor({ onAplicar } = {}) {
   render();
 
   return {
-    /** Abre el editor para un cuadro concreto. */
-    async abrir(frameId) {
+    /** Abre el editor para un cuadro (se le pasa el Object3D del grupo). */
+    async abrir(cuadro) {
+      cuadroActual = cuadro;
+      const frameId = cuadro?.name ?? null;
       frameIdActual = frameId;
       diseño = { ...diseñoPorDefecto(), ...(todos[frameId] ?? {}) };
       await cargarFoto(diseño.foto);
@@ -530,8 +541,11 @@ export function createFrameEditor({ onAplicar } = {}) {
     },
     cerrar() {
       panel.classList.remove('is-open');
+      cuadroActual = null;
       frameIdActual = null;
     },
+    /** El cuadro que esta abierto ahora, o null. */
+    cuadroAbierto: () => cuadroActual,
     isOpen: () => panel.classList.contains('is-open'),
     /** Diseños guardados, para que el mundo los aplique al construir el piso. */
     guardados: () => leerGuardado(),
@@ -556,4 +570,18 @@ export function createFrameEditor({ onAplicar } = {}) {
       return c;
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// Instancia unica
+// ---------------------------------------------------------------------------
+
+// El editor se abre por dos caminos (click derecho en el juego, y seleccionar
+// el cuadro con la tecla T). Si cada uno creara su instancia habria dos
+// paneles distintos peleandose la pantalla, asi que se comparte uno solo.
+let instancia = null;
+
+export function getFrameEditor() {
+  if (!instancia) instancia = createFrameEditor();
+  return instancia;
 }

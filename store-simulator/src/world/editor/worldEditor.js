@@ -3,7 +3,7 @@ import { TransformControls } from 'three/examples/jsm/controls/TransformControls
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { addFurnitureItem } from '../furniture.js';
 import { createEditorPanel } from './editorPanel.js';
-import { createFrameEditor, cuadroDesde } from '../../ui/frameEditor.js';
+import { cuadroDesde, getFrameEditor } from '../../ui/frameEditor.js';
 import { ADDABLE_MODELS, searchableModelPresets } from './modelCatalog.js';
 import {
   applyLayout,
@@ -117,29 +117,9 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   // Se cuelga de la seleccion del editor de mundo en vez de tener su propia
   // tecla o su propia interaccion, porque "cambiar como se ve el mundo" ya es
   // lo que hace la tecla T y no hacia falta un modo nuevo que aprender.
+  // Mismo editor que abre el click derecho: uno solo para todo el juego.
   let cuadroSeleccionado = null;
-  const frameEditor = createFrameEditor({
-    onAplicar: (_nombre, canvas) => {
-      if (!cuadroSeleccionado) return;
-      aplicarCanvasACuadro(cuadroSeleccionado, canvas);
-      notifyWorldChanged();
-    },
-  });
-
-  function aplicarCanvasACuadro(grupo, canvas) {
-    let cara = null;
-    grupo.traverse((o) => {
-      if (!cara && o.isMesh && o.geometry?.type === 'PlaneGeometry') cara = o;
-    });
-    if (!cara) return;
-    const anterior = cara.material.map;
-    const textura = new THREE.CanvasTexture(canvas);
-    textura.colorSpace = THREE.SRGBColorSpace;
-    textura.anisotropy = 4;
-    cara.material.map = textura;
-    cara.material.needsUpdate = true;
-    if (anterior && anterior !== textura) anterior.dispose?.();
-  }
+  const frameEditor = getFrameEditor();
 
   // Abre o cierra el editor de cuadros segun lo que este seleccionado.
   function sincronizarEditorDeCuadro(entry) {
@@ -149,7 +129,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     if (cuadro) {
       if (cuadroSeleccionado !== cuadro) {
         cuadroSeleccionado = cuadro;
-        frameEditor.abrir(cuadro.name);
+        frameEditor.abrir(cuadro);
       }
       return;
     }
