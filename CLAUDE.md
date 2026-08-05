@@ -334,6 +334,29 @@ Leer el detalle de intentos y decisiones en
 
 - El objetivo visual son prendas y maniquies del nivel de una tienda de ropa
   de GTA V, no siluetas planas permanentes.
+- **Prendas colgadas de los percheros: hechas (04/08), `src/world/garments.js`.**
+  Antes cada prenda era un `PlaneGeometry` con textura recortada: una
+  calcomania que desaparecia de costado. Ahora es una malla parametrica: la
+  seccion transversal cambia de ancho y de fondo segun la altura, con ondas
+  verticales que crecen hacia el ruedo. ~600 triangulos, geometria cacheada por
+  tipo (tee / hoodie / jersey), asi que las 9 prendas de un perchero comparten
+  una sola en memoria.
+- Lo que hace que se lean las MANGAS no es el ancho sino el contraste de fondo:
+  manga ancha y plana (0.042) contra pecho angosto y profundo (0.10), mas un
+  sombreado de manga dibujado en las esquinas de arriba de la textura. Subiendo
+  solo el ancho sale un cono, no una manga.
+- La textura de la prenda es OPACA a proposito (`garmentSkinTexture`). La vieja
+  `garmentTexture` de `gallery.js` tenia fondo transparente porque el recorte
+  ERA la forma; con malla 3D ese recorte le come las mangas al modelo. Por eso
+  el material se crea con `alphaTest: 0` — `bindProductVisual` copia ese valor
+  como fallback.
+- La foto real del producto sigue entrando igual: se le pasa a
+  `bindProductVisual` la malla de tela (`mesh`), no el grupo.
+- Perchas: tubos reales de ~1 cm. Antes eran `LineSegments` de 1 px, que no
+  reciben luz ni proyectan sombra y se veian como alambre de wireframe.
+- PENDIENTE en ORIGEN: maniquies, pilas de ropa doblada y exhibidores de pared
+  siguen con el estilo viejo. `createFoldedStack` ya existe en `garments.js`
+  pero todavia no esta conectado.
 - Separar prendas por zonas: cabeza, torso, piernas y calzado.
 - Una prenda nueva debe compartir el rig definitivo de BOB o usar un maniqui
   independiente optimizado.
@@ -427,6 +450,10 @@ checkout Tiendanube hasta completar la prueba y validacion oficial.
 - `src/world/building.js`: construccion interior anterior y luces.
 - `src/world/destinationScenes.js`: escenas aisladas de pisos y terraza.
 - `src/world/bincoShopTrial.js`: base comercial detallada compartida y esfera.
+  Ojo: los cinco pisos ya NO se construyen aca, sino en `terracePs3Trial.js`
+  (`buildPs3FloorScene`). De este archivo solo sigue viva la esfera 360.
+- `src/world/garments.js`: prendas colgadas con volumen real (malla parametrica
+  + normal map de trama) y perchas. Ver seccion de prendas mas abajo.
 - `src/world/floorEnvironmentCatalog.js`: imagen 360 elegida por carpeta/piso.
 - `src/world/dayNightCycle.js`: hora, paleta, sol y luna.
 - `src/world/editor/`: editor, catalogo, seleccion y persistencia.

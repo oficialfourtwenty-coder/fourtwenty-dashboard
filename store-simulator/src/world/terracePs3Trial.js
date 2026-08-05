@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { addEditableHdriSphere } from './bincoShopTrial.js';
-import { garmentTexture } from './gallery.js';
+import { createHangingGarment } from './garments.js';
 import { bindProductVisual } from './productVisuals.js';
 
 const MATERIAL_ROOT = 'assets/materials/terrace-ps3';
@@ -484,22 +484,6 @@ function addCeilingServices(root, mats, theme) {
   root.add(services);
 }
 
-function createHangerLines(count, spacing, material) {
-  const positions = [];
-  for (let index = 0; index < count; index++) {
-    const x = (index - (count - 1) / 2) * spacing;
-    positions.push(
-      x - 0.22, -0.14, 0, x, 0.02, 0,
-      x, 0.02, 0, x + 0.22, -0.14, 0,
-      x + 0.22, -0.14, 0, x - 0.22, -0.14, 0,
-      x, 0.02, 0, x, 0.12, 0,
-    );
-  }
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  return new THREE.LineSegments(geometry, material);
-}
-
 function createRetailRail(root, {
   x,
   z,
@@ -524,11 +508,6 @@ function createRetailRail(root, {
       rail.add(wheel);
     }
   }
-  const hangerMaterial = new THREE.LineBasicMaterial({ color: 0xaaaead });
-  const hangers = createHangerLines(9, 0.27, hangerMaterial);
-  hangers.position.y = 1.48;
-  rail.add(hangers);
-
   const garmentColors = [
     theme.darkHex, 0xd5cfbd, theme.secondaryHex,
     0x1c2425, theme.accentHex, 0x405e62,
@@ -537,26 +516,23 @@ function createRetailRail(root, {
   for (let index = 0; index < 9; index++) {
     const color = garmentColors[index];
     const type = theme.key === 'hoop' ? 'jersey' : (index % 3 === 0 ? 'hoodie' : 'tee');
-    const fallback = garmentTexture(color, type, {
-      number: theme.key === 'hoop' ? [4, 2, 0, 20, 24, 7, 13, 91, 5][index] : undefined,
+    // Prenda con volumen real (ver world/garments.js). La percha viene adentro:
+    // antes era una linea de 1px aparte, por eso ya no se dibujan con
+    // createHangerLines.
+    const { group: garment, mesh } = createHangingGarment({
+      color,
+      type,
+      number: theme.key === 'hoop' ? [4, 2, 0, 20, 24, 7, 13, 91, 5][index] : null,
       monkeyFace: theme.key === 'bob',
+      hangerMaterial: mats.wornSteel,
+      variacion: index,
     });
-    const garment = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.7, 0.88),
-      new THREE.MeshStandardMaterial({
-        map: fallback,
-        transparent: true,
-        alphaTest: 0.3,
-        roughness: 0.96,
-        side: THREE.DoubleSide,
-      }),
-    );
-    garment.position.set((index - 4) * 0.27, 1.11, 0.018 + (index % 3) * 0.012);
-    garment.rotation.set(0, (index - 4) * 0.018, (index % 2 ? 1 : -1) * 0.018);
-    garment.scale.setScalar(0.86 + (index % 3) * 0.035);
+    garment.position.set((index - 4) * 0.27, 1.54, 0);
     garment.name = `${name} · producto ${index + 1}`;
+    mesh.name = `${garment.name} · tela`;
     if (Number.isFinite(productFloor)) {
-      bindProductVisual(garment, { piso: productFloor, index: (slotOffset + index) % 4 }, fallback);
+      // La foto real del producto entra por la malla de tela, no por el grupo.
+      bindProductVisual(mesh, { piso: productFloor, index: (slotOffset + index) % 4 }, mesh.material.map);
     }
     rail.add(garment);
   }
