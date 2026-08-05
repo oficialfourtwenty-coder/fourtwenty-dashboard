@@ -731,6 +731,82 @@ function rebuildStreetEditableColliders() {
   streetEditablesDirty = false;
 }
 
+// ---- Ver las colisiones (tecla K) ------------------------------------------
+// Una caja de colision no se ve, asi que cuando algo frena a BOB y no hay nada
+// en pantalla no queda forma de saber QUE lo frena. Con K se dibujan todas las
+// cajas activas en rojo y, al pararse adentro de una, el cartel de arriba dice
+// el nombre del objeto que la genera. Con ese nombre se lo busca en la lista
+// del editor (tecla T) y se lo borra o se lo mueve.
+const colliderDebug = new THREE.Group();
+colliderDebug.name = 'DEBUG colisiones';
+colliderDebug.userData.editorHelper = true; // que el editor no lo registre
+colliderDebug.visible = false;
+let colliderDebugScene = null;
+
+const colliderDebugMat = new THREE.LineBasicMaterial({ color: 0xff2d2d });
+const colliderDebugHit = new THREE.LineBasicMaterial({ color: 0x39ff6a });
+
+// Cartel propio y no el HUD: el bucle del juego reescribe el texto del HUD
+// cada frame y se comia el aviso.
+const colliderDebugLabel = document.createElement('div');
+colliderDebugLabel.style.cssText = `
+  position: fixed; top: 44px; left: 50%; transform: translateX(-50%);
+  z-index: 95; display: none; max-width: 92vw; text-align: center;
+  font-family: 'Courier New', monospace; font-size: 12px; letter-spacing: 1px;
+  color: #ffdede; background: rgba(20,4,4,0.88); border: 1px solid #ff2d2d;
+  border-radius: 4px; padding: 7px 14px; pointer-events: none;
+`;
+document.body.appendChild(colliderDebugLabel);
+
+function refreshColliderDebug() {
+  for (const hijo of [...colliderDebug.children]) {
+    hijo.geometry?.dispose?.();
+    colliderDebug.remove(hijo);
+  }
+  const cajas = currentPlayerColliders();
+  const p = bob.position;
+  const dentro = [];
+  for (const c of cajas) {
+    const geo = new THREE.BoxGeometry(c.maxX - c.minX, c.maxY - c.minY, c.maxZ - c.minZ);
+    const pisando = p.x > c.minX - 0.35 && p.x < c.maxX + 0.35
+      && p.z > c.minZ - 0.35 && p.z < c.maxZ + 0.35
+      && p.y + 1.6 > c.minY && p.y < c.maxY;
+    if (pisando) dentro.push(c.source ?? c.id ?? 'sin nombre');
+    const caja = new THREE.LineSegments(
+      new THREE.EdgesGeometry(geo),
+      pisando ? colliderDebugHit : colliderDebugMat,
+    );
+    geo.dispose();
+    caja.position.set((c.minX + c.maxX) / 2, (c.minY + c.maxY) / 2, (c.minZ + c.maxZ) / 2);
+    colliderDebug.add(caja);
+  }
+  colliderDebugLabel.style.display = 'block';
+  colliderDebugLabel.innerHTML = dentro.length
+    ? `TE FRENA: <b style="color:#8dff9f">${dentro.slice(0, 2).join(' + ')}</b>`
+    : `VISOR DE COLISIONES · ${cajas.length} cajas · caminá contra la pared invisible · K para salir`;
+}
+
+function toggleColliderDebug() {
+  colliderDebug.visible = !colliderDebug.visible;
+  if (colliderDebugScene !== activeScene) {
+    colliderDebug.removeFromParent();
+    activeScene.add(colliderDebug);
+    colliderDebugScene = activeScene;
+  }
+  if (colliderDebug.visible) {
+    refreshColliderDebug();
+  } else {
+    colliderDebugLabel.style.display = 'none';
+    lastZone = null; // que el HUD vuelva a su texto normal
+  }
+}
+
+window.addEventListener('keydown', (event) => {
+  if (event.code !== 'KeyK' || event.metaKey || event.ctrlKey || event.altKey) return;
+  if (event.target?.matches?.('input, textarea, select, [contenteditable="true"]')) return;
+  toggleColliderDebug();
+});
+
 function currentPlayerColliders() {
   if (isPackageMissionOpen()) {
     streetRuntimeColliders.length = 0;
@@ -1651,6 +1727,10 @@ renderer.setAnimationLoop(() => {
   }
   activePackageMission?.update(dt);
   carInteract?.update(dt); // puertas de los autos + BOB pegado a la butaca
+  // El visor de colisiones se refresca mientras esta prendido: las cajas se
+  // mueven con el editor y hay que ver cual te esta frenando ahora, no cual te
+  // frenaba cuando apretaste K.
+  if (colliderDebug.visible) refreshColliderDebug();
   activeElevator?.update(dt, bob.position);
   const mobileSuppressed = loading || elevatorPanel.isVisible() || editorActive
     || minigameOpen || twentyTimeOpen || packageMissionOpen

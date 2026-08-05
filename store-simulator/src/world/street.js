@@ -61,7 +61,14 @@ const LOCAL_HALF = 3.0;     // medio-ancho del interior (x -3..3)
 export const SPAWN = new THREE.Vector3(0, 0, 6); // vereda, mirando a la galería (-Z)
 
 // Hueco atrás-derecha del local: futuro acceso al shopping (ver nota final).
-const GAP_X0 = 0.4, GAP_X1 = LOCAL_HALF, GAP_STUB = 2;
+// GAP_STUB es la profundidad del hueco del fondo (el "pocket" detras de la
+// pared trasera, donde vive el Stock selector). Paso de 2 a 6 m por pedido de
+// Kusher: con 2 m el hueco estaba lleno de punta a punta con las remeras y no
+// quedaba lugar para entrar caminando ni para poner el ascensor. Ahora es un
+// pasillo: las remeras siguen adelante y atras queda espacio libre.
+// Ojo: MAP_MIN_Z se calcula a partir de esto, asi que el limite del mundo se
+// corre solo y no hay que tocarlo aparte.
+const GAP_X0 = 0.4, GAP_X1 = LOCAL_HALF, GAP_STUB = 6;
 const MAP_HALF_X = FRENTE * MAP_SCALE;
 const MAP_MIN_Z = (Z_LOCAL_BACK - GAP_STUB) * MAP_SCALE;
 const MAP_MAX_Z = (Z_CURB + 1) * MAP_SCALE;

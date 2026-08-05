@@ -304,6 +304,27 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 - Hay cuatro dobles paginas provisionales y animacion al cambiar de pagina.
 - Imagenes y contenido se reemplazaran por la edicion final de FOURTWENTY.
 
+### Fondo del local y visor de colisiones
+
+- El hueco del fondo (detras de la pared trasera, donde vive el Stock
+  selector) pasa de 2 a **6 m de profundidad** (`GAP_STUB` en `street.js`).
+  Con 2 m estaba lleno de punta a punta con las remeras y no habia lugar para
+  entrar caminando ni para poner el ascensor. Ahora es un pasillo: las remeras
+  quedan adelante y atras hay espacio libre. `MAP_MIN_Z` se calcula a partir
+  de `GAP_STUB`, asi que el limite del mundo se corre solo.
+- ⚠️ **Las posiciones guardadas en el layout mandan sobre el codigo.** Cambiar
+  `GAP_STUB` mueve la geometria que se construye, pero los objetos que Kusher
+  ya movio con `T` vuelven a su posicion guardada al aplicar el layout. Si algo
+  no se movio despues de tocar una medida, es por esto.
+- **Tecla `K`: visor de colisiones.** Dibuja en rojo todas las cajas de
+  colision activas y, al pararse contra una, un cartel arriba dice el NOMBRE
+  del objeto que frena (en verde). Con ese nombre se lo busca en la lista del
+  editor (`T`) y se lo borra o se lo mueve.
+- Para que sirve: una caja de colision no se ve. Cuando algo frena a BOB y en
+  pantalla no hay nada, sin esto no habia forma de saber que era. La causa
+  tipica son **copias hechas con el editor** que quedaron invisibles o
+  superpuestas: el visor las muestra por nombre, incluidas las `(copia)`.
+
 ### Local y luces
 
 - Luminarias interiores editables con rango 1, 2 o 3.
