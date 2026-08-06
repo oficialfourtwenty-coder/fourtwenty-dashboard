@@ -135,19 +135,40 @@ function aplicarDiseño(prenda, diseño) {
 function quitarFondoPlano(ctx, W, H, tolerancia) {
   const imagen = ctx.getImageData(0, 0, W, H);
   const d = imagen.data;
-  const en = (x, y) => (y * W + x) * 4;
-
-  const esquinas = [[0, 0], [W - 1, 0], [0, H - 1], [W - 1, H - 1]].map(([x, y]) => {
-    const i = en(x, y);
-    return [d[i], d[i + 1], d[i + 2], d[i + 3]];
-  });
-  // ya viene recortada: si las esquinas son transparentes no hay nada que hacer
-  if (esquinas.every((c) => c[3] < 8)) return { quitado: false, motivo: 'ya tenia el fondo recortado' };
-
-  const base = esquinas[0];
   const parecido = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]);
-  if (esquinas.some((c) => parecido(c, base) > 60)) {
-    return { quitado: false, motivo: 'la imagen no tiene un fondo plano' };
+
+  // Color de fondo = el MAS REPETIDO de todo el marco de la imagen, no el de
+  // una esquina. Un JPG comprimido tiene la esquina con artefactos y el diseño
+  // puede tocar un borde; mirando el marco entero eso deja de importar.
+  const marco = [];
+  const paso = Math.max(1, Math.round(Math.min(W, H) / 120));
+  for (let x = 0; x < W; x += paso) { marco.push((0 * W + x) * 4, ((H - 1) * W + x) * 4); }
+  for (let y = 0; y < H; y += paso) { marco.push((y * W + 0) * 4, (y * W + (W - 1)) * 4); }
+
+  if (marco.every((i) => d[i + 3] < 8)) {
+    return { quitado: false, motivo: 'ya tenia el fondo recortado' };
+  }
+
+  // Se agrupan los colores del marco en cubos de 16 y gana el cubo mas poblado.
+  const cubos = new Map();
+  for (const i of marco) {
+    if (d[i + 3] < 8) continue;
+    const clave = `${d[i] >> 4}_${d[i + 1] >> 4}_${d[i + 2] >> 4}`;
+    const c = cubos.get(clave) ?? { n: 0, r: 0, g: 0, b: 0 };
+    c.n++; c.r += d[i]; c.g += d[i + 1]; c.b += d[i + 2];
+    cubos.set(clave, c);
+  }
+  let ganador = null;
+  for (const c of cubos.values()) if (!ganador || c.n > ganador.n) ganador = c;
+  if (!ganador) return { quitado: false, motivo: 'no se pudo leer el borde' };
+  const base = [ganador.r / ganador.n, ganador.g / ganador.n, ganador.b / ganador.n];
+
+  // Si el color dominante no cubre ni la mitad del marco, no hay fondo plano:
+  // es una foto y recortarla la dejaria agujereada.
+  const validos = marco.filter((i) => d[i + 3] >= 8);
+  const cerca = validos.filter((i) => parecido([d[i], d[i + 1], d[i + 2]], base) <= tolerancia * 3).length;
+  if (cerca / Math.max(1, validos.length) < 0.5) {
+    return { quitado: false, motivo: 'la imagen no tiene un fondo plano (parece una foto)' };
   }
 
   const umbral = tolerancia * 3; // suma de las 3 diferencias de canal
@@ -172,8 +193,10 @@ function quitarFondoPlano(ctx, W, H, tolerancia) {
     pila.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1);
   }
 
-  // Pluma de 1 px: sin esto el borde queda dentado como un recorte de tijera.
-  // Baja el alfa a la mitad en los pixeles que todavia tienen vecino borrado.
+  // Se come 1 pixel del borde en vez de suavizarlo. El material de la estampa
+  // usa alphaTest sin mezcla alfa (ver garmentPrints.js): un pixel a medio alfa
+  // ahi se dibuja OPACO, o sea que un borde suavizado dejaba justamente un halo
+  // blanco alrededor del diseño. Erosionar no deja halo.
   const copiaAlfa = new Uint8ClampedArray(W * H);
   for (let p = 0; p < W * H; p++) copiaAlfa[p] = d[p * 4 + 3];
   for (let y = 1; y < H - 1; y++) {
@@ -182,7 +205,7 @@ function quitarFondoPlano(ctx, W, H, tolerancia) {
       if (copiaAlfa[p] < 8) continue;
       const vecinoVacio = copiaAlfa[p - 1] < 8 || copiaAlfa[p + 1] < 8
         || copiaAlfa[p - W] < 8 || copiaAlfa[p + W] < 8;
-      if (vecinoVacio) d[p * 4 + 3] = 128;
+      if (vecinoVacio) d[p * 4 + 3] = 0;
     }
   }
 
@@ -190,10 +213,41 @@ function quitarFondoPlano(ctx, W, H, tolerancia) {
   return { quitado: borrados > 0, borrados, motivo: '' };
 }
 
+/**
+ * Caja que ocupa realmente el diseño, ignorando el margen vacio.
+ *
+ * ESTO ES LO QUE HACE QUE LA ESTAMPA SE VEA GRANDE. Un archivo de diseño suele
+ * venir con el logo chico en el medio de un lienzo grande: si se apoya tal cual,
+ * la estampa entra entera pero el dibujo ocupa un cuarto del pecho y no hay
+ * control que lo agrande, porque lo que se estira es el margen vacio.
+ */
+function cajaDelDiseño(ctx, W, H) {
+  const d = ctx.getImageData(0, 0, W, H).data;
+  let x0 = W, y0 = H, x1 = -1, y1 = -1;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (d[(y * W + x) * 4 + 3] < 8) continue;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+    }
+  }
+  if (x1 < 0) return null;             // no quedo nada visible
+  // 1% de aire alrededor para que el recorte no muerda el trazo del borde
+  const aire = Math.round(Math.max(W, H) * 0.01);
+  return {
+    x: Math.max(0, x0 - aire),
+    y: Math.max(0, y0 - aire),
+    w: Math.min(W, x1 + aire) - Math.max(0, x0 - aire) + 1,
+    h: Math.min(H, y1 + aire) - Math.max(0, y0 - aire) + 1,
+  };
+}
+
 // PNG y no JPEG: una estampa necesita fondo transparente, y el JPEG no tiene
 // canal alfa — el logo llegaria con un rectangulo blanco atras. El precio es
 // que pesa mas, por eso se limita a 1024 px.
-function leerImagen(file, { maxLado = 1024, quitarFondo = true, tolerancia = 32 } = {}) {
+function leerImagen(file, { maxLado = 1024, quitarFondo = true, tolerancia = 45 } = {}) {
   return new Promise((resolve, reject) => {
     const lector = new FileReader();
     lector.onerror = () => reject(new Error('no se pudo leer el archivo'));
@@ -207,14 +261,35 @@ function leerImagen(file, { maxLado = 1024, quitarFondo = true, tolerancia = 32 
         canvas.height = Math.max(1, Math.round(img.height * escala));
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
         const recorte = quitarFondo
           ? quitarFondoPlano(ctx, canvas.width, canvas.height, tolerancia)
           : { quitado: false, motivo: '' };
+
+        // Recorte del margen vacio. Solo tiene sentido si algo quedo
+        // transparente: en una imagen opaca de punta a punta la caja es la
+        // imagen entera y no cambia nada.
+        let salida = canvas;
+        let margen = null;
+        const caja = cajaDelDiseño(ctx, canvas.width, canvas.height);
+        if (caja && (caja.w < canvas.width * 0.98 || caja.h < canvas.height * 0.98)) {
+          const recortada = document.createElement('canvas');
+          recortada.width = caja.w;
+          recortada.height = caja.h;
+          recortada.getContext('2d')
+            .drawImage(canvas, caja.x, caja.y, caja.w, caja.h, 0, 0, caja.w, caja.h);
+          salida = recortada;
+          margen = Math.round((1 - (caja.w * caja.h) / (canvas.width * canvas.height)) * 100);
+        }
+
         resolve({
-          url: canvas.toDataURL('image/png'),
-          ancho: img.width,
-          alto: img.height,
+          url: salida.toDataURL('image/png'),
+          // La proporcion que importa es la de lo RECORTADO, no la del archivo:
+          // es la que hace que la estampa no entre deformada.
+          ancho: salida.width,
+          alto: salida.height,
           recorte,
+          margen,
         });
       };
       img.src = lector.result;
@@ -266,6 +341,19 @@ const CSS = `
 #${PANEL_ID} .ft-valor { float: right; opacity: 0.9; }
 #${PANEL_ID} label.ft-check { display: flex; align-items: center; gap: 6px; opacity: 0.95; margin-top: 10px; }
 #${PANEL_ID} label.ft-check input { margin: 0; }
+#${PANEL_ID} .ft-previa {
+  margin-top: 8px; height: 110px; border: 1px solid #3a3f36; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  /* damero: lo que se ve a cuadros es lo que quedo transparente */
+  background-color: #2a2e26;
+  background-image:
+    linear-gradient(45deg, #3a3f36 25%, transparent 25%, transparent 75%, #3a3f36 75%),
+    linear-gradient(45deg, #3a3f36 25%, transparent 25%, transparent 75%, #3a3f36 75%);
+  background-size: 14px 14px;
+  background-position: 0 0, 7px 7px;
+}
+#${PANEL_ID} .ft-previa img { max-width: 100%; max-height: 100%; display: block; }
+#${PANEL_ID} .ft-previa span { font-size: 10px; opacity: 0.5; letter-spacing: 1px; }
 #${PANEL_ID} hr { border: none; border-top: 1px solid #2c3128; margin: 12px 0 2px; }
 `;
 
@@ -307,7 +395,10 @@ export function createGarmentEditor() {
       <input type="checkbox" data-ft="sinFondo" checked> QUITARLE EL FONDO
     </label>
     <label>FUERZA DEL RECORTE <span class="ft-valor" data-ft="vTol"></span></label>
-    <input type="range" min="8" max="90" step="2" value="32" data-ft="tolerancia">
+    <input type="range" min="8" max="120" step="2" value="45" data-ft="tolerancia">
+    <!-- El damero de fondo deja ver que quedo transparente y que no. Sin esto
+         hay que salir a mirar la prenda para saber si el recorte funciono. -->
+    <div class="ft-previa" data-ft="previa"><span>SIN IMAGEN</span></div>
 
     <label>ANCHO <span class="ft-valor" data-ft="vAncho"></span></label>
     <input type="range" min="4" max="84" step="1" data-ft="ancho">
@@ -406,6 +497,7 @@ export function createGarmentEditor() {
       lado = boton.dataset.lado;
       proporcion = null;
       pintarControles();
+      mostrarPrevia(ladoActual()?.imagen ?? null);
       avisar(lado === 'dorso' ? 'Estas editando la ESPALDA de la prenda.' : '');
     });
   }
@@ -414,10 +506,17 @@ export function createGarmentEditor() {
   // mueve la fuerza del recorte, sin obligarlo a elegirlo de nuevo.
   let archivoOriginal = null;
 
+  function mostrarPrevia(url) {
+    const caja = el('previa');
+    caja.innerHTML = url
+      ? `<img src="${url}" alt="">`
+      : '<span>SIN IMAGEN</span>';
+  }
+
   async function procesarImagen() {
     if (!archivoOriginal || !diseño) return;
     try {
-      const { url, ancho, alto, recorte } = await leerImagen(archivoOriginal, {
+      const { url, ancho, alto, recorte, margen } = await leerImagen(archivoOriginal, {
         quitarFondo: el('sinFondo').checked,
         tolerancia: Number(el('tolerancia').value),
       });
@@ -431,8 +530,12 @@ export function createGarmentEditor() {
       // del "FT" de relleno.
       refrescarTodo();
       pintarControles();
+      mostrarPrevia(url);
+
       if (el('sinFondo').checked && !recorte.quitado) {
-        avisar(`Estampa cargada, pero NO se le quito el fondo: ${recorte.motivo}.`);
+        avisar(`Cargada, pero NO se le quito el fondo: ${recorte.motivo}. Proba subir FUERZA DEL RECORTE.`);
+      } else if (margen) {
+        avisar(`Fondo quitado y ${margen}% de margen vacio recortado: el diseño ahora ocupa la estampa entera.`);
       } else {
         avisar('Estampa cargada. Ajustala y apreta GUARDAR.');
       }
@@ -493,6 +596,7 @@ export function createGarmentEditor() {
     ladoActual().imagen = null;
     refrescarTodo();
     pintarControles();
+    mostrarPrevia(null);
     avisar('Estampa quitada. Apreta GUARDAR para que quede asi.');
   });
 
@@ -530,6 +634,7 @@ export function createGarmentEditor() {
       el('nombre').textContent = prenda.name || '(prenda sin nombre)';
       el('archivo').value = '';
       archivoOriginal = null;
+      mostrarPrevia(diseño[lado]?.imagen ?? null);
       pintarControles();
       avisar(prenda.name
         ? ''
