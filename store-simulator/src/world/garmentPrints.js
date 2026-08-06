@@ -22,7 +22,9 @@
 // pegada encima, que es exactamente lo que no queremos.
 
 import * as THREE from 'three';
-import { garmentHeight, garmentSurfacePoint } from './garments.js';
+import { getProductoForSlot, onProductosChange } from '../data/productosStore.js';
+import { garmentHeight, garmentSurfacePoint, restyleGarment } from './garments.js';
+import { unbindProductVisuals } from './productVisuals.js';
 
 // Angulos de la seccion: PI/2 mira al frente (+Z), 3PI/2 al dorso (-Z).
 const ANGULO_LADO = { frente: Math.PI / 2, dorso: (Math.PI * 3) / 2 };
@@ -228,3 +230,82 @@ export function applyGarmentPrint(contenedor, type, lado, config) {
   contenedor.add(mesh);
   return mesh;
 }
+
+// ---------------------------------------------------------------------------
+// Estampa que viene del catalogo de productos
+// ---------------------------------------------------------------------------
+//
+// El camino largo (click derecho -> subir imagen -> guardar) sirve para probar
+// y ajustar, pero no escala: son 99 prendas en el mundo y el navegador aguanta
+// unas 20 imagenes guardadas. Aca la estampa sale del producto que la prenda ya
+// tiene asignado (`userData.productSlot`), cargado desde el panel de admin
+// (tecla P) y guardado como archivo en public/assets/estampas/.
+//
+// Asi cargar un producto viste la prenda Y la deja comprable de una sola vez,
+// en lugar de ser dos trabajos separados.
+
+const conProducto = new Set();
+
+function estampaDelProducto(slot) {
+  const info = getProductoForSlot(slot.piso, slot.index);
+  const ruta = info?.producto?.estampa;
+  return typeof ruta === 'string' && ruta.trim() ? ruta.trim() : '';
+}
+
+function refrescarPrenda(grupo) {
+  const datos = grupo.userData?.garment;
+  const slot = grupo.userData?.productSlot;
+  if (!datos || !slot) return;
+
+  // Una estampa cargada a mano con el editor MANDA sobre la del producto: si
+  // Kusher se tomo el trabajo de ubicarla, no se la puede pisar el catalogo.
+  if (datos.print?.frente?.imagen && datos.print.frente.manual) return;
+
+  const ruta = estampaDelProducto(slot);
+  const actual = grupo.userData.estampaProducto;
+  if (ruta === actual) return;
+  grupo.userData.estampaProducto = ruta;
+
+  if (ruta) {
+    // Con estampa propia, el cuerpo vuelve a ser TELA. Sin esto se veian dos
+    // cosas encimadas: `bindProductVisual` estira la foto del producto —que es
+    // la foto de una remera— sobre la malla de la remera, y encima iba el
+    // diseño. La foto del producto sigue viva para el panel y el carrito.
+    unbindProductVisuals(grupo);
+    restyleGarment(grupo, { type: datos.type, color: datos.color, limpia: true });
+  }
+
+  const config = { ...PRINT_DEFAULTS, ...(datos.print?.frente ?? {}), imagen: ruta || null };
+  datos.print = { ...(datos.print ?? {}), frente: config };
+  applyGarmentPrint(grupo, datos.type, 'frente', config);
+}
+
+/**
+ * Deja una prenda enganchada al catalogo: toma la estampa de su producto y se
+ * actualiza sola cuando Kusher carga o cambia el diseño en el panel de admin.
+ */
+export function bindGarmentToProduct(grupo, slot) {
+  if (!grupo?.userData?.garment || !slot) return grupo;
+  grupo.userData.productSlot = slot;
+  conProducto.add(grupo);
+  refrescarPrenda(grupo);
+  return grupo;
+}
+
+/** Suelta las prendas de una escena que se destruye (cambio de piso). Sin esto
+ * el Set las retiene y la escena vieja nunca se libera de memoria. */
+export function unbindGarmentsFromProducts(raiz) {
+  raiz?.traverse?.((o) => conProducto.delete(o));
+}
+
+let pendiente = 0;
+onProductosChange(() => {
+  if (pendiente) return;
+  pendiente = requestAnimationFrame(() => {
+    pendiente = 0;
+    for (const grupo of conProducto) {
+      if (!grupo.parent) { conProducto.delete(grupo); continue; }
+      refrescarPrenda(grupo);
+    }
+  });
+});

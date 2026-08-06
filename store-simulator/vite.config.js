@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import { buildMusicManifest } from './tools/musicManifest.mjs';
@@ -14,6 +14,7 @@ import { buildMusicManifest } from './tools/musicManifest.mjs';
 // estático y el admin guarda en localStorage + Exportar.
 function adminApiPlugin() {
   const productosPath = resolve(import.meta.dirname, 'public/assets/data/productos.json');
+  const estampasDir = resolve(import.meta.dirname, 'public/assets/estampas');
 
   const readBody = (req) => new Promise((resolveBody, reject) => {
     let body = '';
@@ -63,6 +64,38 @@ function adminApiPlugin() {
             return json(res, 200, { ok: true });
           }
           json(res, 405, { error: 'método no soportado' });
+        } catch (e) {
+          json(res, 500, { error: String(e.message ?? e) });
+        }
+      });
+
+      // POST /api/estampa → guarda el diseño de una prenda como PNG REAL en
+      // public/assets/estampas/ y devuelve su ruta.
+      //
+      // POR QUE UN ARCHIVO Y NO TEXTO ADENTRO DEL JSON
+      // Una estampa pesa entre 100 y 400 KB. Guardarla como dataURL adentro de
+      // productos.json (o de localStorage) revienta a las ~20: localStorage
+      // aguanta ~5 MB en total, y productos.json se carga entero al arrancar el
+      // juego. Como archivo suelto queda versionado en git, se baja solo cuando
+      // hace falta y no hay tope practico.
+      server.middlewares.use('/api/estampa', async (req, res) => {
+        if (req.method !== 'POST') return json(res, 405, { error: 'usar POST' });
+        try {
+          const { nombre, dataUrl } = JSON.parse(await readBody(req));
+          const base64 = String(dataUrl ?? '').split(',')[1];
+          if (!base64) return json(res, 400, { error: 'falta la imagen' });
+
+          // El nombre lo arma el navegador, asi que se sanea: solo letras,
+          // numeros y guiones. Sin esto un nombre con ../ escribiria fuera de
+          // la carpeta.
+          const limpio = String(nombre ?? 'estampa')
+            .toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+            .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'estampa';
+
+          mkdirSync(estampasDir, { recursive: true });
+          const archivo = `${limpio}.png`;
+          writeFileSync(resolve(estampasDir, archivo), Buffer.from(base64, 'base64'));
+          json(res, 200, { ok: true, ruta: `assets/estampas/${archivo}` });
         } catch (e) {
           json(res, 500, { error: String(e.message ?? e) });
         }

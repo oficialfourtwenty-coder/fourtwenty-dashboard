@@ -36,6 +36,11 @@ export function productoVacio(coleccionId, n) {
     precio: '',
     moneda: 'ARS',
     imagen: '',
+    // Ruta del PNG de la ESTAMPA (assets/estampas/xxx.png). Es lo que se apoya
+    // sobre la prenda 3D del perchero. NO es lo mismo que `imagen`: esa es la
+    // foto del producto para el panel y el catalogo, y estirarla sobre la
+    // remera 3D la arruinaria. Ver world/garmentPrints.js.
+    estampa: '',
     link: '',
     activo: true,
   };
@@ -57,6 +62,9 @@ function normalize(raw) {
     col.categoriaTN = col.categoriaTN ?? '';
     if (!Array.isArray(col.productos)) col.productos = [];
     col.productos = col.productos.filter((p) => p && typeof p === 'object');
+    // Los productos guardados antes de que existiera la estampa no traen el
+    // campo; se completa vacio para que el panel no muestre "undefined".
+    for (const p of col.productos) if (typeof p.estampa !== 'string') p.estampa = '';
   }
   return data;
 }

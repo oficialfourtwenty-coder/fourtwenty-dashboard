@@ -5,6 +5,7 @@ import { createHangingGarment } from './garments.js';
 import { applySavedFrameDesigns } from '../ui/frameEditor.js';
 import { applySavedGarmentDesigns } from '../ui/garmentEditor.js';
 import { bindProductVisual } from './productVisuals.js';
+import { bindGarmentToProduct } from './garmentPrints.js';
 
 const MATERIAL_ROOT = 'assets/materials/terrace-ps3';
 const textureLoader = new THREE.TextureLoader();
@@ -533,8 +534,12 @@ function createRetailRail(root, {
     garment.name = `${name} · producto ${index + 1}`;
     mesh.name = `${garment.name} · tela`;
     if (Number.isFinite(productFloor)) {
+      const slot = { piso: productFloor, index: (slotOffset + index) % 4 };
       // La foto real del producto entra por la malla de tela, no por el grupo.
-      bindProductVisual(mesh, { piso: productFloor, index: (slotOffset + index) % 4 }, mesh.material.map);
+      bindProductVisual(mesh, slot, mesh.material.map);
+      // Y la ESTAMPA del producto se apoya sobre la prenda. Si ese producto
+      // tiene diseño cargado desde el panel de admin, gana sobre la foto.
+      bindGarmentToProduct(garment, slot);
     }
     rail.add(garment);
   }

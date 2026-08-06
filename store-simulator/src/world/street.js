@@ -18,6 +18,7 @@ import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
 import { createHangingGarment } from './garments.js';
 import { bindProductVisual } from './productVisuals.js';
+import { bindGarmentToProduct } from './garmentPrints.js';
 import { createMoonDisc, createSunDisc } from './dayNightCycle.js';
 
 // ---- Paleta del spec (albedo base) ------------------------------------------
@@ -723,6 +724,8 @@ function buildRealInterior(scene, g, colliders, H) {
     mesh.name = `${prenda.name} · tela`;
     // La foto real del producto entra por la malla de tela, no por el grupo.
     bindProductVisual(mesh, { piso: 'local', index: i }, mesh.material.map);
+    // Y la ESTAMPA del producto se apoya encima (ver world/garmentPrints.js).
+    bindGarmentToProduct(prenda, { piso: 'local', index: i });
     // Cuelga del barral (y = PLAT + 1.95) mirando hacia el centro del local.
     prenda.position.set(-2.74, PLAT + 1.9, -6.85 + i * 0.42);
     // += y no =: createHangingGarment ya le puso un giro chico distinto a cada

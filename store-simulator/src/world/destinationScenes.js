@@ -4,6 +4,7 @@ import { createOriginArcade } from './originArcade.js';
 import { environmentForDestination } from './floorEnvironmentCatalog.js';
 import { buildHoopArena } from './hoopArena.js';
 import { unbindProductVisuals } from './productVisuals.js';
+import { unbindGarmentsFromProducts } from './garmentPrints.js';
 import {
   buildPs3FloorScene,
   PS3_FLOOR_PROFILE,
@@ -95,6 +96,9 @@ export function disposeDestinationScene(record, player) {
   record.arena?.dispose();
   record.scene.remove(player.rig, player.shadow);
   unbindProductVisuals(record.scene);
+  // Y soltar las prendas del catalogo: sin esto el Set de garmentPrints las
+  // retiene y la escena del piso nunca se libera de memoria.
+  unbindGarmentsFromProducts(record.scene);
   const disposedGeometries = new Set();
   const disposedMaterials = new Set();
   const disposedTextures = new Set();

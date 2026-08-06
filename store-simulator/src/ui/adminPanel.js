@@ -19,6 +19,7 @@ import {
   notifyProductosChange,
 } from '../data/productosStore.js';
 import { getTnStatus, syncTiendanube } from '../integrations/tiendanube/client.js';
+import { leerImagen } from './estampaImagen.js';
 
 const PANEL_ID = 'ft-admin-panel';
 const STYLE_ID = 'ft-admin-panel-style';
@@ -77,6 +78,20 @@ function injectStyles() {
       border: 1px solid rgba(255,255,255,0.14); display: flex; align-items: center;
       justify-content: center; color: rgba(245,241,232,0.3); font-size: 9px;
     }
+    #${PANEL_ID} .ap-est-preview {
+      width: 54px; height: 54px; flex: none; border: 1px solid rgba(255,255,255,0.14);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(245,241,232,0.3); font-size: 8px; letter-spacing: 1px;
+      background-color: #17181b; background-position: center; background-size: contain;
+      background-repeat: no-repeat;
+    }
+    /* damero: lo que se ve a cuadros es lo que quedo transparente */
+    #${PANEL_ID} .ap-est-preview:not([style]) { background-image:
+      linear-gradient(45deg, #24262a 25%, transparent 25%, transparent 75%, #24262a 75%),
+      linear-gradient(45deg, #24262a 25%, transparent 25%, transparent 75%, #24262a 75%);
+      background-size: 10px 10px; background-position: 0 0, 5px 5px; }
+    #${PANEL_ID} .ap-est-nota { font-size: 10px; color: rgba(245,241,232,0.5); margin-top: 3px; line-height: 1.4; }
+    #${PANEL_ID} .ap-est-nota button { padding: 0 5px; font-size: 10px; min-height: 0; }
     #${PANEL_ID} .ap-foot { padding: 10px 16px 14px; border-top: 1px solid rgba(255,255,255,0.09); display: grid; gap: 8px; }
     #${PANEL_ID} .ap-status { min-height: 16px; font-size: 11px; color: rgba(245,241,232,0.65); }
     #${PANEL_ID} .ap-tn { font-size: 11px; }
@@ -174,6 +189,16 @@ export function initAdminPanel({ isBlocked = () => false } = {}) {
                 <div class="ap-img-preview" ${p.imagen ? `style="background-image:url('${p.imagen.replace(/'/g, '')}')"` : ''}>${p.imagen ? '' : 'FOTO'}</div>
                 <div style="flex:1;min-width:200px">${fieldHtml(col.id, i, 'imagen', 'Imagen (URL)', p.imagen, { placeholder: 'https://…' })}</div>
               </div>
+              <div class="ap-row ap-estampa" style="margin-bottom:6px">
+                <div class="ap-est-preview" ${p.estampa ? `style="background-image:url('${p.estampa.replace(/'/g, '')}')"` : ''}>${p.estampa ? '' : 'ESTAMPA'}</div>
+                <div style="flex:1;min-width:200px">
+                  <label>Estampa de la prenda 3D (PNG del diseño)</label>
+                  <input type="file" accept="image/*" data-action="estampa" data-col="${col.id}" data-idx="${i}">
+                  <div class="ap-est-nota">${p.estampa
+                    ? `${p.estampa} · <button type="button" class="ap-danger" data-action="del-estampa" data-col="${col.id}" data-idx="${i}">Quitar</button>`
+                    : 'Se le saca el fondo y el margen solos. Es el diseño que va sobre la remera del perchero, no la foto del producto.'}</div>
+                </div>
+              </div>
               ${fieldHtml(col.id, i, 'nombre', 'Nombre', p.nombre)}
               ${fieldHtml(col.id, i, 'precio', 'Precio (solo números)', p.precio, { placeholder: '25000' })}
               ${fieldHtml(col.id, i, 'link', 'Link de compra (Tiendanube)', p.link, { placeholder: 'https://tutienda.mitiendanube.com/productos/…' })}
@@ -213,6 +238,51 @@ export function initAdminPanel({ isBlocked = () => false } = {}) {
     scheduleSave();
   });
 
+  // Subida de la estampa. Se procesa con el MISMO codigo que el editor de
+  // prenda (quita el fondo y recorta el margen) y despues se guarda como
+  // archivo real del repo via /api/estampa. Si ese endpoint no existe —o sea,
+  // en el build publicado— se cae al dataURL, que anda pero no se puede
+  // commitear y ocupa lugar en el navegador.
+  root.addEventListener('change', async (e) => {
+    const input = e.target;
+    if (input.dataset.action !== 'estampa') return;
+    const file = input.files?.[0];
+    if (!file) return;
+    const data = getProductos();
+    const col = data.colecciones.find((c) => c.id === input.dataset.col);
+    const p = col?.productos?.[Number(input.dataset.idx)];
+    if (!p) return;
+
+    setStatus('Procesando la estampa…');
+    try {
+      const { url, recorte, margen } = await leerImagen(file);
+      const nombre = `${col.id}-${Number(input.dataset.idx) + 1}-${p.nombre || 'estampa'}`;
+      let ruta = url;
+      let enArchivo = false;
+      try {
+        const r = await fetch('/api/estampa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, dataUrl: url }),
+        });
+        if (r.ok) { ruta = (await r.json()).ruta; enArchivo = true; }
+      } catch {
+        // sin servidor de desarrollo: queda el dataURL
+      }
+      p.estampa = ruta;
+      render();
+      notifyProductosChange();
+      scheduleSave();
+      const detalle = margen ? ` (se recorto ${margen}% de margen vacio)` : '';
+      const aviso = recorte.quitado ? 'Estampa cargada' : `Estampa cargada SIN quitarle el fondo: ${recorte.motivo}`;
+      setStatus(enArchivo
+        ? `${aviso}${detalle} → ${ruta} · commitea la carpeta assets/estampas/`
+        : `${aviso}${detalle} · sin npm run dev queda guardada en el navegador, no en el repo`);
+    } catch (error) {
+      setStatus(`No se pudo cargar la estampa: ${error.message}`);
+    }
+  });
+
   root.addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
@@ -239,6 +309,12 @@ export function initAdminPanel({ isBlocked = () => false } = {}) {
       col.productos.splice(Number(btn.dataset.idx), 1);
       render();
       scheduleSave();
+      return;
+    }
+    if (action === 'del-estampa') {
+      const col = data.colecciones.find((c) => c.id === btn.dataset.col);
+      const p = col?.productos?.[Number(btn.dataset.idx)];
+      if (p) { p.estampa = ''; render(); notifyProductosChange(); scheduleSave(); }
       return;
     }
     if (action === 'export') { exportProductos(); setStatus('productos.json descargado.'); return; }
