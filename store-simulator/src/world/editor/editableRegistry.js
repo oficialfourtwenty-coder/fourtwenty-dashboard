@@ -165,6 +165,10 @@ function serializeEntry(entry) {
   if (entry.manageShadows === false) data.manageShadows = false;
   if (entry.color) data.color = entry.color;
   if (entry.lightRange) data.lightRange = entry.lightRange;
+  // Datos de reconstruccion de una pieza armada a mano (pieceBuilder.js). El
+  // layout guarda DONDE esta cada objeto, pero una pieza inventada por Kusher
+  // no existe en ninguna escena: sin esto desaparece al refrescar.
+  if (entry.piece) data.piece = entry.piece;
   return data;
 }
 
@@ -210,6 +214,8 @@ export function registerEditableObject(config, { silent = false } = {}) {
     manageShadows: config.manageShadows !== false,
     cloneOf: config.cloneOf ?? null,
     cloneAtSceneRoot: config.cloneAtSceneRoot === true,
+    // Pieza armada a mano: como reconstruirla al recargar (pieceBuilder.js).
+    piece: config.piece ?? previous?.piece ?? null,
     color: normalizeEditorColor(config.color) ?? (sameObject ? previous.color : null),
     lightRange: normalizeLightRange(config.lightRange ?? config.object3D.userData?.editorLightRange)
       ?? (sameObject ? previous.lightRange : null),
@@ -363,6 +369,7 @@ export function applyLayout(layout) {
     if (entry.manageShadows) applyShadowFlags(entry.object3D, entry.castShadow, entry.receiveShadow);
     if (item.color != null) setEditableColor(entry.id, item.color);
     if (item.lightRange != null) setEditableLightRange(entry.id, item.lightRange);
+    if (item.piece) entry.piece = item.piece;
   }
 
   emitRegistryChange();

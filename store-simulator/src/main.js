@@ -18,6 +18,7 @@ import { addFurniture } from './world/furniture.js';
 import { initWorldEditor } from './world/editor/worldEditor.js';
 import { autoRegisterScene, applyLayout, getEditableObjects, isEditableEffectivelyVisible, registerEditableObject, restoreClones } from './world/editor/editableRegistry.js';
 import { loadInitialLayout } from './world/editor/layoutStore.js';
+import { restorePieces } from './world/editor/pieceBuilder.js';
 import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
 import { tickAmbient } from './world/anim.js';
@@ -590,6 +591,12 @@ function applySavedEditorLayout() {
   return loadInitialLayout().then((layout) => {
     applyLayout(layout);
     restoreClones(layout);
+    // Piezas armadas a mano con el editor (editor/pieceBuilder.js). El layout
+    // guarda DONDE esta cada objeto, pero una pieza inventada por Kusher no
+    // existe en ninguna escena hasta que alguien la vuelve a construir: sin
+    // esto desaparecen al refrescar, igual que pasaria con los clones.
+    const piezas = restorePieces(scene, layout);
+    if (piezas) applyLayout(layout);   // reubica las piezas recien creadas
     streetEditablesDirty = true;
     // Después de restaurar clones hay que re-imponer el estado del interruptor:
     // las luminarias duplicadas vuelven con su PointLight encendida.

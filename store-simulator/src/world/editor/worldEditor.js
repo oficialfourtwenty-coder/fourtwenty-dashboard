@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { addFurnitureItem } from '../furniture.js';
+import { createPiece, groupPieces, mergePiece, PIEZAS, setPieceTexture } from './pieceBuilder.js';
+import { leerImagen } from '../../ui/estampaImagen.js';
 import { createEditorPanel } from './editorPanel.js';
 import { cuadroDesde, getFrameEditor } from '../../ui/frameEditor.js';
 import { ADDABLE_MODELS, searchableModelPresets } from './modelCatalog.js';
@@ -160,6 +162,8 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     onSelectParent: selectParent,
     onToggleVisible: toggleSelectedVisible,
     onAddModel: addModelFromPreset,
+    onPiece: handlePieceAction,
+    onPieceTexture: applyPieceTexture,
   });
 
   function isInCurrentScene(object) {
@@ -528,6 +532,79 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     selectId(id);
     notifyWorldChanged();
     saveNow(`${preset.name} agregado.`);
+  }
+
+  // ---- Armar a mano (ver editor/pieceBuilder.js) ----------------------------
+  // Las piezas marcadas para agrupar. Se guardan por id y no por objeto: el
+  // editor puede recrear un objeto (al aplicar un layout) y la referencia vieja
+  // quedaria apuntando a algo que ya no esta en la escena.
+  const marcadas = new Set();
+
+  function refrescarNotaPiezas(extra = '') {
+    const base = marcadas.size
+      ? `${marcadas.size} pieza(s) marcada(s). Apretá Agrupar para juntarlas.`
+      : 'Marcá varias piezas y apretá Agrupar. Fusionar las junta en una sola malla cuando terminaste.';
+    panel.setPieceNote(extra ? `${extra} · ${base}` : base);
+  }
+
+  function handlePieceAction(accion) {
+    if (PIEZAS[accion]) {
+      const entry = createPiece(currentScene, accion, { position: spawnPositionInFront().toArray?.() ?? spawnPositionInFront() });
+      if (!entry) { setStatus('No se pudo crear la pieza.'); return; }
+      selectId(entry.id);
+      notifyWorldChanged();
+      saveNow(`${entry.name} creada. Movela con 1, rotala con 2, escalala con 3.`);
+      refrescarNotaPiezas();
+      return;
+    }
+
+    if (accion === 'marcar') {
+      if (!state.selectedId) { setStatus('Seleccioná una pieza primero.'); return; }
+      if (marcadas.has(state.selectedId)) marcadas.delete(state.selectedId);
+      else marcadas.add(state.selectedId);
+      refrescarNotaPiezas();
+      return;
+    }
+
+    if (accion === 'agrupar') {
+      if (marcadas.size < 2) { setStatus('Marcá al menos 2 piezas para agrupar.'); return; }
+      const entry = groupPieces(currentScene, [...marcadas]);
+      marcadas.clear();
+      if (!entry) { setStatus('No se pudieron agrupar esas piezas.'); refrescarNotaPiezas(); return; }
+      selectId(entry.id);
+      notifyWorldChanged();
+      saveNow('Piezas agrupadas. Ahora se mueven juntas.');
+      refrescarNotaPiezas();
+      return;
+    }
+
+    if (accion === 'fusionar') {
+      if (!state.selectedId) { setStatus('Seleccioná el objeto agrupado.'); return; }
+      const r = mergePiece(state.selectedId);
+      if (!r.ok) { setStatus(r.motivo); return; }
+      notifyWorldChanged();
+      saveNow(`Fusionado: de ${r.antes} piezas a ${r.despues} malla(s). Baja el costo de dibujo.`);
+      return;
+    }
+  }
+
+  async function applyPieceTexture(file) {
+    if (!state.selectedId) { setStatus('Seleccioná una pieza primero.'); return; }
+    setStatus('Procesando la imagen…');
+    try {
+      // Mismo procesado que las estampas: le quita el fondo plano y le recorta
+      // el margen vacio, asi una cinta con el logo entra ocupando la pieza
+      // entera y no como un sello chico en el medio.
+      const { url, recorte } = await leerImagen(file, { maxLado: 1024 });
+      if (!setPieceTexture(state.selectedId, url)) {
+        setStatus('Ese objeto no tiene un material que acepte imagen.');
+        return;
+      }
+      notifyWorldChanged();
+      saveNow(recorte.quitado ? 'Imagen aplicada (se le quitó el fondo).' : 'Imagen aplicada.');
+    } catch (error) {
+      setStatus(`No se pudo cargar la imagen: ${error.message}`);
+    }
   }
 
   async function copyJSON() {

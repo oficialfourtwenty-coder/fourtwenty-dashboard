@@ -23,6 +23,8 @@ function injectStyles() {
     #${PANEL_ID} .we-sub { margin-top: 6px; color: rgba(245,241,232,0.62); font-size: 11px; }
     #${PANEL_ID} .we-body { padding: 12px 14px 14px; display: grid; gap: 12px; }
     #${PANEL_ID} .we-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .we-grid-3 { margin-bottom: 6px; }
+    .we-build button.is-marcada { outline: 1px solid #39ff6a; }
     #${PANEL_ID} .we-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     #${PANEL_ID} .we-pill { color: #ff6d18; font-weight: 900; }
     #${PANEL_ID} .we-section { padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.09); }
@@ -119,6 +121,26 @@ export function createEditorPanel(callbacks = {}) {
         </div>
       </div>
 
+      <div class="we-section we-build">
+        <div class="we-label">Armar a mano</div>
+        <div class="we-grid we-grid-3">
+          ${button('+ Caja', 'piece:caja')}
+          ${button('+ Plano', 'piece:plano')}
+          ${button('+ Cilindro', 'piece:cilindro')}
+          ${button('+ Esfera', 'piece:esfera')}
+          ${button('+ Tubo', 'piece:tubo')}
+          ${button('+ Manga', 'piece:manga')}
+        </div>
+        <div class="we-grid">
+          ${button('Marcar', 'piece:marcar')}
+          ${button('Agrupar', 'piece:agrupar')}
+          ${button('Textura', 'piece:textura')}
+          ${button('Fusionar', 'piece:fusionar')}
+        </div>
+        <input type="file" accept="image/*" data-field="pieceTexture" style="display:none">
+        <div class="we-color-note" data-field="pieceNote">Marcá varias piezas y apretá Agrupar. Fusionar las junta en una sola malla cuando terminaste.</div>
+      </div>
+
       <div class="we-section">
         <div class="we-label">Objects <span data-field="objectCount"></span></div>
         <input type="text" data-field="filter" placeholder="filtrar por nombre…" autocomplete="off" spellcheck="false">
@@ -203,6 +225,8 @@ export function createEditorPanel(callbacks = {}) {
     colorHex: root.querySelector('[data-field="colorHex"]'),
     colorNote: root.querySelector('[data-field="colorNote"]'),
     lightRangeSection: root.querySelector('[data-field="lightRangeSection"]'),
+    pieceTexture: root.querySelector('[data-field="pieceTexture"]'),
+    pieceNote: root.querySelector('[data-field="pieceNote"]'),
   };
 
   // lista con filtro: con TODO el mundo registrado son cientos de objetos
@@ -262,6 +286,15 @@ export function createEditorPanel(callbacks = {}) {
   }
 
   fields.filter.addEventListener('input', renderObjectList);
+  const setPieceNote = (texto) => { fields.pieceNote.textContent = texto; };
+
+  fields.pieceTexture.addEventListener('change', (event) => {
+    const file = event.target.files?.[0];
+    // Se limpia el valor para que elegir el MISMO archivo dos veces vuelva a
+    // disparar el evento: si no, corregir un recorte obliga a renombrarlo.
+    event.target.value = '';
+    if (file) callbacks.onPieceTexture?.(file);
+  });
 
   root.addEventListener('click', (event) => {
     const addModelButton = event.target.closest('[data-add-model-key]');
@@ -278,6 +311,8 @@ export function createEditorPanel(callbacks = {}) {
     const actionButton = event.target.closest('[data-action]');
     if (!actionButton) return;
     const action = actionButton.dataset.action;
+    if (action === 'piece:textura') { fields.pieceTexture.click(); return; }
+    if (action.startsWith('piece:')) { callbacks.onPiece?.(action.split(':')[1]); return; }
     if (action.startsWith('mode:')) callbacks.onMode?.(action.split(':')[1]);
     else if (action.startsWith('light-range:')) callbacks.onLightRangeInput?.(Number(action.split(':')[1]));
     else if (action === 'space') callbacks.onToggleSpace?.();
@@ -345,6 +380,7 @@ export function createEditorPanel(callbacks = {}) {
 
   return {
     root,
+    setPieceNote,
     show() { root.classList.add('is-visible'); },
     hide() { root.classList.remove('is-visible'); },
     setState(state) {

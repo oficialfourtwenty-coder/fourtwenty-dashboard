@@ -255,6 +255,40 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 - Error conocido aceptado: dos puntos inferiores derechos del laberinto pueden
   quedar sin comerse. No corregir sin nuevo pedido.
 
+### Constructor de piezas — armar objetos a mano con `T`
+
+- Kusher pidio poder modelar el mismo, con sus propias palabras: "dejame poder
+  hacer los objetos a mi manera manual, y despues le cargo una imagen que sea
+  una textura encima". El diagnostico era correcto: las formas generadas con
+  formulas salen siempre geometricas porque una formula no tiene ojo.
+- Vive en `src/world/editor/pieceBuilder.js`. Se usa desde el editor de mundo
+  (`T`), seccion **ARMAR A MANO**.
+- Crea piezas desde cero: caja, plano, cilindro, esfera, tubo y manga/cono.
+  Se acomodan con los controles de siempre (1 mover, 2 rotar, 3 escalar, y la
+  escala es POR EJE).
+- **Marcar** varias y **Agrupar**: quedan como un objeto solo que se mueve,
+  rota y escala junto. Adentro se siguen pudiendo mover una por una.
+- **Textura**: sube una imagen y se la pega a la pieza. Usa el mismo procesado
+  que las estampas (`ui/estampaImagen.js`): le quita el fondo plano y le
+  recorta el margen vacio.
+- **Fusionar**: junta las mallas del grupo en una sola. ⚠️ NO es opcional para
+  algo que se repita: un objeto de 20 piezas cuesta 20 llamadas de dibujo, y en
+  este proyecto las llamadas pesan mas que los triangulos. Solo fusiona piezas
+  que comparten textura — dos mallas con imagenes distintas no pueden ser una
+  sin rehacer las UV.
+- Criterio de fondo: es como esta hecho GTA San Andreas. La geometria es simple
+  y lo que la hace ver bien es la textura.
+- ⚠️ **Una pieza inventada no existe en ninguna escena.** El layout guarda
+  DONDE esta cada objeto, pero no como construirlo. Por eso cada pieza guarda
+  `piece: { tipo, textura, color, piezas, fusionado }` y `restorePieces(scene,
+  layout)` la reconstruye al cargar, igual que `restoreClones` con los clones.
+  Se llama en `applySavedEditorLayout` de `main.js`. Sin eso desaparecen al
+  refrescar.
+- ⚠️ Los dos agujeros de guardado que aparecieron probando, por si vuelven:
+  la marca `fusionado` (si no, la fusion se perdia en cada refresco y el ahorro
+  era mentira) y la textura copiada a CADA pieza del grupo (si no, en pantalla
+  se veia aplicada pero al recargar volvia sin imagen).
+
 ### Cuadros editables por piso
 
 - **Los tres cuadros existen en los CINCO pisos** (04/08). Antes se creaban
