@@ -15,6 +15,13 @@ import { buildMusicManifest } from './tools/musicManifest.mjs';
 function adminApiPlugin() {
   const productosPath = resolve(import.meta.dirname, 'public/assets/data/productos.json');
   const estampasDir = resolve(import.meta.dirname, 'public/assets/estampas');
+  // Carpetas donde el panel puede escribir imagenes. Es una lista blanca a
+  // proposito: el nombre de carpeta lo manda el navegador y sin esto se podria
+  // escribir en cualquier lado del repo.
+  const CARPETAS = {
+    estampas: 'public/assets/estampas',
+    campana: 'public/assets/campana',
+  };
 
   const readBody = (req) => new Promise((resolveBody, reject) => {
     let body = '';
@@ -78,10 +85,13 @@ function adminApiPlugin() {
       // aguanta ~5 MB en total, y productos.json se carga entero al arrancar el
       // juego. Como archivo suelto queda versionado en git, se baja solo cuando
       // hace falta y no hay tope practico.
+      // `carpeta` elige el destino: 'estampas' (diseños de prenda) o 'campana'
+      // (fotos de campaña para los cuadros). Por defecto estampas, para que la
+      // llamada vieja siga funcionando igual.
       server.middlewares.use('/api/estampa', async (req, res) => {
         if (req.method !== 'POST') return json(res, 405, { error: 'usar POST' });
         try {
-          const { nombre, dataUrl } = JSON.parse(await readBody(req));
+          const { nombre, dataUrl, carpeta = 'estampas' } = JSON.parse(await readBody(req));
           const base64 = String(dataUrl ?? '').split(',')[1];
           if (!base64) return json(res, 400, { error: 'falta la imagen' });
 
@@ -92,10 +102,17 @@ function adminApiPlugin() {
             .toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
             .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'estampa';
 
-          mkdirSync(estampasDir, { recursive: true });
-          const archivo = `${limpio}.png`;
-          writeFileSync(resolve(estampasDir, archivo), Buffer.from(base64, 'base64'));
-          json(res, 200, { ok: true, ruta: `assets/estampas/${archivo}` });
+          const relativa = CARPETAS[carpeta];
+          if (!relativa) return json(res, 400, { error: `carpeta no permitida: ${carpeta}` });
+          const destino = resolve(import.meta.dirname, relativa);
+          mkdirSync(destino, { recursive: true });
+          // Las fotos de campaña van en JPEG: son fotograficas y no necesitan
+          // transparencia. Una foto de 1280 px pesa ~180 KB en JPEG y ~1.4 MB
+          // en PNG, y son 42.
+          const ext = dataUrl.startsWith('data:image/jpeg') ? 'jpg' : 'png';
+          const archivo = `${limpio}.${ext}`;
+          writeFileSync(resolve(destino, archivo), Buffer.from(base64, 'base64'));
+          json(res, 200, { ok: true, ruta: `${relativa.replace('public/', '')}/${archivo}` });
         } catch (e) {
           json(res, 500, { error: String(e.message ?? e) });
         }

@@ -1,0 +1,21 @@
+FOTOS DE CAMPAÑA
+================
+
+Aca van las fotos que se ponen en los cuadros del mundo.
+
+NO se cargan a mano en esta carpeta. Se cargan desde adentro del juego:
+
+  1. Corre `npm run dev` (hace falta: el guardado en archivo solo existe ahi).
+  2. Abri el editor de mundo con `T` y clickea un cuadro.
+  3. En EDITOR DE CUADRO, elegi la foto. Se guarda ACA sola.
+  4. Apreta GUARDAR y despues commitea esta carpeta.
+
+POR QUE COMO ARCHIVO Y NO EN EL NAVEGADOR
+Una foto de 1280 px pesa ~180 KB. El navegador aguanta ~5 MB en total, asi que
+a la vigesima foto el guardado empieza a fallar en silencio. Solo en ORIGEN van
+~42 fotos. Como archivo del repo no hay tope, quedan versionadas en git y se
+bajan con el piso, no al arrancar el juego.
+
+En el build publicado (sin `npm run dev`) el editor no puede escribir archivos
+y la foto queda en el navegador. Por eso la carga oficial se hace siempre con
+`npm run dev`.

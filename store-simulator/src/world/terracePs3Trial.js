@@ -6,6 +6,7 @@ import { applySavedFrameDesigns } from '../ui/frameEditor.js';
 import { applySavedGarmentDesigns } from '../ui/garmentEditor.js';
 import { bindProductVisual } from './productVisuals.js';
 import { bindGarmentToProduct } from './garmentPrints.js';
+import { bindStackToProduct, createDisplayTable, createFoldedStack } from './displayTable.js';
 
 const MATERIAL_ROOT = 'assets/materials/terrace-ps3';
 const textureLoader = new THREE.TextureLoader();
@@ -873,7 +874,58 @@ function createArtworkFrame(root, {
   root.add(frame);
 }
 
+// Los 4 diseños de la coleccion ORIGEN, tal como los definio Kusher.
+// 12 remeras en total: 3 de cada una, 6 blancas y 6 negras.
+// El `index` es el slot del catalogo de productos: cargando esos 4 productos
+// desde el panel de admin (tecla P) las pilas se visten solas con su estampa.
+const REMERAS_ORIGEN = Object.freeze([
+  { nombre: 'WHITE CHOCOLATE', color: 0xf4f2ec, index: 0 }, // full blanca
+  { nombre: 'YIN', color: 0xf4f2ec, index: 1 },             // blanca, bordado negro
+  { nombre: 'BLACK MAMBA', color: 0x141416, index: 2 },     // full negra
+  { nombre: 'YANG', color: 0x141416, index: 3 },            // negra, bordado blanco y verde
+]);
+
+// Mesa cuadrada de exhibicion con las 12 remeras dobladas, 3 por diseño.
+// Es el mueble central del piso: en las capturas de Binco son justamente estas
+// mesas con prendas apiladas las que hacen que se lea como tienda.
+function addOriginDisplayTable(root, mats, theme) {
+  const mesa = createDisplayTable({
+    lado: 1.5,
+    maderaMaterial: mats.wood,
+    metalMaterial: mats.metal ?? mats.steel,
+    nombre: themedName(theme, 'mesa de exhibicion'),
+  });
+  mesa.group.position.set(0, 0, 2.2);
+  root.add(mesa.group);
+
+  // Las 4 pilas en cuadrado sobre la tapa, con aire entre ellas.
+  const sep = 0.36;
+  REMERAS_ORIGEN.forEach((remera, i) => {
+    const pila = createFoldedStack({
+      color: remera.color,
+      cantidad: 3,
+      material: mats.fabric ?? mats.wood,
+      nombre: themedName(theme, `pila ${remera.nombre}`),
+      // El plano de estampa se crea siempre: `bindStackToProduct` lo esconde
+      // mientras el producto no tenga diseño cargado, y lo enciende cuando si.
+      estampa: null,
+    });
+    pila.position.set(
+      ((i % 2) - 0.5) * sep * 2,
+      mesa.alturaTapa,
+      (Math.floor(i / 2) - 0.5) * sep * 2,
+    );
+    pila.rotation.y = (i - 1.5) * 0.06;
+    mesa.group.add(pila);
+    bindStackToProduct(pila, { piso: 2, index: remera.index });
+  });
+
+  return mesa;
+}
+
 function addOriginDetails(root, mats, theme) {
+  addOriginDisplayTable(root, mats, theme);
+
   for (const [side, variant] of [[-1, 0], [1, 1]]) {
     const wall = unit(new THREE.Group(), themedName(theme, variant ? 'mural Burela' : 'mural Origen'), { collider: true });
     const backing = roundedBox(0.18, 2.82, 5.55, mats.concreteDark, 0.07, 2);

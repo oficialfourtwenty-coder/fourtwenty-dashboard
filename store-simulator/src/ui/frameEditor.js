@@ -482,10 +482,30 @@ export function createFrameEditor() {
     if (!file) return;
     try {
       avisar('Procesando la foto…');
-      diseño.foto = await achicarFoto(file);
+      const dataUrl = await achicarFoto(file);
+      // Se guarda como ARCHIVO del repo, no como texto en el navegador.
+      // localStorage aguanta ~5 MB y una foto pesa ~180 KB: a la vigesima el
+      // guardado empieza a fallar. Kusher va a poner ~42 solo en ORIGEN.
+      // Sin `npm run dev` no hay endpoint y se cae al dataURL, que anda pero no
+      // se puede commitear.
+      let ruta = dataUrl;
+      let enArchivo = false;
+      try {
+        const r = await fetch('/api/estampa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre: `${cuadroActual?.name ?? 'cuadro'}-${Date.now().toString(36)}`, dataUrl, carpeta: 'campana' }),
+        });
+        if (r.ok) { ruta = (await r.json()).ruta; enArchivo = true; }
+      } catch {
+        // sin servidor de desarrollo: queda el dataURL
+      }
+      diseño.foto = ruta;
       await cargarFoto(diseño.foto);
       repintar();
-      avisar('Foto cargada. Acordate de GUARDAR.');
+      avisar(enArchivo
+        ? `Foto guardada en ${ruta} · acordate de GUARDAR y de commitear assets/campana/`
+        : 'Foto cargada (queda en el navegador: sin npm run dev no se puede guardar como archivo). Acordate de GUARDAR.');
     } catch (error) {
       avisar(`No se pudo cargar: ${error.message}`, true);
     }
