@@ -25,6 +25,7 @@ import * as THREE from 'three';
 import { getProductoForSlot, onProductosChange } from '../data/productosStore.js';
 import { garmentHeight, garmentSurfacePoint, restyleGarment } from './garments.js';
 import { unbindProductVisuals } from './productVisuals.js';
+import { registerEditableObject, unregisterEditableObject } from './editor/editableRegistry.js';
 
 // Angulos de la seccion: PI/2 mira al frente (+Z), 3PI/2 al dorso (-Z).
 const ANGULO_LADO = { frente: Math.PI / 2, dorso: (Math.PI * 3) / 2 };
@@ -47,6 +48,11 @@ export const PRINT_DEFAULTS = Object.freeze({
   // 0 = centrada, -1 = pegada al costado izquierdo, 1 = al derecho.
   centroX: 0,
   opacidad: 1,
+  espejar: false,
+  // Ajuste fino hecho con el gizmo del editor de mundo (tecla T). Se guarda
+  // aparte de los controles gruesos: los sliders regeneran el parche desde
+  // cero, y sin esto cada toque de un slider borraba lo acomodado a mano.
+  transform: null,
 });
 
 // Tope angular del parche a cada lado del centro. 1.52 rad son 87 grados:
@@ -100,7 +106,7 @@ function aperturaParaAncho(type, t, anguloCentro, anchoM) {
  * Malla del parche de estampa, en el espacio local de la prenda.
  * Devuelve null si la prenda no admite estampa en esa altura.
  */
-export function printPatchGeometry(type, { lado, anchoCm, altoCm, centroY, centroX = 0 }) {
+export function printPatchGeometry(type, { lado, anchoCm, altoCm, centroY, centroX = 0, espejar = false }) {
   const base = ANGULO_LADO[lado] ?? ANGULO_LADO.frente;
   const alto = garmentHeight(type);
   const altoM = altoCm / 100;
@@ -145,9 +151,14 @@ export function printPatchGeometry(type, { lado, anchoCm, altoCm, centroY, centr
       nx /= largo; nz /= largo;
 
       posiciones.push(p.x + nx * SEPARACION, p.y, p.z + nz * SEPARACION);
-      // El dorso se mira desde -Z: sin invertir la U, la estampa de atras sale
-      // espejada (un texto se leeria al reves).
-      uvs.push(lado === 'dorso' ? 1 - fu : fu, 1 - fv);
+      // ⚠️ LOS DOS LADOS VAN INVERTIDOS. Al recorrer el parche, fu=0 cae del
+      // lado +X de la prenda, que en pantalla es la DERECHA cuando se la mira
+      // de frente. Con u=fu el borde izquierdo de la imagen aterrizaba a la
+      // derecha: todo lo que se cargaba salia espejado. El dorso ya estaba
+      // bien porque se mira desde -Z y la pantalla se da vuelta sola.
+      // `espejar` deja darlo vuelta a mano si un diseño lo necesita.
+      const u = espejar ? fu : 1 - fu;
+      uvs.push(u, 1 - fv);
       const ao = aoDePliegue(t, angulo);
       colores.push(ao, ao, ao);
     }
@@ -225,6 +236,7 @@ export function applyGarmentPrint(contenedor, type, lado, config) {
   const nombre = `Estampa ${lado}`;
   const anterior = contenedor.getObjectByName(nombre);
   if (anterior) {
+    if (contenedor.name) unregisterEditableObject(`estampa:${contenedor.name}:${lado}`);
     contenedor.remove(anterior);
     anterior.geometry?.dispose?.();
     anterior.material?.dispose?.();
@@ -243,7 +255,35 @@ export function applyGarmentPrint(contenedor, type, lado, config) {
   // duplicada a 4 mm del cuerpo se ve como una lamina flotando.
   mesh.castShadow = false;
   mesh.receiveShadow = true;
+
+  // Ajuste fino hecho a mano con el gizmo. Va DESPUES de generar el parche:
+  // los controles del panel definen la forma, esto la reubica.
+  const t = opciones.transform;
+  if (t) {
+    if (t.position) mesh.position.fromArray(t.position);
+    if (t.rotation) mesh.rotation.set(t.rotation[0], t.rotation[1], t.rotation[2]);
+    if (t.scale) mesh.scale.fromArray(t.scale);
+  }
+
   contenedor.add(mesh);
+
+  // La estampa se registra como objeto editable para que Kusher pueda agarrarla
+  // con `T` y moverla, rotarla y escalarla con el gizmo de siempre, en vez de
+  // pelearle a los sliders. `transient: true`: se edita en vivo pero NO entra al
+  // layout del mundo — su posicion se guarda con el diseño de la prenda, que es
+  // donde corresponde.
+  if (contenedor.name) {
+    registerEditableObject({
+      id: `estampa:${contenedor.name}:${lado}`,
+      name: `${contenedor.name} · estampa ${lado}`,
+      type: 'estampa',
+      object3D: mesh,
+      castShadow: false,
+      receiveShadow: true,
+      transient: true,
+      manageShadows: false,
+    }, { silent: true });
+  }
   return mesh;
 }
 
@@ -325,3 +365,19 @@ onProductosChange(() => {
     }
   });
 });
+
+
+/**
+ * Lee la posicion, rotacion y escala que Kusher le dejo a la estampa con el
+ * gizmo, para guardarla en el diseño. Sin esto, el ajuste fino se pierde en
+ * cuanto se toca cualquier slider (que regenera el parche) o se refresca.
+ */
+export function readPrintTransform(contenedor, lado) {
+  const mesh = contenedor?.getObjectByName(`Estampa ${lado}`);
+  if (!mesh) return null;
+  return {
+    position: mesh.position.toArray(),
+    rotation: [mesh.rotation.x, mesh.rotation.y, mesh.rotation.z],
+    scale: mesh.scale.toArray(),
+  };
+}

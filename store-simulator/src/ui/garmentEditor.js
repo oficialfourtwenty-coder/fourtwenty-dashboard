@@ -17,7 +17,7 @@
 // motivo: un diseño guardado no puede aparecer sobre otra prenda porque alguien
 // agrego un mueble antes.
 
-import { applyGarmentPrint, PRINT_DEFAULTS } from '../world/garmentPrints.js';
+import { applyGarmentPrint, PRINT_DEFAULTS, readPrintTransform } from '../world/garmentPrints.js';
 import { garmentTypes, moldGarment, restyleGarment } from '../world/garments.js';
 import { leerImagen } from './estampaImagen.js';
 
@@ -237,6 +237,14 @@ export function createGarmentEditor() {
     <label>MOVER IZQUIERDA / DERECHA <span class="ft-valor" data-ft="vCentroX"></span></label>
     <input type="range" min="-100" max="100" step="1" data-ft="centroX">
 
+    <label class="ft-check">
+      <input type="checkbox" data-ft="espejar"> DAR VUELTA LA IMAGEN (espejo)
+    </label>
+
+    <p class="ft-aviso">Para encajarla fina: abrí el editor de mundo con <b>T</b>,
+    clickeá la estampa y usá el gizmo de siempre — <b>1</b> mover, <b>2</b> rotar,
+    <b>3</b> escalar. Después volvé acá y apretá GUARDAR.</p>
+
     <hr>
     <p class="ft-sub">MOLDEAR EL CUERPO — para que la prenda 3D calce con tu imagen</p>
 
@@ -301,6 +309,7 @@ export function createGarmentEditor() {
     el('vTol').textContent = el('tolerancia').value;
     el('vCentro').textContent = l.imagen ? `${Math.round(l.centroY * 100)}%` : '—';
     el('centroX').value = Math.round((l.centroX ?? 0) * 100);
+    el('espejar').checked = Boolean(l.espejar);
     el('vCentroX').textContent = l.imagen ? `${Math.round((l.centroX ?? 0) * 100)}` : '—';
     const m = diseño.molde ?? { ancho: 1, alto: 1, espesor: 1 };
     el('moldeAncho').value = Math.round(m.ancho * 100);
@@ -430,6 +439,12 @@ export function createGarmentEditor() {
     pintarControles();
   });
 
+  el('espejar').addEventListener('change', () => {
+    if (!diseño) return;
+    ladoActual().espejar = el('espejar').checked;
+    refrescarEstampa();
+  });
+
   el('centroX').addEventListener('input', () => {
     if (!diseño) return;
     ladoActual().centroX = Number(el('centroX').value) / 100;
@@ -474,6 +489,13 @@ export function createGarmentEditor() {
 
   el('guardar').addEventListener('click', () => {
     if (!prenda || !diseño) return;
+    // Antes de guardar se lee lo que Kusher dejo acomodado con el gizmo del
+    // editor de mundo. Sin esto el ajuste fino a mano no se guardaba nunca:
+    // el panel solo conocia los valores de sus propios sliders.
+    for (const cual of ['frente', 'dorso']) {
+      const t = readPrintTransform(prenda, cual);
+      if (t) diseño[cual].transform = t;
+    }
     const todos = leerGuardado();
     todos[prenda.name] = diseño;
     const resultado = guardar(todos);

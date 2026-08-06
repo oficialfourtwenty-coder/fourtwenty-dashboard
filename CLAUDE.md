@@ -255,6 +255,25 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 - Error conocido aceptado: dos puntos inferiores derechos del laberinto pueden
   quedar sin comerse. No corregir sin nuevo pedido.
 
+### Estampas: dos niveles de control
+
+- **Panel (click derecho sobre la prenda):** cuerpo, color, imagen, ancho, alto,
+  mover en los dos ejes, dar vuelta la imagen, y moldear el cuerpo. Es el
+  control grueso.
+- **Gizmo (tecla `T`):** la estampa se registra como objeto editable con el id
+  `estampa:<nombre de la prenda>:<lado>`, asi que se agarra y se mueve, rota y
+  escala con los mismos controles que cualquier objeto del mundo. Es el ajuste
+  fino, porque los sliders nunca alcanzan para encajar una imagen "al ojo".
+- ⚠️ El transform del gizmo se guarda con el DISEÑO de la prenda, no en el
+  layout del mundo (`transient: true`). Y se lee al apretar GUARDAR en el
+  panel: si Kusher acomoda con el gizmo y no guarda, se pierde, porque cualquier
+  slider regenera el parche desde cero.
+- ⚠️ **La estampa del frente salia ESPEJADA** hasta el 06/08. Al recorrer el
+  parche, `fu = 0` cae del lado +X de la prenda, que mirandola de frente es la
+  DERECHA de la pantalla: con `u = fu` el borde izquierdo de la imagen
+  aterrizaba a la derecha. Ahora los dos lados usan `u = 1 - fu`. Se verifica
+  midiendo en que X cae `u ≈ 0`, no mirando una captura.
+
 ### Constructor de piezas — armar objetos a mano con `T`
 
 - Kusher pidio poder modelar el mismo, con sus propias palabras: "dejame poder
