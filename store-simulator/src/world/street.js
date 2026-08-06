@@ -699,9 +699,15 @@ function buildRealInterior(scene, g, colliders, H) {
   const rail2 = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.6, 8), chrome);
   rail2.name = 'Interior local · barral prendas izquierdo';
   rail2.rotation.x = Math.PI / 2; rail2.position.set(-2.78, PLAT + 1.95, -6.2); g.add(rail2);
+  // Los CUATRO cuerpos que pidio Kusher, colgados juntos en la pared izquierda
+  // del local: es el primer perchero que se ve al entrar, asi que sirve de
+  // muestrario. Cada uno se puede rediseñar con click derecho (cuerpo, color y
+  // estampa propia) — ver src/ui/garmentEditor.js.
   const shirtDefs = [
-    { color: 0x141414, tipo: 'tee' }, { color: 0xf5f2ea, tipo: 'tee' },
-    { color: 0xf5f2ea, tipo: 'tee' }, { color: 0x2a3550, tipo: 'hoodie' },
+    { color: 0x141414, tipo: 'tee' },
+    { color: 0x2a3550, tipo: 'hoodie' },
+    { color: 0x2f3540, tipo: 'pantalon' },
+    { color: 0xb4a88c, tipo: 'bermuda' },
   ];
   // Prendas con volumen real, las mismas que los percheros de los pisos
   // (world/garments.js). Antes eran planos con textura recortada: de costado
@@ -871,7 +877,11 @@ function buildStockSelector(scene, g) {
     // Cuelga del barral cromado, que esta en PLAT + 2.05.
     prenda.position.set(x, PLAT + 2.0, zShirt);
     prenda.scale.setScalar(0.8);
-    prenda.userData = { piso: d.piso, label: d.label, baseScale: 0.8 };
+    // Object.assign y no `=`: createHangingGarment ya dejo `userData.garment`
+    // con el tipo y el color, que es lo que el editor de prendas usa para
+    // reconocerla. Reemplazar el objeto entero se lo comia y la prenda dejaba
+    // de poder editarse con click derecho.
+    Object.assign(prenda.userData, { piso: d.piso, label: d.label, baseScale: 0.8 });
     g.add(prenda);
     selectors.push(prenda);
     // etiqueta chica bajo cada remera

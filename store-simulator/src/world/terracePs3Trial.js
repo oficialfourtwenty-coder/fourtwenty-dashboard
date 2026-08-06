@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { addEditableHdriSphere } from './bincoShopTrial.js';
 import { createHangingGarment } from './garments.js';
 import { applySavedFrameDesigns } from '../ui/frameEditor.js';
+import { applySavedGarmentDesigns } from '../ui/garmentEditor.js';
 import { bindProductVisual } from './productVisuals.js';
 
 const MATERIAL_ROOT = 'assets/materials/terrace-ps3';
@@ -1418,6 +1419,9 @@ export function buildPs3FloorScene(scene, {
   // foto guardada tarda en decodificar; mientras tanto el cuadro muestra el
   // afiche provisional, que es exactamente lo que corresponde.
   applySavedFrameDesigns(scene);
+  // Sin esto las prendas vuelven a su color de fabrica y sin estampa cada vez
+  // que se entra de nuevo al piso, igual que pasaba con los cuadros.
+  applySavedGarmentDesigns(scene);
   return { root, colliders: [] };
 }
 
