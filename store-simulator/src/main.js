@@ -640,6 +640,10 @@ function registerDestinationEditables(record) {
     if (activeDestinationRecord !== record) return;
     applyLayout(layout);
     restoreClones(layout);
+    // Piezas armadas a mano DENTRO de este piso (editor/pieceBuilder.js). Sin
+    // esto solo se restauraban las de la calle: todo lo que Kusher armara
+    // parado en un piso desaparecia al salir y volver a entrar.
+    if (restorePieces(record.scene, layout)) applyLayout(layout);
     record.collidersDirty = true;
     renderer.shadowMap.needsUpdate = true;
   });
@@ -1390,6 +1394,7 @@ function buildShopping() {
   loadInitialLayout().then((layout) => {
     applyLayout(layout);
     restoreClones(layout);
+    if (restorePieces(s, layout)) applyLayout(layout);
   });
   return { scene: s, colliders: cols };
 }
