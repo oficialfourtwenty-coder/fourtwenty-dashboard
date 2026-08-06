@@ -5,7 +5,6 @@ import { registerEditableObject, unregisterEditableObject } from './editor/edita
 import { loadInitialLayout, saveLocalLayout } from './editor/layoutStore.js';
 import { BUNDLED_FURNITURE, MODEL_CATALOG_MIGRATION_KEY } from './editor/modelCatalog.js';
 import { normalizeGLTFHeight } from './gltfUtils.js';
-import { bindRackProducts } from './rackProducts.js';
 
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('/assets/draco/');
@@ -132,9 +131,6 @@ export async function addFurnitureItem(scene, item) {
     object.name = item.name ?? item.id;
     applyLayoutToObject(object, item);
     applyShadows(object, item);
-    // Si el mueble es un perchero, sus remeras quedan clickeables como
-    // producto. Para cualquier otro modelo no hace nada.
-    bindRackProducts(object, item.model);
     object.updateMatrixWorld(true);
     scene.add(object);
 
