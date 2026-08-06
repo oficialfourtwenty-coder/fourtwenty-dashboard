@@ -7,6 +7,7 @@ import { applySavedGarmentDesigns } from '../ui/garmentEditor.js';
 import { bindProductVisual } from './productVisuals.js';
 import { bindGarmentToProduct } from './garmentPrints.js';
 import { bindStackToProduct, createDisplayTable, createFoldedStack } from './displayTable.js';
+import { buildOriginCourtyard } from './originCourtyard.js';
 
 const MATERIAL_ROOT = 'assets/materials/terrace-ps3';
 const textureLoader = new THREE.TextureLoader();
@@ -888,14 +889,17 @@ const REMERAS_ORIGEN = Object.freeze([
 // Mesa cuadrada de exhibicion con las 12 remeras dobladas, 3 por diseño.
 // Es el mueble central del piso: en las capturas de Binco son justamente estas
 // mesas con prendas apiladas las que hacen que se lea como tienda.
-function addOriginDisplayTable(root, mats, theme) {
+function addOriginDisplayTable(root, mats, theme, centro = null) {
   const mesa = createDisplayTable({
     lado: 1.5,
     maderaMaterial: mats.wood,
     metalMaterial: mats.metal ?? mats.steel,
     nombre: themedName(theme, 'mesa de exhibicion'),
   });
-  mesa.group.position.set(0, 0, 2.2);
+  // Sobre la alfombra del patio. Si algun dia se mueve la alfombra, la mesa se
+  // mueve con ella: la posicion la manda el patio, no este numero.
+  if (centro) mesa.group.position.copy(centro);
+  else mesa.group.position.set(0, 0, 2.2);
   root.add(mesa.group);
 
   // Las 4 pilas en cuadrado sobre la tapa, con aire entre ellas.
@@ -924,7 +928,12 @@ function addOriginDisplayTable(root, mats, theme) {
 }
 
 function addOriginDetails(root, mats, theme) {
-  addOriginDisplayTable(root, mats, theme);
+  // ORIGEN deja de usar el decorado compartido y arma el PATIO FOURTWENTY que
+  // pidio Kusher: cuadrado de hormigon a cielo abierto, postes con el cartel
+  // colgante, barrales de pared, mostrador, alfombra y mesas laterales.
+  // Ver world/originCourtyard.js.
+  const patio = buildOriginCourtyard(root, mats, theme);
+  addOriginDisplayTable(root, mats, theme, patio.centroMesa);
 
   for (const [side, variant] of [[-1, 0], [1, 1]]) {
     const wall = unit(new THREE.Group(), themedName(theme, variant ? 'mural Burela' : 'mural Origen'), { collider: true });
