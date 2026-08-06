@@ -64,7 +64,11 @@ function aoDePliegue(t, angulo) {
 function aperturaParaAncho(type, t, anguloCentro, anchoM) {
   const objetivo = anchoM / 2;
   const PASOS = 64;
-  const paso = 0.9 / PASOS; // hasta ~51 grados a cada lado
+  // Hasta 83 grados a cada lado: practicamente la mitad delantera entera de la
+  // prenda. Antes el tope era 51 grados y una estampa grande dejaba de crecer
+  // aunque el control siguiera subiendo. No se llega a 90: ahi esta la costura
+  // del costado y el parche quedaria de canto contra la camara.
+  const paso = 1.45 / PASOS;
   const p = { x: 0, y: 0, z: 0 };
   const anterior = { x: 0, z: 0 };
   garmentSurfacePoint(type, t, anguloCentro, p);

@@ -122,10 +122,78 @@ function aplicarDiseño(prenda, diseño) {
 // Imagen
 // ---------------------------------------------------------------------------
 
-// PNG y no JPEG: una estampa casi siempre viene con fondo transparente, y el
-// JPEG no tiene canal alfa — el logo llegaria con un rectangulo blanco atras.
-// El precio es que pesa mas, por eso se limita a 1024 px.
-function leerImagen(file, maxLado = 1024) {
+// QUITAR EL FONDO
+//
+// Se rellena desde los BORDES hacia adentro, no se borra "todo lo que sea
+// blanco". La diferencia importa: un logo negro con letras blancas adentro
+// perderia las letras con la version simple. Partiendo del borde solo se come
+// el fondo que rodea al diseño, y cualquier blanco encerrado por tinta queda.
+//
+// El color de fondo se toma de las cuatro esquinas. Si las esquinas no
+// coinciden entre si, la imagen no tiene un fondo plano (es una foto) y no se
+// toca nada: mejor dejarla entera que agujerearla.
+function quitarFondoPlano(ctx, W, H, tolerancia) {
+  const imagen = ctx.getImageData(0, 0, W, H);
+  const d = imagen.data;
+  const en = (x, y) => (y * W + x) * 4;
+
+  const esquinas = [[0, 0], [W - 1, 0], [0, H - 1], [W - 1, H - 1]].map(([x, y]) => {
+    const i = en(x, y);
+    return [d[i], d[i + 1], d[i + 2], d[i + 3]];
+  });
+  // ya viene recortada: si las esquinas son transparentes no hay nada que hacer
+  if (esquinas.every((c) => c[3] < 8)) return { quitado: false, motivo: 'ya tenia el fondo recortado' };
+
+  const base = esquinas[0];
+  const parecido = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]);
+  if (esquinas.some((c) => parecido(c, base) > 60)) {
+    return { quitado: false, motivo: 'la imagen no tiene un fondo plano' };
+  }
+
+  const umbral = tolerancia * 3; // suma de las 3 diferencias de canal
+  const visto = new Uint8Array(W * H);
+  const pila = [];
+  for (let x = 0; x < W; x++) { pila.push(x, 0, x, H - 1); }
+  for (let y = 0; y < H; y++) { pila.push(0, y, W - 1, y); }
+
+  let borrados = 0;
+  while (pila.length) {
+    const y = pila.pop();
+    const x = pila.pop();
+    if (x < 0 || y < 0 || x >= W || y >= H) continue;
+    const p = y * W + x;
+    if (visto[p]) continue;
+    visto[p] = 1;
+    const i = p * 4;
+    if (d[i + 3] < 8) continue; // ya transparente
+    if (parecido([d[i], d[i + 1], d[i + 2]], base) > umbral) continue;
+    d[i + 3] = 0;
+    borrados++;
+    pila.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1);
+  }
+
+  // Pluma de 1 px: sin esto el borde queda dentado como un recorte de tijera.
+  // Baja el alfa a la mitad en los pixeles que todavia tienen vecino borrado.
+  const copiaAlfa = new Uint8ClampedArray(W * H);
+  for (let p = 0; p < W * H; p++) copiaAlfa[p] = d[p * 4 + 3];
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x < W - 1; x++) {
+      const p = y * W + x;
+      if (copiaAlfa[p] < 8) continue;
+      const vecinoVacio = copiaAlfa[p - 1] < 8 || copiaAlfa[p + 1] < 8
+        || copiaAlfa[p - W] < 8 || copiaAlfa[p + W] < 8;
+      if (vecinoVacio) d[p * 4 + 3] = 128;
+    }
+  }
+
+  ctx.putImageData(imagen, 0, 0);
+  return { quitado: borrados > 0, borrados, motivo: '' };
+}
+
+// PNG y no JPEG: una estampa necesita fondo transparente, y el JPEG no tiene
+// canal alfa — el logo llegaria con un rectangulo blanco atras. El precio es
+// que pesa mas, por eso se limita a 1024 px.
+function leerImagen(file, { maxLado = 1024, quitarFondo = true, tolerancia = 32 } = {}) {
   return new Promise((resolve, reject) => {
     const lector = new FileReader();
     lector.onerror = () => reject(new Error('no se pudo leer el archivo'));
@@ -137,8 +205,17 @@ function leerImagen(file, maxLado = 1024) {
         const canvas = document.createElement('canvas');
         canvas.width = Math.max(1, Math.round(img.width * escala));
         canvas.height = Math.max(1, Math.round(img.height * escala));
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve({ url: canvas.toDataURL('image/png'), ancho: img.width, alto: img.height });
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const recorte = quitarFondo
+          ? quitarFondoPlano(ctx, canvas.width, canvas.height, tolerancia)
+          : { quitado: false, motivo: '' };
+        resolve({
+          url: canvas.toDataURL('image/png'),
+          ancho: img.width,
+          alto: img.height,
+          recorte,
+        });
       };
       img.src = lector.result;
     };
@@ -187,6 +264,8 @@ const CSS = `
 #${PANEL_ID} .ft-aviso { margin-top: 8px; font-size: 10px; line-height: 1.4; opacity: 0.75; }
 #${PANEL_ID} .ft-aviso.ft-error { color: #ff9a7a; opacity: 1; }
 #${PANEL_ID} .ft-valor { float: right; opacity: 0.9; }
+#${PANEL_ID} label.ft-check { display: flex; align-items: center; gap: 6px; opacity: 0.95; margin-top: 10px; }
+#${PANEL_ID} label.ft-check input { margin: 0; }
 #${PANEL_ID} hr { border: none; border-top: 1px solid #2c3128; margin: 12px 0 2px; }
 `;
 
@@ -221,14 +300,20 @@ export function createGarmentEditor() {
       <button data-ft="lado" data-lado="dorso">DORSO</button>
     </div>
 
-    <label>IMAGEN DE LA ESTAMPA (PNG con fondo transparente)</label>
+    <label>IMAGEN DE LA ESTAMPA</label>
     <input type="file" accept="image/*" data-ft="archivo">
 
+    <label class="ft-check">
+      <input type="checkbox" data-ft="sinFondo" checked> QUITARLE EL FONDO
+    </label>
+    <label>FUERZA DEL RECORTE <span class="ft-valor" data-ft="vTol"></span></label>
+    <input type="range" min="8" max="90" step="2" value="32" data-ft="tolerancia">
+
     <label>ANCHO <span class="ft-valor" data-ft="vAncho"></span></label>
-    <input type="range" min="4" max="42" step="1" data-ft="ancho">
+    <input type="range" min="4" max="84" step="1" data-ft="ancho">
 
     <label>ALTO <span class="ft-valor" data-ft="vAlto"></span></label>
-    <input type="range" min="4" max="52" step="1" data-ft="alto">
+    <input type="range" min="4" max="104" step="1" data-ft="alto">
 
     <label>ALTURA EN LA PRENDA <span class="ft-valor" data-ft="vCentro"></span></label>
     <input type="range" min="6" max="92" step="1" data-ft="centro">
@@ -264,12 +349,17 @@ export function createGarmentEditor() {
     aviso.classList.toggle('ft-error', error);
   }
 
+  // Devuelve null si no hay ninguna prenda abierta. Los controles del panel
+  // siguen existiendo en el DOM con el editor cerrado, y un evento suelto
+  // (el input de archivo conserva su valor, el navegador restaura sliders)
+  // llegaba con `diseño` en null y tiraba la pagina entera.
   function ladoActual() {
-    return diseño[lado];
+    return diseño ? diseño[lado] : null;
   }
 
   function pintarControles() {
     const l = ladoActual();
+    if (!l) return;
     selTipo.value = diseño.tipo;
     el('color').value = hex(diseño.color);
     el('ancho').value = l.anchoCm;
@@ -277,6 +367,7 @@ export function createGarmentEditor() {
     el('centro').value = Math.round(l.centroY * 100);
     el('vAncho').textContent = `${l.anchoCm} cm`;
     el('vAlto').textContent = `${l.altoCm} cm`;
+    el('vTol').textContent = el('tolerancia').value;
     el('vCentro').textContent = l.imagen ? `${Math.round(l.centroY * 100)}%` : '—';
     for (const boton of panel.querySelectorAll('[data-ft="lado"]')) {
       boton.classList.toggle('is-activo', boton.dataset.lado === lado);
@@ -287,23 +378,25 @@ export function createGarmentEditor() {
   // cada movimiento del slider tiraria la geometria y la textura 60 veces por
   // segundo; el parche son ~300 triangulos y se regenera sin que se note.
   function refrescarEstampa() {
-    if (!prenda) return;
+    if (!prenda || !diseño) return;
     applyGarmentPrint(prenda, prenda.userData.garment.type, lado, ladoActual());
     prenda.userData.garment.print = { frente: diseño.frente, dorso: diseño.dorso };
   }
 
   function refrescarTodo() {
-    if (!prenda) return;
+    if (!prenda || !diseño) return;
     aplicarDiseño(prenda, diseño);
   }
 
   selTipo.addEventListener('change', () => {
+    if (!diseño) return;
     diseño.tipo = selTipo.value;
     refrescarTodo();
     avisar('Cuerpo cambiado. Acordate de GUARDAR.');
   });
 
   el('color').addEventListener('input', () => {
+    if (!diseño) return;
     diseño.color = parseInt(el('color').value.slice(1), 16);
     refrescarTodo();
   });
@@ -317,36 +410,56 @@ export function createGarmentEditor() {
     });
   }
 
-  el('archivo').addEventListener('change', async (evento) => {
-    const file = evento.target.files?.[0];
-    if (!file) return;
+  // Se guarda el archivo original para poder volver a recortarlo cuando Kusher
+  // mueve la fuerza del recorte, sin obligarlo a elegirlo de nuevo.
+  let archivoOriginal = null;
+
+  async function procesarImagen() {
+    if (!archivoOriginal || !diseño) return;
     try {
-      const { url, ancho, alto } = await leerImagen(file);
+      const { url, ancho, alto, recorte } = await leerImagen(archivoOriginal, {
+        quitarFondo: el('sinFondo').checked,
+        tolerancia: Number(el('tolerancia').value),
+      });
       const l = ladoActual();
       l.imagen = url;
       proporcion = alto / ancho;
-      // Alto inicial derivado de la proporcion real: si no, una imagen apaisada
-      // entra estirada y hay que corregirla a mano siempre.
-      l.altoCm = Math.max(4, Math.min(52, Math.round(l.anchoCm * proporcion)));
+      // Alto derivado de la proporcion real: si no, una imagen apaisada entra
+      // estirada y hay que corregirla a mano siempre.
+      l.altoCm = Math.max(4, Math.min(104, Math.round(l.anchoCm * proporcion)));
       // El cuerpo se redibuja limpio: sin esto la estampa nueva queda encima
       // del "FT" de relleno.
       refrescarTodo();
       pintarControles();
-      avisar('Estampa cargada. Ajustala y apreta GUARDAR.');
+      if (el('sinFondo').checked && !recorte.quitado) {
+        avisar(`Estampa cargada, pero NO se le quito el fondo: ${recorte.motivo}.`);
+      } else {
+        avisar('Estampa cargada. Ajustala y apreta GUARDAR.');
+      }
     } catch (error) {
       avisar(error.message, true);
     }
+  }
+
+  el('archivo').addEventListener('change', (evento) => {
+    archivoOriginal = evento.target.files?.[0] ?? null;
+    if (archivoOriginal) procesarImagen();
   });
+  el('sinFondo').addEventListener('change', procesarImagen);
+  el('tolerancia').addEventListener('change', () => { pintarControles(); procesarImagen(); });
+  el('tolerancia').addEventListener('input', pintarControles);
 
   el('ancho').addEventListener('input', () => {
     const l = ladoActual();
+    if (!l) return;
     l.anchoCm = Number(el('ancho').value);
-    if (proporcion) l.altoCm = Math.max(4, Math.min(52, Math.round(l.anchoCm * proporcion)));
+    if (proporcion) l.altoCm = Math.max(4, Math.min(104, Math.round(l.anchoCm * proporcion)));
     refrescarEstampa();
     pintarControles();
   });
 
   el('alto').addEventListener('input', () => {
+    if (!diseño) return;
     ladoActual().altoCm = Number(el('alto').value);
     proporcion = null; // el dueño decidio deformarla a proposito
     refrescarEstampa();
@@ -354,6 +467,7 @@ export function createGarmentEditor() {
   });
 
   el('centro').addEventListener('input', () => {
+    if (!diseño) return;
     ladoActual().centroY = Number(el('centro').value) / 100;
     refrescarEstampa();
     pintarControles();
@@ -361,11 +475,12 @@ export function createGarmentEditor() {
 
   el('proporcion').addEventListener('click', () => {
     const l = ladoActual();
+    if (!l) return;
     if (!l.imagen) { avisar('Primero subi una imagen.', true); return; }
     const img = new Image();
     img.onload = () => {
       proporcion = img.height / img.width;
-      l.altoCm = Math.max(4, Math.min(52, Math.round(l.anchoCm * proporcion)));
+      l.altoCm = Math.max(4, Math.min(104, Math.round(l.anchoCm * proporcion)));
       refrescarEstampa();
       pintarControles();
       avisar('Proporcion original restaurada.');
@@ -374,6 +489,7 @@ export function createGarmentEditor() {
   });
 
   el('quitar').addEventListener('click', () => {
+    if (!diseño) return;
     ladoActual().imagen = null;
     refrescarTodo();
     pintarControles();
@@ -381,6 +497,7 @@ export function createGarmentEditor() {
   });
 
   el('guardar').addEventListener('click', () => {
+    if (!prenda || !diseño) return;
     const todos = leerGuardado();
     todos[prenda.name] = diseño;
     const resultado = guardar(todos);
@@ -412,6 +529,7 @@ export function createGarmentEditor() {
       proporcion = null;
       el('nombre').textContent = prenda.name || '(prenda sin nombre)';
       el('archivo').value = '';
+      archivoOriginal = null;
       pintarControles();
       avisar(prenda.name
         ? ''
