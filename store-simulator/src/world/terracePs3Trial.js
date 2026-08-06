@@ -7,7 +7,6 @@ import { applySavedGarmentDesigns } from '../ui/garmentEditor.js';
 import { bindProductVisual } from './productVisuals.js';
 import { bindGarmentToProduct } from './garmentPrints.js';
 import { bindStackToProduct, createDisplayTable, createFoldedStack } from './displayTable.js';
-import { buildOriginCourtyard } from './originCourtyard.js';
 
 const MATERIAL_ROOT = 'assets/materials/terrace-ps3';
 const textureLoader = new THREE.TextureLoader();
@@ -927,106 +926,59 @@ function addOriginDisplayTable(root, mats, theme, centro = null) {
   return mesa;
 }
 
-function addOriginDetails(root, mats, theme) {
-  // ORIGEN deja de usar el decorado compartido y arma el PATIO FOURTWENTY que
-  // pidio Kusher: cuadrado de hormigon a cielo abierto, postes con el cartel
-  // colgante, barrales de pared, mostrador, alfombra y mesas laterales.
-  // Ver world/originCourtyard.js.
-  const patio = buildOriginCourtyard(root, mats, theme);
-  addOriginDisplayTable(root, mats, theme, patio.centroMesa);
-
-  for (const [side, variant] of [[-1, 0], [1, 1]]) {
-    const wall = unit(new THREE.Group(), themedName(theme, variant ? 'mural Burela' : 'mural Origen'), { collider: true });
-    const backing = roundedBox(0.18, 2.82, 5.55, mats.concreteDark, 0.07, 2);
-    backing.position.y = 1.55;
-    wall.add(backing);
-    const face = new THREE.Mesh(
-      new THREE.PlaneGeometry(5.3, 2.58),
-      new THREE.MeshBasicMaterial({ map: graffitiTexture(theme, variant), toneMapped: false }),
-    );
-    face.position.set(side < 0 ? 0.096 : -0.096, 1.55, 0);
-    face.rotation.y = side < 0 ? Math.PI / 2 : -Math.PI / 2;
-    wall.add(face);
-    wall.position.set(side * 6.48, 0, variant ? 7.35 : 7.15);
-    root.add(wall);
-  }
-
-  const crates = unit(new THREE.Group(), themedName(theme, 'cajones y latas de pintura'));
-  for (let index = 0; index < 5; index++) {
-    const crate = roundedBox(0.72, 0.42, 0.55, mats.wood, 0.06, 2);
-    crate.position.set((index % 2) * 0.58, 0.21 + Math.floor(index / 2) * 0.42, (index % 3) * 0.08);
-    crate.rotation.y = (index - 2) * 0.08;
-    crates.add(crate);
-  }
-  for (let index = 0; index < 4; index++) {
-    const can = cylinder(0.11, 0.11, 0.25, index % 2 ? mats.orange : mats.green, 14);
-    can.position.set(-0.48 + index * 0.28, 0.13, 0.55);
-    crates.add(can);
-  }
-  crates.position.set(-5.55, 0, 10.9);
-  root.add(crates);
+// ORIGEN ARRANCA VACIO A PROPOSITO (06/08).
+//
+// Kusher lo pidio asi: "dejame a mi que lo hago de 0 manualmente, pone solo un
+// piso amplio que establezca los limites de movimiento". Y tiene razon — mis
+// dos intentos de adivinar como se veia el local fallaron, y con el constructor
+// de piezas (`T` -> ARMAR A MANO) el lo arma con su ojo en menos tiempo del que
+// yo tardo en errarle otra vez.
+//
+// Lo unico que queda puesto es lo que NO puede armar a mano:
+//   - el piso, que ademas marca hasta donde se puede caminar
+//   - la esfera 360 del cielo (la pone buildPs3FloorScene, se edita con `T`)
+//   - la mesa con las 12 remeras, que depende del catalogo de productos
+//   - los cuadros, para las fotos de campaña
+// Las paredes, los postes, el cartel y los muebles los arma el.
+function addOriginDetails(root, mats, theme, productFloor = null) {
+  addOriginFloor(root, mats, theme);
+  // Centro del area caminable: x=0 y z=4.5, el punto medio entre los limites.
+  addOriginDisplayTable(root, mats, theme, new THREE.Vector3(0, 0, 4.5));
 }
 
-function courtTexture(theme) {
-  return canvasTexture(1024, 1024, (ctx, width, height) => {
-    ctx.fillStyle = '#9b6a3d';
-    ctx.fillRect(0, 0, width, height);
-    for (let x = 0; x < width; x += 42) {
-      ctx.fillStyle = x % 84 ? 'rgba(255,224,167,0.10)' : 'rgba(55,24,11,0.09)';
-      ctx.fillRect(x, 0, 38, height);
-    }
-    ctx.strokeStyle = '#f4ead7';
-    ctx.lineWidth = 14;
-    ctx.strokeRect(52, 52, width - 104, height - 104);
-    ctx.beginPath();
-    ctx.arc(width / 2, height / 2, 145, 0, Math.PI * 2);
-    ctx.stroke();
-    for (const y of [52, height - 320]) ctx.strokeRect(width / 2 - 155, y, 310, 268);
-    ctx.fillStyle = theme.accentCss;
-    ctx.beginPath();
-    ctx.arc(width / 2, height / 2, 102, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#111515';
-    ctx.font = '900 92px Arial Black, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('420', width / 2, height / 2 + 8);
-  });
-}
+// Piso de ORIGEN. Cubre EXACTAMENTE el area caminable (PS3_FLOOR_PROFILE.bounds)
+// mas un borde de 40 cm, asi el canto del piso es el limite del movimiento y
+// Kusher ve donde termina el mundo sin tener que chocarse contra una pared
+// invisible.
+function addOriginFloor(root, mats, theme) {
+  const b = PS3_FLOOR_PROFILE.bounds;
+  const ancho = (b.maxX - b.minX) + 0.8;
+  const fondo = (b.maxZ - b.minZ) + 0.8;
+  const centroX = (b.minX + b.maxX) / 2;
+  const centroZ = (b.minZ + b.maxZ) / 2;
 
-function scoreboardTexture(theme) {
-  return canvasTexture(1024, 420, (ctx, width, height) => {
-    ctx.fillStyle = '#070909';
-    ctx.fillRect(0, 0, width, height);
-    ctx.strokeStyle = theme.accentCss;
-    ctx.lineWidth = 14;
-    ctx.strokeRect(16, 16, width - 32, height - 32);
-    ctx.fillStyle = '#f5eee2';
-    ctx.font = '900 72px Arial Black, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('BURELA LEAGUE', width / 2, 92);
-    ctx.fillStyle = theme.accentCss;
-    ctx.font = '900 156px Courier New, monospace';
-    ctx.fillText('42  -  0', width / 2, 270);
-    ctx.fillStyle = '#d6c7a8';
-    ctx.font = '700 34px Courier New, monospace';
-    ctx.fillText('HOOP SEASON  /  FOURTWENTY', width / 2, 356);
-  });
-}
+  const piso = roundedBox(ancho, 0.3, fondo, mats.concreteDark ?? mats.concrete, 0.1, 2);
+  piso.name = themedName(theme, 'piso');
+  piso.position.set(centroX, -0.15, centroZ);
+  piso.receiveShadow = true;
+  root.add(piso);
 
-function createBasketball(mats) {
-  const ball = new THREE.Group();
-  const sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.18, 20, 14),
-    new THREE.MeshStandardMaterial({ color: 0xc65d24, roughness: 0.9 }),
-  );
-  ball.add(sphere);
-  for (const rotation of [[0, 0, 0], [Math.PI / 2, 0, 0], [0, Math.PI / 2, 0]]) {
-    const seam = new THREE.Mesh(new THREE.TorusGeometry(0.181, 0.008, 6, 24), mats.black);
-    seam.rotation.set(...rotation);
-    ball.add(seam);
+  // Zocalo de 12 cm en todo el perimetro: sin algo que marque el borde, con el
+  // cielo de fondo el piso parece flotar en el aire y no se entiende donde
+  // termina el mundo.
+  const zocalo = mats.concrete ?? mats.concreteDark;
+  for (const [x, z, ax, az] of [
+    [centroX, centroZ - fondo / 2, ancho, 0.12],
+    [centroX, centroZ + fondo / 2, ancho, 0.12],
+    [centroX - ancho / 2, centroZ, 0.12, fondo],
+    [centroX + ancho / 2, centroZ, 0.12, fondo],
+  ]) {
+    const borde = new THREE.Mesh(new THREE.BoxGeometry(ax, 0.12, az), zocalo);
+    borde.name = themedName(theme, 'zocalo del piso');
+    borde.position.set(x, 0.06, z);
+    borde.receiveShadow = true;
+    root.add(borde);
   }
-  return ball;
 }
 
 function addHoopDetails(root, mats, theme) {
@@ -1340,8 +1292,8 @@ function addArtworkFrames(root, mats, theme) {
   }
 }
 
-function addThemeDetails(root, mats, theme) {
-  if (theme.key === 'origen') addOriginDetails(root, mats, theme);
+function addThemeDetails(root, mats, theme, productFloor = null) {
+  if (theme.key === 'origen') addOriginDetails(root, mats, theme, productFloor);
   else if (theme.key === 'hoop') addHoopDetails(root, mats, theme);
   else if (theme.key === 'cultura') addCultureDetails(root, mats, theme);
   else if (theme.key === 'bob') addBobDetails(root, mats, theme);
@@ -1403,10 +1355,17 @@ export function buildPs3FloorScene(scene, {
   const mats = buildMaterials(theme);
   scene.userData.ps3Theme = theme.key;
 
+  // ORIGEN NO usa la base comercial compartida: es un patio de hormigon a
+  // cielo abierto con su propio piso, sus paredes y sus muebles
+  // (world/originCourtyard.js). Antes el patio se agregaba ENCIMA de la tienda
+  // vieja y las paredes quedaban paradas en el medio del local.
+  const esPatio = theme.key === 'origen';
+
   const environmentRoot = addEditableHdriSphere(root, scene, environmentConfig);
   environmentRoot.scale.setScalar(1.5);
   environmentRoot.rotation.y = -0.18;
 
+  if (!esPatio) {
   const floor = roundedBox(
     TERRACE_PS3_PROFILE.width,
     0.32,
@@ -1465,7 +1424,8 @@ export function buildPs3FloorScene(scene, {
   }
   createPlanter(root, { x: -5.72, z: -3.85, scale: 0.9, mats, theme });
   createPlanter(root, { x: 5.72, z: -3.85, scale: 0.9, mats, theme });
-  addThemeDetails(root, mats, theme);
+  }
+  addThemeDetails(root, mats, theme, productFloor);
   addArtworkFrames(root, mats, theme);
 
   root.traverse((object) => {
