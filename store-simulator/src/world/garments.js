@@ -724,6 +724,31 @@ export function restyleGarment(group, { type, color, limpia = false }) {
   return cuerpo;
 }
 
+/**
+ * MOLDEAR LA PRENDA: estira o achica el cuerpo en sus tres ejes.
+ *
+ * Existe porque el cuerpo parametrico nunca va a coincidir exactamente con la
+ * foto de una prenda real. En vez de que Kusher tenga que aceptar la silueta
+ * que yo eligi, puede deformarla hasta que calce con su imagen — igual que
+ * mueve y escala cualquier objeto con la tecla `T`.
+ *
+ * ⚠️ La escala se aplica a la tela Y a los parches de estampa por separado, no
+ * al grupo. Si se escalara el grupo, la percha se estiraria con la prenda y una
+ * remera ancha colgaria de una percha deformada.
+ */
+export function moldGarment(group, { ancho = 1, alto = 1, espesor = 1 } = {}) {
+  if (!group) return;
+  group.userData.garment ??= {};
+  group.userData.garment.molde = { ancho, alto, espesor };
+  group.traverse((hijo) => {
+    if (!hijo.isMesh) return;
+    const esTela = hijo.userData?.garmentBody === true;
+    const esEstampa = typeof hijo.name === 'string' && hijo.name.startsWith('Estampa ');
+    if (!esTela && !esEstampa) return;   // la percha queda como esta
+    hijo.scale.set(ancho, alto, espesor);
+  });
+}
+
 /** Pila de prendas dobladas para estantes y mesas. */
 export function createFoldedStack({ colors, material, cantidad = 4, ancho = 0.34 }) {
   const group = new THREE.Group();

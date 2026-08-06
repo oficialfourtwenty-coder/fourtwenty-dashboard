@@ -43,8 +43,21 @@ export const PRINT_DEFAULTS = Object.freeze({
   // altura del CENTRO de la estampa, 0 = hombros, 1 = ruedo. 0.34 cae en el
   // pecho, que es donde va una estampa serigrafiada real.
   centroY: 0.34,
+  // corrimiento HORIZONTAL, en fraccion del medio-ancho de la prenda.
+  // 0 = centrada, -1 = pegada al costado izquierdo, 1 = al derecho.
+  centroX: 0,
   opacidad: 1,
 });
+
+// Tope angular del parche a cada lado del centro. 1.52 rad son 87 grados:
+// practicamente la costura del costado, o sea la mitad delantera COMPLETA de la
+// prenda. No se llega a 90 exactos porque ahi el parche queda de canto y se ve
+// como una linea.
+//
+// Este numero existe por la geometria de la prenda, no por criterio: mas alla
+// de la costura ya no hay frente donde apoyar nada. Cualquier otro limite de
+// tamaño lo decide Kusher con los controles, no este archivo.
+const APERTURA_MAXIMA = 1.52;
 
 /** Igual que el AO del cuerpo (garments.js). Duplicado a proposito: si el
  * parche usara otra formula, la estampa se veria mas clara que la tela justo
@@ -65,12 +78,8 @@ function aoDePliegue(t, angulo) {
  */
 function aperturaParaAncho(type, t, anguloCentro, anchoM) {
   const objetivo = anchoM / 2;
-  const PASOS = 64;
-  // Hasta 83 grados a cada lado: practicamente la mitad delantera entera de la
-  // prenda. Antes el tope era 51 grados y una estampa grande dejaba de crecer
-  // aunque el control siguiera subiendo. No se llega a 90: ahi esta la costura
-  // del costado y el parche quedaria de canto contra la camara.
-  const paso = 1.45 / PASOS;
+  const PASOS = 96;
+  const paso = APERTURA_MAXIMA / PASOS;
   const p = { x: 0, y: 0, z: 0 };
   const anterior = { x: 0, z: 0 };
   garmentSurfacePoint(type, t, anguloCentro, p);
@@ -84,24 +93,31 @@ function aperturaParaAncho(type, t, anguloCentro, anchoM) {
     anterior.x = p.x; anterior.z = p.z;
     if (arco >= objetivo) return i * paso;
   }
-  return PASOS * paso;
+  return APERTURA_MAXIMA;
 }
 
 /**
  * Malla del parche de estampa, en el espacio local de la prenda.
  * Devuelve null si la prenda no admite estampa en esa altura.
  */
-export function printPatchGeometry(type, { lado, anchoCm, altoCm, centroY }) {
-  const anguloCentro = ANGULO_LADO[lado] ?? ANGULO_LADO.frente;
+export function printPatchGeometry(type, { lado, anchoCm, altoCm, centroY, centroX = 0 }) {
+  const base = ANGULO_LADO[lado] ?? ANGULO_LADO.frente;
   const alto = garmentHeight(type);
   const altoM = altoCm / 100;
   const anchoM = anchoCm / 100;
 
-  // Rango de altura, recortado para que la estampa no se trepe al hombro ni se
-  // caiga del ruedo. 0.04..0.97 deja siempre un margen de tela.
+  // Corrimiento horizontal: centroX va de -1 a 1 y se traduce a un giro sobre
+  // la seccion. El signo se invierte en el dorso para que "derecha" siga siendo
+  // la derecha de la pantalla cuando se mira la prenda por atras.
+  const anguloCentro = base + (lado === 'dorso' ? -1 : 1) * centroX * (APERTURA_MAXIMA * 0.6);
+
+  // Rango de altura. Va de 0 (hombros) a 1 (ruedo) SIN recorte: si Kusher
+  // quiere que la imagen cubra la prenda entera, tiene que poder llegar a los
+  // dos extremos. Antes se recortaba a 0.04..0.97 "para dejar margen de tela",
+  // que era una decision mia, no una necesidad tecnica.
   const medioT = (altoM / alto) / 2;
-  const tArriba = Math.max(0.04, centroY - medioT);
-  const tAbajo = Math.min(0.97, centroY + medioT);
+  const tArriba = Math.max(0, centroY - medioT);
+  const tAbajo = Math.min(1, centroY + medioT);
   if (tAbajo <= tArriba) return null;
 
   const apertura = aperturaParaAncho(type, centroY, anguloCentro, anchoM);

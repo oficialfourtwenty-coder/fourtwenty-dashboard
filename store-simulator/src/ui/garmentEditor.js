@@ -18,7 +18,7 @@
 // agrego un mueble antes.
 
 import { applyGarmentPrint, PRINT_DEFAULTS } from '../world/garmentPrints.js';
-import { garmentTypes, restyleGarment } from '../world/garments.js';
+import { garmentTypes, moldGarment, restyleGarment } from '../world/garments.js';
 import { leerImagen } from './estampaImagen.js';
 
 const STORAGE_KEY = 'ft-prendas-v1';
@@ -78,6 +78,7 @@ function diseñoDe(prenda) {
   return {
     tipo: g.type,
     color: g.color,
+    molde: g.molde ?? { ancho: 1, alto: 1, espesor: 1 },
     frente: { ...PRINT_DEFAULTS, lado: 'frente', imagen: null, ...(g.print?.frente ?? {}) },
     dorso: { ...PRINT_DEFAULTS, lado: 'dorso', imagen: null, ...(g.print?.dorso ?? {}) },
   };
@@ -117,6 +118,9 @@ function aplicarDiseño(prenda, diseño) {
   });
   applyGarmentPrint(prenda, g.type, 'frente', diseño.frente);
   applyGarmentPrint(prenda, g.type, 'dorso', diseño.dorso);
+  // El molde va DESPUES de las estampas: applyGarmentPrint crea parches nuevos
+  // con escala 1 y hay que volver a estirarlos junto con el cuerpo.
+  if (diseño.molde) moldGarment(prenda, diseño.molde);
 }
 
 // ---------------------------------------------------------------------------
@@ -221,14 +225,29 @@ export function createGarmentEditor() {
          hay que salir a mirar la prenda para saber si el recorte funciono. -->
     <div class="ft-previa" data-ft="previa"><span>SIN IMAGEN</span></div>
 
-    <label>ANCHO <span class="ft-valor" data-ft="vAncho"></span></label>
-    <input type="range" min="4" max="84" step="1" data-ft="ancho">
+    <label>ANCHO DE LA IMAGEN <span class="ft-valor" data-ft="vAncho"></span></label>
+    <input type="range" min="2" max="140" step="1" data-ft="ancho">
 
-    <label>ALTO <span class="ft-valor" data-ft="vAlto"></span></label>
-    <input type="range" min="4" max="104" step="1" data-ft="alto">
+    <label>ALTO DE LA IMAGEN <span class="ft-valor" data-ft="vAlto"></span></label>
+    <input type="range" min="2" max="170" step="1" data-ft="alto">
 
-    <label>ALTURA EN LA PRENDA <span class="ft-valor" data-ft="vCentro"></span></label>
-    <input type="range" min="6" max="92" step="1" data-ft="centro">
+    <label>MOVER ARRIBA / ABAJO <span class="ft-valor" data-ft="vCentro"></span></label>
+    <input type="range" min="0" max="100" step="1" data-ft="centro">
+
+    <label>MOVER IZQUIERDA / DERECHA <span class="ft-valor" data-ft="vCentroX"></span></label>
+    <input type="range" min="-100" max="100" step="1" data-ft="centroX">
+
+    <hr>
+    <p class="ft-sub">MOLDEAR EL CUERPO — para que la prenda 3D calce con tu imagen</p>
+
+    <label>ANCHO DEL CUERPO <span class="ft-valor" data-ft="vMoldeAncho"></span></label>
+    <input type="range" min="40" max="200" step="1" data-ft="moldeAncho">
+
+    <label>LARGO DEL CUERPO <span class="ft-valor" data-ft="vMoldeAlto"></span></label>
+    <input type="range" min="40" max="200" step="1" data-ft="moldeAlto">
+
+    <label>ESPESOR <span class="ft-valor" data-ft="vMoldeEspesor"></span></label>
+    <input type="range" min="20" max="220" step="1" data-ft="moldeEspesor">
 
     <div class="ft-acciones">
       <button data-ft="proporcion">PROPORCION ORIGINAL</button>
@@ -281,6 +300,15 @@ export function createGarmentEditor() {
     el('vAlto').textContent = `${l.altoCm} cm`;
     el('vTol').textContent = el('tolerancia').value;
     el('vCentro').textContent = l.imagen ? `${Math.round(l.centroY * 100)}%` : '—';
+    el('centroX').value = Math.round((l.centroX ?? 0) * 100);
+    el('vCentroX').textContent = l.imagen ? `${Math.round((l.centroX ?? 0) * 100)}` : '—';
+    const m = diseño.molde ?? { ancho: 1, alto: 1, espesor: 1 };
+    el('moldeAncho').value = Math.round(m.ancho * 100);
+    el('moldeAlto').value = Math.round(m.alto * 100);
+    el('moldeEspesor').value = Math.round(m.espesor * 100);
+    el('vMoldeAncho').textContent = `${Math.round(m.ancho * 100)}%`;
+    el('vMoldeAlto').textContent = `${Math.round(m.alto * 100)}%`;
+    el('vMoldeEspesor').textContent = `${Math.round(m.espesor * 100)}%`;
     for (const boton of panel.querySelectorAll('[data-ft="lado"]')) {
       boton.classList.toggle('is-activo', boton.dataset.lado === lado);
     }
@@ -293,6 +321,8 @@ export function createGarmentEditor() {
     if (!prenda || !diseño) return;
     applyGarmentPrint(prenda, prenda.userData.garment.type, lado, ladoActual());
     prenda.userData.garment.print = { frente: diseño.frente, dorso: diseño.dorso };
+    // el parche nace con escala 1: hay que devolverle el molde de la prenda
+    if (diseño.molde) moldGarment(prenda, diseño.molde);
   }
 
   function refrescarTodo() {
@@ -399,6 +429,24 @@ export function createGarmentEditor() {
     refrescarEstampa();
     pintarControles();
   });
+
+  el('centroX').addEventListener('input', () => {
+    if (!diseño) return;
+    ladoActual().centroX = Number(el('centroX').value) / 100;
+    refrescarEstampa();
+    pintarControles();
+  });
+
+  // Moldear el cuerpo NO regenera la geometria: solo cambia la escala de la
+  // malla, que es instantaneo y se puede arrastrar en vivo.
+  for (const [control, eje] of [['moldeAncho', 'ancho'], ['moldeAlto', 'alto'], ['moldeEspesor', 'espesor']]) {
+    el(control).addEventListener('input', () => {
+      if (!diseño || !prenda) return;
+      diseño.molde = { ...(diseño.molde ?? { ancho: 1, alto: 1, espesor: 1 }), [eje]: Number(el(control).value) / 100 };
+      moldGarment(prenda, diseño.molde);
+      pintarControles();
+    });
+  }
 
   el('proporcion').addEventListener('click', () => {
     const l = ladoActual();
