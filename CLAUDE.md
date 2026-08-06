@@ -255,6 +255,36 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 - Error conocido aceptado: dos puntos inferiores derechos del laberinto pueden
   quedar sin comerse. No corregir sin nuevo pedido.
 
+### Perchero GLB de Chelo (pared izquierda del local)
+
+- Modelo `public/assets/furniture/fourtwenty-rack-display-v01.glb` (274 KB,
+  34 mallas, ~11.000 triangulos, 1.80 x 0.89 x 0.35 m). Reemplaza al barral
+  procedural que estaba en la pared izquierda del local (06/08).
+- Viene con `fourtwenty-tshirt-inspection-v01.glb` (53 KB): una remera suelta
+  con nodos `PRINT_FRONT` / `PRINT_BACK` preparados para recibir estampas.
+  Todavia no se usa en el mundo; esta registrada para sumarla con `T`.
+- Entra como mueble editable normal (`BUNDLED_FURNITURE`), asi que se mueve,
+  rota, escala y duplica con `T` como cualquier otro. `collidable: false`:
+  va contra la pared. `castShadow: false`: 6 prendas con sombra salen caras.
+- **Sin `height` a proposito.** El modelo ya viene en metros; poner `height`
+  haria que `normalizeGLTFHeight` lo reescale y pierda la escala de Chelo.
+- Las 6 remeras (`TSHIRT_01_BODY` ... `TSHIRT_06_BODY`) quedan clickeables
+  como producto via `src/world/rackProducts.js`, que corre al cargar cada
+  mueble. Toman los slots `{ piso: 'local', index: 0..3 }` que antes tenian las
+  4 prendas procedurales; el jean sigue en el slot 4.
+- ⚠️ Ahi **no** se usa `bindProductVisual`. Esa funcion pisa el mapa del
+  material con la foto del producto: sirve para las prendas parametricas de
+  `garments.js`, cuyo UV esta hecho para recibir una foto plana. Estirar un
+  `.webp` de la tienda sobre el UV de Chelo arruinaria el modelo. Solo se marca
+  `userData.productSlot`, que es lo unico que `productClicks.js` necesita.
+
+- ⚠️ **Al sumar un mueble a `BUNDLED_FURNITURE` hay que subir
+  `MODEL_CATALOG_MIGRATION_KEY`** (`editor/modelCatalog.js`). Esa migracion
+  inyecta los muebles nuevos en el layout guardado UNA sola vez y despues deja
+  una marca en localStorage. Si no se sube el numero, la computadora de Kusher
+  — que ya tiene la marca vieja — se saltea la migracion y el mueble nunca
+  aparece, aunque este en el codigo y ande perfecto en una maquina limpia.
+
 ### Cuadros editables por piso
 
 - **Los tres cuadros existen en los CINCO pisos** (04/08). Antes se creaban

@@ -693,38 +693,15 @@ function buildRealInterior(scene, g, colliders, H) {
     g.add(stool);
   }
 
-  // — Pared izquierda: estante flotante + barral con remeras —
+  // — Pared izquierda: estante flotante —
+  // El barral procedural que iba abajo (cilindro + 4 prendas parametricas) se
+  // saco: en su lugar va el perchero GLB que modelo Chelo en Blender
+  // (`fourtwenty-rack-display-v01.glb`, registrado en editor/modelCatalog.js y
+  // montado como mueble editable). Los 4 slots de producto que tenian esas
+  // prendas los toman ahora las 6 remeras del GLB, en world/rackProducts.js.
+  // El estante queda: va a PLAT + 2.15, arriba del perchero, no se pisan.
   g.add(named(box(1.3, 0.05, 0.28, -2.8, PLAT + 2.15, -6.2, wood), 'Interior local · estante pared izquierda'));
   g.add(named(box(0.24, 0.14, 0.2, -3.05 + 0.4, PLAT + 2.25, -6.5, black), 'Interior local · deco estante'));
-  const rail2 = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.6, 8), chrome);
-  rail2.name = 'Interior local · barral prendas izquierdo';
-  rail2.rotation.x = Math.PI / 2; rail2.position.set(-2.78, PLAT + 1.95, -6.2); g.add(rail2);
-  const shirtDefs = [
-    { color: 0x141414, tipo: 'tee' }, { color: 0xf5f2ea, tipo: 'tee' },
-    { color: 0xf5f2ea, tipo: 'tee' }, { color: 0x2a3550, tipo: 'hoodie' },
-  ];
-  // Prendas con volumen real, las mismas que los percheros de los pisos
-  // (world/garments.js). Antes eran planos con textura recortada: de costado
-  // desaparecian, y este barral se mira justo de costado al entrar al local.
-  shirtDefs.forEach((d, i) => {
-    const { group: prenda, mesh } = createHangingGarment({
-      color: d.color,
-      type: d.tipo,
-      hangerMaterial: chrome,
-      variacion: i,
-    });
-    prenda.name = `Interior local · prenda colgada izquierda ${i + 1}`;
-    mesh.name = `${prenda.name} · tela`;
-    // La foto real del producto entra por la malla de tela, no por el grupo.
-    bindProductVisual(mesh, { piso: 'local', index: i }, mesh.material.map);
-    // Cuelga del barral (y = PLAT + 1.95) mirando hacia el centro del local.
-    prenda.position.set(-2.74, PLAT + 1.9, -6.85 + i * 0.42);
-    // += y no =: createHangingGarment ya le puso un giro chico distinto a cada
-    // una para que el barral no se lea como un sello repetido.
-    prenda.rotation.y += Math.PI / 2;
-    prenda.scale.setScalar(0.88);
-    g.add(prenda);
-  });
 
   // — Exhibidor del jean blanco (adelante-izquierda, como la foto) —
   const px = -2.2, pz = -5.3;
