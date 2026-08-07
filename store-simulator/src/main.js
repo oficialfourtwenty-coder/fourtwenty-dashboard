@@ -1052,22 +1052,31 @@ function clearShirtHover() {
   shirtTip.style.display = 'none';
 }
 
-function callActiveElevator() {
-  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()
+function callActiveElevator({ desdeEditor = false } = {}) {
+  // ⚠️ El editor de mundo bloqueaba el ascensor por completo, y como Kusher
+  // construye con `T` abierto, al querer salir del piso el boton simplemente no
+  // respondia y parecia roto. Ahora la tecla E si lo llama con el editor
+  // abierto; el CLICK sigue bloqueado, porque ahi el click es para seleccionar
+  // objetos y viajar de piso sin querer seria peor.
+  if (loading || elevatorPanel.isVisible() || phone?.isOpen()
     || minigameManager.isOpen() || twentyTimeInteract?.isOpen() || isPackageMissionOpen()) return;
+  if (worldEditor.isEnabled() && !desdeEditor) return;
   activeElevator.call();
 }
 
 // E = pulsar el boton cuando BOB esta cerca.
 function interactNearest() {
-  if (loading || elevatorPanel.isVisible() || worldEditor.isEnabled() || phone?.isOpen()
+  if (loading || elevatorPanel.isVisible() || phone?.isOpen()
     || minigameManager.isOpen() || twentyTimeInteract?.isOpen() || adminPanel?.isOpen()
     || productClicks.panel.isOpen() || carInteract?.isRadioOpen() || isPackageMissionOpen()) return false;
-  if (carInteract?.getCurrentCar() && carInteract.interact(bob.position)) return true;
+  // El ascensor es la UNICA interaccion que sigue viva con el editor abierto:
+  // sin eso no hay forma de salir del piso sin cerrar el editor primero.
   if (activeElevator?.isNearCallButton(bob.position)) {
-    callActiveElevator();
+    callActiveElevator({ desdeEditor: true });
     return true;
   }
+  if (worldEditor.isEnabled()) return false;
+  if (carInteract?.getCurrentCar() && carInteract.interact(bob.position)) return true;
   if (carInteract?.interact(bob.position)) return true;
   if (world === 'street' && twentyTimeInteract?.interact(bob.position)) return true;
   if (activeDestinationRecord?.minigameArcade?.interact(bob.position)) return true;
