@@ -591,6 +591,11 @@ function applySavedEditorLayout() {
   return loadInitialLayout().then((layout) => {
     applyLayout(layout);
     restoreClones(layout);
+    // ⚠️ EL ASCENSOR NUNCA PUEDE QUEDAR OCULTO NI ENTERRADO.
+    // Si el layout guardado lo esconde o lo manda debajo del piso, el juego se
+    // vuelve injugable: no hay forma de llegar a ningun piso y encima no se ve
+    // que fue lo que paso. Se repara solo al cargar.
+    rescatarAscensor();
     // Piezas armadas a mano con el editor (editor/pieceBuilder.js). El layout
     // guarda DONDE esta cada objeto, pero una pieza inventada por Kusher no
     // existe en ninguna escena hasta que alguien la vuelve a construir: sin
@@ -666,6 +671,33 @@ addFurniture(scene).then(() => {
   renderer.shadowMap.needsUpdate = true;
   applySavedEditorLayout();
 });
+
+// Devuelve el ascensor de la calle a un estado usable: visible y sobre el
+// piso. No lo mueve de lugar si Kusher lo reubico a proposito — solo lo saca de
+// un estado del que no se puede salir jugando.
+function rescatarAscensor() {
+  const root = streetElevator?.root;
+  if (!root) return;
+  let cambio = '';
+  if (!root.visible) { root.visible = true; cambio = 'estaba oculto'; }
+  root.traverse((hijo) => { if (!hijo.visible) hijo.visible = true; });
+  if (root.position.y < -0.5) { root.position.y = 0; cambio += (cambio ? ' y ' : '') + 'estaba bajo el piso'; }
+  if (cambio) console.warn(`Ascensor rescatado: ${cambio}. Se lo devolvio a un estado usable.`);
+}
+
+// Consola: devolver el ascensor a la vereda, o llevarlo a donde se quiera.
+//   __ascensor()                  -> lo trae a su lugar original
+//   __ascensor(1.7, 0.45, -13)    -> lo lleva al fondo del local
+window.__ascensor = (x = -18.527, y = 0, z = 3) => {
+  const root = streetElevator?.root;
+  if (!root) return 'no hay ascensor en esta escena';
+  root.visible = true;
+  root.traverse((hijo) => { hijo.visible = true; });
+  root.position.set(x, y, z);
+  root.updateMatrixWorld(true);
+  streetEditablesDirty = true;
+  return `Ascensor en [${x}, ${y}, ${z}] y visible. Abri T y apreta Save Local para que quede guardado.`;
+};
 
 function appendEditableColliders(targetColliders, targetSteppables) {
   for (const entry of getEditableObjects()) {
