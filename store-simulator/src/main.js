@@ -1820,7 +1820,11 @@ renderer.setAnimationLoop(() => {
   });
   // E: adentro del auto abre la radio (lo maneja carInteract), afuera es el
   // pulsador del ascensor. Se consume igual para que no quede trabado.
-  if (editorActive || seated || phoneOpen || minigameOpen || twentyTimeOpen || packageMissionOpen) input.consumeInteract();
+  // ⚠️ `editorActive` NO va aca. Con el editor abierto la E se descartaba antes
+  // de llegar a `interactNearest`, y como Kusher construye con `T` abierto, al
+  // querer salir del piso el ascensor parecia roto. `interactNearest` ya se
+  // encarga de que con el editor abierto lo UNICO que responda sea el ascensor.
+  if (seated || phoneOpen || minigameOpen || twentyTimeOpen || packageMissionOpen) input.consumeInteract();
   else if (input.consumeInteract()) interactNearest(); // E = boton exterior del ascensor
   if (editorActive || phoneOpen || minigameOpen || twentyTimeOpen || packageMissionOpen) clearShirtHover();
   else updateHover();      // feedback del pulsador bajo el mouse

@@ -255,6 +255,32 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 - Error conocido aceptado: dos puntos inferiores derechos del laberinto pueden
   quedar sin comerse. No corregir sin nuevo pedido.
 
+### El editor de mundo se traga teclas (fase de captura)
+
+- `worldEditor.js` escucha `keydown` en **fase de CAPTURA**
+  (`addEventListener('keydown', onKeyDown, true)`), y a las teclas de su lista
+  `handled` les hace `stopPropagation()`. En captura eso mata el evento **antes**
+  de que lo vea `core/input.js`, que escucha normal.
+- ⚠️ Por eso `KeyE` estaba en esa lista y **el ascensor no abria con el editor
+  abierto** (06/08): la tecla no llegaba nunca al juego. Como Kusher construye
+  con `T` abierto, salir del piso era imposible y parecia que el ascensor
+  estaba roto. Se saco `KeyE` de la lista; el editor no la usa para nada.
+- Ademas `interactNearest` (main.js) deja pasar SOLO el ascensor cuando el
+  editor esta abierto, y el bucle principal ya no descarta la E por
+  `editorActive`. El CLICK sobre el boton sigue bloqueado a proposito: con el
+  editor abierto el click sirve para seleccionar objetos.
+- Si alguna otra interaccion "no responde" con el editor abierto, mirar primero
+  esa lista `handled` antes de buscar en main.js.
+
+### ⚠️ El teclado SI llega al navegador de pruebas
+
+- Anotado mal antes: `page.keyboard.press('t')` y `press('e')` funcionan y
+  disparan el juego. Lo que NO funciona es el MOVIMIENTO con WASD sostenido.
+- Un `window.dispatchEvent(new KeyboardEvent(...))` sintetico **no** sirve:
+  Playwright tiene que mandar la tecla de verdad con `page.keyboard.press`.
+  Confundir las dos cosas hizo dar por "no verificable" un arreglo que estaba
+  mal, y encima se reporto como verificado.
+
 ### Estampas: dos niveles de control
 
 - **Panel (click derecho sobre la prenda):** cuerpo, color, imagen, ancho, alto,

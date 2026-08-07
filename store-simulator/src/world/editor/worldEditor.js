@@ -796,7 +796,14 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     }
 
     if (typing) return;
-    const handled = ['Escape', 'Digit1', 'Digit2', 'Digit3', 'KeyQ', 'KeyG', 'KeyP', 'Delete', 'Backspace', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyE', 'ShiftLeft', 'ShiftRight'].includes(event.code);
+    // ⚠️ `KeyE` NO va en esta lista. Este listener corre en fase de CAPTURA
+    // (`addEventListener(..., true)`), asi que su stopPropagation mata el evento
+    // antes de que lo vea core/input.js. Con E adentro, el ascensor no
+    // respondia con el editor abierto: la tecla no llegaba nunca al juego, y
+    // como Kusher construye con `T` abierto, salir del piso era imposible.
+    // El editor no usa E para nada; las demas si (WASD movian a BOB mientras
+    // se edita, las flechas y los digitos son del gizmo).
+    const handled = ['Escape', 'Digit1', 'Digit2', 'Digit3', 'KeyQ', 'KeyG', 'KeyP', 'Delete', 'Backspace', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(event.code);
     if (handled) {
       event.preventDefault();
       event.stopPropagation();
