@@ -457,6 +457,18 @@ export function duplicateEditable(id, {
 } = {}) {
   const entry = registry.get(id);
   if (!entry?.object3D?.parent) return null;
+
+  // ⚠️ EL ASCENSOR NO SE PUEDE DUPLICAR (06/08).
+  // Una copia es solo la geometria: no tiene controlador, asi que no abre las
+  // puertas, no calcula colision y no lleva a ningun piso. Se atraviesa
+  // caminando y no hace nada. Kusher duplico el de la calle para ponerlo en el
+  // local y parecia que el ascensor estaba roto. Para moverlo hay que mover EL
+  // ORIGINAL con el gizmo, no sacarle una copia.
+  if (entry.type === 'elevator') {
+    console.warn('El ascensor no se puede duplicar: la copia no funciona. Mové el original.');
+    return null;
+  }
+
   const source = entry.object3D;
   const cloneParent = cloneAtSceneRoot ? sceneRootOf(source) : source.parent;
   if (!cloneParent?.add) return null;

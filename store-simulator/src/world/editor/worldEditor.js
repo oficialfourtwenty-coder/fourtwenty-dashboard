@@ -677,6 +677,11 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       setStatus('Selecciona un objeto para duplicar.');
       return;
     }
+    const seleccionado = getEditableById(state.selectedId);
+    if (seleccionado?.type === 'elevator') {
+      setStatus('El ascensor no se duplica: la copia no abre ni lleva a ningún piso. Movelo con el gizmo.');
+      return;
+    }
     const entry = duplicateEditable(state.selectedId);
     if (!entry) {
       setStatus('No se pudo duplicar ese objeto.');
