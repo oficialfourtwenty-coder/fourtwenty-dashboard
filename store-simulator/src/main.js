@@ -1069,9 +1069,14 @@ function interactNearest() {
   if (loading || elevatorPanel.isVisible() || phone?.isOpen()
     || minigameManager.isOpen() || twentyTimeInteract?.isOpen() || adminPanel?.isOpen()
     || productClicks.panel.isOpen() || carInteract?.isRadioOpen() || isPackageMissionOpen()) return false;
-  // El ascensor es la UNICA interaccion que sigue viva con el editor abierto:
-  // sin eso no hay forma de salir del piso sin cerrar el editor primero.
+  // El ascensor es la UNICA interaccion que sigue viva con el editor abierto.
+  // ⚠️ Ademas CIERRA el editor: con el editor abierto BOB no camina
+  // (`bob.update` se saltea por `editorActive`), asi que abrir las puertas sin
+  // cerrarlo dejaba el ascensor abierto y a BOB clavado afuera, sin poder
+  // entrar. Apretar E al lado del boton ahora sale del modo edicion y llama al
+  // ascensor de una.
   if (activeElevator?.isNearCallButton(bob.position)) {
+    if (worldEditor.isEnabled()) worldEditor.setEnabled(false);
     callActiveElevator({ desdeEditor: true });
     return true;
   }
