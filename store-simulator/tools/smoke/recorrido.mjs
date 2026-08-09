@@ -223,15 +223,27 @@ try {
   for (const e of errVuelta) linea(`    ERROR: ${e.texto}`);
 
   // ---- la invariante: en Burela no queda nada de los pisos ----
+  // ---- pasada dedicada para medir la limpieza ----
+  // ⚠️ VA APARTE DEL RECORRIDO A PROPOSITO.
+  // Recargar reinicia el registro, asi que cualquier corrida con una recarga
+  // deja la medicion invalidada. Y como el navegador que dibuja por software
+  // tropieza seguido, casi todas las corridas tenian alguna: la invariante que
+  // pidio Codex no se podia medir nunca en la practica.
+  // Aca se arranca de cero y se hace UN viaje de ida y vuelta. Dos viajes en
+  // vez de doce: muchas menos chances de tropezar, y si tropieza se dice.
   linea(`\nLIMPIEZA AL SALIR DE LOS PISOS`);
+  linea(`    (pasada aparte: Burela -> ORIGEN -> Burela, desde cero)`);
+  huboRecarga = false;
+  await entrarAlJuego();
+  const ida = await viajarA(1, 'limpieza-ida');
+  const regreso = ida && await viajarA(0, 'limpieza-vuelta');
   const quedaron = await entradasDePiso();
-  if (huboRecarga) {
-    // Recargar reinicia el registro: un cero aca no probaria que se libera al
-    // salir de un piso, solo que la pagina arranco de nuevo. Se dice, no se
-    // afirma nada.
-    linea(`    ⚠️ no medible: hubo que recargar por un viaje vencido`);
-    linea(`       (${quedaron.length} entradas al final, pero el numero no vale)`);
+
+  let limpiezaMedida = false;
+  if (!ida || !regreso || huboRecarga) {
+    linea(`    ⚠️ no medible: el viaje de prueba no completo`);
   } else if (quedaron.length === 0) {
+    limpiezaMedida = true;
     linea(`    ✅ parado en Burela no queda ninguna entrada de piso registrada`);
   } else {
     fallos.push(`limpieza: ${quedaron.length} entradas de piso siguen registradas en Burela`);
@@ -252,6 +264,11 @@ try {
   if (fallos.length) {
     linea(`❌ FALLARON: ${fallos.join(', ')}\n`);
     process.exitCode = 1;
+  } else if (!limpiezaMedida) {
+    // ⚠️ NO decir "todo bien" cuando la limpieza no se pudo medir. El veredicto
+    // anterior afirmaba "no queda nada retenido" mientras la seccion de arriba
+    // decia "no medible" — o sea, daba por verificado algo que no se verifico.
+    linea(`⚠️ Los 6 destinos abren y se vuelve a Burela, PERO la limpieza no se pudo medir.\n`);
   } else {
     linea(`✅ TODO BIEN — los 6 destinos abren, se vuelve a Burela y no queda nada retenido\n`);
   }
