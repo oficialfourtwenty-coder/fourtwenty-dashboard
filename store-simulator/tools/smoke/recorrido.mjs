@@ -46,6 +46,10 @@ const IGNORAR = [
 
 // Los 404 se anotan aparte. Se listan siempre al final, porque un archivo que
 // falta es informacion util aunque no tumbe la corrida.
+// ⚠️ El texto de consola de Chromium para un recurso caido NO trae la URL: dice
+// solo "Failed to load resource: ... 404". Asi el informe avisaba que faltaban
+// dos archivos sin decir cuales, o sea no servia para arreglar nada. La URL
+// esta en los eventos de red (`response` / `requestfailed`), no en la consola.
 const ES_404 = /404|Failed to load resource/i;
 const faltantes = new Set();
 
@@ -63,11 +67,16 @@ let etapa = 'arranque';
 const errores = [];
 const anotar = (texto) => {
   if (IGNORAR.some((r) => r.test(texto))) return;
-  if (ES_404.test(texto)) { faltantes.add(texto.slice(0, 160)); return; }
+  if (ES_404.test(texto)) return; // duplicado sin URL: lo anota el evento de red
   errores.push({ etapa, texto: texto.slice(0, 200) });
 };
 page.on('pageerror', (e) => anotar(e.message));
 page.on('console', (m) => { if (m.type() === 'error') anotar(m.text()); });
+
+// De aca sale el NOMBRE del archivo que falto.
+const corto = (url) => (url.startsWith(URL_BASE) ? url.slice(URL_BASE.length) : url).slice(0, 120);
+page.on('response', (r) => { if (r.status() >= 400) faltantes.add(`${r.status()} ${corto(r.url())}`); });
+page.on('requestfailed', (r) => faltantes.add(`${r.failure()?.errorText ?? 'fallo de red'} ${corto(r.url())}`));
 
 const erroresDe = (nombre) => errores.filter((e) => e.etapa === nombre);
 
