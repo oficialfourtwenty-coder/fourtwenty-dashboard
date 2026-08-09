@@ -41,7 +41,14 @@ function migrateBundledFurniture(layout) {
 
   let changed = false;
   const bundledByModel = new Map(BUNDLED_FURNITURE.map((item) => [item.model, item]));
-  const next = layout.map((item) => {
+  // Esta prueba sustituye el City Map monolitico por edificios modulares. Se
+  // elimina tambien de layouts locales viejos para que no se cargue oculto.
+  const withoutOldCity = layout.filter((item) => {
+    const keep = !item.model?.endsWith('city-map-free.glb');
+    if (!keep) changed = true;
+    return keep;
+  });
+  const next = withoutOldCity.map((item) => {
     const bundled = bundledByModel.get(item.model);
     if (!bundled || item.collidable === false) return item;
     changed = true;
@@ -49,7 +56,8 @@ function migrateBundledFurniture(layout) {
   });
 
   for (const bundled of BUNDLED_FURNITURE) {
-    if (next.some((item) => item.model === bundled.model)) continue;
+    const isKenneyCity = bundled.id.startsWith('furniture:kenney-city-');
+    if (next.some((item) => isKenneyCity ? item.id === bundled.id : item.model === bundled.model)) continue;
     next.push(cloneLayoutItem(bundled));
     changed = true;
   }
