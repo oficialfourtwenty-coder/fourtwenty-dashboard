@@ -143,6 +143,24 @@ async function viajarA(id, nombre) {
           (d) => window.__elevatorTest.getState().destinationId === d,
           id, { timeout: 45000 },
         );
+
+        // ⚠️ LLEGAR NO ES TERMINAR. El piso se activa en `activateDestination`,
+        // que corre ANTES del video de intro: el destino ya cambio pero el
+        // viaje sigue abierto y `travelling` sigue en true. El bucle de arriba
+        // corta apenas detecta la llegada, asi que en los pisos que construyen
+        // rapido el Escape nunca caia sobre el intro — y el viaje SIGUIENTE
+        // salia rechazado por la guarda. Ese era el "primer intento fallido"
+        // de CULTURA, BOB y la vuelta.
+        // Aca se espera a que la pantalla de intro se vaya de verdad, que es lo
+        // mismo que hace un jugador antes de volver a llamar al ascensor.
+        for (let intento = 0; intento < 24; intento++) {
+          const enPantalla = await page
+            .evaluate(() => document.getElementById('loading-screen')?.classList.contains('show') ?? false)
+            .catch(() => false);
+          if (!enPantalla) break;
+          await page.keyboard.press('Escape');
+          await page.waitForTimeout(500);
+        }
         await page.waitForTimeout(4000);       // que terminen de llegar los GLB
       })(),
       new Promise((_, rechazar) => {
