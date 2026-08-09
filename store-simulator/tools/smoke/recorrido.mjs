@@ -86,13 +86,25 @@ async function entrarAlJuego() {
 // para nada, menos en CI. Si un destino no llega a tiempo se marca como fallo y
 // se sigue con el siguiente, en vez de trabar toda la corrida.
 async function viajarA(id, nombre) {
-  const LIMITE = 45000;
+  const LIMITE = 60000;
   try {
     await Promise.race([
       (async () => {
         await page.evaluate((d) => window.__elevatorTest.travelTo(d), id);
-        await page.waitForTimeout(2000);
-        await page.keyboard.press('Escape');   // saltear el video del piso
+        // ⚠️ Escape REPETIDO, no una sola vez.
+        // CULTURA, TERRAZA y HOOP abren con un video de intro, y el navegador
+        // sin interfaz no trae H.264: el video nunca arranca. Con un solo
+        // Escape a los 2 s el momento no coincidia y esos tres pisos daban
+        // falso negativo — se los reporto como rotos cuando el problema era la
+        // prueba. Insistiendo, el intro se saltea aparezca cuando aparezca.
+        for (const espera of [800, 1200, 1500, 2000, 2500, 3000]) {
+          await page.waitForTimeout(espera);
+          await page.keyboard.press('Escape');
+          const llegado = await page.evaluate(
+            (d) => window.__elevatorTest.getState().destinationId === d, id,
+          ).catch(() => false);
+          if (llegado) break;
+        }
         await page.waitForFunction(
           (d) => window.__elevatorTest.getState().destinationId === d,
           id, { timeout: 25000 },
