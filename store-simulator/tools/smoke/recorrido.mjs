@@ -81,7 +81,12 @@ page.on('requestfailed', (r) => faltantes.add(`${r.failure()?.errorText ?? 'fall
 const erroresDe = (nombre) => errores.filter((e) => e.etapa === nombre);
 
 async function entrarAlJuego() {
-  await page.goto(`${URL_BASE}/?q=low&elevatorTest=1`);
+  // ⚠️ `domcontentloaded`, NO el `load` por defecto. `load` espera a que baje
+  // TODO —los GLB de los muebles, el HDRI, el audio—, y con el navegador que
+  // dibuja por software eso pasa de 30 s: la recarga de la pasada de limpieza
+  // se corto asi. Lo que de verdad marca que el juego esta listo es
+  // `window.__elevatorTest`, que se espera abajo con su propio margen.
+  await page.goto(`${URL_BASE}/?q=low&elevatorTest=1`, { waitUntil: 'domcontentloaded', timeout: 120000 });
   await page.waitForFunction(() => window.__elevatorTest, null, { timeout: 120000 });
   await page.waitForTimeout(2500);
   await page.mouse.click(550, 380);     // ENTRAR A BOBILONIA
