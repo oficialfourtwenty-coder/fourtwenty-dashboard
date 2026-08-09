@@ -1365,7 +1365,30 @@ function playElevatorIntro(video, className) {
   return new Promise((resolve) => {
     let done = false;
 
+    // ⚠️ RED DE SEGURIDAD: un <video> puede no emitir NUNCA un evento final.
+    // Medido el 09/08 instrumentando los eventos: con `preload="none"` y sin
+    // datos, emite `loadstart`, `waiting`, `suspend`... y despues silencio
+    // absoluto. Ni `ended` ni `error`. Como esta promesa se resolvia SOLO con
+    // esos dos, quedaba colgada para siempre — y como `travelToDestination`
+    // la espera, `travelling` nunca volvia a false: el ascensor quedaba muerto
+    // por el resto de la sesion. Cualquier viaje posterior salia rechazado en
+    // 0 ms sin moverse.
+    // El jugador podia salvarse con Esc o click, pero solo si adivinaba que
+    // habia que hacerlo. Ahora, si el video no da NINGUNA senal de vida
+    // durante SILENCIO_MAXIMO, se saltea el intro y el juego sigue.
+    // Un video que anda de verdad emite `timeupdate` unas 4 veces por segundo,
+    // asi que esto no puede cortar una reproduccion normal.
+    const SILENCIO_MAXIMO = 12000;
+    const SENALES_DE_VIDA = ['loadeddata', 'canplay', 'progress', 'playing', 'timeupdate'];
+    let vigilante = null;
+    const rearmarVigilante = () => {
+      clearTimeout(vigilante);
+      vigilante = setTimeout(() => finish(), SILENCIO_MAXIMO);
+    };
+
     const cleanup = () => {
+      clearTimeout(vigilante);
+      for (const senal of SENALES_DE_VIDA) video.removeEventListener(senal, rearmarVigilante);
       window.removeEventListener('keydown', onKeyDown, true);
       loadingEl.removeEventListener('click', skipIntro, true);
       video.onended = null;
@@ -1416,6 +1439,8 @@ function playElevatorIntro(video, className) {
     // que si corta, y el jugador siempre puede saltear con Esc o click.
     video.onstalled = null;
     video.onabort = null;
+    for (const senal of SENALES_DE_VIDA) video.addEventListener(senal, rearmarVigilante);
+    rearmarVigilante();
     const playPromise = video.play();
     if (playPromise?.catch) playPromise.catch(finish);
   });
