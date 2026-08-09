@@ -549,6 +549,10 @@ window.__minigameManager = minigameManager;
 // teletransporta (saltea la colision) y el teclado no siempre llega en pruebas
 // automatizadas, asi que mirar los datos es lo unico confiable.
 window.__colliders = () => currentPlayerColliders();
+// Lo usa la prueba de recorrido (tools/smoke/recorrido.mjs) para detectar si un
+// piso cerrado sigue retenido: si este numero sube vuelta a vuelta sin volver a
+// bajar, hay una fuga.
+window.__editables = () => getEditableObjects();
 
 registerEditableObject({
   id: 'elevator-street',

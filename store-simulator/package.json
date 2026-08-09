@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "tn:setup": "node tools/tiendanube/setup.mjs",
     "tn:token": "node tools/tiendanube/get-token.mjs",
-    "tn:sync": "node tools/tiendanube/sync.mjs"
+    "tn:sync": "node tools/tiendanube/sync.mjs",
+    "smoke": "node tools/smoke/recorrido.mjs"
   },
   "dependencies": {
     "three": "0.184.0"

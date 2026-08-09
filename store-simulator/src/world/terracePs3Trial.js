@@ -981,6 +981,75 @@ function addOriginFloor(root, mats, theme) {
   }
 }
 
+// ⚠️ Estas tres funciones las usa HOOP SEASON, no ORIGEN.
+// Se borraron sin querer el 06/08 al vaciar ORIGEN: el corte se hizo por rango
+// de texto entre `addOriginDetails` y `addHoopDetails`, y ellas vivian en el
+// medio. `npm run build` no lo detecta — JavaScript no valida una funcion
+// inexistente hasta que se ejecuta. Por eso HOOP tiraba `courtTexture is not
+// defined` recien al entrar al piso.
+
+function courtTexture(theme) {
+  return canvasTexture(1024, 1024, (ctx, width, height) => {
+    ctx.fillStyle = '#9b6a3d';
+    ctx.fillRect(0, 0, width, height);
+    for (let x = 0; x < width; x += 42) {
+      ctx.fillStyle = x % 84 ? 'rgba(255,224,167,0.10)' : 'rgba(55,24,11,0.09)';
+      ctx.fillRect(x, 0, 38, height);
+    }
+    ctx.strokeStyle = '#f4ead7';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(52, 52, width - 104, height - 104);
+    ctx.beginPath();
+    ctx.arc(width / 2, height / 2, 145, 0, Math.PI * 2);
+    ctx.stroke();
+    for (const y of [52, height - 320]) ctx.strokeRect(width / 2 - 155, y, 310, 268);
+    ctx.fillStyle = theme.accentCss;
+    ctx.beginPath();
+    ctx.arc(width / 2, height / 2, 102, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#111515';
+    ctx.font = '900 92px Arial Black, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('420', width / 2, height / 2 + 8);
+  });
+}
+
+function scoreboardTexture(theme) {
+  return canvasTexture(1024, 420, (ctx, width, height) => {
+    ctx.fillStyle = '#070909';
+    ctx.fillRect(0, 0, width, height);
+    ctx.strokeStyle = theme.accentCss;
+    ctx.lineWidth = 14;
+    ctx.strokeRect(16, 16, width - 32, height - 32);
+    ctx.fillStyle = '#f5eee2';
+    ctx.font = '900 72px Arial Black, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BURELA LEAGUE', width / 2, 92);
+    ctx.fillStyle = theme.accentCss;
+    ctx.font = '900 156px Courier New, monospace';
+    ctx.fillText('42  -  0', width / 2, 270);
+    ctx.fillStyle = '#d6c7a8';
+    ctx.font = '700 34px Courier New, monospace';
+    ctx.fillText('HOOP SEASON  /  FOURTWENTY', width / 2, 356);
+  });
+}
+
+function createBasketball(mats) {
+  const ball = new THREE.Group();
+  const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.18, 20, 14),
+    new THREE.MeshStandardMaterial({ color: 0xc65d24, roughness: 0.9 }),
+  );
+  ball.add(sphere);
+  for (const rotation of [[0, 0, 0], [Math.PI / 2, 0, 0], [0, Math.PI / 2, 0]]) {
+    const seam = new THREE.Mesh(new THREE.TorusGeometry(0.181, 0.008, 6, 24), mats.black);
+    seam.rotation.set(...rotation);
+    ball.add(seam);
+  }
+  return ball;
+}
+
 function addHoopDetails(root, mats, theme) {
   const court = new THREE.Mesh(
     new THREE.PlaneGeometry(8.4, 11.8),
