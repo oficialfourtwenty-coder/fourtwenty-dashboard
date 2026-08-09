@@ -244,6 +244,24 @@ export function unregisterEditableObject(id) {
   return true;
 }
 
+/**
+ * Elimina todos los editables que pertenecen a una escena que se va a destruir.
+ * Se decide por pertenencia real al arbol, no por el nombre del id: asi tambien
+ * salen piezas, estampas, ascensor y arcade sin tocar los objetos de Burela.
+ */
+export function unregisterEditableObjectsInScene(sceneRoot) {
+  if (!sceneRoot) return 0;
+  let removed = 0;
+  for (const [id, entry] of registry) {
+    if (!entry.object3D || sceneRootOf(entry.object3D) !== sceneRoot) continue;
+    unmarkEditableTree(entry.object3D);
+    registry.delete(id);
+    removed++;
+  }
+  if (removed) emitRegistryChange();
+  return removed;
+}
+
 export function getEditableObjects() {
   return Array.from(registry.values());
 }
