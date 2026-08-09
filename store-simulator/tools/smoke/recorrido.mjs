@@ -91,7 +91,11 @@ async function entrarAlJuego() {
 let huboRecarga = false;
 
 async function viajarA(id, nombre) {
-  const LIMITE = 60000;
+  // Margen holgado a proposito: este entorno de prueba dibuja por SOFTWARE
+  // (swiftshader), que es muchisimo mas lento que una placa real. Un piso que
+  // en la maquina de Kusher abre en 3 s puede tardar 30 aca. Apretar el tiempo
+  // solo genera fallos que no existen para un usuario.
+  const LIMITE = 90000;
   try {
     await Promise.race([
       (async () => {
@@ -115,7 +119,7 @@ async function viajarA(id, nombre) {
         }
         await page.waitForFunction(
           (d) => window.__elevatorTest.getState().destinationId === d,
-          id, { timeout: 25000 },
+          id, { timeout: 45000 },
         );
         await page.waitForTimeout(4000);       // que terminen de llegar los GLB
       })(),
