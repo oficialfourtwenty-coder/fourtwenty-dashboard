@@ -5,6 +5,8 @@ import { environmentForDestination } from './floorEnvironmentCatalog.js';
 import { buildHoopArena } from './hoopArena.js';
 import { unbindProductVisuals } from './productVisuals.js';
 import { unbindGarmentsFromProducts } from './garmentPrints.js';
+import { unbindStacksFromProducts } from './displayTable.js';
+import { unregisterEditableObjectsInScene } from './editor/editableRegistry.js';
 import {
   buildPs3FloorScene,
   PS3_FLOOR_PROFILE,
@@ -95,10 +97,12 @@ export function disposeDestinationScene(record, player) {
   record.elevator?.cancel();
   record.arena?.dispose();
   record.scene.remove(player.rig, player.shadow);
+  unregisterEditableObjectsInScene(record.scene);
   unbindProductVisuals(record.scene);
   // Y soltar las prendas del catalogo: sin esto el Set de garmentPrints las
   // retiene y la escena del piso nunca se libera de memoria.
   unbindGarmentsFromProducts(record.scene);
+  unbindStacksFromProducts(record.scene);
   const disposedGeometries = new Set();
   const disposedMaterials = new Set();
   const disposedTextures = new Set();
