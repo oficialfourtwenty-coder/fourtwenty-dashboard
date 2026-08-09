@@ -74,9 +74,17 @@ page.on('pageerror', (e) => anotar(e.message));
 page.on('console', (m) => { if (m.type() === 'error') anotar(m.text()); });
 
 // De aca sale el NOMBRE del archivo que falto.
+// ⚠️ `ERR_ABORTED` NO es un archivo que falta: es una descarga que alguien
+// corto a proposito. La prueba saltea los videos de intro con Escape, asi que
+// los cuatro mp4 aparecian como "no cargaron" en todas las corridas. Es el
+// mismo falso positivo que ya esta anotado para el evento `abort` del <video>.
 const corto = (url) => (url.startsWith(URL_BASE) ? url.slice(URL_BASE.length) : url).slice(0, 120);
 page.on('response', (r) => { if (r.status() >= 400) faltantes.add(`${r.status()} ${corto(r.url())}`); });
-page.on('requestfailed', (r) => faltantes.add(`${r.failure()?.errorText ?? 'fallo de red'} ${corto(r.url())}`));
+page.on('requestfailed', (r) => {
+  const causa = r.failure()?.errorText ?? 'fallo de red';
+  if (/ERR_ABORTED/.test(causa)) return;
+  faltantes.add(`${causa} ${corto(r.url())}`);
+});
 
 const erroresDe = (nombre) => errores.filter((e) => e.etapa === nombre);
 
