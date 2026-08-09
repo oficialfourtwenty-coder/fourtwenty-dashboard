@@ -85,25 +85,33 @@ async function entrarAlJuego() {
 // prueba, quince minutos esperando HOOP— y una prueba que no termina no sirve
 // para nada, menos en CI. Si un destino no llega a tiempo se marca como fallo y
 // se sigue con el siguiente, en vez de trabar toda la corrida.
+// Se pone en true si algun viaje vencio su tiempo y hubo que recargar. La
+// invariante de limpieza deja de ser medible en esa corrida: recargar reinicia
+// el registro, asi que un cero al final no probaria nada.
+let huboRecarga = false;
+
 async function viajarA(id, nombre) {
   const LIMITE = 60000;
   try {
     await Promise.race([
       (async () => {
-        await page.evaluate((d) => window.__elevatorTest.travelTo(d), id);
-        // ⚠️ Escape REPETIDO, no una sola vez.
-        // CULTURA, TERRAZA y HOOP abren con un video de intro, y el navegador
-        // sin interfaz no trae H.264: el video nunca arranca. Con un solo
-        // Escape a los 2 s el momento no coincidia y esos tres pisos daban
-        // falso negativo — se los reporto como rotos cuando el problema era la
-        // prueba. Insistiendo, el intro se saltea aparezca cuando aparezca.
-        for (const espera of [800, 1200, 1500, 2000, 2500, 3000]) {
+        // ⚠️ NO devolver la promesa de travelTo.
+        // `page.evaluate` espera a que la promesa que devuelve el codigo
+        // resuelva, y `travelToDestination` espera adentro a que termine el
+        // video de intro. Devolviendola, el `await` no volvia hasta que el
+        // intro terminaba — y como el navegador sin interfaz no trae H.264, el
+        // video nunca arranca. Todos los Escape llegaban DESPUES: por eso
+        // CULTURA, TERRAZA y HOOP daban falso negativo. Se dispara y se sigue.
+        await page.evaluate((d) => { window.__elevatorTest.travelTo(d); }, id);
+
+        // Escape insistente mientras el intro pueda estar en pantalla.
+        for (const espera of [600, 900, 1200, 1500, 2000, 2500, 3000]) {
           await page.waitForTimeout(espera);
           await page.keyboard.press('Escape');
-          const llegado = await page.evaluate(
-            (d) => window.__elevatorTest.getState().destinationId === d, id,
-          ).catch(() => false);
-          if (llegado) break;
+          const llego = await page
+            .evaluate((d) => window.__elevatorTest.getState().destinationId === d, id)
+            .catch(() => false);
+          if (llego) break;
         }
         await page.waitForFunction(
           (d) => window.__elevatorTest.getState().destinationId === d,
@@ -118,6 +126,12 @@ async function viajarA(id, nombre) {
     return true;
   } catch (e) {
     errores.push({ etapa: nombre, texto: `viaje colgado o fallido: ${e.message}` });
+    // ⚠️ `Promise.race` NO cancela el viaje original: sigue corriendo y deja la
+    // pagina en un estado indefinido. Sin recargar, el destino siguiente
+    // arrancaba desde ahi — por eso CULTURA aparecia parada en HOOP. Se
+    // recarga para que cada piso se pruebe desde un estado limpio.
+    huboRecarga = true;
+    try { await entrarAlJuego(); } catch { /* si tampoco recarga, lo dira el siguiente */ }
     return false;
   }
 }
@@ -193,7 +207,13 @@ try {
   // ---- la invariante: en Burela no queda nada de los pisos ----
   linea(`\nLIMPIEZA AL SALIR DE LOS PISOS`);
   const quedaron = await entradasDePiso();
-  if (quedaron.length === 0) {
+  if (huboRecarga) {
+    // Recargar reinicia el registro: un cero aca no probaria que se libera al
+    // salir de un piso, solo que la pagina arranco de nuevo. Se dice, no se
+    // afirma nada.
+    linea(`    ⚠️ no medible: hubo que recargar por un viaje vencido`);
+    linea(`       (${quedaron.length} entradas al final, pero el numero no vale)`);
+  } else if (quedaron.length === 0) {
     linea(`    ✅ parado en Burela no queda ninguna entrada de piso registrada`);
   } else {
     fallos.push(`limpieza: ${quedaron.length} entradas de piso siguen registradas en Burela`);
