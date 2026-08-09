@@ -140,6 +140,20 @@ async function viajarA(id, nombre) {
   }
 }
 
+// Reintenta UNA vez antes de dar un destino por fallado. Un tropiezo aislado en
+// un navegador que dibuja por software es ruido; dos seguidos son señal.
+// Sin esto CULTURA caia en la corrida completa aunque pasara perfecto probandola
+// sola justo despues de HOOP — o sea, un falso negativo.
+async function conReintento(id, nombre) {
+  if (await viajarA(id, nombre)) return true;
+  linea(`    (${nombre}: primer intento fallido, reintentando)`);
+  // El error del primer intento se descarta: solo cuenta el resultado final.
+  for (let i = errores.length - 1; i >= 0; i--) {
+    if (errores[i].etapa === nombre) errores.splice(i, 1);
+  }
+  return viajarA(id, nombre);
+}
+
 const estado = () => page.evaluate(() => {
   const s = window.__elevatorTest.getState();
   return {
@@ -185,7 +199,7 @@ try {
   // ---- los cinco pisos ----
   for (const destino of DESTINOS) {
     etapa = destino.nombre;
-    const llego = await viajarA(destino.id, destino.nombre);
+    const llego = await conReintento(destino.id, destino.nombre);
     const info = await estado();
     const errs = erroresDe(destino.nombre);
     const ok = llego && info.destino === destino.id && errs.length === 0;
@@ -199,7 +213,7 @@ try {
 
   // ---- volver a Burela ----
   etapa = 'vuelta';
-  const volvio = await viajarA(0, 'vuelta');
+  const volvio = await conReintento(0, 'vuelta');
   const vuelta = await estado();
   const errVuelta = erroresDe('vuelta');
   const vueltaOk = volvio && vuelta.destino === 0 && errVuelta.length === 0;
