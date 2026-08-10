@@ -1494,13 +1494,22 @@ export function crearMueblePs3(clave, destinationId = 5) {
   return objeto;
 }
 
-/** Reconstruye los muebles agregados a mano. Sin esto desaparecen al refrescar. */
-export function restoreMuebles(scene, layout) {
+/**
+ * Reconstruye los muebles agregados a mano. Sin esto desaparecen al refrescar.
+ *
+ * ⚠️ `destinoDeLaEscena` NO es opcional. Sin el, cada mueble se recreaba en
+ * TODAS las escenas: la funcion corre una vez para Burela y otra vez por cada
+ * piso que se abre, y como el layout es uno solo, un mostrador puesto en HOOP
+ * aparecia tambien en Burela y en CULTURA. Cada mueble guarda en que piso lo
+ * pusieron y solo vuelve ahi.
+ */
+export function restoreMuebles(scene, layout, destinoDeLaEscena) {
   if (!Array.isArray(layout) || !scene) return 0;
   let creados = 0;
   for (const item of layout) {
     if (!item?.mueble?.clave || getEditableById(item.id)?.object3D) continue;
-    const objeto = crearMueblePs3(item.mueble.clave, item.mueble.destinationId ?? 5);
+    if ((item.mueble.destinationId ?? 0) !== destinoDeLaEscena) continue;
+    const objeto = crearMueblePs3(item.mueble.clave, item.mueble.tema ?? item.mueble.destinationId ?? 5);
     if (!objeto) continue;
     objeto.name = item.name ?? objeto.name;
     objeto.position.fromArray(item.position ?? [0, 0, 0]);

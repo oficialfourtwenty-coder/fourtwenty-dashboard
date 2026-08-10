@@ -171,6 +171,8 @@ function serializeEntry(entry) {
   if (entry.piece) data.piece = entry.piece;
   // Idem para un mueble del catalogo agregado con `T` (terracePs3Trial.js).
   if (entry.mueble) data.mueble = entry.mueble;
+  // Idem para una prenda GLB colgada a mano (world/garmentModels.js).
+  if (entry.prendaGlb) data.prendaGlb = entry.prendaGlb;
   return data;
 }
 
@@ -222,6 +224,7 @@ export function registerEditableObject(config, { silent = false } = {}) {
     // (terracePs3Trial.js). Si esta linea falta el mueble se guarda en el
     // layout pero vuelve vacio, porque la entrada pierde el dato al registrarse.
     mueble: config.mueble ?? previous?.mueble ?? null,
+    prendaGlb: config.prendaGlb ?? previous?.prendaGlb ?? null,
     color: normalizeEditorColor(config.color) ?? (sameObject ? previous.color : null),
     lightRange: normalizeLightRange(config.lightRange ?? config.object3D.userData?.editorLightRange)
       ?? (sameObject ? previous.lightRange : null),

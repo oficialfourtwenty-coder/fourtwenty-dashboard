@@ -55,25 +55,15 @@ export const ADDABLE_MODELS = Object.freeze({
   'kenney-tower-b': kenneyBuilding('building-sample-tower-b', 'Torre B', 21),
   'kenney-tower-c': kenneyBuilding('building-sample-tower-c', 'Torre C', 27),
   'kenney-tower-d': kenneyBuilding('building-sample-tower-d', 'Torre D', 31),
-  // Prendas modeladas a mano (Fer/Chelo). Estan en el catalogo para que Kusher
-  // arme cada perchero el mismo: `T` -> buscar "remera" -> agregar copia.
-  // ⚠️ `height: null` a proposito — el GLB ya viene con la medida real de una
-  // remera (48,8 x 72,5 cm). Normalizarle la altura la deformaria.
-  'remera-oversize': {
-    name: 'Remera oversize (Fer)',
-    model: 'assets/garments/remera-oversize.glb',
-    castShadow: true,
-    collidable: false,
-    searchTerms: 'remera prenda ropa oversize negra fer chelo',
-  },
-  'remera-regular': {
-    name: 'Remera regular (Fer)',
-    model: 'assets/garments/remera-regular.glb',
-    castShadow: true,
-    collidable: false,
-    searchTerms: 'remera prenda ropa regular blanca fer chelo',
-  },
 });
+
+// ⚠️ LAS REMERAS NO VAN EN `ADDABLE_MODELS`.
+// Estuvieron aca y era un error: agregar una por esa via la creaba como un GLB
+// cualquiera, sin `userData.garmentModel`. Kusher podia ponerla en el piso pero
+// el click derecho no la reconocia como prenda, asi que no se podia diseñar.
+// Ahora se agregan por `prenda:<clave>` en `worldEditor.js`, que pasa por
+// `addGarmentModel` — el unico camino que le pone la marca, le clona el
+// material, la endereza y le aplica el diseño guardado.
 
 function bundledFurniture(key, id, position, { rotation = [0, 0, 0] } = {}) {
   const preset = ADDABLE_MODELS[key];

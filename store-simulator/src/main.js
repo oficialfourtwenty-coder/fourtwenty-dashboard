@@ -20,6 +20,7 @@ import { autoRegisterScene, applyLayout, getEditableObjects, isEditableEffective
 import { loadInitialLayout } from './world/editor/layoutStore.js';
 import { restorePieces } from './world/editor/pieceBuilder.js';
 import { restoreMuebles } from './world/terracePs3Trial.js';
+import { restorePrendasGlb } from './world/garmentModels.js';
 import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
 import { tickAmbient } from './world/anim.js';
@@ -608,7 +609,7 @@ function applySavedEditorLayout() {
     // esto desaparecen al refrescar, igual que pasaria con los clones.
     // Idem los muebles del catalogo de pisos agregados con `T`: tampoco
     // existen en ninguna escena hasta que alguien los vuelve a construir.
-    const piezas = restorePieces(scene, layout) + restoreMuebles(scene, layout);
+    const piezas = restorePieces(scene, layout) + restoreMuebles(scene, layout, 0) + restorePrendasGlb(scene, layout, 0);
     if (piezas) applyLayout(layout);   // reubica lo recien creado
     streetEditablesDirty = true;
     // Después de restaurar clones hay que re-imponer el estado del interruptor:
@@ -656,7 +657,7 @@ function registerDestinationEditables(record) {
     // Piezas armadas a mano DENTRO de este piso (editor/pieceBuilder.js). Sin
     // esto solo se restauraban las de la calle: todo lo que Kusher armara
     // parado en un piso desaparecia al salir y volver a entrar.
-    if (restorePieces(record.scene, layout) + restoreMuebles(record.scene, layout)) applyLayout(layout);
+    if (restorePieces(record.scene, layout) + restoreMuebles(record.scene, layout, record.destination.id) + restorePrendasGlb(record.scene, layout, record.destination.id)) applyLayout(layout);
     record.collidersDirty = true;
     renderer.shadowMap.needsUpdate = true;
   });

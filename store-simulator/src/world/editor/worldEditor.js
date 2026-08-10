@@ -8,6 +8,7 @@ import { createEditorPanel } from './editorPanel.js';
 import { cuadroDesde, getFrameEditor } from '../../ui/frameEditor.js';
 import { ADDABLE_MODELS, searchableModelPresets } from './modelCatalog.js';
 import { MUEBLES_PS3, crearMueblePs3 } from '../terracePs3Trial.js';
+import { PRENDAS_GLB, addGarmentModel } from '../garmentModels.js';
 import {
   applyLayout,
   duplicateEditable,
@@ -152,6 +153,9 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       ...Object.entries(MUEBLES_PS3).map(([clave, m]) => ({
         key: `mueble:${clave}`, name: m.nombre, searchTerms: m.buscar,
       })),
+      ...Object.entries(PRENDAS_GLB).map(([clave, p]) => ({
+        key: `prenda:${clave}`, name: p.nombre, searchTerms: 'remera prenda ropa colgar fer chelo',
+      })),
     ],
     onMode: setMode,
     onToggleSpace: toggleSpace,
@@ -176,10 +180,25 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     onPieceTexture: applyPieceTexture,
   });
 
+  // Numeracion por tipo de prenda, para que cada copia tenga nombre propio.
+  const numeroDePrenda = new Map();
+  function siguienteNumeroDePrenda(clave) {
+    const n = (numeroDePrenda.get(clave) ?? 0) + 1;
+    numeroDePrenda.set(clave, n);
+    return n;
+  }
+
   // De que piso tomar los colores y materiales al construir un mueble. Burela
   // no es un piso PS3: ahi se usa la paleta de la Terraza.
   function destinoActual() {
     return currentScene?.userData?.ps3DestinationId ?? 5;
+  }
+
+  // Igual que `destinoActual` pero para GUARDAR: en Burela el piso es 0, no 5.
+  // `destinoActual` devuelve 5 ahi porque lo unico que decide es de que piso
+  // copiar los colores, y Burela no tiene paleta PS3 propia.
+  function destinoDeLaEscenaActual() {
+    return currentScene?.userData?.ps3DestinationId ?? 0;
   }
 
   function isInCurrentScene(object) {
@@ -515,11 +534,36 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
         locked: false,
         visible: true,
         // Sin esto el mueble desaparece al refrescar: ver `restoreMuebles`.
-        mueble: { clave, destinationId: destinoActual() },
+        // `destinationId` dice DONDE vuelve al recargar (Burela es 0).
+        // `tema` dice de que piso copiar colores y materiales — Burela no tiene
+        // paleta PS3 propia, asi que usa la de la Terraza. Son dos cosas
+        // distintas y mezclarlas dejaba el mueble sin materiales en Burela.
+        mueble: { clave, destinationId: destinoDeLaEscenaActual(), tema: destinoActual() },
       });
       selectId(id);
       notifyWorldChanged();
       saveNow(`${preset.nombre} agregado.`);
+      return;
+    }
+
+    // Prendas modeladas a mano. NO se pueden agregar como un GLB cualquiera:
+    // solo `addGarmentModel` les pone `userData.garmentModel`, que es lo que
+    // hace que el click derecho las reconozca y se puedan diseñar.
+    if (key.startsWith('prenda:')) {
+      const clave = key.slice('prenda:'.length);
+      setStatus(`Colgando ${PRENDAS_GLB[clave]?.nombre ?? clave}...`);
+      const puesta = await addGarmentModel(currentScene, clave, {
+        position: spawnPositionInFront(),
+        // ⚠️ Nombre UNICO por copia. Los diseños se guardan por nombre: dos
+        // remeras con el mismo nombre compartirian la estampa.
+        name: `${PRENDAS_GLB[clave]?.nombre ?? 'Prenda'} ${siguienteNumeroDePrenda(clave)}`,
+        destinationId: destinoDeLaEscenaActual(),
+        persistente: true,
+      });
+      if (!puesta) { setStatus(`No se pudo colgar ${clave}.`); return; }
+      selectId(puesta.root.userData.editorId);
+      notifyWorldChanged();
+      saveNow(`${puesta.root.name} colgada. Click derecho para diseñarla.`);
       return;
     }
 

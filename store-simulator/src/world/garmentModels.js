@@ -22,7 +22,7 @@
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { registerEditableObject } from './editor/editableRegistry.js';
+import { getEditableById, registerEditableObject } from './editor/editableRegistry.js';
 import { diseñoDe, pintarPrenda } from '../ui/garmentGlbEditor.js';
 
 const loader = new GLTFLoader();
@@ -77,6 +77,14 @@ export async function addGarmentModel(scene, clave, {
   scale = 1,
   id = null,
   name = null,
+  // En que escena se colgo. Se guarda para que al recargar vuelva SOLO ahi:
+  // sin esto una remera puesta en HOOP reaparecia tambien en Burela.
+  destinationId = null,
+  // ⚠️ Solo las prendas que Kusher cuelga a mano se guardan en el layout.
+  // Las MUESTRAS no: la escena las crea sola cada vez que se arma, asi que
+  // guardarlas las duplicaba —una del codigo y otra del layout— y la copia se
+  // multiplicaba en cada refresco.
+  persistente = false,
 } = {}) {
   const preset = PRENDAS_GLB[clave];
   if (!preset || !scene) return null;
@@ -134,6 +142,10 @@ export async function addGarmentModel(scene, clave, {
     receiveShadow: true,
     locked: false,
     visible: true,
+    // Sin esto una prenda agregada a mano desaparece al refrescar: el layout
+    // guarda DONDE esta, no que archivo cargar. Lo reconstruye
+    // `restorePrendasGlb`, igual que `restoreMuebles` con los muebles.
+    ...(persistente ? { prendaGlb: { clave, destinationId: destinationId ?? scene?.userData?.ps3DestinationId ?? 0 } } : {}),
   });
 
   return { root, tela };
@@ -160,4 +172,45 @@ export function addSampleGarments(scene, {
       name: `${PRENDAS_GLB[clave].nombre} · muestra`,
     }).catch((error) => console.warn('No se pudo colgar la prenda de muestra.', error));
   });
+}
+
+/**
+ * Reconstruye las prendas que Kusher colgo a mano. Es asincrona (el GLB se
+ * baja), asi que devuelve la cantidad que va a crear, no las ya creadas.
+ */
+// Prendas que se estan bajando ahora mismo. Hace falta porque `addGarmentModel`
+// es asincrona: hasta que el GLB no resuelve, la prenda no esta registrada, y si
+// mientras tanto se vuelve a aplicar el layout se pedia otra copia. Se veian
+// tres remeras donde habia una.
+const colgandose = new Set();
+
+export function restorePrendasGlb(scene, layout, destinoDeLaEscena) {
+  if (!Array.isArray(layout) || !scene) return 0;
+  let pedidas = 0;
+  for (const item of layout) {
+    if (!item?.prendaGlb?.clave) continue;
+    // Mismo motivo que en `restoreMuebles`: sin este filtro la prenda se
+    // recreaba en todas las escenas.
+    if ((item.prendaGlb.destinationId ?? 0) !== destinoDeLaEscena) continue;
+    // Ya esta puesta. Este chequeo es el principal: `applySavedEditorLayout`
+    // corre varias veces por entrada a un piso, y sin el se colgaban tres
+    // remeras donde habia una. El de `colgandose` cubre la ventana en la que el
+    // GLB todavia se esta bajando y la prenda aun no figura en el registro.
+    if (getEditableById(item.id)?.object3D?.parent) continue;
+    if (colgandose.has(item.id)) continue;
+    colgandose.add(item.id);
+    pedidas++;
+    addGarmentModel(scene, item.prendaGlb.clave, {
+      id: item.id,
+      name: item.name,
+      position: item.position ?? [0, 0, 0],
+      rotationY: item.rotation?.[1] ?? 0,
+      scale: item.scale?.[0] ?? 1,
+      destinationId: destinoDeLaEscena,
+      persistente: true,
+    })
+      .catch((error) => console.warn('No se pudo recolgar la prenda.', error))
+      .finally(() => colgandose.delete(item.id));
+  }
+  return pedidas;
 }
