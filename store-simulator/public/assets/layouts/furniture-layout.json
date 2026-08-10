@@ -4012,6 +4012,58 @@
     "manageShadows": false
   },
   {
+    "id": "calle-kit:49.62.0",
+    "name": "Interior local · prenda colgada izquierda 1 · tela",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.62.1",
+    "name": "Percha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.045,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
     "id": "calle-kit:49.63",
     "name": "Interior local · prenda colgada izquierda 2",
     "type": "calle-kit",
@@ -4029,6 +4081,58 @@
     "scale": [
       0.6161453064562523,
       0.7325990350045618,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.63.0",
+    "name": "Interior local · prenda colgada izquierda 2 · tela",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.63.1",
+    "name": "Percha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.045,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
       1
     ],
     "castShadow": true,
@@ -4064,6 +4168,58 @@
     "manageShadows": false
   },
   {
+    "id": "calle-kit:49.64.0",
+    "name": "Interior local · prenda colgada izquierda 3 · tela",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.64.1",
+    "name": "Percha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.045,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
     "id": "calle-kit:49.65",
     "name": "Interior local · prenda colgada izquierda 4",
     "type": "calle-kit",
@@ -4081,6 +4237,58 @@
     "scale": [
       1.1575388909907327,
       1.0510534751653937,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.65.0",
+    "name": "Interior local · prenda colgada izquierda 4 · tela",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.65.1",
+    "name": "Percha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.045,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
       1
     ],
     "castShadow": true,
@@ -4610,6 +4818,58 @@
     "manageShadows": false
   },
   {
+    "id": "calle-kit:49.76.0",
+    "name": "Stock selector · remera PISO 1 · ARCHIVE · tela",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.76.1",
+    "name": "Percha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.045,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
     "id": "calle-kit:49.77",
     "name": "Stock selector · etiqueta PISO 1 · ARCHIVE",
     "type": "calle-kit",
@@ -4644,6 +4904,58 @@
       1.21,
       2.17,
       -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.78.0",
+    "name": "Stock selector · remera PISO 2 · ORIGEN · tela",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.78.1",
+    "name": "Percha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.045,
+      0
     ],
     "rotation": [
       0,
@@ -4714,6 +5026,58 @@
     "manageShadows": false
   },
   {
+    "id": "calle-kit:49.80.0",
+    "name": "Stock selector · remera PISO 3 · HOOP SEASON · tela",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.80.1",
+    "name": "Percha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.045,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
     "id": "calle-kit:49.81",
     "name": "Stock selector · etiqueta PISO 3 · HOOP SEASON",
     "type": "calle-kit",
@@ -4766,6 +5130,58 @@
     "manageShadows": false
   },
   {
+    "id": "calle-kit:49.82.0",
+    "name": "Stock selector · remera PISO 4 · BOB · tela",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.82.1",
+    "name": "Percha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.045,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
     "id": "calle-kit:49.83",
     "name": "Stock selector · etiqueta PISO 4 · BOB",
     "type": "calle-kit",
@@ -4800,6 +5216,58 @@
       2.6799999999999997,
       2.17,
       -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.84.0",
+    "name": "Stock selector · remera PISO 5 · CULTURA · tela",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.84.1",
+    "name": "Percha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.045,
+      0
     ],
     "rotation": [
       0,
@@ -5135,8 +5603,8 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      84.27281321677388,
-      11.094726338704383,
+      64.31225654373692,
+      55.578176096850896,
       6
     ],
     "rotation": [
@@ -5161,8 +5629,8 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      84.27281321677388,
-      -11.094726338704383,
+      64.31225654373691,
+      -55.5781760968509,
       6
     ],
     "rotation": [
@@ -8323,6 +8791,469 @@
     "manageShadows": false
   },
   {
+    "id": "calle-kit:1-copia-37",
+    "name": "Vereda gris frente al local (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -10.906063282379701,
+      -2.4390212072233908e-15,
+      21.46385351475063
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      1.043398985329426,
+      2.2571888677708567,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "furniture:kenney-city-east-2",
+    "name": "Ciudad Kenney · Casa B",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-house-b.glb",
+    "position": [
+      41,
+      0,
+      -14
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 11,
+    "collidable": false
+  },
+  {
+    "id": "furniture:kenney-city-back-6",
+    "name": "Ciudad Kenney · Casa B",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-house-b.glb",
+    "position": [
+      25,
+      0,
+      -49
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 11,
+    "collidable": false
+  },
+  {
+    "id": "furniture:kenney-city-east-1",
+    "name": "Ciudad Kenney · Torre D",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-tower-d.glb",
+    "position": [
+      43,
+      0,
+      -27
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 31,
+    "collidable": false
+  },
+  {
+    "id": "furniture:kenney-city-back-5",
+    "name": "Ciudad Kenney · Torre D",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-tower-d.glb",
+    "position": [
+      13,
+      0,
+      -58
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 31,
+    "collidable": false
+  },
+  {
+    "id": "furniture:kenney-city-east-6",
+    "name": "Ciudad Kenney · Casa A",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-house-a.glb",
+    "position": [
+      57,
+      0,
+      -20
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 10,
+    "collidable": false
+  },
+  {
+    "id": "furniture:kenney-city-back-2",
+    "name": "Ciudad Kenney · Casa A",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-house-a.glb",
+    "position": [
+      -23,
+      0,
+      -48
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 10,
+    "collidable": false
+  },
+  {
+    "id": "furniture:kenney-city-east-4",
+    "name": "Ciudad Kenney · Casa C",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-house-c.glb",
+    "position": [
+      42,
+      0,
+      10
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 10,
+    "collidable": false
+  },
+  {
+    "id": "furniture:kenney-city-back-4",
+    "name": "Ciudad Kenney · Casa C",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-house-c.glb",
+    "position": [
+      0,
+      0,
+      -49
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 10,
+    "collidable": false
+  },
+  {
+    "id": "furniture:kenney-city-east-4-copia-1",
+    "name": "Ciudad Kenney · Casa C (copia)",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-house-c.glb",
+    "position": [
+      8.696587042790563,
+      -0.6805441808474098,
+      30.647885246122964
+    ],
+    "rotation": [
+      -3.141592653589793,
+      0.06508925907774207,
+      -3.141592653589793
+    ],
+    "scale": [
+      0.7735104211589371,
+      0.8000972586129691,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 10,
+    "collidable": false,
+    "cloneOf": "furniture:kenney-city-east-4",
+    "cloneAtSceneRoot": true
+  },
+  {
+    "id": "furniture:kenney-city-east-3",
+    "name": "Ciudad Kenney · Torre A",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-tower-a.glb",
+    "position": [
+      45,
+      0,
+      -2
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 24,
+    "collidable": false
+  },
+  {
+    "id": "furniture:kenney-city-back-7",
+    "name": "Ciudad Kenney · Torre A",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-tower-a.glb",
+    "position": [
+      36,
+      0,
+      -54
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 24,
+    "collidable": false
+  },
+  {
+    "id": "furniture:kenney-city-east-7",
+    "name": "Ciudad Kenney · Torre B",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-tower-b.glb",
+    "position": [
+      59,
+      0,
+      4
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 21,
+    "collidable": false
+  },
+  {
+    "id": "furniture:kenney-city-back-1",
+    "name": "Ciudad Kenney · Torre B",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-tower-b.glb",
+    "position": [
+      -34,
+      0,
+      -51
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 21,
+    "collidable": false
+  },
+  {
+    "id": "furniture:kenney-city-back-1-copia-1",
+    "name": "Ciudad Kenney · Torre B (copia)",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-tower-b.glb",
+    "position": [
+      0.015256127148256221,
+      0,
+      30.537171606954878
+    ],
+    "rotation": [
+      -3.141592653589793,
+      0.026893121279485968,
+      -3.141592653589793
+    ],
+    "scale": [
+      0.5034878398629661,
+      0.45826043659338783,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 21,
+    "collidable": false,
+    "cloneOf": "furniture:kenney-city-back-1",
+    "cloneAtSceneRoot": true
+  },
+  {
+    "id": "furniture:kenney-city-east-5",
+    "name": "Ciudad Kenney · Torre C",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-tower-c.glb",
+    "position": [
+      48,
+      0,
+      22
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 27,
+    "collidable": false
+  },
+  {
+    "id": "furniture:kenney-city-back-3",
+    "name": "Ciudad Kenney · Torre C",
+    "type": "furniture",
+    "model": "assets/furniture/kenney-modular-city/building-sample-tower-c.glb",
+    "position": [
+      -12,
+      0,
+      -55
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": false,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "height": 27,
+    "collidable": false
+  },
+  {
     "id": "furniture:b54-simulator-base",
     "name": "B54 FTT Lowpoly Simulator",
     "type": "furniture",
@@ -8532,19 +9463,71 @@
     "castShadow": false,
     "receiveShadow": true,
     "locked": false,
-    "visible": true,
+    "visible": false,
     "height": 7,
     "collidable": false
   },
   {
-    "id": "furniture:tram-station-base-copia-1",
-    "name": "Tram Station · Estacion de tranvia GLB (copia)",
-    "type": "furniture",
-    "model": "assets/furniture/tram-station.glb",
+    "id": "elevator-destination-2",
+    "name": "Ascensor FOURTWENTY · HOOP SEASON (mover completo)",
+    "type": "elevator",
+    "model": "",
     "position": [
-      -169.25,
-      -6,
-      -23.25
+      0,
+      0,
+      13.05
+    ],
+    "rotation": [
+      0,
+      3.141592653589793,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destination-2-minigame-arcade",
+    "name": "Arcade BOB'S MAZE (mover completo)",
+    "type": "minigame",
+    "model": "",
+    "position": [
+      -5.72,
+      0,
+      7.55
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0",
+    "name": "HOOP SEASON PS3 · FOURTWENTY",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
     ],
     "rotation": [
       0,
@@ -8552,16 +9535,1574 @@
       0
     ],
     "scale": [
-      2.8131458116503554,
-      6.469817467454453,
-      1.3250914005071617
+      1,
+      1,
+      1
     ],
-    "castShadow": false,
+    "castShadow": true,
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "height": 7,
-    "collidable": false,
-    "cloneOf": "furniture:tram-station-base"
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.0",
+    "name": "ESFERA 360 · TAMAÑO EDITABLE",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      1.55,
+      4.5
+    ],
+    "rotation": [
+      0,
+      -0.18,
+      0
+    ],
+    "scale": [
+      1.5,
+      1.5,
+      1.5
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.0.0",
+    "name": "ESFERA · urban-alley-01-4k.exr",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.1",
+    "name": "HOOP SEASON PS3 · piso PBR de hormigon",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      -0.16,
+      4.5
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.2",
+    "name": "HOOP SEASON PS3 · superficie central",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0.012,
+      4.15
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.3",
+    "name": "HOOP SEASON PS3 · vidriera panoramica frontal",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0,
+      -5.36
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.4",
+    "name": "HOOP SEASON PS3 · vidriera izquierda",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      -6.86,
+      0,
+      4.5
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.5",
+    "name": "HOOP SEASON PS3 · vidriera derecha",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      6.86,
+      0,
+      4.5
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.6",
+    "name": "HOOP SEASON PS3 · columna facetada",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      -6.72,
+      2.175,
+      -5.18
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.7",
+    "name": "HOOP SEASON PS3 · columna facetada",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      6.72,
+      2.175,
+      -5.18
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.8",
+    "name": "HOOP SEASON PS3 · columna facetada",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      -6.72,
+      2.175,
+      4.5
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.9",
+    "name": "HOOP SEASON PS3 · columna facetada",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      6.72,
+      2.175,
+      4.5
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.10",
+    "name": "HOOP SEASON PS3 · columna facetada",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      -6.72,
+      2.175,
+      14.15
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.11",
+    "name": "HOOP SEASON PS3 · columna facetada",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      6.72,
+      2.175,
+      14.15
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.12",
+    "name": "HOOP SEASON PS3 · muro de ladrillo izquierdo",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0,
+      14.28
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.13",
+    "name": "HOOP SEASON PS3 · muro de ladrillo derecho",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0,
+      14.28
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.14",
+    "name": "HOOP SEASON PS3 · dintel del ascensor",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      4.02,
+      14.2
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.15",
+    "name": "HOOP SEASON PS3 · arco metalico central",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      1.36,
+      12.2
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.16",
+    "name": "HOOP SEASON PS3 · FOURTWENTY · Cylinder 16",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      -2.28,
+      0.68,
+      12.2
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.17",
+    "name": "HOOP SEASON PS3 · FOURTWENTY · Cylinder 17",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      2.28,
+      0.68,
+      12.2
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.18",
+    "name": "HOOP SEASON PS3 · cubierta industrial",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.19",
+    "name": "HOOP SEASON PS3 · instalaciones de techo",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.20",
+    "name": "HOOP SEASON PS3 · cartel HOOP SEASON",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      4.12,
+      3.03,
+      14.055
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.21",
+    "name": "HOOP SEASON PS3 · poster de campana",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      -5.82,
+      1.6,
+      2.1
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.22",
+    "name": "HOOP SEASON PS3 · isla oval central",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0,
+      3.25
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.23",
+    "name": "HOOP SEASON PS3 · perchero izquierdo",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      -2.65,
+      0,
+      0.25
+    ],
+    "rotation": [
+      0,
+      0.08,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.24",
+    "name": "HOOP SEASON PS3 · perchero derecho",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      2.85,
+      0,
+      6.65
+    ],
+    "rotation": [
+      0,
+      -0.12,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.25",
+    "name": "HOOP SEASON PS3 · pared modular de producto",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      6.28,
+      0,
+      4.8
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.26",
+    "name": "HOOP SEASON PS3 · probador curvo",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      -4.62,
+      0,
+      10.4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.27",
+    "name": "HOOP SEASON PS3 · caja curva detallada",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      3.95,
+      0,
+      10.6
+    ],
+    "rotation": [
+      0,
+      -0.08,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.28",
+    "name": "HOOP SEASON PS3 · maniqui de escala",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      -1.1,
+      0,
+      3.25
+    ],
+    "rotation": [
+      0,
+      -0.2,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.29",
+    "name": "HOOP SEASON PS3 · maniqui de escala",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      1.05,
+      0,
+      3.25
+    ],
+    "rotation": [
+      0,
+      0.2,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.30",
+    "name": "HOOP SEASON PS3 · macetero urbano",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      -5.72,
+      0,
+      -3.85
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.9,
+      0.9,
+      0.9
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.31",
+    "name": "HOOP SEASON PS3 · macetero urbano",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      5.72,
+      0,
+      -3.85
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.9,
+      0.9,
+      0.9
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.32",
+    "name": "HOOP SEASON PS3 · media cancha de exhibicion",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0.04,
+      4
+    ],
+    "rotation": [
+      -1.5707963267948966,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.33",
+    "name": "HOOP SEASON PS3 · aro de basket completo",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0,
+      -4.35
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.34",
+    "name": "HOOP SEASON PS3 · carro de pelotas",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      -4.9,
+      0,
+      8.8
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.35",
+    "name": "HOOP SEASON PS3 · marcador Burela League",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      -3.85,
+      3,
+      14.04
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.36",
+    "name": "HOOP SEASON PS3 · cuadro reemplazable 1",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      6.32,
+      1.82,
+      -2.5
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.37",
+    "name": "HOOP SEASON PS3 · cuadro reemplazable 2",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      6.32,
+      1.82,
+      -0.8500000000000001
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:0.38",
+    "name": "HOOP SEASON PS3 · cuadro reemplazable 3",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      6.32,
+      1.82,
+      0.7999999999999998
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión)",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0,
+      4.5
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1.32
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.0",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión) · Plane 0",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      -0.02,
+      0
+    ],
+    "rotation": [
+      -1.5707963267948966,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.1",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión) · Cylinder 1",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      3.9499999999999997,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.2",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión) · Cylinder 2",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0.45,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.3",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión) · Cylinder 3",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      7.17,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.4",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión) · Cylinder 4",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      13,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.5",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión) · Cylinder 5",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      8,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.6",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión) · Cylinder 6",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      17.17,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.7",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión) · Cylinder 7",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      23.5,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.8",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión) · Cylinder 8",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      18,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.9",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión) · Cylinder 9",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      28.17,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.10",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión) · Cylinder 10",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      1.5,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.11",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión) · Cylinder 11",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      8,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.12",
+    "name": "HOOP ARENA · jumbotron",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      21,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      0.7575757575757576
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.12.0",
+    "name": "HOOP ARENA · jumbotron · Box 0",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.12.1",
+    "name": "HOOP ARENA · jumbotron · Plane 1",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      0,
+      4.55
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.12.2",
+    "name": "HOOP ARENA · jumbotron · Plane 2",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      4.55,
+      0,
+      2.7860714680602287e-16
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.12.3",
+    "name": "HOOP ARENA · jumbotron · Plane 3",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      5.572142936120457e-16,
+      0,
+      -4.55
+    ],
+    "rotation": [
+      0,
+      3.141592653589793,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.12.4",
+    "name": "HOOP ARENA · jumbotron · Plane 4",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      -4.55,
+      0,
+      -8.358214404180685e-16
+    ],
+    "rotation": [
+      0,
+      4.71238898038469,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-2:16.13",
+    "name": "HOOP ARENA · estadio (decorado, sin colisión) · Circle 13",
+    "type": "destino-2",
+    "model": "",
+    "position": [
+      0,
+      30,
+      0
+    ],
+    "rotation": [
+      -1.5707963267948966,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
   }
 ]
