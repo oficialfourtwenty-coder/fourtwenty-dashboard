@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { addEditableHdriSphere } from './bincoShopTrial.js';
-import { createHangingGarment } from './garments.js';
+import { addSampleGarments } from './garmentModels.js';
 import { applySavedFrameDesigns } from '../ui/frameEditor.js';
 import { applySavedGarmentDesigns } from '../ui/garmentEditor.js';
 import { bindProductVisual } from './productVisuals.js';
@@ -512,37 +512,22 @@ function createRetailRail(root, {
       rail.add(wheel);
     }
   }
-  const garmentColors = [
-    theme.darkHex, 0xd5cfbd, theme.secondaryHex,
-    0x1c2425, theme.accentHex, 0x405e62,
-    0xe2ddd0, theme.secondaryHex, theme.darkHex,
-  ];
+  // ⚠️ EL PERCHERO VA VACIO (10/08, pedido de Kusher).
+  // Antes se colgaban 9 prendas generadas con formulas (`world/garments.js`).
+  // Ahora las prendas son los GLB modelados a mano (`world/garmentModels.js`) y
+  // Kusher arma cada perchero el mismo: se deja UNA de cada tipo como muestra
+  // por escena y el duplica con `T` las que quiera.
+  // `createHangingGarment` (world/garments.js) queda en el repo pero YA NO SE
+  // LLAMA desde ninguna escena. No se borra por si hay que volver atras.
+  //
+  // ⚠️ Queda un hueco vacio por cada prenda que habia. Los ids del editor son
+  // posicionales (`autoRegisterScene`), asi que borrar objetos corre a todos
+  // los hermanos siguientes y el layout guardado se aplica al objeto
+  // equivocado. Un Object3D vacio no dibuja nada pero ocupa el lugar.
   for (let index = 0; index < 9; index++) {
-    const color = garmentColors[index];
-    const type = theme.key === 'hoop' ? 'jersey' : (index % 3 === 0 ? 'hoodie' : 'tee');
-    // Prenda con volumen real (ver world/garments.js). La percha viene adentro:
-    // antes era una linea de 1px aparte, por eso ya no se dibujan con
-    // createHangerLines.
-    const { group: garment, mesh } = createHangingGarment({
-      color,
-      type,
-      number: theme.key === 'hoop' ? [4, 2, 0, 20, 24, 7, 13, 91, 5][index] : null,
-      monkeyFace: theme.key === 'bob',
-      hangerMaterial: mats.wornSteel,
-      variacion: index,
-    });
-    garment.position.set((index - 4) * 0.27, 1.54, 0);
-    garment.name = `${name} · producto ${index + 1}`;
-    mesh.name = `${garment.name} · tela`;
-    if (Number.isFinite(productFloor)) {
-      const slot = { piso: productFloor, index: (slotOffset + index) % 4 };
-      // La foto real del producto entra por la malla de tela, no por el grupo.
-      bindProductVisual(mesh, slot, mesh.material.map);
-      // Y la ESTAMPA del producto se apoya sobre la prenda. Si ese producto
-      // tiene diseño cargado desde el panel de admin, gana sobre la foto.
-      bindGarmentToProduct(garment, slot);
-    }
-    rail.add(garment);
+    const hueco = new THREE.Object3D();
+    hueco.name = `${name} · lugar libre ${index + 1}`;
+    rail.add(hueco);
   }
   rail.position.set(x, 0, z);
   rail.rotation.y = rotation;
@@ -901,28 +886,19 @@ function addOriginDisplayTable(root, mats, theme, centro = null) {
   else mesa.group.position.set(0, 0, 2.2);
   root.add(mesa.group);
 
-  // Las 4 pilas en cuadrado sobre la tapa, con aire entre ellas.
-  const sep = 0.36;
-  REMERAS_ORIGEN.forEach((remera, i) => {
-    const pila = createFoldedStack({
-      color: remera.color,
-      cantidad: 3,
-      material: mats.fabric ?? mats.wood,
-      nombre: themedName(theme, `pila ${remera.nombre}`),
-      // El plano de estampa se crea siempre: `bindStackToProduct` lo esconde
-      // mientras el producto no tenga diseño cargado, y lo enciende cuando si.
-      estampa: null,
-    });
-    pila.position.set(
-      ((i % 2) - 0.5) * sep * 2,
-      mesa.alturaTapa,
-      (Math.floor(i / 2) - 0.5) * sep * 2,
-    );
-    pila.rotation.y = (i - 1.5) * 0.06;
-    mesa.group.add(pila);
-    bindStackToProduct(pila, { piso: 2, index: remera.index });
+  // ⚠️ LA MESA VA VACIA (10/08, pedido de Kusher).
+  // Antes se apilaban aca las 12 remeras dobladas de los 4 diseños de ORIGEN,
+  // generadas con formulas. Ahora las prendas son los GLB modelados a mano y
+  // Kusher acomoda la mesa el mismo con `T`.
+  // `REMERAS_ORIGEN` y `bindStackToProduct` quedan a mano por si vuelve a
+  // querer las pilas atadas al catalogo de productos.
+  // Mismo motivo que en los percheros: un hueco vacio por pila, para no correr
+  // los ids posicionales del editor.
+  REMERAS_ORIGEN.forEach((remera) => {
+    const hueco = new THREE.Object3D();
+    hueco.name = themedName(theme, `lugar libre ${remera.nombre}`);
+    mesa.group.add(hueco);
   });
-
   return mesa;
 }
 
@@ -1480,6 +1456,10 @@ export function buildPs3FloorScene(scene, {
     slotOffset: 2,
     name: themedName(theme, 'perchero derecho'),
   });
+  // UNA de cada prenda como muestra, colgada del perchero izquierdo. Los dos
+  // percheros quedan vacios: Kusher los llena duplicando estas con `T`.
+  // Va sin await: la escena no espera al GLB para abrirse.
+  addSampleGarments(root, { x: -3.0, y: 1.54, z: 0.25, rotationY: 0.08, escala: 1 });
   if (!['origen', 'bob'].includes(theme.key)) createWallDisplay(root, mats, theme);
   createFittingPod(root, mats, theme);
   createCounter(root, mats, theme);
