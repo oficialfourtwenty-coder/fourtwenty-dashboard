@@ -16,7 +16,7 @@ import { Reflector } from 'three/addons/objects/Reflector.js';
 import { towerFacade, veredaTile, hexPaver, greenShutter, whiteFloor, lightWood } from './textures.js';
 import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
-import { createHangingGarment } from './garments.js';
+import { addSampleGarments } from './garmentModels.js';
 import { bindProductVisual } from './productVisuals.js';
 import { bindGarmentToProduct } from './garmentPrints.js';
 import { createMoonDisc, createSunDisc } from './dayNightCycle.js';
@@ -700,40 +700,27 @@ function buildRealInterior(scene, g, colliders, H) {
   const rail2 = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.6, 8), chrome);
   rail2.name = 'Interior local · barral prendas izquierdo';
   rail2.rotation.x = Math.PI / 2; rail2.position.set(-2.78, PLAT + 1.95, -6.2); g.add(rail2);
-  // Los CUATRO cuerpos que pidio Kusher, colgados juntos en la pared izquierda
-  // del local: es el primer perchero que se ve al entrar, asi que sirve de
-  // muestrario. Cada uno se puede rediseñar con click derecho (cuerpo, color y
-  // estampa propia) — ver src/ui/garmentEditor.js.
-  const shirtDefs = [
-    { color: 0x141414, tipo: 'tee' },
-    { color: 0x2a3550, tipo: 'hoodie' },
-    { color: 0x2f3540, tipo: 'pantalon' },
-    { color: 0xb4a88c, tipo: 'bermuda' },
-  ];
-  // Prendas con volumen real, las mismas que los percheros de los pisos
-  // (world/garments.js). Antes eran planos con textura recortada: de costado
-  // desaparecian, y este barral se mira justo de costado al entrar al local.
-  shirtDefs.forEach((d, i) => {
-    const { group: prenda, mesh } = createHangingGarment({
-      color: d.color,
-      type: d.tipo,
-      hangerMaterial: chrome,
-      variacion: i,
-    });
-    prenda.name = `Interior local · prenda colgada izquierda ${i + 1}`;
-    mesh.name = `${prenda.name} · tela`;
-    // La foto real del producto entra por la malla de tela, no por el grupo.
-    bindProductVisual(mesh, { piso: 'local', index: i }, mesh.material.map);
-    // Y la ESTAMPA del producto se apoya encima (ver world/garmentPrints.js).
-    bindGarmentToProduct(prenda, { piso: 'local', index: i });
-    // Cuelga del barral (y = PLAT + 1.95) mirando hacia el centro del local.
-    prenda.position.set(-2.74, PLAT + 1.9, -6.85 + i * 0.42);
-    // += y no =: createHangingGarment ya le puso un giro chico distinto a cada
-    // una para que el barral no se lea como un sello repetido.
-    prenda.rotation.y += Math.PI / 2;
-    prenda.scale.setScalar(0.88);
-    g.add(prenda);
-  });
+  // ⚠️ EL BARRAL VA VACIO (10/08, pedido de Kusher).
+  // Antes colgaban aca las 4 prendas generadas con formulas (tee, hoodie,
+  // pantalon y bermuda). Ahora las prendas son los GLB modelados a mano
+  // (`world/garmentModels.js`): se deja UNA de cada tipo como muestra y Kusher
+  // arma el barral el mismo duplicando con `T`.
+  //
+  // ⚠️⚠️ EN LUGAR DE CADA PRENDA QUEDA UN HUECO VACIO, Y NO SE PUEDE SACAR.
+  // El editor arma los ids por POSICION en el arbol (`autoRegisterScene`:
+  // `calle-kit:49.76` es el hijo 76 del grupo 49). Si se borran objetos, todos
+  // los hermanos que venian despues corren un lugar y **el layout guardado de
+  // Kusher se aplica a los objetos equivocados**. Medido: 176 de sus 312
+  // posiciones guardadas viven dentro de este grupo, y al borrar las 9 prendas
+  // dos objetos cualquiera aparecieron con el nombre "Stock selector · remera".
+  // Un Object3D vacio no dibuja nada y no cuesta nada, pero ocupa el lugar.
+  for (let i = 0; i < 4; i++) {
+    const hueco = new THREE.Object3D();
+    hueco.name = `Interior local · lugar libre barral izquierdo ${i + 1}`;
+    g.add(hueco);
+  }
+  // El barral esta en y = PLAT + 1.95; la prenda cuelga desde ahi.
+  addSampleGarments(g, { x: -2.74, y: PLAT + 1.9, z: -6.7, rotationY: Math.PI / 2, escala: 0.88, eje: 'z' });
 
   // — Exhibidor del jean blanco (adelante-izquierda, como la foto) —
   const px = -2.2, pz = -5.3;
@@ -867,27 +854,21 @@ function buildStockSelector(scene, g) {
   const selectors = [];
   defs.forEach((d, i) => {
     const x = GAP_X0 + 0.32 + i * ((W - 0.64) / (defs.length - 1));
-    // Volumen real, igual que los percheros de los pisos (world/garments.js).
-    const { group: prenda, mesh: shirt } = createHangingGarment({
-      color: d.color,
-      type: d.tipo,
-      monkeyFace: Boolean(d.cara),
-      hangerMaterial: mat(0xb9bcc2, 0.3, 0.9),
-      variacion: i,
-    });
-    prenda.name = `Stock selector · remera ${d.label}`;
-    shirt.name = `${prenda.name} · tela`;
-    // Cuelga del barral cromado, que esta en PLAT + 2.05.
-    prenda.position.set(x, PLAT + 2.0, zShirt);
-    prenda.scale.setScalar(0.8);
-    // Object.assign y no `=`: createHangingGarment ya dejo `userData.garment`
-    // con el tipo y el color, que es lo que el editor de prendas usa para
-    // reconocerla. Reemplazar el objeto entero se lo comia y la prenda dejaba
-    // de poder editarse con click derecho.
-    Object.assign(prenda.userData, { piso: d.piso, label: d.label, baseScale: 0.8 });
-    g.add(prenda);
-    selectors.push(prenda);
-    // etiqueta chica bajo cada remera
+    // ⚠️ EL BARRAL DEL STOCK SELECTOR VA VACIO (10/08, pedido de Kusher).
+    // Antes colgaba una prenda generada por cada piso. Se sacaron: eran
+    // decorativas, `selectors` se devuelve pero ya no lo consume nadie —
+    // verificado buscando `.selectors` en todo `src/`.
+    // Las etiquetas SI quedan: marcan que piso es cada lugar del barral, y
+    // sirven de guia cuando Kusher cuelgue ahi las prendas de verdad.
+    //
+    // ⚠️ El hueco vacio NO se puede sacar: los ids del editor son posicionales
+    // y borrar un objeto corre a todos sus hermanos, con lo que el layout
+    // guardado de Kusher se aplica al objeto equivocado. Ver la nota larga en
+    // el barral izquierdo del local.
+    const hueco = new THREE.Object3D();
+    hueco.name = `Stock selector · lugar libre ${d.label}`;
+    g.add(hueco);
+    // etiqueta chica bajo cada lugar
     const c = document.createElement('canvas'); c.width = 256; c.height = 48;
     const ctx = c.getContext('2d');
     ctx.fillStyle = '#f6f5f2'; ctx.fillRect(0, 0, 256, 48);
