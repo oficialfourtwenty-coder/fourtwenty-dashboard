@@ -1,6 +1,6 @@
 # Simulador Bobilonia Maestro - contexto obligatorio
 
-Ultima actualizacion documental: 3 de agosto de 2026.
+Ultima actualizacion documental: 10 de agosto de 2026.
 
 Este archivo es la fuente de contexto que deben leer Claude, Claude Code, Codex
 y cualquier colaborador antes de trabajar. El dueno no programa: explicar los
@@ -26,16 +26,25 @@ producto que no esten escritas aqui.
   `Desktop/ft-probar-0bbbb13`, `ft-probar-a209171`, `ft-probar-interior`,
   `ft-probar-layout`.
 - Aplicacion: `store-simulator/`.
-- Rama oficial actual: `version-lunes-3-de-agosto` (etiqueta `lunes-3-de-agosto`).
-  Reemplaza a `version-final-final-final`, que queda como checkpoint anterior y
-  esta incluida entera dentro de la rama nueva.
-- Respaldo anterior a todo el trabajo de esta noche: `version-jueves-30` en
-  `234e8e2`. No desarrollar sobre ese respaldo salvo pedido de Kusher.
+- Rama oficial actual: `version-lunes-10-de-agosto`
+  (etiqueta `lunes-10-de-agosto`). Aprobada por Kusher el 10/08 despues de
+  probar a mano el ascensor, los cinco pisos y los videos de intro.
+  Reemplaza a `version-lunes-3-de-agosto`, que queda como checkpoint anterior
+  y esta incluida entera dentro de la rama nueva.
+- Respaldo mas viejo: `version-jueves-30` en `234e8e2`. No desarrollar sobre
+  ese respaldo salvo pedido de Kusher.
 - La rama oficial incluye el audio comprimido, el registro dinamico de juegos,
   la mision de la estacion, la auditoria de rendimiento, la Terraza PS3
   aprobada y la esfera optimizada de CULTURA.
+- Lo que suma esta version sobre la del 3 de agosto:
+  - Liberacion de editables y pilas al cerrar un piso (Codex). Antes una
+    escena cerrada quedaba retenida entera: medido, 48 entradas por viaje.
+  - El video de intro ya no puede colgar el juego para siempre. Ver la seccion
+    del ascensor.
+  - Prueba automatica del recorrido completo (`npm run smoke`) y herramienta de
+    medicion de viajes (`npm run diagnostico`).
 - Para conocer el commit exacto vigente usar
-  `git rev-parse origin/version-lunes-3-de-agosto`; no partir de un hash viejo
+  `git rev-parse origin/version-lunes-10-de-agosto`; no partir de un hash viejo
   escrito en una conversacion.
 - Bitacora detallada vigente:
   `store-simulator/design/ESTADO_ACTUAL_Y_BITACORA.md`.
@@ -56,7 +65,7 @@ Antes de tocar codigo:
 cd /Users/kusher/Desktop/fourtwenty-dashboard
 git status --short --branch
 git fetch origin
-git switch version-lunes-3-de-agosto
+git switch version-lunes-10-de-agosto
 git pull --ff-only
 ```
 
@@ -150,6 +159,16 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 - `Save Local` conserva cambios en el navegador de esa computadora. Para que
   Claude, Codex, Fer y GitHub los reciban, Kusher debe exportar el JSON y se
   debe revisar antes de reemplazar `public/assets/layouts/furniture-layout.json`.
+- ⚠️ **AL 10/08 EL ARCHIVO DEL REPO ESTA ATRASADO.** `furniture-layout.json`
+  tiene 328 objetos y no se toca desde el 01/08. Todo lo que Kusher acomodo
+  despues vive SOLO en el localStorage de su Mac: no esta en GitHub, no lo
+  tiene ningun agente, y **la version publica se arma con el archivo del repo,
+  no con su navegador**. Si se vacia la cache o se usa otra computadora, ese
+  trabajo no aparece.
+  Pendiente concreto: que Kusher use **EXPORTAR JSON** y lo mande. Antes de
+  reemplazar el archivo hay que comparar contra el actual y decirle que cambio;
+  no pisarlo a ciegas.
+  Lo mismo vale para los diseños de cuadros, que tienen su propio EXPORTAR JSON.
 
 ### BOB
 
@@ -221,6 +240,26 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
   abria de una. Solo `error` corta; el jugador siempre puede saltear con `Esc`
   o click. Se detecto el 03/08 instrumentando los eventos del `<video>` con
   Playwright, no se veia leyendo el codigo.
+- ⚠️ **Pero `error` tampoco llega siempre, y por eso hay un vigilante** (10/08).
+  Medido con `npm run diagnostico`: un `<video>` con `preload="none"` y sin
+  datos emite `loadstart`, `waiting`, `suspend`... y despues **silencio
+  absoluto**. Ni `ended` ni `error`. Como `playElevatorIntro` se resolvia solo
+  con esos dos, la promesa quedaba colgada para siempre; `travelToDestination`
+  la espera, asi que `travelling` nunca volvia a false y **el ascensor quedaba
+  muerto por el resto de la sesion**: todo viaje posterior salia rechazado por
+  la guarda en 0 ms sin moverse. El jugador podia salvarse con `Esc`, pero solo
+  si adivinaba que habia que hacerlo.
+  Ahora hay un vigilante: si el video no da ninguna senal de vida durante 12 s
+  se saltea el intro y el juego sigue. Se rearma con `progress`, `canplay`,
+  `playing`, `loadeddata` y `timeupdate`. Verificado que NO corta un video que
+  anda: se apunto el `<source>` de HOOP a una copia VP9 de 22 s (mas larga que
+  el tope a proposito) y llego entera hasta `ended`.
+  **No sacar ese vigilante.** Sin el vuelve el ascensor muerto.
+- ⚠️ **Llegar a un piso NO es haber terminado el viaje.** `activateDestination`
+  corre ANTES del video: el destino ya cambio pero el viaje sigue abierto y
+  `travelling` sigue en true. Cualquier prueba que dispare el viaje siguiente
+  apenas ve el cambio de destino se lo va a comer rechazado. Hay que esperar a
+  que la pantalla de intro se vaya.
 - ⚠️ **El Chromium headless de las pruebas NO trae H.264**: cualquier mp4 falla
   ahi con `DEMUXER_ERROR_NO_SUPPORTED_STREAMS` aunque ande perfecto en el
   navegador real. Para probar la logica de un video, generar una copia corta en
@@ -709,7 +748,7 @@ checkout Tiendanube hasta completar la prueba y validacion oficial.
 
 ```bash
 cd /Users/kusher/Desktop/fourtwenty-dashboard
-git switch version-lunes-3-de-agosto
+git switch version-lunes-10-de-agosto
 git pull --ff-only
 cd store-simulator
 npm install
@@ -727,6 +766,23 @@ Build:
 cd /Users/kusher/Desktop/fourtwenty-dashboard/store-simulator
 npm run build
 ```
+
+Pruebas automaticas (con el `npm run dev` corriendo en otra pestana; la primera
+vez hace falta `npx playwright install chromium`):
+
+```bash
+SMOKE_URL=http://127.0.0.1:5201 npm run smoke        # recorre Burela y los 5 pisos
+SMOKE_URL=http://127.0.0.1:5201 npm run diagnostico  # mide donde se va el tiempo
+```
+
+- `smoke` tiene que terminar en `✅ TODO BIEN` y devolver salida 0. Comprueba
+  que los 6 destinos abren, que se vuelve a Burela, y que **no queda ninguna
+  entrada de piso registrada** al volver (esa es la fuga que arreglo Codex).
+- `diagnostico` imprime, viaje por viaje, cuanto tardo, cuanto se congelo el
+  hilo principal y que eventos tiro el video de intro. Es la herramienta con la
+  que se encontro el ascensor muerto del 10/08.
+- ⚠️ Ese navegador dibuja **por software**: sus segundos sirven para comparar
+  pisos entre si, no para predecir la maquina de Kusher.
 
 ## 12. Definicion de terminado para agosto
 
