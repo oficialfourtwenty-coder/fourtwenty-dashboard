@@ -169,6 +169,8 @@ function serializeEntry(entry) {
   // layout guarda DONDE esta cada objeto, pero una pieza inventada por Kusher
   // no existe en ninguna escena: sin esto desaparece al refrescar.
   if (entry.piece) data.piece = entry.piece;
+  // Idem para un mueble del catalogo agregado con `T` (terracePs3Trial.js).
+  if (entry.mueble) data.mueble = entry.mueble;
   return data;
 }
 
@@ -216,6 +218,10 @@ export function registerEditableObject(config, { silent = false } = {}) {
     cloneAtSceneRoot: config.cloneAtSceneRoot === true,
     // Pieza armada a mano: como reconstruirla al recargar (pieceBuilder.js).
     piece: config.piece ?? previous?.piece ?? null,
+    // Mueble del catalogo de pisos: idem, pero lo reconstruye `restoreMuebles`
+    // (terracePs3Trial.js). Si esta linea falta el mueble se guarda en el
+    // layout pero vuelve vacio, porque la entrada pierde el dato al registrarse.
+    mueble: config.mueble ?? previous?.mueble ?? null,
     color: normalizeEditorColor(config.color) ?? (sameObject ? previous.color : null),
     lightRange: normalizeLightRange(config.lightRange ?? config.object3D.userData?.editorLightRange)
       ?? (sameObject ? previous.lightRange : null),

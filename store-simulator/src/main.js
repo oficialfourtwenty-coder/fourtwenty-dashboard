@@ -19,6 +19,7 @@ import { initWorldEditor } from './world/editor/worldEditor.js';
 import { autoRegisterScene, applyLayout, getEditableObjects, isEditableEffectivelyVisible, registerEditableObject, restoreClones } from './world/editor/editableRegistry.js';
 import { loadInitialLayout } from './world/editor/layoutStore.js';
 import { restorePieces } from './world/editor/pieceBuilder.js';
+import { restoreMuebles } from './world/terracePs3Trial.js';
 import { buildSignage } from './world/signage.js';
 import { COLLECTIONS } from './world/collections.js';
 import { tickAmbient } from './world/anim.js';
@@ -604,8 +605,10 @@ function applySavedEditorLayout() {
     // guarda DONDE esta cada objeto, pero una pieza inventada por Kusher no
     // existe en ninguna escena hasta que alguien la vuelve a construir: sin
     // esto desaparecen al refrescar, igual que pasaria con los clones.
-    const piezas = restorePieces(scene, layout);
-    if (piezas) applyLayout(layout);   // reubica las piezas recien creadas
+    // Idem los muebles del catalogo de pisos agregados con `T`: tampoco
+    // existen en ninguna escena hasta que alguien los vuelve a construir.
+    const piezas = restorePieces(scene, layout) + restoreMuebles(scene, layout);
+    if (piezas) applyLayout(layout);   // reubica lo recien creado
     streetEditablesDirty = true;
     // Después de restaurar clones hay que re-imponer el estado del interruptor:
     // las luminarias duplicadas vuelven con su PointLight encendida.
@@ -652,7 +655,7 @@ function registerDestinationEditables(record) {
     // Piezas armadas a mano DENTRO de este piso (editor/pieceBuilder.js). Sin
     // esto solo se restauraban las de la calle: todo lo que Kusher armara
     // parado en un piso desaparecia al salir y volver a entrar.
-    if (restorePieces(record.scene, layout)) applyLayout(layout);
+    if (restorePieces(record.scene, layout) + restoreMuebles(record.scene, layout)) applyLayout(layout);
     record.collidersDirty = true;
     renderer.shadowMap.needsUpdate = true;
   });
@@ -1469,7 +1472,7 @@ function buildShopping() {
   loadInitialLayout().then((layout) => {
     applyLayout(layout);
     restoreClones(layout);
-    if (restorePieces(s, layout)) applyLayout(layout);
+    if (restorePieces(s, layout) + restoreMuebles(s, layout)) applyLayout(layout);
   });
   return { scene: s, colliders: cols };
 }

@@ -7,6 +7,7 @@ import { leerImagen } from '../../ui/estampaImagen.js';
 import { createEditorPanel } from './editorPanel.js';
 import { cuadroDesde, getFrameEditor } from '../../ui/frameEditor.js';
 import { ADDABLE_MODELS, searchableModelPresets } from './modelCatalog.js';
+import { MUEBLES_PS3, crearMueblePs3 } from '../terracePs3Trial.js';
 import {
   applyLayout,
   duplicateEditable,
@@ -18,6 +19,7 @@ import {
   getParentEditableId,
   isEditableEffectivelyVisible,
   isObjectInScene,
+  registerEditableObject,
   removeEditable,
   serializeEditableObjects,
   setEditableColor,
@@ -142,7 +144,15 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   }
 
   const panel = createEditorPanel({
-    modelPresets: searchableModelPresets(),
+    // Los GLB del catalogo MAS los muebles de piso, que no son archivos sino
+    // objetos que se construyen. Con los pisos vacios, estos son la unica forma
+    // de volver a armar una tienda.
+    modelPresets: [
+      ...searchableModelPresets(),
+      ...Object.entries(MUEBLES_PS3).map(([clave, m]) => ({
+        key: `mueble:${clave}`, name: m.nombre, searchTerms: m.buscar,
+      })),
+    ],
     onMode: setMode,
     onToggleSpace: toggleSpace,
     onToggleSnap: toggleSnap,
@@ -165,6 +175,12 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     onPiece: handlePieceAction,
     onPieceTexture: applyPieceTexture,
   });
+
+  // De que piso tomar los colores y materiales al construir un mueble. Burela
+  // no es un piso PS3: ahi se usa la paleta de la Terraza.
+  function destinoActual() {
+    return currentScene?.userData?.ps3DestinationId ?? 5;
+  }
 
   function isInCurrentScene(object) {
     return isObjectInScene(object, currentScene);
@@ -472,6 +488,41 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   }
 
   async function addModelFromPreset(key) {
+    // Muebles del catalogo de pisos: no son GLB ni copias de algo que este en
+    // escena, se CONSTRUYEN con la misma funcion que los hacia antes. Es lo que
+    // permite volver a armar un piso vaciado.
+    if (key.startsWith('mueble:')) {
+      const clave = key.slice('mueble:'.length);
+      const preset = MUEBLES_PS3[clave];
+      const objeto = crearMueblePs3(clave, destinoActual());
+      if (!objeto) { setStatus(`No se pudo armar ${preset?.nombre ?? clave}.`); return; }
+      // ⚠️ `fromArray` y no `copy`: spawnPositionInFront devuelve un ARRAY.
+      // Con `copy` las tres coordenadas quedaban en undefined y el mueble
+      // aparecia con posicion NaN (la consola tiraba "Computed radius is NaN").
+      objeto.position.fromArray(spawnPositionInFront());
+      currentScene.add(objeto);
+      const id = uniqueFurnitureId(`mueble-${clave}`);
+      registerEditableObject({
+        id,
+        name: `${preset.nombre}`,
+        type: 'mueble',
+        object3D: objeto,
+        position: objeto.position.toArray(),
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+        castShadow: true,
+        receiveShadow: true,
+        locked: false,
+        visible: true,
+        // Sin esto el mueble desaparece al refrescar: ver `restoreMuebles`.
+        mueble: { clave, destinationId: destinoActual() },
+      });
+      selectId(id);
+      notifyWorldChanged();
+      saveNow(`${preset.nombre} agregado.`);
+      return;
+    }
+
     const preset = ADDABLE_MODELS[key];
     if (!preset) {
       setStatus(`Modelo no encontrado: ${key}`);

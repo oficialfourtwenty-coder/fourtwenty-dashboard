@@ -7,6 +7,7 @@ import { applySavedGarmentDesigns } from '../ui/garmentEditor.js';
 import { bindProductVisual } from './productVisuals.js';
 import { bindGarmentToProduct } from './garmentPrints.js';
 import { bindStackToProduct, createDisplayTable, createFoldedStack } from './displayTable.js';
+import { getEditableById, registerEditableObject } from './editor/editableRegistry.js';
 
 const MATERIAL_ROOT = 'assets/materials/terrace-ps3';
 const textureLoader = new THREE.TextureLoader();
@@ -1393,6 +1394,118 @@ function addLights(scene, shadows, mats, theme) {
   scene.userData.ps3FloorLightMaterial = mats.light;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CATALOGO DE MUEBLES — para volver a poner a mano lo que se saco de los pisos
+//
+// Vaciar los cinco pisos sin esto fue un error: Kusher quedo con 14 objetos en
+// la lista y nada con que rellenar. Sus palabras: "necesito todos para poder
+// armar los pisos, poner todo lo que necesite".
+//
+// Cada mueble se construye con la MISMA funcion que lo construia antes, asi que
+// es identico al que habia. Se agregan desde `T` buscandolos por nombre.
+//
+// ⚠️ Un mueble agregado asi NO existe en ninguna escena al recargar: el layout
+// guarda DONDE esta, no COMO se construye. Por eso cada uno se registra con
+// `mueble: { clave }` y `restoreMuebles` lo reconstruye, igual que
+// `restorePieces` con las piezas armadas a mano.
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const MUEBLES_PS3 = Object.freeze({
+  perchero: {
+    nombre: 'Perchero con ruedas',
+    buscar: 'perchero barral ropa colgar rack',
+    crear: (root, mats, theme) => createRetailRail(root, {
+      x: 0, z: 0, rotation: 0, mats, theme, name: themedName(theme, 'perchero'),
+    }),
+  },
+  mostrador: {
+    nombre: 'Mostrador / caja',
+    buscar: 'mostrador caja counter cobrar',
+    crear: (root, mats, theme) => createCounter(root, mats, theme),
+  },
+  probador: {
+    nombre: 'Probador',
+    buscar: 'probador vestidor fitting cortina',
+    crear: (root, mats, theme) => createFittingPod(root, mats, theme),
+  },
+  maniqui: {
+    nombre: 'Maniqui',
+    buscar: 'maniqui muñeco cuerpo exhibir',
+    crear: (root, mats, theme) => createMannequin(root, {
+      x: 0, z: 0, rotation: 0, mats, outfit: theme.outfitA, theme,
+    }),
+  },
+  isla: {
+    nombre: 'Isla oval central',
+    buscar: 'isla plinto oval central tarima',
+    crear: (root, mats, theme) => createCentralPlinth(root, mats, theme),
+  },
+  'pared-producto': {
+    nombre: 'Pared modular de producto',
+    buscar: 'pared modular producto estante exhibidor',
+    crear: (root, mats, theme) => createWallDisplay(root, mats, theme),
+  },
+  cantero: {
+    nombre: 'Cantero con planta',
+    buscar: 'cantero maceta planta verde',
+    crear: (root, mats, theme) => createPlanter(root, { x: 0, z: 0, scale: 1, mats, theme }),
+  },
+});
+
+/**
+ * Construye un mueble suelto, listo para agregar a la escena.
+ * Los builders agregan a un `root`, asi que se les pasa un grupo temporal y se
+ * saca de ahi lo que construyeron.
+ */
+export function crearMueblePs3(clave, destinationId = 5) {
+  const preset = MUEBLES_PS3[clave];
+  if (!preset) return null;
+  const theme = ps3ThemeForDestination(destinationId);
+  const mats = buildMaterials(theme);
+  const temporal = new THREE.Group();
+  preset.crear(temporal, mats, theme);
+  const objeto = temporal.children[0] ?? null;
+  objeto?.removeFromParent();
+  if (objeto) {
+    objeto.position.set(0, 0, 0);
+    objeto.rotation.set(0, 0, 0);
+  }
+  return objeto;
+}
+
+/** Reconstruye los muebles agregados a mano. Sin esto desaparecen al refrescar. */
+export function restoreMuebles(scene, layout) {
+  if (!Array.isArray(layout) || !scene) return 0;
+  let creados = 0;
+  for (const item of layout) {
+    if (!item?.mueble?.clave || getEditableById(item.id)?.object3D) continue;
+    const objeto = crearMueblePs3(item.mueble.clave, item.mueble.destinationId ?? 5);
+    if (!objeto) continue;
+    objeto.name = item.name ?? objeto.name;
+    objeto.position.fromArray(item.position ?? [0, 0, 0]);
+    objeto.rotation.set(...(item.rotation ?? [0, 0, 0]));
+    objeto.scale.fromArray(item.scale ?? [1, 1, 1]);
+    objeto.visible = item.visible !== false;
+    scene.add(objeto);
+    registerEditableObject({
+      id: item.id,
+      name: objeto.name,
+      type: 'mueble',
+      object3D: objeto,
+      position: item.position ?? [0, 0, 0],
+      rotation: item.rotation ?? [0, 0, 0],
+      scale: item.scale ?? [1, 1, 1],
+      castShadow: true,
+      receiveShadow: true,
+      locked: item.locked === true,
+      visible: item.visible !== false,
+      mueble: item.mueble,
+    });
+    creados++;
+  }
+  return creados;
+}
+
 export function buildPs3FloorScene(scene, {
   destinationId = 5,
   environmentConfig,
@@ -1404,6 +1517,7 @@ export function buildPs3FloorScene(scene, {
   root.name = `${theme.editorLabel} · FOURTWENTY`;
   const mats = buildMaterials(theme);
   scene.userData.ps3Theme = theme.key;
+  scene.userData.ps3DestinationId = destinationId;
 
   // ⚠️ LOS CINCO PISOS ARRANCAN VACIOS (10/08, pedido de Kusher).
   //
