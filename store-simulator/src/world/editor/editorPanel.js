@@ -1,3 +1,5 @@
+import { miniaturaDe } from './thumbnails.js';
+
 const PANEL_ID = 'ft-world-editor';
 const STYLE_ID = 'ft-world-editor-style';
 
@@ -52,11 +54,26 @@ function injectStyles() {
     }
     #${PANEL_ID} input:disabled { cursor: not-allowed; opacity: 0.38; }
     #${PANEL_ID} .we-color-note { margin-top: 6px; color: rgba(245,241,232,0.55); font-size: 10px; }
-    #${PANEL_ID} .we-object-list { display: grid; gap: 5px; max-height: 200px; overflow: auto; margin-top: 6px; }
+    /* Mas alta que antes: con miniatura entran menos filas por pantalla, y
+       tener que scrollear tres veces mas anula la ventaja de verlas. */
+    #${PANEL_ID} .we-object-list { display: grid; gap: 5px; max-height: 320px; overflow: auto; margin-top: 6px; }
     #${PANEL_ID} .we-object {
       width: 100%; text-align: left; text-transform: none; letter-spacing: 0;
-      display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      display: flex; align-items: center; gap: 8px; overflow: hidden;
     }
+    #${PANEL_ID} .we-object-texto {
+      min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    /* El hueco ocupa su lugar desde el primer momento aunque la foto todavia no
+       este: si apareciera despues, la lista entera saltaria mientras se genera. */
+    #${PANEL_ID} .we-thumb {
+      flex: 0 0 auto; width: 34px; height: 34px; border-radius: 4px;
+      background: rgba(255,255,255,0.05) center/contain no-repeat;
+      border: 1px solid rgba(255,255,255,0.08);
+      transition: opacity 0.15s; opacity: 0.35;
+    }
+    #${PANEL_ID} .we-thumb.is-lista { opacity: 1; background-color: rgba(255,255,255,0.09); }
+    #${PANEL_ID} .we-thumb.is-vacia { opacity: 0.18; }
     #${PANEL_ID} .we-object small { color: rgba(245,241,232,0.52); }
     #${PANEL_ID} .we-selected {
       min-height: 48px; padding: 8px; background: rgba(255,255,255,0.045);
@@ -276,13 +293,42 @@ export function createEditorPanel(callbacks = {}) {
     const objectHTML = shown.length
       ? shown.map((obj) => `
         <button type="button" class="we-object ${obj.id === lastSelectedId ? 'is-active' : ''}" data-object-id="${obj.id}">
-          ${obj.name}${obj.effectiveVisible === false || obj.visible === false || obj.object3D?.visible === false ? ' · <small>OCULTO</small>' : ''}<br><small>${obj.cloneOf ? 'copia editable' : 'pieza editable'}</small>
+          <span class="we-thumb" data-thumb-for="${obj.id}"></span>
+          <span class="we-object-texto">${obj.name}${obj.effectiveVisible === false || obj.visible === false || obj.object3D?.visible === false ? ' · <small>OCULTO</small>' : ''}<br><small>${obj.cloneOf ? 'copia editable' : 'pieza editable'}</small></span>
         </button>
       `).join('') + (filtered.length > MAX_LIST ? `<div class="we-status">…y ${filtered.length - MAX_LIST} más (usá el filtro)</div>` : '')
       : '';
     fields.objectList.innerHTML = presetHTML || objectHTML
       ? `${presetHTML}${objectHTML}`
       : '<div class="we-status">No hay objetos editables cargados.</div>';
+    observarMiniaturas(shown);
+  }
+
+  // Las miniaturas se dibujan DE A UNA y solo cuando la fila entra en pantalla.
+  // Dibujar las 360 juntas congela el juego varios segundos.
+  let observador = null;
+  function observarMiniaturas(objetos) {
+    observador?.disconnect();
+    if (!objetos.length) return;
+    const porId = new Map(objetos.map((o) => [o.id, o]));
+    observador = new IntersectionObserver((entradas) => {
+      for (const entrada of entradas) {
+        if (!entrada.isIntersecting) continue;
+        const hueco = entrada.target;
+        observador.unobserve(hueco);
+        const obj = porId.get(hueco.dataset.thumbFor);
+        if (!obj?.object3D) continue;
+        // Un respiro entre una y otra: asi el panel scrollea fluido mientras se
+        // van llenando, en vez de trabarse de a tandas.
+        requestAnimationFrame(() => {
+          const url = miniaturaDe(obj.object3D, obj.id);
+          if (!url) { hueco.classList.add('is-vacia'); return; }
+          hueco.style.backgroundImage = `url(${url})`;
+          hueco.classList.add('is-lista');
+        });
+      }
+    }, { root: fields.objectList, rootMargin: '160px' });
+    for (const hueco of fields.objectList.querySelectorAll('[data-thumb-for]')) observador.observe(hueco);
   }
 
   fields.filter.addEventListener('input', renderObjectList);
