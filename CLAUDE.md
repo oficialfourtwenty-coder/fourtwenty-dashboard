@@ -147,10 +147,21 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
   geometria procedural simple, por eso el dueno la describe como Minecraft.
 - Se agregaron modelos GLB grandes y se escalaron para acercar las torres al
   tamano real. Al dueno le gusta esta direccion aunque siga incompleta.
-- El layout oficial incluye varias copias de City Map alrededor de los limites
-  y dos Tram Station para crear fondo urbano, desnivel y vias.
-- City Map y Tram Station fueron comprimidos con Draco sin perder su edicion
-  mediante `T`.
+- El fondo urbano lo dan ahora **7 edificios modulares de Kenney** (3 casas y
+  4 torres) repartidos en 14 lugares: siete al este y siete atras. Reemplazan
+  al City Map, que era un GLB monolitico puesto 4 veces. Medido: Burela paso de
+  703 a 621 mallas y esa ciudad de 740 KB a 239 KB. Los siete estan en el
+  catalogo de `T` como `Ciudad Kenney · Casa A` / `Torre A`, asi que Kusher
+  puede seguir agregando.
+- ⚠️ La migracion que hace ese cambio **borra del layout guardado los objetos
+  cuyo modelo sea `city-map-free.glb`** y reescribe el localStorage
+  (`saveLocalLayout`). Corre una sola vez, protegida por
+  `MODEL_CATALOG_MIGRATION_KEY` (hoy `v2`). Todo lo demas que Kusher acomodo se
+  conserva: la migracion recorre su layout y solo saca esos objetos. Si se
+  agrega otra migracion parecida hay que subir esa clave, si no nunca corre.
+- Quedan dos Tram Station para crear desnivel y vias, y siguen 5 copias de
+  `apartment-building.glb` y 2 de `b54-ftt-lowpoly-simulator.glb`.
+- Tram Station fue comprimido con Draco sin perder su edicion mediante `T`.
 - El interior del local es la replica actual aprobada por el dueno. Conservar
   posiciones, entrada, espejo, luces y cambios guardados en el editor.
 - El World Editor se abre con `T` o `Tab`: permite buscar, crear una copia
