@@ -23,6 +23,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { registerEditableObject } from './editor/editableRegistry.js';
+import { diseñoDe, pintarPrenda } from '../ui/garmentGlbEditor.js';
 
 const loader = new GLTFLoader();
 const cache = new Map();
@@ -36,12 +37,20 @@ export const PRENDAS_GLB = Object.freeze({
     archivo: '/assets/garments/remera-oversize.glb',
     // El nombre de la malla del cuerpo dentro del GLB. Es lo que se pinta y lo
     // que despues va a recibir la estampa; la percha queda afuera a proposito.
-    tela: /^Remera_.*_Mesh$/i,
+    // ⚠️ Es el nombre del NODO, no el de la malla dentro del glTF. GLTFLoader
+    // bautiza el Object3D con el nodo: aca es `Remera_Oversize_Negra_Sin_Logo`,
+    // no `Remera_Oversize_Negra_Mesh`. Buscar por el nombre de la malla no
+    // encontraba nada y la prenda quedaba sin poder pintarse.
+    tela: /^Remera/i,
   },
   'remera-regular': {
     nombre: 'Remera regular',
     archivo: '/assets/garments/remera-regular.glb',
-    tela: /^Remera_.*_Mesh$/i,
+    // ⚠️ Es el nombre del NODO, no el de la malla dentro del glTF. GLTFLoader
+    // bautiza el Object3D con el nodo: aca es `Remera_Oversize_Negra_Sin_Logo`,
+    // no `Remera_Oversize_Negra_Mesh`. Buscar por el nombre de la malla no
+    // encontraba nada y la prenda quedaba sin poder pintarse.
+    tela: /^Remera/i,
   },
 });
 
@@ -105,6 +114,13 @@ export async function addGarmentModel(scene, clave, {
   // Marca para el editor de prendas: con esto sabe cual malla pintar.
   root.userData.garmentModel = { clave, telaNombre: tela?.name ?? null };
   scene.add(root);
+
+  // ⚠️ El diseño guardado se aplica ACA y no al terminar de armar la escena.
+  // El GLB se baja de forma asincronica: cuando `buildPs3FloorScene` llama a
+  // `applySavedGlbGarmentDesigns` la prenda todavia no existe en la escena, asi
+  // que no la encontraba y el diseño de Kusher no aparecia nunca.
+  const diseño = diseñoDe(root);
+  if (diseño.imagen || diseño.color) pintarPrenda(root, diseño);
 
   registerEditableObject({
     id: id ?? `prenda:${clave}:${Math.random().toString(36).slice(2, 8)}`,

@@ -4,6 +4,7 @@ import { addEditableHdriSphere } from './bincoShopTrial.js';
 import { addSampleGarments } from './garmentModels.js';
 import { applySavedFrameDesigns } from '../ui/frameEditor.js';
 import { applySavedGarmentDesigns } from '../ui/garmentEditor.js';
+import { applySavedGlbGarmentDesigns } from '../ui/garmentGlbEditor.js';
 import { bindProductVisual } from './productVisuals.js';
 import { bindGarmentToProduct } from './garmentPrints.js';
 import { bindStackToProduct, createDisplayTable, createFoldedStack } from './displayTable.js';
@@ -1450,7 +1451,27 @@ export const MUEBLES_PS3 = Object.freeze({
     buscar: 'cantero maceta planta verde',
     crear: (root, mats, theme) => createPlanter(root, { x: 0, z: 0, scale: 1, mats, theme }),
   },
+  cuadro: {
+    nombre: 'Cuadro para foto',
+    buscar: 'cuadro marco foto campaña poster imagen',
+    // ⚠️ Cada cuadro agregado lleva un `index` distinto y por lo tanto un NOMBRE
+    // distinto. Los diseños de cuadro se guardan POR NOMBRE (ver frameEditor):
+    // si dos copias compartieran nombre, cambiarle la foto a una se la cambiaria
+    // a la otra, que es justo lo contrario de lo que Kusher quiere.
+    crear: (root, mats, theme) => createArtworkFrame(root, {
+      texture: artworkPlaceholder(0, theme),
+      x: 0, y: 0, z: 0, rotationY: 0,
+      index: siguienteIndiceDeCuadro(), mats, theme,
+    }),
+  },
 });
+
+// Los tres cuadros que trae cada piso usan 0, 1 y 2. Los agregados a mano
+// arrancan en 100 para no pisarles el nombre.
+let contadorDeCuadros = 100;
+function siguienteIndiceDeCuadro() {
+  return contadorDeCuadros++;
+}
 
 /**
  * Construye un mueble suelto, listo para agregar a la escena.
@@ -1630,6 +1651,9 @@ export function buildPs3FloorScene(scene, {
   // Sin esto las prendas vuelven a su color de fabrica y sin estampa cada vez
   // que se entra de nuevo al piso, igual que pasaba con los cuadros.
   applySavedGarmentDesigns(scene);
+  // Idem para las prendas modeladas a mano: sin esto el diseño que Kusher pinto
+  // se pierde cada vez que entra de nuevo al piso.
+  applySavedGlbGarmentDesigns(scene);
   return { root, colliders: [] };
 }
 

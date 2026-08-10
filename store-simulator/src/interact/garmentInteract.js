@@ -12,6 +12,7 @@
 
 import * as THREE from 'three';
 import { esPrenda, getGarmentEditor, prendaDesde } from '../ui/garmentEditor.js';
+import { esPrendaGlb, getGarmentGlbEditor, prendaGlbDesde } from '../ui/garmentGlbEditor.js';
 
 const TIP_ID = 'ft-garment-tip';
 
@@ -40,6 +41,11 @@ export function initGarmentInteract({
   if (!canvas || !camera || !getScene) return null;
 
   const editor = getGarmentEditor();
+  // Las prendas modeladas a mano (GLB) tienen su propio panel: no se les puede
+  // cambiar el CUERPO —la forma es la que modelo Fer— pero si pintarles el
+  // diseño sobre el mapa UV. Ver `ui/garmentGlbEditor.js`.
+  const editorGlb = getGarmentGlbEditor();
+  const algunoAbierto = () => editor.isOpen() || editorGlb.estaAbierto();
   const raycaster = new THREE.Raycaster();
   const puntero = new THREE.Vector2();
   const cartel = crearCartel();
@@ -50,7 +56,7 @@ export function initGarmentInteract({
     const scene = getScene();
     const encontradas = [];
     scene?.traverse?.((o) => {
-      if (esPrenda(o) && o.visible) encontradas.push(o);
+      if ((esPrenda(o) || esPrendaGlb(o)) && o.visible) encontradas.push(o);
     });
     return encontradas;
   }
@@ -63,7 +69,8 @@ export function initGarmentInteract({
     const prendas = prendasDeLaEscena();
     if (!prendas.length) return null;
     const golpe = raycaster.intersectObjects(prendas, true)[0]?.object;
-    return golpe ? prendaDesde(golpe) : null;
+    if (!golpe) return null;
+    return prendaGlbDesde(golpe) ?? prendaDesde(golpe);
   }
 
   function ocultarCartel() {
@@ -71,7 +78,7 @@ export function initGarmentInteract({
   }
 
   function onPointerMove(event) {
-    if (isBlocked() || editor.isOpen()) { ocultarCartel(); return; }
+    if (isBlocked() || algunoAbierto()) { ocultarCartel(); return; }
     const prenda = prendaBajoElMouse(event.clientX, event.clientY);
     if (!prenda) { ocultarCartel(); return; }
     cartel.textContent = 'CLICK DERECHO · DISEÑAR PRENDA';
@@ -82,18 +89,20 @@ export function initGarmentInteract({
 
   function onContextMenu(event) {
     // click derecho sobre un panel/formulario: menu normal del navegador
-    if (event.target?.closest?.(`#${TIP_ID}, #ft-garment-editor, #ft-frame-editor, input, select, textarea, button`)) return;
+    if (event.target?.closest?.(`#${TIP_ID}, #ft-garment-editor, #ft-garment-glb-editor, #ft-frame-editor, input, select, textarea, button`)) return;
     if (isBlocked()) return;
     const prenda = prendaBajoElMouse(event.clientX, event.clientY);
     if (!prenda) return;            // fuera de una prenda, menu normal del navegador
     event.preventDefault();
     ocultarCartel();
-    editor.abrir(prenda);
+    if (esPrendaGlb(prenda)) editorGlb.abrir(prenda);
+    else editor.abrir(prenda);
   }
 
   function onKeyDown(event) {
-    if (event.code !== 'Escape' || !editor.isOpen()) return;
+    if (event.code !== 'Escape' || !algunoAbierto()) return;
     editor.cerrar();
+    editorGlb.cerrar();
   }
 
   // En `window` y no en el canvas por el mismo motivo que el editor de cuadros:
@@ -105,8 +114,8 @@ export function initGarmentInteract({
   window.addEventListener('keydown', onKeyDown);
 
   return {
-    isOpen: () => editor.isOpen(),
-    cerrar: () => editor.cerrar(),
+    isOpen: () => algunoAbierto(),
+    cerrar: () => { editor.cerrar(); editorGlb.cerrar(); },
     dispose() {
       window.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerleave', ocultarCartel);

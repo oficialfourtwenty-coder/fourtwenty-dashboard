@@ -40,6 +40,7 @@ import { initTwentyTimeInteract } from './interact/twentyTimeInteract.js';
 import { initFrameInteract } from './interact/frameInteract.js';
 import { initGarmentInteract } from './interact/garmentInteract.js';
 import { applySavedGarmentDesigns } from './ui/garmentEditor.js';
+import { applySavedGlbGarmentDesigns } from './ui/garmentGlbEditor.js';
 import { createCartStore } from './data/cartStore.js';
 import { createPhone } from './ui/phone.js';
 import { initMobileControls } from './ui/mobileControls.js';
@@ -673,6 +674,7 @@ applySavedEditorLayout();
 // Diseños de prenda guardados en el local (color, cuerpo y estampa). Los pisos
 // lo hacen solos al construirse; la calle se construye una vez sola, aca.
 applySavedGarmentDesigns(scene);
+applySavedGlbGarmentDesigns(scene);
 addFurniture(scene).then(() => {
   streetEditablesDirty = true;
   renderer.shadowMap.needsUpdate = true;
