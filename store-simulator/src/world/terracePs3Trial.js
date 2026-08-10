@@ -1338,10 +1338,15 @@ function addArtworkFrames(root, mats, theme) {
 }
 
 function addThemeDetails(root, mats, theme, productFloor = null) {
-  if (theme.key === 'origen') addOriginDetails(root, mats, theme, productFloor);
-  else if (theme.key === 'hoop') addHoopDetails(root, mats, theme);
-  else if (theme.key === 'cultura') addCultureDetails(root, mats, theme);
-  else if (theme.key === 'bob') addBobDetails(root, mats, theme);
+  // ⚠️ Los cinco pisos arrancan vacios (ver la nota en `buildPs3FloorScene`).
+  // Lo unico que se pone es el PISO, porque marca hasta donde se puede caminar
+  // y sin el BOB queda flotando. La decoracion tematica de cada piso
+  // —la cancha y el marcador de HOOP, la esfera de CULTURA, los juguetes de
+  // BOB, la mesa de ORIGEN— la arma Kusher a mano con `T`.
+  // Las cuatro funciones siguen en el archivo: `addHoopDetails`,
+  // `addCultureDetails`, `addBobDetails` y `addOriginDetails`. No se borran por
+  // si hay que volver atras; hoy no las llama nadie.
+  addOriginFloor(root, mats, theme);
 }
 
 function addLights(scene, shadows, mats, theme) {
@@ -1400,17 +1405,31 @@ export function buildPs3FloorScene(scene, {
   const mats = buildMaterials(theme);
   scene.userData.ps3Theme = theme.key;
 
-  // ORIGEN NO usa la base comercial compartida: es un patio de hormigon a
-  // cielo abierto con su propio piso, sus paredes y sus muebles
-  // (world/originCourtyard.js). Antes el patio se agregaba ENCIMA de la tienda
-  // vieja y las paredes quedaban paradas en el medio del local.
-  const esPatio = theme.key === 'origen';
+  // ⚠️ LOS CINCO PISOS ARRANCAN VACIOS (10/08, pedido de Kusher).
+  //
+  // Antes solo ORIGEN estaba vacio. Ahora los cinco: "borra todo lo de los
+  // locales, y yo poder armarlo a mano". Es la misma decision que se tomo para
+  // ORIGEN el 06/08 y por el mismo motivo — mis intentos de adivinar como se ve
+  // una tienda salen geometricos, y con el constructor de piezas
+  // (`T` -> ARMAR A MANO) el los arma con su ojo en menos tiempo del que yo
+  // tardo en errarle.
+  //
+  // Queda SOLO lo que no puede armar a mano ni le conviene rehacer:
+  //   - el piso, que ademas marca hasta donde se puede caminar
+  //   - la esfera 360 del cielo (se agrega arriba, se edita con `T`)
+  //   - los cuadros, para las fotos de campaña
+  //   - el ascensor y la arcade, que los pone destinationScenes.js
+  // Todo lo demas —paredes, techo, mostrador, probador, maniquies, percheros,
+  // canteros, cartelería y la cancha de HOOP— sale de escena.
+  //
+  // Poner `false` devuelve la tienda completa a los cinco pisos.
+  const vacio = true;
 
   const environmentRoot = addEditableHdriSphere(root, scene, environmentConfig);
   environmentRoot.scale.setScalar(1.5);
   environmentRoot.rotation.y = -0.18;
 
-  if (!esPatio) {
+  if (!vacio) {
   const floor = roundedBox(
     TERRACE_PS3_PROFILE.width,
     0.32,

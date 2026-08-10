@@ -66,9 +66,13 @@ function buildSectionScene(destination, { environment, shadows, onElevatorEnter,
   });
   scene.add(minigameArcade.root);
 
-  // HOOP SEASON queda en el medio de un estadio NBA: se ve por el vidrio del
-  // frente. Es decorado procedural, sin colisión — ver hoopArena.js.
-  const arena = destination.id === 2 ? buildHoopArena(scene) : null;
+  // ⚠️ EL ESTADIO DE HOOP QUEDA APAGADO (10/08, pedido de Kusher).
+  // Los cinco pisos arrancan vacios para que los arme a mano (ver la nota en
+  // `buildPs3FloorScene`), y el estadio era la pieza mas grande que quedaba
+  // puesta en HOOP. `buildHoopArena` sigue intacta en `hoopArena.js`: poner
+  // `true` aca la devuelve.
+  const CON_ESTADIO = false;
+  const arena = (CON_ESTADIO && destination.id === 2) ? buildHoopArena(scene) : null;
 
   return {
     destination,
