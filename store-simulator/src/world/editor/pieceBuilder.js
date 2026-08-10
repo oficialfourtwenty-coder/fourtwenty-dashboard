@@ -32,6 +32,21 @@ export const PIEZAS = Object.freeze({
   // Cono truncado: sirve de manga, de pierna y de ruedo, que es lo que mas
   // falta al armar ropa a mano con cajas.
   manga: { nombre: 'Manga / cono', crear: () => new THREE.CylinderGeometry(0.12, 0.09, 0.4, 12, 1, true) },
+  // ESFERA 360 para Burela. Los pisos ya tenian la suya (`addEditableHdriSphere`
+  // en bincoShopTrial.js), pero esa se construye con el piso y vive atada a el;
+  // Burela no tenia forma de ponerle una.
+  // Va aca y no como modelo del catalogo porque el catalogo son archivos GLB, y
+  // asi hereda gratis lo que ya funciona: se agarra con `T`, se mueve, rota y
+  // escala, se le sube una imagen, y `restorePieces` la reconstruye al refrescar.
+  // `fondo: true` la marca como telon: ver `createPiece`.
+  esfera360: {
+    nombre: 'ESFERA 360',
+    fondo: true,
+    // Radio 100: mas afuera que todo lo que hay en Burela (los edificios de
+    // Kenney llegan a z=-58). Si queda grande se achica con la tecla 3.
+    // 48x24 y no 64x32: es una superficie lisa que se mira de lejos.
+    crear: () => new THREE.SphereGeometry(100, 48, 24),
+  },
 });
 
 const texturaCache = new Map();
@@ -45,6 +60,20 @@ function texturaDesde(dataUrl) {
   texture.anisotropy = 8;
   texturaCache.set(dataUrl, texture);
   return texture;
+}
+
+// Telon de fondo: se mira DESDE ADENTRO, no lo toca la luz y no entra en el
+// ciclo de dia/noche. Basic y no Standard a proposito — una foto 360 ya trae su
+// propia iluminacion pintada, sombrearla otra vez la ensucia.
+function materialDeFondo({ color = 0x9fb3c4, textura = null } = {}) {
+  return new THREE.MeshBasicMaterial({
+    color: textura ? 0xffffff : color,
+    map: texturaDesde(textura),
+    side: THREE.BackSide,
+    fog: false,
+    depthWrite: false,
+    toneMapped: true,
+  });
 }
 
 function materialDePieza({ color = 0xb9b3a6, textura = null } = {}) {
@@ -88,15 +117,29 @@ export function createPiece(scene, tipo, {
   const preset = PIEZAS[tipo];
   if (!preset || !scene) return null;
 
-  const mesh = new THREE.Mesh(preset.crear(), materialDePieza({ color, textura }));
-  mesh.name = name ?? `${preset.nombre} ${contador + 1}`;
+  const esFondo = preset.fondo === true;
+  const mesh = new THREE.Mesh(
+    preset.crear(),
+    esFondo ? materialDeFondo({ color, textura }) : materialDePieza({ color, textura }),
+  );
+  mesh.name = name ?? (esFondo ? preset.nombre : `${preset.nombre} ${contador + 1}`);
   mesh.position.fromArray(position);
   mesh.rotation.set(rotation[0], rotation[1], rotation[2]);
   mesh.scale.fromArray(scale);
   mesh.visible = visible;
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  mesh.userData.editorCollider = true;
+  // ⚠️ El telon NO proyecta ni recibe sombra, NO genera colision y se dibuja
+  // primero. Sin `editorCollider = false` BOB choca contra el cielo; sin
+  // `renderOrder` tapa la escena; sin `frustumCulled = false` desaparece al
+  // mirar hacia afuera del centro.
+  mesh.castShadow = !esFondo;
+  mesh.receiveShadow = !esFondo;
+  mesh.userData.editorCollider = !esFondo;
+  if (esFondo) {
+    mesh.renderOrder = -100;
+    mesh.frustumCulled = false;
+    mesh.userData.skipShadow = true;
+    mesh.userData.editorHint = 'Tecla 3 para agrandar o achicar · tecla 2 para girarla · el boton IMAGEN le pone tu foto 360';
+  }
   scene.add(mesh);
 
   const entryId = id ?? idDePieza(tipo);
