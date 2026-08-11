@@ -29,6 +29,11 @@ const loader = new GLTFLoader();
 const cache = new Map();
 
 // -90° en X: pasa de Z-arriba (Blender) a Y-arriba (three.js).
+// ⚠️ NO todas las prendas la necesitan. Las dos remeras y el jean colgado
+// vienen en Z-arriba y hay que pararlas; el hoodie ya vino exportado con
+// "+Y up" y el jean doblado esta acostado A PROPOSITO (va sobre una mesa).
+// Por eso la rotacion es por prenda y no una constante global: aplicarsela a
+// todas dejaba unas de pie y otras de costado.
 const ROTACION_DE_PIE = -Math.PI / 2;
 
 export const PRENDAS_GLB = Object.freeze({
@@ -51,6 +56,35 @@ export const PRENDAS_GLB = Object.freeze({
     // no `Remera_Oversize_Negra_Mesh`. Buscar por el nombre de la malla no
     // encontraba nada y la prenda quedaba sin poder pintarse.
     tela: /^Remera/i,
+  },
+  hoodie: {
+    nombre: 'Hoodie',
+    archivo: '/assets/garments/hoodie.glb',
+    tela: /^HOODIE/i,
+    // Ya vino con "+Y up": no hay que pararlo.
+    rotacionX: 0,
+    // ⚠️ ACHICADO A PROPOSITO. Medido: el archivo trae la prenda de 1,77 m de
+    // ancho por 1,92 m de alto — casi tres veces una prenda real. Colgado en un
+    // perchero tapaba media tienda y atravesaba las paredes. 0.38 lo deja en
+    // ~73 cm de alto, la medida de un hoodie de verdad.
+    // El arreglo limpio es que se exporte a escala real y este numero se va.
+    escala: 0.38,
+  },
+  'jean-colgado': {
+    nombre: 'Jean colgado',
+    archivo: '/assets/garments/jean-colgado.glb',
+    tela: /^JEAN/i,
+    // Viene en Z-arriba: 46 cm de ancho por 97 de largo. Se para.
+    rotacionX: -Math.PI / 2,
+  },
+  'jean-doblado': {
+    nombre: 'Jean doblado (para mesa)',
+    archivo: '/assets/garments/jean-doblado.glb',
+    tela: /^JEAN/i,
+    // ⚠️ Este NO se para. Es un jean doblado para apoyar sobre una mesa: 44 x 55
+    // cm y 3 cm de espesor. Ya viene acostado y asi tiene que quedar.
+    rotacionX: 0,
+    // No cuelga de un perchero: se apoya. Ponelo sobre la mesa con el gizmo.
   },
 });
 
@@ -101,7 +135,7 @@ export async function addGarmentModel(scene, clave, {
   const root = new THREE.Group();
   root.name = name ?? preset.nombre;
   const modelo = gltf.scene.clone(true);
-  modelo.rotation.x = ROTACION_DE_PIE;
+  modelo.rotation.x = preset.rotacionX ?? ROTACION_DE_PIE;
   root.add(modelo);
 
   // El material se clona por prenda: si no, cambiarle el color a una se lo
@@ -117,7 +151,9 @@ export async function addGarmentModel(scene, clave, {
 
   root.position.fromArray(position);
   root.rotation.y = rotationY;
-  root.scale.setScalar(scale);
+  // La escala de correccion del modelo se multiplica por la que pida quien lo
+  // coloca, asi el hoodie entra ya corregido sin que nadie tenga que acordarse.
+  root.scale.setScalar(scale * (preset.escala ?? 1));
   root.userData.editorCollider = false;   // una prenda colgada no frena a BOB
   // Marca para el editor de prendas: con esto sabe cual malla pintar.
   root.userData.garmentModel = { clave, telaNombre: tela?.name ?? null };
