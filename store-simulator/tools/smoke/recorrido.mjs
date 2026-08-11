@@ -57,7 +57,7 @@ const fallos = [];
 const linea = (s) => console.log(s);
 
 const browser = await chromium.launch({
-  executablePath: process.env.PLAYWRIGHT_CHROMIUM ?? undefined,
+  executablePath: process.env.PLAYWRIGHT_CHROMIUM ?? '/opt/pw-browsers/chromium',
   args: ['--use-gl=angle', '--use-angle=swiftshader', '--no-sandbox'],
 });
 const page = await browser.newPage({ viewport: { width: 1100, height: 760 } });

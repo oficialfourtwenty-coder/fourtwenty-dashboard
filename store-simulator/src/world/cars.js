@@ -15,11 +15,27 @@
 // BOB), los tirás en esa carpeta y quedan idénticos sin tocar una línea de acá.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { normalizeGLTFHeight } from './gltfUtils.js';
 
 // ---- Especificación de cada auto -------------------------------------------
 // ⚠️ COLOR Y PATENTE: cambialos acá si no coinciden con los autos reales.
 // Es una línea por dato, no hace falta tocar nada más.
+// ⚠️ CON DRACO. Los GLB de los autos estan comprimidos (10/08): pasaron de 3,9
+// a 0,84 MB cada uno. Un `GLTFLoader` pelado NO los puede abrir — falla en
+// silencio y el auto simplemente no aparece, quedando la carroceria procedural
+// de respaldo. Este cargador es uno solo y se arma una sola vez.
+let _cargadorAutos = null;
+function cargadorDeAutos() {
+  if (!_cargadorAutos) {
+    const draco = new DRACOLoader();
+    draco.setDecoderPath('/assets/draco/');
+    _cargadorAutos = new GLTFLoader();
+    _cargadorAutos.setDRACOLoader(draco);
+  }
+  return _cargadorAutos;
+}
+
 const CAR_SPECS = [
   {
     id: 'car-up-luca',
@@ -466,7 +482,7 @@ class Car {
   // Si el dueño deja un GLB real en public/assets/cars/<id>.glb, se usa ese y
   // la carrocería procedural desaparece. La puerta/asiento/radio siguen igual.
   _tryLoadRealModel() {
-    new GLTFLoader().load(
+    cargadorDeAutos().load(
       `assets/cars/${this.id}.glb`,
       (gltf) => {
         const model = gltf.scene;
