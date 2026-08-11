@@ -134,7 +134,41 @@ function cajaDelDiseño(ctx, W, H) {
 // PNG y no JPEG: una estampa necesita fondo transparente, y el JPEG no tiene
 // canal alfa — el logo llegaria con un rectangulo blanco atras. El precio es
 // que pesa mas, por eso se limita a 1024 px.
-export function leerImagen(file, { maxLado = 1024, quitarFondo = true, tolerancia = 45 } = {}) {
+/**
+ * Mide cuanta transparencia REAL trae la imagen.
+ * Sirve para decidir sola si hay que quitarle el fondo: un PNG exportado con
+ * fondo transparente ya viene recortado y pasarle el quitador solo puede
+ * arruinarlo.
+ */
+function proporcionTransparente(ctx, W, H) {
+  const d = ctx.getImageData(0, 0, W, H).data;
+  let transparentes = 0;
+  let total = 0;
+  // De a saltos: contar 4 millones de pixeles uno por uno no aporta precision.
+  const paso = Math.max(1, Math.round(Math.sqrt((W * H) / 40000)));
+  for (let y = 0; y < H; y += paso) {
+    for (let x = 0; x < W; x += paso) {
+      total++;
+      if (d[(y * W + x) * 4 + 3] < 16) transparentes++;
+    }
+  }
+  return total ? transparentes / total : 0;
+}
+
+/**
+ * `quitarFondo` acepta:
+ *   'auto'  (por defecto) — lo decide sola: si la imagen ya trae transparencia
+ *                           NO la toca; si es opaca, le saca el fondo plano.
+ *   true    — forzar el quitado
+ *   false   — no tocar nada
+ *
+ * ⚠️ El default era `true`, y ese era el bug que reporto Kusher: sus logos son
+ * PNG con fondo ya transparente, y el quitador les buscaba igual un "color de
+ * fondo" en el marco. Si el diseño tocaba un borde, o tenia sombra suave, el
+ * relleno se metia adentro del logo y se lo comia. Un PNG recortado no necesita
+ * que nadie le recorte nada.
+ */
+export function leerImagen(file, { maxLado = 1024, quitarFondo = 'auto', tolerancia = 45 } = {}) {
   return new Promise((resolve, reject) => {
     const lector = new FileReader();
     lector.onerror = () => reject(new Error('no se pudo leer el archivo'));
@@ -149,9 +183,15 @@ export function leerImagen(file, { maxLado = 1024, quitarFondo = true, toleranci
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        const recorte = quitarFondo
+        const transparencia = proporcionTransparente(ctx, canvas.width, canvas.height);
+        // 3% ya alcanza: un logo recortado siempre deja mas margen vacio que eso,
+        // y una foto opaca no llega ni cerca.
+        const yaRecortada = transparencia > 0.03;
+        const hayQueQuitar = quitarFondo === 'auto' ? !yaRecortada : quitarFondo === true;
+        const recorte = hayQueQuitar
           ? quitarFondoPlano(ctx, canvas.width, canvas.height, tolerancia)
-          : { quitado: false, motivo: '' };
+          : { quitado: false, motivo: yaRecortada ? 'el PNG ya venia recortado' : '' };
+        recorte.yaRecortada = yaRecortada;
 
         // Recorte del margen vacio. Solo tiene sentido si algo quedo
         // transparente: en una imagen opaca de punta a punta la caja es la

@@ -20,7 +20,17 @@ import * as THREE from 'three';
 import { leerImagen } from './estampaImagen.js';
 
 const CLAVE = 'ft-prendas-glb-v1';
-const LADO = 1024;
+// ⚠️ 2048 y no 1024. El logo ocupa una fraccion chica del mapa —en el pecho,
+// como un 16% del ancho— asi que a 1024 le tocaban ~160 pixeles y se veia
+// pastoso, nada parecido a un bordado. A 2048 son ~330 y se lee la trama.
+// El costo se controla con el cache de abajo: dos prendas con el MISMO diseño
+// comparten una sola textura, asi que 20 remeras con 4 diseños son 4 texturas.
+const LADO = 2048;
+const LADO_SIN_IMAGEN = 512;   // color plano: no hace falta resolucion
+
+// Texturas ya pintadas, por diseño. Sin esto cada prenda colgada se llevaba su
+// propia textura de 2048: veinte prendas eran 320 MB de memoria de video.
+const cacheDeTexturas = new Map();
 const PANEL_ID = 'ft-garment-glb-editor';
 
 // Arranca sobre el pecho del frente. Sale de medir en que UV caen los vertices
@@ -34,6 +44,11 @@ export const DISEÑO_BASE = Object.freeze({
   alto: 0.16,
   rotacion: 0,        // grados
   espejar: false,
+  // Relieve del bordado. Un logo pegado plano se lee como calcomania; un
+  // bordado real tiene un borde con sombra porque el hilo levanta sobre la
+  // tela. Se dibuja una copia oscura corrida un pelo abajo y a la derecha,
+  // debajo del logo. 0 lo apaga.
+  relieve: 0.5,
 });
 
 export function esPrendaGlb(objeto) {
@@ -96,27 +111,44 @@ export function pintarPrenda(prenda, diseño) {
   const tela = telaDe(prenda);
   if (!tela?.material) return null;
 
-  const lienzo = tela.userData.lienzoPrenda ?? document.createElement('canvas');
-  lienzo.width = lienzo.height = LADO;
+  tela.userData.colorOriginal ??= tela.material.color.getHex();
+
+  // Misma pinta => misma textura. Se compara el diseño entero, imagen incluida.
+  const clave = JSON.stringify(diseño);
+  const cacheada = cacheDeTexturas.get(clave);
+  if (cacheada) {
+    tela.material.map = cacheada.textura;
+    tela.material.color.set(0xffffff);
+    tela.material.needsUpdate = true;
+    tela.userData.lienzoPrenda = cacheada.lienzo;
+    return cacheada.lienzo;
+  }
+
+  const lienzo = document.createElement('canvas');
+  lienzo.width = lienzo.height = diseño.imagen ? LADO : LADO_SIN_IMAGEN;
   tela.userData.lienzoPrenda = lienzo;
   const ctx = lienzo.getContext('2d');
+  // Sin esto el logo sale con escalones al achicarlo.
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  const LADO_ACTUAL = lienzo.width;
 
   // Fondo: el color de la tela. Se pinta el lienzo ENTERO, no solo la zona del
   // dibujo — el mapa cubre toda la prenda y cualquier hueco saldria negro.
-  const color = diseño.color ?? `#${(tela.userData.colorOriginal ?? tela.material.color.getHex()).toString(16).padStart(6, '0')}`;
-  tela.userData.colorOriginal ??= tela.material.color.getHex();
+  const color = diseño.color ?? `#${tela.userData.colorOriginal.toString(16).padStart(6, '0')}`;
   ctx.fillStyle = color;
-  ctx.fillRect(0, 0, LADO, LADO);
+  ctx.fillRect(0, 0, LADO_ACTUAL, LADO_ACTUAL);
 
   const dibujar = () => {
-    tela.material.map = tela.userData.texturaPrenda ?? new THREE.CanvasTexture(lienzo);
-    tela.userData.texturaPrenda = tela.material.map;
-    tela.material.map.colorSpace = THREE.SRGBColorSpace;
-    tela.material.map.anisotropy = 8;
+    const textura = new THREE.CanvasTexture(lienzo);
+    textura.colorSpace = THREE.SRGBColorSpace;
+    textura.anisotropy = 16;
+    textura.needsUpdate = true;
+    cacheDeTexturas.set(clave, { textura, lienzo });
+    tela.material.map = textura;
     // ⚠️ El color del material se lleva a BLANCO: si queda tenido, multiplica
     // la textura y el diseño sale con ese tinte encima.
     tela.material.color.set(0xffffff);
-    tela.material.map.needsUpdate = true;
     tela.material.needsUpdate = true;
   };
 
@@ -124,15 +156,31 @@ export function pintarPrenda(prenda, diseño) {
 
   const img = new Image();
   img.onload = () => {
-    const w = diseño.ancho * LADO;
-    const h = diseño.alto * LADO;
+    // La proporcion del archivo manda: estirar un logo para llenar un cuadrado
+    // lo deforma. Se encaja dentro de la caja pedida sin deformarlo.
+    const caja = diseño.ancho * LADO_ACTUAL;
+    const proporcion = img.width / Math.max(1, img.height);
+    const w = proporcion >= 1 ? caja : caja * proporcion;
+    const h = proporcion >= 1 ? caja / proporcion : caja;
     // El eje V del mapa va al reves que el Y del lienzo.
-    const cx = diseño.u * LADO;
-    const cy = (1 - diseño.v) * LADO;
+    const cx = diseño.u * LADO_ACTUAL;
+    const cy = (1 - diseño.v) * LADO_ACTUAL;
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate((diseño.rotacion ?? 0) * Math.PI / 180);
     if (diseño.espejar) ctx.scale(-1, 1);
+
+    // RELIEVE: una copia oscura apenas corrida, debajo del logo. Es lo que hace
+    // que se lea como hilo levantado sobre la tela y no como una calcomania.
+    const relieve = diseño.relieve ?? 0;
+    if (relieve > 0) {
+      const corrimiento = Math.max(1, (relieve * LADO_ACTUAL) / 380);
+      ctx.globalAlpha = 0.42 * relieve;
+      ctx.filter = 'brightness(0.18)';
+      ctx.drawImage(img, -w / 2 + corrimiento, -h / 2 + corrimiento, w, h);
+      ctx.filter = 'none';
+      ctx.globalAlpha = 1;
+    }
     ctx.drawImage(img, -w / 2, -h / 2, w, h);
     ctx.restore();
     dibujar();
@@ -213,6 +261,10 @@ export function createGarmentGlbEditor() {
       <button data-a="subir">Subir imagen</button>
       <button data-a="quitar">Quitar</button>
     </div>
+    <div class="gg-fila" style="margin-top:6px">
+      <button data-a="fondo" data-f="fondoBtn">Fondo: automático</button>
+      <button data-a="relieve" data-f="relieveBtn">Bordado: sí</button>
+    </div>
 
     <div class="gg-label">Mover a lo ancho <span data-f="uTxt"></span></div>
     <input type="range" data-f="u" min="0" max="1" step="0.005">
@@ -244,6 +296,9 @@ export function createGarmentGlbEditor() {
 
   let prenda = null;
   let diseño = { ...DISEÑO_BASE };
+  // Como tratar el fondo de la proxima imagen que se suba.
+  let modoFondo = 'auto';
+  const TEXTO_FONDO = { auto: 'Fondo: automático', true: 'Fondo: quitar', false: 'Fondo: dejar' };
 
   const avisar = (t, error = false) => {
     f.aviso.textContent = t;
@@ -272,6 +327,8 @@ export function createGarmentGlbEditor() {
     f.tamTxt.textContent = `${Math.round(diseño.ancho * 100)}%`;
     f.rotTxt.textContent = `${Math.round(diseño.rotacion ?? 0)}°`;
     if (diseño.color) f.color.value = diseño.color;
+    f.fondoBtn.textContent = TEXTO_FONDO[String(modoFondo)] ?? TEXTO_FONDO.auto;
+    f.relieveBtn.textContent = diseño.relieve > 0 ? 'Bordado: sí' : 'Bordado: no';
   }
 
   function cambio() {
@@ -296,6 +353,16 @@ export function createGarmentGlbEditor() {
     if (accion === 'subir') f.archivo.click();
     else if (accion === 'quitar') { diseño.imagen = null; cambio(); avisar('Diseño quitado.'); }
     else if (accion === 'espejar') { diseño.espejar = !diseño.espejar; cambio(); }
+    else if (accion === 'relieve') {
+      diseño.relieve = diseño.relieve > 0 ? 0 : 0.5;
+      cambio();
+      avisar(diseño.relieve ? 'Con relieve de bordado.' : 'Plano, sin relieve.');
+    } else if (accion === 'fondo') {
+      // auto -> forzar quitado -> no tocar -> auto
+      modoFondo = modoFondo === 'auto' ? true : (modoFondo === true ? false : 'auto');
+      pintarControles();
+      avisar('Volvé a subir la imagen para aplicar el cambio.');
+    }
     else if (accion === 'reset') {
       diseño = { ...diseño, u: DISEÑO_BASE.u, v: DISEÑO_BASE.v, ancho: DISEÑO_BASE.ancho, alto: DISEÑO_BASE.alto, rotacion: 0 };
       cambio();
@@ -314,10 +381,14 @@ export function createGarmentGlbEditor() {
     try {
       // Mismo procesado que las estampas: le saca el fondo plano y le recorta el
       // margen vacio, asi un logo con fondo blanco no tapa media remera.
-      const { url, recorte } = await leerImagen(archivo, { maxLado: 1024 });
+      // maxLado 2048: el lienzo es de 2048 y bajar antes tira nitidez que no
+      // se recupera.
+      const { url, recorte } = await leerImagen(archivo, { maxLado: 2048, quitarFondo: modoFondo });
       diseño.imagen = url;
       cambio();
-      avisar(recorte.quitado ? 'Imagen puesta (se le quitó el fondo).' : 'Imagen puesta.');
+      if (recorte.quitado) avisar('Imagen puesta (se le quitó el fondo).');
+      else if (recorte.yaRecortada) avisar('Imagen puesta. Tu PNG ya venía recortado: no se le tocó nada.');
+      else avisar('Imagen puesta.');
     } catch (error) {
       avisar(`No se pudo cargar: ${error.message}`, true);
     }
