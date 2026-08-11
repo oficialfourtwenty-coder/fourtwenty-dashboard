@@ -9441,33 +9441,6 @@
     "height": 20
   },
   {
-    "id": "furniture:tram-station-base",
-    "name": "Tram Station · Estacion de tranvia GLB",
-    "type": "furniture",
-    "model": "assets/furniture/tram-station.glb",
-    "position": [
-      -12.889858950727541,
-      -6,
-      75.56520771955645
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      2.8131458116503554,
-      6.469817467454453,
-      1.3250914005071617
-    ],
-    "castShadow": false,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": false,
-    "height": 7,
-    "collidable": false
-  },
-  {
     "id": "elevator-destination-2",
     "name": "Ascensor FOURTWENTY · HOOP SEASON (mover completo)",
     "type": "elevator",

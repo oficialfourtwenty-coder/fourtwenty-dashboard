@@ -1,4 +1,4 @@
-export const MODEL_CATALOG_MIGRATION_KEY = 'fourtwenty-editor-model-catalog-v2';
+export const MODEL_CATALOG_MIGRATION_KEY = 'fourtwenty-editor-model-catalog-v3';
 
 const KENNEY_CITY_PATH = 'assets/furniture/kenney-modular-city';
 
@@ -84,8 +84,15 @@ function bundledFurniture(key, id, position, { rotation = [0, 0, 0] } = {}) {
   });
 }
 
+// ⚠️ LA TRAM STATION YA NO ESTA EN BURELA (10/08, pedido de Kusher).
+// Es el objeto mas caro del mundo: 1,5 MB, 227.222 triangulos y 42 llamadas de
+// dibujo. Y estaba puesta ahi solo para que el juego del paquete tuviera adonde
+// entregar. Peor: Kusher ya la tenia OCULTA en su layout, pero el GLB se bajaba
+// igual —el codigo carga el archivo y recien despues le aplica el "invisible"—
+// asi que se pagaba entera por algo que no se veia.
+// Ahora la carga la mision, en su propia escena. Ver `packageStationMission.js`.
+// Sigue en `ADDABLE_MODELS`: se puede volver a poner a mano desde `T`.
 export const BUNDLED_FURNITURE = Object.freeze([
-  bundledFurniture('tram-station', 'furniture:tram-station-base', [16, 0, 6]),
   bundledFurniture('b54-simulator', 'furniture:b54-simulator-base', [-14, 0, 18]),
   // Fondo lateral este: fuera del limite caminable, mirando hacia Burela.
   bundledFurniture('kenney-tower-d', 'furniture:kenney-city-east-1', [43, 0, -27], { rotation: [0, -Math.PI / 2, 0] }),

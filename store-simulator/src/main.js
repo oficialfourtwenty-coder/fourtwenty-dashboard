@@ -1619,8 +1619,11 @@ async function travelToDestination(destinationId) {
   }
 }
 
+// Donde queda la estacion DENTRO del mapa de la mision. Ya no se busca en
+// Burela: la estacion salio del mundo y la carga la propia mision.
+// Si Kusher vuelve a poner una a mano desde `T`, se respeta esa.
 function getStationMissionPosition() {
-  const stationEntry = getEditableObjects().find((entry) => entry.id === 'furniture:tram-station-base');
+  const stationEntry = getEditableObjects().find((entry) => entry.model?.endsWith('tram-station.glb'));
   if (!stationEntry?.object3D || !isEditableEffectivelyVisible(stationEntry.id)) {
     return new THREE.Vector3(-12.9, -6, 75.6);
   }

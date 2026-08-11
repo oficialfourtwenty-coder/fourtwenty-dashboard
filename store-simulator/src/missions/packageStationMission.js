@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { clone as cloneSkeleton } from 'three/addons/utils/SkeletonUtils.js';
+import { loadFurnitureModel } from '../world/furniture.js';
 import './packageStationMission.css';
 
 const DEFAULTS = Object.freeze({
@@ -54,6 +55,24 @@ export function createPackageStationMission({
   const root = new THREE.Group();
   root.name = 'MISION · paquete a la estacion';
   const environment = new THREE.Group();
+  // ⚠️ LA ESTACION AHORA VIVE ACA, no en Burela (10/08).
+  // Estaba puesta en el mundo solo para que esta mision tuviera adonde entregar,
+  // y le costaba a TODOS los jugadores 1,5 MB de descarga, 227.222 triangulos y
+  // 42 llamadas de dibujo — incluso a los que nunca abren el juego. Ahora se
+  // baja cuando se abre la mision y desaparece con ella.
+  // Va sin await a proposito: el juego arranca igual y la estacion aparece
+  // cuando termina de bajar, como el resto de los GLB del proyecto.
+  let estacion = null;
+  loadFurnitureModel('/assets/furniture/tram-station.glb')
+    .then((gltf) => {
+      if (!environment.parent) return;   // la mision se cerro mientras bajaba
+      estacion = gltf.scene.clone(true);
+      estacion.name = 'MISION · estacion de tranvia';
+      estacion.position.copy(station);
+      estacion.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = true; } });
+      environment.add(estacion);
+    })
+    .catch((error) => console.warn('No se pudo cargar la estacion de la mision.', error));
   const actors = new THREE.Group();
   const effects = new THREE.Group();
   root.add(environment, actors, effects);

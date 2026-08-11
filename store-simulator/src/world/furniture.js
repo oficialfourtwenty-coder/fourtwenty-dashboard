@@ -41,10 +41,14 @@ function migrateBundledFurniture(layout) {
 
   let changed = false;
   const bundledByModel = new Map(BUNDLED_FURNITURE.map((item) => [item.model, item]));
-  // Esta prueba sustituye el City Map monolitico por edificios modulares. Se
-  // elimina tambien de layouts locales viejos para que no se cargue oculto.
+  // Modelos que salieron del mundo y hay que sacar tambien de los layouts ya
+  // guardados, o se siguen bajando en silencio:
+  //   - city-map-free: reemplazado por los edificios modulares de Kenney.
+  //   - tram-station: se mudo al mapa del juego del paquete. Era 1,5 MB y
+  //     227.000 triangulos que Burela pagaba aunque estuviera oculta.
+  const FUERA_DE_BURELA = ['city-map-free.glb', 'tram-station.glb'];
   const withoutOldCity = layout.filter((item) => {
-    const keep = !item.model?.endsWith('city-map-free.glb');
+    const keep = !FUERA_DE_BURELA.some((archivo) => item.model?.endsWith(archivo));
     if (!keep) changed = true;
     return keep;
   });
@@ -69,6 +73,10 @@ function migrateBundledFurniture(layout) {
 
 function vec3(value, fallback) {
   return Array.isArray(value) && value.length >= 3 ? value.slice(0, 3).map(Number) : fallback.slice();
+}
+
+export function loadFurnitureModel(path) {
+  return loadModel(path);
 }
 
 function loadModel(path) {
