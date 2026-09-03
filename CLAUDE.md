@@ -29,11 +29,29 @@ producto que no esten escritas aqui.
   `Desktop/ft-probar-0bbbb13`, `ft-probar-a209171`, `ft-probar-interior`,
   `ft-probar-layout`.
 - Aplicacion: `store-simulator/`.
-- Rama oficial actual: `version-lunes-10-de-agosto`
-  (etiqueta `lunes-10-de-agosto`). Aprobada por Kusher el 10/08 despues de
-  probar a mano el ascensor, los cinco pisos y los videos de intro.
-  Reemplaza a `version-lunes-3-de-agosto`, que queda como checkpoint anterior
-  y esta incluida entera dentro de la rama nueva.
+- **Rama oficial actual: `version-3-de-septiembre-final`** (etiqueta
+  `3-de-septiembre-final`). Aprobada por Kusher el 03/09 despues de probarla a
+  mano. Contiene todo lo de `version-lunes-10-de-agosto` mas la rama
+  `claude/todo-junto` entera y el trabajo del 03/09.
+  Lo que suma sobre la del 10 de agosto:
+  - Percheros vacios y las prendas GLB de Fer (5 modelos, 0,43 MB los cinco).
+  - Los cinco pisos arrancan vacios + catalogo de muebles para armarlos a mano.
+  - Miniatura de cada objeto en el editor.
+  - Editor de diseño de las prendas GLB y cuadro duplicable.
+  - Arreglo de los PNG de logos (el quitado de fondo rompia los ya recortados).
+  - La estacion de tranvia se muda al mapa del juego del paquete.
+  - Video de intro y autos comprimidos.
+  - BOB comprimido con Draco (2,33 → 0,83 MB) y lector de GLB compartido.
+  - Pantalla para elegir entre 10 BOBs al cargar la partida.
+  - BOB usa sus tres clips: antes caminaba con la animacion de correr.
+  - Primera carga medida: 17,16 → 15,44 MB.
+  ⚠️ **PENDIENTE CONOCIDO Y ACEPTADO:** los pies de BOB se mueven bien pero los
+  DEDOS quedan pegados al cuerpo. Es del rig, no del codigo, y Kusher lo va a
+  pulir. Se aprobo la version igual. No "arreglarlo" tocando el codigo de
+  animacion: el arreglo va en el modelo.
+- Checkpoint anterior: `version-lunes-10-de-agosto` (etiqueta
+  `lunes-10-de-agosto`), aprobada el 10/08. Esta incluida entera dentro de la
+  rama nueva. Antes de esa, `version-lunes-3-de-agosto`.
 - Respaldo mas viejo: `version-jueves-30` en `234e8e2`. No desarrollar sobre
   ese respaldo salvo pedido de Kusher.
 - La rama oficial incluye el audio comprimido, el registro dinamico de juegos,
@@ -47,7 +65,7 @@ producto que no esten escritas aqui.
   - Prueba automatica del recorrido completo (`npm run smoke`) y herramienta de
     medicion de viajes (`npm run diagnostico`).
 - Para conocer el commit exacto vigente usar
-  `git rev-parse origin/version-lunes-10-de-agosto`; no partir de un hash viejo
+  `git rev-parse origin/version-3-de-septiembre-final`; no partir de un hash viejo
   escrito en una conversacion.
 - Bitacora detallada vigente:
   `store-simulator/design/ESTADO_ACTUAL_Y_BITACORA.md`.
@@ -68,7 +86,7 @@ Antes de tocar codigo:
 cd /Users/kusher/Desktop/fourtwenty-dashboard
 git status --short --branch
 git fetch origin
-git switch version-lunes-10-de-agosto
+git switch version-3-de-septiembre-final
 git pull --ff-only
 ```
 
@@ -972,7 +990,7 @@ bastante menor. La pantalla de eleccion suma **10,7 kB** al bundle
 
 ```bash
 cd /Users/kusher/Desktop/fourtwenty-dashboard
-git switch version-lunes-10-de-agosto
+git switch version-3-de-septiembre-final
 git pull --ff-only
 cd store-simulator
 npm install
