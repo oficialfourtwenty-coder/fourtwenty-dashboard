@@ -900,7 +900,47 @@ bastante menor. La pantalla de eleccion suma **10,7 kB** al bundle
 - Modelos y videos cargados bajo demanda.
 - Medir peso agregado antes de aceptar cada asset.
 
-### Cloudflare
+### Hostinger — la plataforma elegida (03/09)
+
+**Kusher decidio publicar todo en Hostinger.** Reemplaza al plan de Cloudflare,
+que queda como referencia mas abajo.
+
+Motivo: ya tiene contratado **Business Web Hosting**, pago **hasta el 5 de marzo
+de 2027**, y ese plan hace las dos cosas que necesitamos, cosa que un hosting
+barato no hace. Confirmado por soporte de Hostinger:
+
+- **Node.js** 18/20/22/24, con **proceso persistente** y reinicio desde panel.
+  O sea que el backend de la compra puede vivir ahi.
+- **Despliegue desde GitHub** (tambien .zip o el conector de VS Code). Los
+  `npm install` corren solos al desplegar; no hay que hacerlo por SSH.
+- **Webhooks entrantes** por HTTPS en el dominio propio. Sin bloqueo general —
+  la validacion de firma la hace nuestra app.
+- **SSH y variables de entorno**: las credenciales van ahi, NUNCA al repo.
+- **MariaDB 10.5**, hasta 300 bases. Aca viven los usuarios y el saldo de FT$.
+- **50 GB** de almacenamiento total y sin tope mensual de ancho de banda.
+
+Dominios propios: `fourtwentyofficial.com` (vence **13/10/2026**) y
+`fourtwentyoficial.com` (vence 22/12/2026).
+
+⚠️ **Kusher desactivo la renovacion automatica de los cinco servicios.** El
+hosting vence el 05/03/2027 y **el dominio el 13/10/2026, mucho antes**. Al
+reactivar NO se conserva el precio viejo: se aplica la tarifa vigente (la ultima
+consultada fue $263.988 ARS). El dominio es lo urgente, no el hosting.
+
+⚠️ **Los 20 MB de primera carga NO son un limite de hosting.** Es un
+presupuesto que nos pusimos nosotros: cuanto descarga el visitante antes de
+poder jugar. Mudarse de plataforma no lo cambia. Con 50 GB de disco el
+presupuesto sigue siendo el mismo, porque el problema es el tiempo de espera y
+los datos moviles del que entra, no el espacio guardado.
+
+⚠️ Es hosting **compartido**. Para la escala inicial alcanza. Si algun dia hay
+mucho trafico, lo que conviene mover a un CDN son los archivos pesados (video,
+modelos), dejando en Hostinger el backend. Eso es un problema de exito, no de
+ahora: no adelantarlo.
+
+### Cloudflare (propuesta anterior — NO vigente)
+
+⚠️ Se conserva por si algun dia se vuelve. La plataforma elegida es Hostinger.
 
 - Direccion prevista: Pages para aplicacion y R2 para modelos, audio y archivos
   grandes. La migracion aun no esta integrada.
