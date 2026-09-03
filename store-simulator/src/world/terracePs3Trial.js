@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { addEditableHdriSphere } from './bincoShopTrial.js';
 import { addSampleGarments } from './garmentModels.js';
+import { gltfLoader } from './gltfLoaders.js';
 import { applySavedFrameDesigns } from '../ui/frameEditor.js';
 import { applySavedGarmentDesigns } from '../ui/garmentEditor.js';
 import { applySavedGlbGarmentDesigns } from '../ui/garmentGlbEditor.js';
@@ -1349,6 +1350,38 @@ function addThemeDetails(root, mats, theme, productFloor = null) {
   // `addCultureDetails`, `addBobDetails` y `addOriginDetails`. No se borran por
   // si hay que volver atras; hoy no las llama nadie.
   addOriginFloor(root, mats, theme);
+
+  // ÚNICA excepción a "los pisos arrancan vacíos": el exhibidor de Kobe va
+  // solo en HOOP SEASON (pedido de Kusher, 03/09). Es el objeto más caro del
+  // pack de Fer —1,6 MB y 45 mallas— así que se carga en UN piso, no en los
+  // cinco, y sólo cuando ese piso se abre.
+  if (theme?.editorLabel === 'HOOP SEASON PS3') addKobeDisplay(root);
+}
+
+// El exhibidor de Kobe. Se trae con el lector compartido (viene con Draco: un
+// GLTFLoader pelado no lo abriría y no daría error, simplemente no aparecería).
+//
+// ⚠️ Carga asíncrona dentro de una escena que se destruye al salir del piso.
+// Si el jugador se va antes de que baje el archivo, el grupo ya no tiene padre
+// y colgarle el modelo dejaría memoria retenida — que es justo la fuga que
+// arregló Codex. Por eso está la guarda `if (!grupo.parent) return`.
+function addKobeDisplay(root) {
+  const grupo = new THREE.Group();
+  grupo.name = 'HOOP SEASON · exhibidor Kobe';
+  grupo.position.set(-3.6, 0, -2.4);
+  root.add(grupo);
+
+  gltfLoader().load(
+    'assets/babilonia/arcades-y-exhibidores/display-kobe.glb',
+    (gltf) => {
+      if (!grupo.parent) return;          // el piso se cerró mientras bajaba
+      const modelo = gltf.scene;
+      modelo.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      grupo.add(modelo);
+    },
+    undefined,
+    () => { /* si falta el archivo, el piso abre igual */ },
+  );
 }
 
 function addLights(scene, shadows, mats, theme) {
