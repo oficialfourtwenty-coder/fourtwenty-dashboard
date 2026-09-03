@@ -11,7 +11,8 @@
     "tn:token": "node tools/tiendanube/get-token.mjs",
     "tn:sync": "node tools/tiendanube/sync.mjs",
     "smoke": "node tools/smoke/recorrido.mjs",
-    "diagnostico": "node tools/smoke/diagnostico-viajes.mjs"
+    "diagnostico": "node tools/smoke/diagnostico-viajes.mjs",
+    "modelos": "node tools/smoke/verificar-modelos.mjs"
   },
   "dependencies": {
     "three": "0.184.0"

@@ -21,11 +21,11 @@
 //   Lo correcto es que se exporten con "+Y up" y ahi esta constante se va.
 
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { getEditableById, registerEditableObject } from './editor/editableRegistry.js';
 import { diseñoDe, pintarPrenda } from '../ui/garmentGlbEditor.js';
+import { gltfLoader } from './gltfLoaders.js';
 
-const loader = new GLTFLoader();
+const loader = gltfLoader();
 const cache = new Map();
 
 // -90° en X: pasa de Z-arriba (Blender) a Y-arriba (three.js).

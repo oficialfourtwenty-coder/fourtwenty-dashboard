@@ -30,6 +30,7 @@ import { Player } from './player/bob3d.js';
 import { ThirdPersonCamera } from './core/camera.js';
 import { Input } from './core/input.js';
 import { Hud } from './ui/hud.js';
+import { initBobSelect } from './ui/bobSelect.js';
 import { initElevatorPanel } from './ui/elevatorPanel.js';
 import { loadProductos } from './data/productosStore.js';
 import { initProductClicks } from './interact/productClicks.js';
@@ -408,8 +409,18 @@ const elevatorPanel = initElevatorPanel({
 // Recien ahi se descarga (preload="none"); antes solo se ve su primer frame,
 // que es una webp de 70 KB. Sus ~59 segundos son ademas tiempo gratis para que
 // termine de cargar el mundo detras. Se saltea con Esc o click.
-hud.onStart(() => {
+// ELEGIR BOB: entre el boton ENTRAR y el video va la pantalla de los 10 BOBs.
+// Se pone ANTES del video a proposito — el video dura 59 s y son tiempo gratis
+// de carga, asi que conviene que corra mientras el mundo termina de armarse,
+// no antes de que la persona todavia este eligiendo.
+// Los diez son el MISMO `bob.glb` repintado; no se descarga nada nuevo. Ver
+// `player/bobSkins.js`.
+const bobSelect = initBobSelect();
+
+hud.onStart(async () => {
   hud.showOverlay(false);
+  const skin = await bobSelect.abrir();
+  bob.setSkin(skin);
   if (!bobiloniaIntroVideo || !showElevatorIntroFrame(bobiloniaIntroVideo, 'bobilonia-intro')) return;
   loading = true;
   playElevatorIntro(bobiloniaIntroVideo, 'bobilonia-intro').finally(() => { loading = false; });

@@ -22,7 +22,14 @@
 import { chromium } from 'playwright';
 
 const args = process.argv.slice(2);
-const URL_BASE = args.includes('--url') ? args[args.indexOf('--url') + 1] : 'http://127.0.0.1:5173';
+// ⚠️ Acepta las DOS formas. Antes solo miraba `--url`, pero CLAUDE.md documenta
+// `SMOKE_URL=... npm run smoke` (que es lo que si lee `diagnostico-viajes.mjs`).
+// Con el comando del manual esta prueba ignoraba la direccion en silencio y
+// pegaba contra el 5173: o fallaba con "connection refused" sin explicar por
+// que, o —peor— probaba OTRO servidor que estuviera levantado ahi.
+const URL_BASE = args.includes('--url')
+  ? args[args.indexOf('--url') + 1]
+  : (process.env.SMOKE_URL ?? 'http://127.0.0.1:5173');
 
 // 0 = Calle Burela. 1..5 = los pisos, en el orden del ascensor.
 const DESTINOS = [
@@ -98,9 +105,24 @@ async function entrarAlJuego() {
   await page.waitForFunction(() => window.__elevatorTest, null, { timeout: 120000 });
   await page.waitForTimeout(2500);
   await page.mouse.click(550, 380);     // ENTRAR A BOBILONIA
+  await elegirBob(page);
   await page.waitForTimeout(1000);
   await page.keyboard.press('Escape');  // saltear el video de portada
   await page.waitForTimeout(6000);
+}
+
+// ⚠️ ENTRE "ENTRAR" Y EL VIDEO HAY UNA PANTALLA (03/09): la eleccion de BOB.
+// No se saltea con Escape a proposito —es una eleccion, no un video— asi que
+// hay que apretarle el boton. Si esta prueba se olvida de esto, el juego NUNCA
+// arranca y los seis destinos fallan por algo que no tiene nada que ver con el
+// ascensor. Se espera al boton, no a un tiempo fijo: las diez fotos se
+// renderizan y en el navegador por software eso tarda.
+async function elegirBob(page) {
+  const boton = await page.waitForSelector('#bob-select.show .bs-go', { timeout: 30000 }).catch(() => null);
+  if (!boton) return;                   // si algun dia se saca la pantalla, sigue igual
+  await boton.click();
+  await page.waitForFunction(() => !document.querySelector('#bob-select.show'), null, { timeout: 10000 })
+    .catch(() => {});
 }
 
 // ⚠️ CON TOPE DE TIEMPO. Un viaje puede quedar colgado —le paso a esta misma

@@ -7,9 +7,10 @@
 // - Movimiento con peso: aceleración/frenada en rampa (~0.2s), rotación con
 //   velocidad angular limitada (sin snap), sprint con Shift.
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { sampleGround } from '../world/building.js';
 import { normalizeGLTFHeight } from '../world/gltfUtils.js';
+import { gltfLoader } from '../world/gltfLoaders.js';
+import { BOB_SKINS, aplicarSkin, bobElegido } from './bobSkins.js';
 
 // Cada escena provee su propia función de altura de piso (la calle tiene
 // escalones; el shopping tiene pisos). Se asigna a `bob.sampleGround` desde
@@ -88,12 +89,14 @@ export class Player {
     this.walkPhase = 0;
 
     this.mixer = null;
-    this.actions = {};          // { idle, move } acciones del GLB si existen
+    this.actions = {};          // { idle, walk, run } acciones del GLB si existen
     this.model = null;
     this._isBillboard = false;
     this.sampleGround = sampleGround; // la escena activa puede reemplazarla
+    // Pelaje elegido en la pantalla de carga. Si nunca eligio, el original.
+    this._skin = bobElegido() ?? BOB_SKINS[0];
 
-    new GLTFLoader().load(
+    gltfLoader().load(
       'assets/bob/bob.glb',
       (gltf) => this._setupModel(gltf),
       undefined,
@@ -118,28 +121,51 @@ export class Player {
     this.model = model;
     this.rig.add(model);
 
+    // El pelaje elegido en la pantalla de carga. Va antes que la animación
+    // porque `aplicarSkin` clona el material, y clonarlo después dejaría al
+    // BOB del jugador y a la estatua del piso 4 compartiendo el mismo.
+    aplicarSkin(model, this._skin);
+
     // ¿Trae clips de animación?
+    // ⚠️ BOB tiene TRES: `BOB_idle`, `BOB_walk` y `BOB_run`. Hasta el 03/09 el
+    // código buscaba uno solo con /run|walk|jog|move/ y `Array.find` devuelve
+    // el PRIMERO que coincide, que en el orden del archivo es `BOB_run`. O sea
+    // que BOB caminaba con la animación de correr, ralentizada — por eso movía
+    // los brazos de más al ir despacio. El clip de caminata estaba ahí, sin
+    // usar. Ahora se mezclan los tres según la velocidad real.
     const clips = gltf.animations || [];
     if (clips.length) {
       this.mixer = new THREE.AnimationMixer(model);
       const find = (re) => clips.find((c) => re.test(c.name));
       const idleClip = find(/idle|stand|breath/i);
-      const move = find(/run|walk|jog|move/i) || clips[0];
-      this.actions.move = this.mixer.clipAction(move);
-      this.actions.move.play();
-      // Sin clip de idle propio: reutilizamos el de caminata pero pausado en
-      // el primer frame (pose neutra) cuando BOB está quieto.
+      const walkClip = find(/walk|caminar/i);
+      const runClip = find(/run|sprint|jog/i);
+
+      const usar = (clip) => {
+        const a = this.mixer.clipAction(clip);
+        a.play();
+        a.weight = 0;
+        return a;
+      };
+      // El de andar: caminata si existe; si no, la corrida; si no, el primero.
+      this.actions.walk = usar(walkClip || runClip || clips[0]);
+      // El de correr solo cuenta como separado si de verdad es otro clip.
+      this.actions.run = runClip && walkClip ? usar(runClip) : null;
+      this.actions.idle = idleClip ? usar(idleClip) : this.actions.walk;
       this._singleClip = !idleClip;
-      if (idleClip) {
-        this.actions.idle = this.mixer.clipAction(idleClip);
-        this.actions.idle.play();
-      } else {
-        this.actions.idle = this.actions.move;
-      }
-      console.info(`bob.glb: ${clips.length} clips (idle="${idleClip ? idleClip.name : move.name + ' [pausado]'}", move="${move.name}")`);
+      this.actions.walk.weight = 1;
+
+      console.info(`bob.glb: ${clips.length} clips → idle="${idleClip?.name ?? '(pose neutra)'}" walk="${(walkClip || runClip || clips[0]).name}" run="${this.actions.run ? runClip.name : '(usa el de caminar)'}"`);
     } else {
       console.info('bob.glb sin animation clips — animación procedural activada');
     }
+  }
+
+  // Cambiar de BOB en vivo (lo usa la pantalla de elección para la vista
+  // previa, y sirve si algún día se puede cambiar de pelaje dentro del juego).
+  setSkin(skin) {
+    this._skin = skin;
+    if (this.model && !this._isBillboard) aplicarSkin(this.model, skin);
   }
 
   // Círculo (radio RADIUS) vs AABB, con banda de altura — sin closures nuevas
@@ -211,15 +237,29 @@ export class Player {
       if (this._singleClip) {
         // un solo clip (caminata): se reproduce escalado por velocidad y se
         // pausa en el primer frame (pose neutra) cuando BOB está quieto
-        this.actions.move.weight = 1;
-        this.actions.move.paused = speed < 0.05;
-        this.actions.move.timeScale = THREE.MathUtils.clamp(speed / WALK, 0.6, 1.8);
+        this.actions.walk.weight = 1;
+        this.actions.walk.paused = speed < 0.05;
+        this.actions.walk.timeScale = THREE.MathUtils.clamp(speed / WALK, 0.6, 1.8);
+      } else if (this.actions.run) {
+        // Tres clips: quieto → caminando → corriendo, mezclados por velocidad.
+        // Dos tramos, no uno: de 0 a WALK se cruza idle con caminata, y de WALK
+        // a RUN se cruza caminata con corrida. Así la corrida entra recién
+        // cuando de verdad está corriendo, en vez de acelerar la caminata.
+        const aCaminar = THREE.MathUtils.clamp(speed / WALK, 0, 1);
+        const aCorrer = THREE.MathUtils.clamp((speed - WALK) / (RUN - WALK), 0, 1);
+        this.actions.idle.weight = 1 - aCaminar;
+        this.actions.walk.weight = aCaminar * (1 - aCorrer);
+        this.actions.run.weight = aCaminar * aCorrer;
+        // Cada clip acompaña el paso, pero cada uno contra SU propia velocidad
+        // de referencia: si no, la corrida se reproduce al doble.
+        this.actions.walk.timeScale = THREE.MathUtils.clamp(speed / WALK, 0.6, 1.4);
+        this.actions.run.timeScale = THREE.MathUtils.clamp(speed / RUN, 0.7, 1.3);
       } else {
-        // crossfade idle ↔ move según velocidad, y el clip acompaña el paso
+        // crossfade idle ↔ caminata según velocidad, y el clip acompaña el paso
         const w = THREE.MathUtils.clamp(speed / WALK, 0, 1);
-        this.actions.move.weight = w;
+        this.actions.walk.weight = w;
         this.actions.idle.weight = 1 - w;
-        this.actions.move.timeScale = THREE.MathUtils.clamp(speed / WALK, 0.6, 1.8);
+        this.actions.walk.timeScale = THREE.MathUtils.clamp(speed / WALK, 0.6, 1.8);
       }
       this.mixer.update(dt);
     } else if (this.model && !this._isBillboard) {

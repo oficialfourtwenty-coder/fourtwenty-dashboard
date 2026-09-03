@@ -2,6 +2,7 @@
 // Muestra imagen, nombre, descripción y precio del catálogo (productosStore) y
 // el botón COMPRAR que solo REDIRIGE al link de compra de Tiendanube — el
 // juego jamás procesa pagos. DOM plano, aislado: no toca cámara ni controles.
+import { cuentaTiendanube } from '../data/cuentaTiendanube.js';
 
 const PANEL_ID = 'ft-product-panel';
 const STYLE_ID = 'ft-product-panel-style';
@@ -149,13 +150,20 @@ export function createProductPanel({ onAddToCart = () => false } = {}) {
       el('name').textContent = producto.nombre || 'Prenda sin nombre';
       el('price').textContent = precioTexto(producto);
       el('desc').textContent = producto.descripcion || '';
-      currentLink = producto.link || '';
+      // Si la prenda todavía no tiene su link propio, cae al de la tienda que
+      // se cargó en la pantalla de elección de BOB. Antes el botón simplemente
+      // no hacía nada. Ver src/data/cuentaTiendanube.js.
+      const linkTienda = cuentaTiendanube();
+      currentLink = producto.link || linkTienda || '';
+      const esFallback = !producto.link && !!linkTienda;
       currentProduct = producto;
       el('buy').disabled = !currentLink;
       el('cart').disabled = false;
-      el('hint').textContent = currentLink
+      el('hint').textContent = producto.link
         ? 'Comprar abre la página del producto en la tienda (Tiendanube).'
-        : 'Sin link de compra: cargalo en el panel de administración (tecla P).';
+        : esFallback
+          ? 'Esta prenda no tiene link propio: COMPRAR te lleva a la tienda.'
+          : 'Sin link de compra: cargalo en el panel de administración (tecla P).';
     }
     root.classList.add('is-visible');
   }

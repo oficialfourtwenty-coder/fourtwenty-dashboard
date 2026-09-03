@@ -4,12 +4,12 @@
 // Prendas = siluetas dibujadas (remera/buzo/camiseta), NO cubos: placeholders
 // hasta que TiendaNube traiga las fotos reales (Fase 5).
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FLOOR_YS, FLOOR_H, INTERIOR } from './building.js';
 import { registerSpinner } from './anim.js';
 import { normalizeGLTFHeight } from './gltfUtils.js';
 import { box, smoothTexture as smooth, hiCanvas, white } from './gfxUtils.js';
 import { bindProductVisual } from './productVisuals.js';
+import { gltfLoader } from './gltfLoaders.js';
 
 const WALL_W = -INTERIOR.x + 0.03; // cara interna pared oeste
 const WALL_E = INTERIOR.x - 0.03;  // cara interna pared este
@@ -329,7 +329,7 @@ export function buildGallery(scene, collection, { floorY = FLOOR_YS[collection.p
     const ped = box(1.2, 0.45, 1.2, sx, Y + 0.225, sz, white);
     g.add(ped);
     colliders.push({ minX: sx - 0.6, maxX: sx + 0.6, minY: Y, maxY: Y + 2.6, minZ: sz - 0.6, maxZ: sz + 0.6 });
-    new GLTFLoader().load('assets/bob/bob.glb', (gltf) => {
+    gltfLoader().load('assets/bob/bob.glb', (gltf) => {
       const statue = gltf.scene;
       normalizeGLTFHeight(statue, 2.0); // centrado en X/Z, apoyado en Y=0
       statue.position.x += sx;

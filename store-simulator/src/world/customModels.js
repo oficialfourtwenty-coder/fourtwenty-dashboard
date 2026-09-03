@@ -10,10 +10,10 @@
 // escala para medir eso, se centra en x/z y se apoya en el piso solo — no
 // hace falta calcular escalas a mano ni adivinar el pivote del archivo.
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { normalizeGLTFHeight } from './gltfUtils.js';
+import { gltfLoader } from './gltfLoaders.js';
 
-const loader = new GLTFLoader();
+const loader = gltfLoader();
 const cache = new Map(); // evita cargar el mismo GLB dos veces si se repite
 
 function loadOnce(path) {

@@ -183,12 +183,92 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
 
 ### BOB
 
-- Modelo activo: `public/assets/bob/bob.glb`, aproximadamente 1.3 MB.
-- Tiene skeleton y un clip de caminata, pero el rig fue reparado muchas veces.
-- El compromiso actual mantiene las piernas sin animacion para evitar
-  deformaciones y mueve principalmente brazos/manos.
+- Modelo activo: `public/assets/bob/bob.glb`, **0,83 MB con Draco** (03/09).
+  Antes eran 2,33 MB sin comprimir: era el archivo mas pesado de la primera
+  carga. El original sin comprimir queda en `source-assets/bob/` (esa carpeta
+  no se publica) y ademas vive en el historial de git, en `f1c4a10`.
+- ⚠️ **AHORA NECESITA UN LECTOR CON DRACO.** Un `GLTFLoader` pelado no lo abre y
+  **no da error**: BOB simplemente no aparece y se cae al muñeco de respaldo.
+  Por eso ya no se crea ningun lector suelto — ver la seccion del lector
+  compartido mas abajo.
+- Como se verifico que comprimirlo no lo rompe (no alcanza con mirar el peso):
+  se renderizaron las dos versiones en la MISMA pose, con los tres clips, y se
+  compararon pixel por pixel. Resultado: la caja del modelo ya deformado
+  coincide hasta 0,10 mm, y de 134.400 pixeles solo 16 cambian de verdad
+  (0,01%); el resto se mueve 1,5/255, que es invisible. Los 41 huesos y los 3
+  clips quedan intactos.
+  ⚠️ Comparar los vertices por indice NO sirve: Draco los reordena y da errores
+  de 994 mm que parecen catastroficos y son un espejismo.
+- **Tiene 3 clips: `BOB_idle`, `BOB_walk` y `BOB_run`** (41 huesos).
+  ⚠️ Hasta el 03/09 el codigo usaba UNO. Buscaba el clip de movimiento con
+  `/run|walk|jog|move/` y `Array.find` devuelve el PRIMERO que coincide, que en
+  el orden del archivo es `BOB_run`: **BOB caminaba con la animacion de correr,
+  ralentizada**, y el clip de caminata estaba ahi sin usar. Ahora se mezclan los
+  tres en dos tramos (quieto→caminata de 0 a 3,4 m/s, caminata→corrida de 3,4 a
+  5,8). Verificado midiendo los pesos: quieto idle=1, caminando walk=1,
+  corriendo run=1.
 - Antes de producir muchas prendas 3D se necesita un rig definitivo, estable,
   con nombres de huesos congelados y una prenda piloto verificada.
+- Las dos texturas del GLB (`bob_basecolor` 156 KB y `bob_normal_fur` 345 KB,
+  las dos 1024x1024) son ya la mitad del peso del archivo. Draco comprime la
+  MALLA, no las texturas. Bajarlas es el proximo ahorro posible (~150-200 KB),
+  pero toca al personaje protagonista: no hacerlo sin comparar a ojo.
+
+### Elegir BOB al cargar la partida
+
+- Al apretar **ENTRAR A BOBILONIA** aparece una pantalla con **10 BOBs** para
+  elegir. El elegido queda guardado y es con el que se juega.
+  `src/ui/bobSelect.js` + `src/player/bobSkins.js`.
+- ⚠️ **NO son 10 archivos.** Diez GLB distintos serian 8,3 MB, casi la mitad del
+  presupuesto entero de primera carga, para un solo detalle. Es UN `bob.glb` con
+  10 recetas de color: se lee la luminancia del atlas de pelaje y se la mapea a
+  una rampa de dos colores en un `<canvas>`. El dibujo del pelo se conserva
+  entero, solo cambia la paleta. **Costo de descarga de los 10: 0 KB.**
+  Misma idea con la que se pintan las prendas GLB en `garmentGlbEditor.js`.
+- El BOB 0 es el original de la marca, con su textura sin tocar. Es el que sale
+  por defecto y no se le aplica ningun repintado.
+- `gamma` por skin corre el punto medio de la rampa. Hace falta: el atlas de BOB
+  es casi todo medios tonos, y sin eso NOCHE, HUMO, NIEVE y BURELA salian los
+  cuatro gris raton, indistinguibles.
+- Las 10 fotos de la pantalla **se renderizan con el modelo de verdad** en el
+  momento (256 px, un renderer aparte que se suelta al terminar). No son PNG
+  guardados: si Fer cambia a BOB, las diez fotos cambian solas.
+  ⚠️ `preserveDrawingBuffer: true` es obligatorio o `toDataURL` sale en negro.
+  ⚠️ Al terminar se hace `renderer.dispose()` + `forceContextLoss()`: un contexto
+  WebGL abierto cuenta contra el limite del navegador y despues el juego se
+  queda sin poder crear el suyo.
+- La eleccion vive en `localStorage` (`ft-bob-elegido-v1`), o sea **por
+  computadora**, igual que el layout del editor y los diseños de las prendas.
+- ⚠️ **LA PANTALLA NO SE SALTEA CON ESCAPE** — es una eleccion, no un video. Las
+  pruebas automaticas tienen que apretarle el boton `#bob-select .bs-go`; si se
+  lo olvidan, el juego nunca arranca y los seis destinos fallan por algo que no
+  tiene nada que ver con el ascensor. Ya esta contemplado en `recorrido.mjs` y
+  en `diagnostico-viajes.mjs`.
+- La pantalla tiene ademas un campo para el **link de la cuenta de FOURTWENTY en
+  Tiendanube** (`src/data/cuentaTiendanube.js`). Es SOLO un link guardado: si
+  una prenda todavia no tiene su link de compra propio, el boton COMPRAR lleva
+  ahi en vez de no hacer nada. **No es un login y no tiene nada que ver con
+  cobrar.** Se valida que sea `http(s)` — sin eso, un `javascript:` pegado en el
+  campo se ejecutaria al apretar COMPRAR. Nunca guardar ahi una credencial: es
+  el navegador, cualquiera lo lee.
+
+### Lector de GLB compartido — no crear nunca uno suelto
+
+- `src/world/gltfLoaders.js` exporta `gltfLoader()`: **un solo** `GLTFLoader`
+  para todo el simulador, ya con Draco puesto.
+- ⚠️ **REGLA: no escribir `new GLTFLoader()` en ningun otro archivo.**
+- Por que existe: un lector pelado no abre un archivo Draco y **falla en
+  silencio**. Ya casi pasa dos veces. El 10/08 con los autos (`cars.js` tenia el
+  suyo y se detecto de casualidad antes de subirlo). El 03/09 al comprimir a BOB
+  aparecio que habia **DOS** lugares cargando `bob.glb` con lector pelado:
+  `player/bob3d.js` y `world/gallery.js` (la estatua gigante). Mientras cada
+  archivo se arme su propio lector, comprimir cualquier GLB es una ruleta.
+- Bonus medido: antes habia DOS `DRACOLoader` vivos (`cars.js` y `furniture.js`)
+  y cada uno levanta su propia tanda de workers. Ahora es uno.
+- Para comprobar que los modelos siguen apareciendo despues de comprimir algo:
+  `npm run modelos` (cuenta huesos, triangulos y mallas de verdad en el
+  navegador). Un GLB que no se puede leer no da error — contar es la unica forma
+  de saberlo.
 
 ### Autos y musica
 
@@ -659,6 +739,44 @@ checkout Tiendanube hasta completar la prueba y validacion oficial.
 - El build detecta algunos muebles de 330k a 501k triangulos y reduce sombras y
   postprocesado cuando mide bajo rendimiento.
 
+### Medicion del 03/09 — primera carga
+
+Medido con el mismo metodo en las dos versiones (bytes que baja el navegador
+hasta que el juego esta listo, servidor de desarrollo):
+
+| | antes (`f1c4a10`) | despues | cambio |
+|---|---|---|---|
+| **Primera carga** | 17,16 MB | **15,44 MB** | **−1,72 MB** |
+| modelos 3D | 5,23 MB | 3,72 MB | −1,51 MB (BOB) |
+| JavaScript | 6,36 MB | 6,45 MB | +0,09 MB (la pantalla de BOBs) |
+| imagenes | 2,51 MB | 2,51 MB | = |
+
+En produccion el JS viaja empaquetado y comprimido, asi que el numero real es
+bastante menor. La pantalla de eleccion suma **10,7 kB** al bundle
+(3,7 kB comprimidos) — contra 1,5 MB que ahorra BOB.
+
+### Ahorro medido que TODAVIA NO se hizo
+
+- **121 kB (41,8 kB comprimidos) de JavaScript se cargan siempre y solo se usan
+  apretando `T`**: `worldEditor.js`, `editorPanel.js`, `pieceBuilder.js` y
+  `thumbnails.js`. Es el 13% del JS de la primera carga, para algo que la
+  version publica no va a tener. Se arregla con `import()` dinamico + un stub
+  que responda `isEnabled() → false` hasta que se cargue.
+  ⚠️ No se hizo en esta rama a proposito: son 16 puntos de contacto en
+  `main.js`, y `main.js` es archivo compartido con Codex (hay acuerdo de avisar
+  antes de tocarlo). Merece su propia rama.
+  ⚠️ `restorePieces` de `pieceBuilder.js` se necesita SIEMPRE (reconstruye las
+  piezas hechas a mano al cargar): ese archivo no se puede diferir entero.
+- Composicion medida del bundle: three.js 778 kB (205 kB comprimido, el 70% —
+  es el motor, no se toca), codigo propio 170 kB, editor 86 kB, paneles de
+  edicion 68 kB, revista 17 kB.
+- Los GLB que quedan sin comprimir son los siete de la ciudad Kenney (30-40 KB
+  cada uno) y las cinco prendas de Fer (40-210 KB). **Draco no rinde a ese
+  tamaño** —tiene costo fijo por archivo y puede agrandarlos—: se midieron y se
+  dejaron como estan. Todo lo que pesaba de verdad ya esta comprimido.
+- `/favicon.ico` devuelve 404 (no existe). Es cosmetico —la pestaña queda sin
+  iconito— y es de antes; se deja porque elegir el icono es decision de marca.
+
 ### Objetivos iniciales
 
 - Primera carga: ideal 15 MB, tope 20 MB.
@@ -784,7 +902,14 @@ vez hace falta `npx playwright install chromium`):
 ```bash
 SMOKE_URL=http://127.0.0.1:5201 npm run smoke        # recorre Burela y los 5 pisos
 SMOKE_URL=http://127.0.0.1:5201 npm run diagnostico  # mide donde se va el tiempo
+SMOKE_URL=http://127.0.0.1:5201 npm run modelos      # los GLB siguen apareciendo?
 ```
+
+- ⚠️ Hasta el 03/09 `recorrido.mjs` **no leia `SMOKE_URL`**: solo aceptaba
+  `--url`, asi que el comando de arriba —el que dice este manual— ignoraba la
+  direccion en silencio y pegaba contra el 5173. O fallaba con "connection
+  refused" sin explicar por que, o probaba OTRO servidor que estuviera ahi
+  levantado. Ahora las dos herramientas aceptan las dos formas.
 
 - `smoke` tiene que terminar en `✅ TODO BIEN` y devolver salida 0. Comprueba
   que los 6 destinos abren, que se vuelve a Burela, y que **no queda ninguna

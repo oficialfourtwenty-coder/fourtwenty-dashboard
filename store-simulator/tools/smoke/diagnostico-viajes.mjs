@@ -80,6 +80,13 @@ async function entrarAlJuego() {
   await instrumentar();
   await page.waitForTimeout(2500);
   await page.mouse.click(550, 380);     // ENTRAR A BOBILONIA
+  // ⚠️ La pantalla de eleccion de BOB (03/09) va entre ENTRAR y el video, y no
+  // se saltea con Escape: hay que apretarle el boton. Ver `recorrido.mjs`.
+  const boton = await page.waitForSelector('#bob-select.show .bs-go', { timeout: 30000 }).catch(() => null);
+  if (boton) {
+    await boton.click();
+    await page.waitForFunction(() => !document.querySelector('#bob-select.show'), null, { timeout: 10000 }).catch(() => {});
+  }
   await page.waitForTimeout(1000);
   await page.keyboard.press('Escape');  // saltear el video de portada
   await page.waitForTimeout(6000);

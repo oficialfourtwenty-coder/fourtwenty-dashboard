@@ -14,9 +14,8 @@
 // O sea: cuando generes los autos de verdad desde fotos (igual que hiciste con
 // BOB), los tirás en esa carpeta y quedan idénticos sin tocar una línea de acá.
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { normalizeGLTFHeight } from './gltfUtils.js';
+import { gltfLoader } from './gltfLoaders.js';
 
 // ---- Especificación de cada auto -------------------------------------------
 // ⚠️ COLOR Y PATENTE: cambialos acá si no coinciden con los autos reales.
@@ -24,17 +23,8 @@ import { normalizeGLTFHeight } from './gltfUtils.js';
 // ⚠️ CON DRACO. Los GLB de los autos estan comprimidos (10/08): pasaron de 3,9
 // a 0,84 MB cada uno. Un `GLTFLoader` pelado NO los puede abrir — falla en
 // silencio y el auto simplemente no aparece, quedando la carroceria procedural
-// de respaldo. Este cargador es uno solo y se arma una sola vez.
-let _cargadorAutos = null;
-function cargadorDeAutos() {
-  if (!_cargadorAutos) {
-    const draco = new DRACOLoader();
-    draco.setDecoderPath('/assets/draco/');
-    _cargadorAutos = new GLTFLoader();
-    _cargadorAutos.setDRACOLoader(draco);
-  }
-  return _cargadorAutos;
-}
+// de respaldo. El lector compartido de `gltfLoaders.js` ya viene con Draco.
+const cargadorDeAutos = gltfLoader;
 
 const CAR_SPECS = [
   {

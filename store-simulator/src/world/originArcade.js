@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { gltfLoader } from './gltfLoaders.js';
 
 export const ORIGIN_ARCADE_CONFIG = Object.freeze({
   modelUrl: null,
@@ -64,7 +64,7 @@ export function createOriginArcade({ onInteract, config = ORIGIN_ARCADE_CONFIG }
   root.add(button);
 
   if (config.modelUrl) {
-    new GLTFLoader().load(config.modelUrl, (gltf) => {
+    gltfLoader().load(config.modelUrl, (gltf) => {
       root.remove(visual);
       visual = gltf.scene;
       visual.name = 'Arcade · modelo GLB';
