@@ -33,8 +33,7 @@ const UP = new THREE.Vector3(0, 1, 0);
 // Kusher no tenga que acordarse de agregar nada a la direccion. El de siempre
 // se sigue viendo con `?bob=viejo`.
 // ⚠️ Antes de pasar esto a la rama oficial hay que volver a poner `bob.glb`
-// como POR_DEFECTO: el de Meshy pesa 2,34 MB contra 0,72 MB y todavia no tiene
-// textura, o sea que sale blanco.
+// como POR_DEFECTO: el de Meshy pesa 2,34 MB contra 0,72 MB del actual.
 // El giro es porque cada modelo viene mirando para otro lado: el de Tripo trae
 // el frente en +x, el de Meshy ya viene en +z.
 // `alto` es cuanto mide en metros. 1,7 es el de siempre; el de Meshy va un 20%
@@ -42,7 +41,8 @@ const UP = new THREE.Vector3(0, 1, 0);
 // separado: un HEIGHT global agrandaria tambien al BOB aprobado.
 const MODELOS_BOB = {
   viejo: { archivo: 'assets/bob/bob.glb', giroY: -Math.PI / 2, pelaje: true, alto: HEIGHT },
-  meshy: { archivo: 'assets/bob/bob-meshy.glb', giroY: 0, pelaje: false, alto: HEIGHT * 1.2 },
+  meshy: { archivo: 'assets/bob/bob-meshy.glb', giroY: 0, pelaje: false, alto: HEIGHT * 1.2,
+           colorPorVertice: true },
 };
 const POR_DEFECTO = 'meshy';
 function modeloElegido() {
@@ -151,6 +151,7 @@ export class Player {
     // El modelo de Meshy viene SIN textura, y las recetas de pelaje repintan el
     // atlas del BOB original: sin atlas no hay nada que repintar.
     if (this._modelo.pelaje) aplicarSkin(model, this._skin);
+    if (this._modelo.colorPorVertice) this._pintar(model);
 
     // ¿Trae clips de animación?
     // ⚠️ BOB tiene TRES: `BOB_idle`, `BOB_walk` y `BOB_run`. Hasta el 03/09 el
@@ -188,6 +189,22 @@ export class Player {
     } else {
       console.info('bob.glb sin animation clips — animación procedural activada');
     }
+  }
+
+  // El GLB de Meshy viene sin material: sale blanco. El color se le hornea aparte
+  // con tools/rig/pintar-bob.mjs, que le mete un COLOR_0 por vertice con los
+  // colores del BOB de la marca.
+  // ⚠️ VA POR VERTICE Y NO POR TEXTURA porque las UV de ese modelo estan
+  // solapadas: distintas partes del cuerpo comparten los mismos pixeles del
+  // mapa (medido: 373.393 choques entre zonas distintas), asi que con una
+  // textura no se le puede dar a la mano un color distinto al del torso.
+  _pintar(model) {
+    model.traverse((o) => {
+      if (!o.isSkinnedMesh && !o.isMesh) return;
+      o.material = new THREE.MeshStandardMaterial({
+        vertexColors: true, roughness: 0.9, metalness: 0,
+      });
+    });
   }
 
   // Cambiar de BOB en vivo (lo usa la pantalla de elección para la vista
