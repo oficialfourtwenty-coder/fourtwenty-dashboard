@@ -29,15 +29,17 @@ const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const UP = new THREE.Vector3(0, 1, 0);
 
 // ── Modelos de BOB para probar ───────────────────────────────────────────────
-// Por defecto va el de siempre. `?bob=meshy` carga el modelo riggeado de Meshy
-// con el arreglo de pesos (la mano ya no viaja con la pierna). Es SOLO para
-// mirarlo: pesa 11,1 MB contra 0,72 MB del actual, asi que no puede quedar como
-// el de arranque sin bajarle triangulos antes.
+// Por defecto va el de siempre. `?bob=meshy` carga el modelo riggeado de Meshy,
+// ya con los pesos arreglados y los brazos bajados (ver tools/rig/). Pesa
+// 2,34 MB contra 0,72 MB del actual y todavia no tiene textura: sale blanco.
 // El giro es porque cada modelo viene mirando para otro lado: el de Tripo trae
 // el frente en +x, el de Meshy ya viene en +z.
+// `alto` es cuanto mide en metros. 1,7 es el de siempre; el de Meshy va un 20%
+// mas grande por pedido de Kusher (03/09), y por eso lo trae cada modelo por
+// separado: cambiar el HEIGHT global agrandaria tambien al BOB aprobado.
 const MODELOS_BOB = {
-  '': { archivo: 'assets/bob/bob.glb', giroY: -Math.PI / 2, pelaje: true },
-  meshy: { archivo: 'assets/bob/bob-meshy.glb', giroY: 0, pelaje: false },
+  '': { archivo: 'assets/bob/bob.glb', giroY: -Math.PI / 2, pelaje: true, alto: HEIGHT },
+  meshy: { archivo: 'assets/bob/bob-meshy.glb', giroY: 0, pelaje: false, alto: HEIGHT * 1.2 },
 };
 function modeloElegido() {
   let cual = '';
@@ -133,8 +135,8 @@ export class Player {
     // Cada GLB viene mirando para otro lado; se lo gira para que mire a +z
     // (la convención del rig; esto arregla el "se ve de costado").
     model.rotation.y = this._modelo.giroY;
-    // normalizar: que mida HEIGHT metros y apoye los pies en y=0
-    normalizeGLTFHeight(model, HEIGHT);
+    // normalizar: que mida lo que pide su ficha y apoye los pies en y=0
+    normalizeGLTFHeight(model, this._modelo.alto);
 
     this.model = model;
     this.rig.add(model);
@@ -309,7 +311,9 @@ export class Player {
 
     // 7) Sombra blob pegada al piso
     this.shadow.position.set(this.position.x, ground + 0.02, this.position.z);
+    // La sombra acompaña el tamaño del modelo: si BOB va un 20% mas grande, su
+    // sombra tambien, o queda flotando sobre una mancha chica.
     const squash = 1 - Math.min(0.35, Math.max(0, this.position.y - ground) * 0.5);
-    this.shadow.scale.setScalar(squash);
+    this.shadow.scale.setScalar(squash * (this._modelo.alto / HEIGHT));
   }
 }
