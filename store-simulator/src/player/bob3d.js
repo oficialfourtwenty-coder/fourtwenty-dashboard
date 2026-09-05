@@ -29,22 +29,26 @@ const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const UP = new THREE.Vector3(0, 1, 0);
 
 // ── Modelos de BOB para probar ───────────────────────────────────────────────
-// Por defecto va el de siempre. `?bob=meshy` carga el modelo riggeado de Meshy,
-// ya con los pesos arreglados y los brazos bajados (ver tools/rig/). Pesa
-// 2,34 MB contra 0,72 MB del actual y todavia no tiene textura: sale blanco.
+// ⚠️ EN ESTA RAMA DE PRUEBA el que sale por defecto es el de Meshy, para que
+// Kusher no tenga que acordarse de agregar nada a la direccion. El de siempre
+// se sigue viendo con `?bob=viejo`.
+// ⚠️ Antes de pasar esto a la rama oficial hay que volver a poner `bob.glb`
+// como POR_DEFECTO: el de Meshy pesa 2,34 MB contra 0,72 MB y todavia no tiene
+// textura, o sea que sale blanco.
 // El giro es porque cada modelo viene mirando para otro lado: el de Tripo trae
 // el frente en +x, el de Meshy ya viene en +z.
 // `alto` es cuanto mide en metros. 1,7 es el de siempre; el de Meshy va un 20%
 // mas grande por pedido de Kusher (03/09), y por eso lo trae cada modelo por
-// separado: cambiar el HEIGHT global agrandaria tambien al BOB aprobado.
+// separado: un HEIGHT global agrandaria tambien al BOB aprobado.
 const MODELOS_BOB = {
-  '': { archivo: 'assets/bob/bob.glb', giroY: -Math.PI / 2, pelaje: true, alto: HEIGHT },
+  viejo: { archivo: 'assets/bob/bob.glb', giroY: -Math.PI / 2, pelaje: true, alto: HEIGHT },
   meshy: { archivo: 'assets/bob/bob-meshy.glb', giroY: 0, pelaje: false, alto: HEIGHT * 1.2 },
 };
+const POR_DEFECTO = 'meshy';
 function modeloElegido() {
   let cual = '';
   try { cual = new URLSearchParams(location.search).get('bob') ?? ''; } catch { /* sin location */ }
-  return MODELOS_BOB[cual] ?? MODELOS_BOB[''];
+  return MODELOS_BOB[cual] ?? MODELOS_BOB[POR_DEFECTO];
 }
 
 // Sombra blob (así se hacía en PS2: un círculo oscuro, nada de shadow maps).

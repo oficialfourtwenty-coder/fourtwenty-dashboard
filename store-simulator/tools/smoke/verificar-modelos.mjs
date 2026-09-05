@@ -7,7 +7,9 @@ const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium',
   args: ['--use-gl=angle','--use-angle=swiftshader','--no-sandbox'] });
 const p = await b.newPage({ viewport: { width: 1100, height: 800 } });
 await p.addInitScript(() => { try { localStorage.clear(); } catch {} });
-await p.goto(`${URL}/?q=low&elevatorTest=1`, { waitUntil: 'domcontentloaded', timeout: 120000 });
+// ⚠️ `bob=viejo` explicito: en esta rama el que sale por defecto es el de
+// Meshy, y esta prueba comprueba el bob.glb de siempre (41 huesos, pelaje).
+await p.goto(`${URL}/?q=low&elevatorTest=1&bob=viejo`, { waitUntil: 'domcontentloaded', timeout: 120000 });
 await p.waitForFunction(() => window.__elevatorTest, null, { timeout: 120000 });
 await p.click('#start-overlay');
 const boton = await p.waitForSelector('#bob-select.show .bs-go', { timeout: 30000 });
