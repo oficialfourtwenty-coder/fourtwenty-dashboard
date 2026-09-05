@@ -28,6 +28,23 @@ const GRAVITY = 14;
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const UP = new THREE.Vector3(0, 1, 0);
 
+// ── Modelos de BOB para probar ───────────────────────────────────────────────
+// Por defecto va el de siempre. `?bob=meshy` carga el modelo riggeado de Meshy
+// con el arreglo de pesos (la mano ya no viaja con la pierna). Es SOLO para
+// mirarlo: pesa 11,1 MB contra 0,72 MB del actual, asi que no puede quedar como
+// el de arranque sin bajarle triangulos antes.
+// El giro es porque cada modelo viene mirando para otro lado: el de Tripo trae
+// el frente en +x, el de Meshy ya viene en +z.
+const MODELOS_BOB = {
+  '': { archivo: 'assets/bob/bob.glb', giroY: -Math.PI / 2, pelaje: true },
+  meshy: { archivo: 'assets/bob/bob-meshy.glb', giroY: 0, pelaje: false },
+};
+function modeloElegido() {
+  let cual = '';
+  try { cual = new URLSearchParams(location.search).get('bob') ?? ''; } catch { /* sin location */ }
+  return MODELOS_BOB[cual] ?? MODELOS_BOB[''];
+}
+
 // Sombra blob (así se hacía en PS2: un círculo oscuro, nada de shadow maps).
 function makeBlobShadow() {
   const c = document.createElement('canvas');
@@ -96,8 +113,9 @@ export class Player {
     // Pelaje elegido en la pantalla de carga. Si nunca eligio, el original.
     this._skin = bobElegido() ?? BOB_SKINS[0];
 
+    this._modelo = modeloElegido();
     gltfLoader().load(
-      'assets/bob/bob.glb',
+      this._modelo.archivo,
       (gltf) => this._setupModel(gltf),
       undefined,
       () => {
@@ -112,9 +130,9 @@ export class Player {
 
   _setupModel(gltf) {
     const model = gltf.scene;
-    // el GLB de Tripo viene con el frente hacia +x → lo giramos para que
-    // mire hacia +z (la convención del rig; esto arregla el "se ve de costado")
-    model.rotation.y = -Math.PI / 2;
+    // Cada GLB viene mirando para otro lado; se lo gira para que mire a +z
+    // (la convención del rig; esto arregla el "se ve de costado").
+    model.rotation.y = this._modelo.giroY;
     // normalizar: que mida HEIGHT metros y apoye los pies en y=0
     normalizeGLTFHeight(model, HEIGHT);
 
@@ -124,7 +142,9 @@ export class Player {
     // El pelaje elegido en la pantalla de carga. Va antes que la animación
     // porque `aplicarSkin` clona el material, y clonarlo después dejaría al
     // BOB del jugador y a la estatua del piso 4 compartiendo el mismo.
-    aplicarSkin(model, this._skin);
+    // El modelo de Meshy viene SIN textura, y las recetas de pelaje repintan el
+    // atlas del BOB original: sin atlas no hay nada que repintar.
+    if (this._modelo.pelaje) aplicarSkin(model, this._skin);
 
     // ¿Trae clips de animación?
     // ⚠️ BOB tiene TRES: `BOB_idle`, `BOB_walk` y `BOB_run`. Hasta el 03/09 el
@@ -152,10 +172,13 @@ export class Player {
       // El de correr solo cuenta como separado si de verdad es otro clip.
       this.actions.run = runClip && walkClip ? usar(runClip) : null;
       this.actions.idle = idleClip ? usar(idleClip) : this.actions.walk;
-      this._singleClip = !idleClip;
+      // Sin clip de quieto, la pose neutra sale de pausar la caminata en su
+      // primer cuadro. Ojo: `actions.idle` es la MISMA accion que `walk`, asi
+      // que en ese caso no se le puede dar un peso propio.
+      this._sinIdle = !idleClip;
       this.actions.walk.weight = 1;
 
-      console.info(`bob.glb: ${clips.length} clips → idle="${idleClip?.name ?? '(pose neutra)'}" walk="${(walkClip || runClip || clips[0]).name}" run="${this.actions.run ? runClip.name : '(usa el de caminar)'}"`);
+      console.info(`${this._modelo.archivo}: ${clips.length} clips → idle="${idleClip?.name ?? '(pose neutra)'}" walk="${(walkClip || runClip || clips[0]).name}" run="${this.actions.run ? runClip.name : '(usa el de caminar)'}"`);
     } else {
       console.info('bob.glb sin animation clips — animación procedural activada');
     }
@@ -165,7 +188,7 @@ export class Player {
   // previa, y sirve si algún día se puede cambiar de pelaje dentro del juego).
   setSkin(skin) {
     this._skin = skin;
-    if (this.model && !this._isBillboard) aplicarSkin(this.model, skin);
+    if (this.model && !this._isBillboard && this._modelo.pelaje) aplicarSkin(this.model, skin);
   }
 
   // Círculo (radio RADIUS) vs AABB, con banda de altura — sin closures nuevas
@@ -234,12 +257,22 @@ export class Player {
 
     // 6) Animación
     if (this.mixer) {
-      if (this._singleClip) {
-        // un solo clip (caminata): se reproduce escalado por velocidad y se
-        // pausa en el primer frame (pose neutra) cuando BOB está quieto
-        this.actions.walk.weight = 1;
-        this.actions.walk.paused = speed < 0.05;
-        this.actions.walk.timeScale = THREE.MathUtils.clamp(speed / WALK, 0.6, 1.8);
+      if (this._sinIdle) {
+        // Sin clip de quieto: la pose neutra es la caminata pausada en su
+        // primer cuadro. Si además trae corrida, igual se mezclan las dos —
+        // antes este caso usaba SOLO la caminata acelerada y el clip de correr
+        // quedaba sin usar, que es el mismo error que tenía BOB al revés.
+        const quieto = speed < 0.05;
+        const aCorrer = this.actions.run
+          ? THREE.MathUtils.clamp((speed - WALK) / (RUN - WALK), 0, 1) : 0;
+        this.actions.walk.weight = 1 - aCorrer;
+        this.actions.walk.paused = quieto;
+        this.actions.walk.timeScale = THREE.MathUtils.clamp(speed / WALK, 0.6, 1.4);
+        if (this.actions.run) {
+          this.actions.run.weight = aCorrer;
+          this.actions.run.paused = quieto;
+          this.actions.run.timeScale = THREE.MathUtils.clamp(speed / RUN, 0.7, 1.3);
+        }
       } else if (this.actions.run) {
         // Tres clips: quieto → caminando → corriendo, mezclados por velocidad.
         // Dos tramos, no uno: de 0 a WALK se cruza idle con caminata, y de WALK
