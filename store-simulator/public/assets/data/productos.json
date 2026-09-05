@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "actualizado": "2026-07-13T18:09:17.123Z",
+  "origen": "tiendanube",
+  "colecciones": [
+    {
+      "id": "local",
+      "nombre": "LOCAL BURELA",
+      "piso": "local",
+      "categoriaTN": "Remeras Origen",
+      "productos": [
+        {
+          "id": "local-1",
+          "productId": null,
+          "nombre": "Remera \"fourtwenty\" n Yang",
+          "descripcion": "Remera de algodón peinado 24/1 con logo bordado. Prenda de ejemplo: editala desde el panel de administración (tecla P).",
+          "precio": "42000",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/obsesionnegra-ead94eeed8092d0d8c17742324893867-1024-1024.webp",
+          "link": "https://www.fourtwentyofficial.com/productos/fourtwenty-n-yang/",
+          "activo": true
+        },
+        {
+          "id": "local-2",
+          "productId": null,
+          "nombre": "Remera FOURTWENTY Blanca",
+          "descripcion": "Prenda de ejemplo: editala desde el panel de administración (tecla P).",
+          "precio": "25000",
+          "moneda": "ARS",
+          "imagen": "",
+          "link": "",
+          "activo": true
+        },
+        {
+          "id": "local-3",
+          "productId": null,
+          "nombre": "Remera FOURTWENTY Crema",
+          "descripcion": "Prenda de ejemplo: editala desde el panel de administración (tecla P).",
+          "precio": "25000",
+          "moneda": "ARS",
+          "imagen": "",
+          "link": "",
+          "activo": true
+        },
+        {
+          "id": "local-4",
+          "productId": null,
+          "nombre": "Buzo FOURTWENTY Navy",
+          "descripcion": "Prenda de ejemplo: editala desde el panel de administración (tecla P).",
+          "precio": "48000",
+          "moneda": "ARS",
+          "imagen": "",
+          "link": "",
+          "activo": true
+        },
+        {
+          "id": "local-5",
+          "productId": null,
+          "nombre": "Jean FOURTWENTY Blanco",
+          "descripcion": "Prenda de ejemplo: editala desde el panel de administración (tecla P).",
+          "precio": "62000",
+          "moneda": "ARS",
+          "imagen": "",
+          "link": "",
+          "activo": true
+        }
+      ]
+    },
+    {
+      "id": "origen",
+      "nombre": "ORIGEN",
+      "piso": 2,
+      "categoriaTN": "",
+      "productos": []
+    },
+    {
+      "id": "hoop",
+      "nombre": "HOOP SEASON",
+      "piso": 3,
+      "categoriaTN": "",
+      "productos": []
+    },
+    {
+      "id": "bob",
+      "nombre": "BOB",
+      "piso": 4,
+      "categoriaTN": "",
+      "productos": []
+    },
+    {
+      "id": "cultura",
+      "nombre": "CULTURA",
+      "piso": 5,
+      "categoriaTN": "",
+      "productos": []
+    }
+  ]
+}

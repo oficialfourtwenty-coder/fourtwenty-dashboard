@@ -1,0 +1,25 @@
+{
+  "name": "fourtwenty-store-simulator",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "tn:setup": "node tools/tiendanube/setup.mjs",
+    "tn:token": "node tools/tiendanube/get-token.mjs",
+    "tn:sync": "node tools/tiendanube/sync.mjs",
+    "smoke": "node tools/smoke/recorrido.mjs",
+    "diagnostico": "node tools/smoke/diagnostico-viajes.mjs",
+    "modelos": "node tools/smoke/verificar-modelos.mjs"
+  },
+  "dependencies": {
+    "three": "0.184.0"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.4.2",
+    "playwright": "1.49.1",
+    "vite": "^6.3.5"
+  }
+}
