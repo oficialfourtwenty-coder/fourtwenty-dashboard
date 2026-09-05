@@ -327,6 +327,33 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
   MALLA, no las texturas. Bajarlas es el proximo ahorro posible (~150-200 KB),
   pero toca al personaje protagonista: no hacerlo sin comparar a ojo.
 
+### El dedo pegado al muslo: son DOS problemas, no uno
+
+Aparece en todo modelo hecho con IA (Tripo, Meshy) porque se generan en pose de
+reposo con las manos apoyadas en los muslos. Arreglar uno solo no alcanza y la
+version "arreglada" se ve igual de mal:
+
+1. **Los PESOS.** Hay vertices pintados con la mano y con la pierna a la vez, asi
+   que la mano viaja con la pierna. Se arregla con
+   `tools/rig/despegar-cadenas.mjs`. ⚠️ **Sin umbral**: un residuo de 0,01 de
+   muslo en un vertice de la mano ya arrastra 160 mm en una zancada.
+2. **La PIEL.** La mano y el muslo son literalmente **la misma superficie**:
+   hay triangulos que los cosen. Los pesos correctos hacen que cada parte
+   obedezca a su hueso, pero la piel cosida se estira como una membrana entre
+   las dos. Se arregla con `tools/rig/descoser-manos.mjs`, que corta esos
+   triangulos y tapa los agujeros.
+
+Medido en el modelo de Meshy: los pesos solos bajaron el arrastre de la mano de
+7.888 mm a 0,0 mm **y aun asi se veia la membrana**. El corte la saco: pintando
+el reves de la piel de rojo, los pixeles de agujero pasan de 20,4% a 0,8%.
+
+⚠️ **Como se comprueba, y como NO.** Mirar la silueta no sirve: yo di por bueno
+un arreglo mirando fotos donde la membrana parecia una sombra. Lo que sirve es
+pintar el reves de rojo y contar pixeles, y comparar el **mismo cuadro exacto**
+de la animacion en las dos versiones — con distinto cuadro no se puede concluir
+nada. Y antes de creerle a cualquier medicion de movimiento, pasarle una pose de
+rotacion CERO: tiene que dar 0,0000 mm.
+
 ### Elegir BOB al cargar la partida
 
 - Al apretar **ENTRAR A BOBILONIA** aparece una pantalla con **10 BOBs** para
