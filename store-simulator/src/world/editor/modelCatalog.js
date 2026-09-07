@@ -1,6 +1,7 @@
 export const MODEL_CATALOG_MIGRATION_KEY = 'fourtwenty-editor-model-catalog-v3';
 
 const KENNEY_CITY_PATH = 'assets/furniture/kenney-modular-city';
+const BABILONIA_ASSETS_PATH = 'assets/babilonia';
 
 function kenneyBuilding(file, name, height) {
   return {
@@ -10,6 +11,20 @@ function kenneyBuilding(file, name, height) {
     castShadow: false,
     collidable: false,
     searchTerms: `kenney ciudad edificio modular ${name.toLowerCase()}`,
+  };
+}
+
+function babiloniaModel(folder, file, name, height, searchTerms, {
+  castShadow = true,
+  collidable = true,
+} = {}) {
+  return {
+    name: `Babilonia · ${name}`,
+    model: `${BABILONIA_ASSETS_PATH}/${folder}/${file}.glb`,
+    height,
+    castShadow,
+    collidable,
+    searchTerms: `babilonia optimizado fer ${searchTerms}`,
   };
 }
 
@@ -55,6 +70,38 @@ export const ADDABLE_MODELS = Object.freeze({
   'kenney-tower-b': kenneyBuilding('building-sample-tower-b', 'Torre B', 21),
   'kenney-tower-c': kenneyBuilding('building-sample-tower-c', 'Torre C', 27),
   'kenney-tower-d': kenneyBuilding('building-sample-tower-d', 'Torre D', 31),
+
+  // Pack optimizado por Fer. No se carga al iniciar: aparece en el buscador
+  // del World Editor al escribir "Babilonia" y recien ahi se descarga el GLB.
+  'babilonia-counter-checkout': babiloniaModel('muebles', 'counter-checkout-01', 'Mueble · Mostrador checkout', 1.05, 'mueble mostrador counter checkout caja'),
+  'babilonia-frame-fitting-double': babiloniaModel('muebles', 'frame-fitting-double-01', 'Mueble · Probador doble', 2.35, 'mueble probador fitting frame doble'),
+  'babilonia-mirror-fitting-01': babiloniaModel('muebles', 'mirror-fitting-01', 'Mueble · Espejo de probador 01', 2.1, 'mueble espejo mirror fitting probador'),
+  'babilonia-mirror-fitting-02': babiloniaModel('muebles', 'mirror-fitting-02', 'Mueble · Espejo de probador 02', 2.1, 'mueble espejo mirror fitting probador'),
+  'babilonia-rack-counter-display': babiloniaModel('muebles', 'rack-counter-display-01', 'Mueble · Rack exhibidor de mostrador', 1.35, 'mueble rack exhibidor display counter'),
+  'babilonia-rack-freestanding-ornate': babiloniaModel('muebles', 'rack-freestanding-ornate-01', 'Mueble · Rack central ornamentado', 1.8, 'mueble rack central freestanding ornate perchero'),
+  'babilonia-rack-wall-clothing-01': babiloniaModel('muebles', 'rack-wall-clothing-01', 'Mueble · Rack de pared 01', 2.1, 'mueble rack pared wall clothing perchero'),
+  'babilonia-rack-wall-clothing-02': babiloniaModel('muebles', 'rack-wall-clothing-02', 'Mueble · Rack de pared 02', 2.1, 'mueble rack pared wall clothing perchero'),
+  'babilonia-rack-wall-grid': babiloniaModel('muebles', 'rack-wall-grid-01', 'Mueble · Panel rack de pared', 2.1, 'mueble rack panel pared wall grid'),
+  'babilonia-rod-fitting-01': babiloniaModel('muebles', 'rod-fitting-01', 'Mueble · Barral de probador 01', 0.06, 'mueble barral rod fitting perchero'),
+  'babilonia-rod-fitting-02': babiloniaModel('muebles', 'rod-fitting-02', 'Mueble · Barral de probador 02', 0.06, 'mueble barral rod fitting perchero'),
+  'babilonia-shelf-bag-display': babiloniaModel('muebles', 'shelf-bag-display-01', 'Mueble · Estantería para bolsos', 2.2, 'mueble estanteria shelf bag display bolsos'),
+  'babilonia-shelf-folded-display': babiloniaModel('muebles', 'shelf-folded-display-01', 'Mueble · Estantería para ropa doblada', 2.2, 'mueble estanteria shelf folded display ropa'),
+  'babilonia-shelf-shoe-wall': babiloniaModel('muebles', 'shelf-shoe-wall-01', 'Mueble · Estantería de zapatos', 2.2, 'mueble estanteria shelf shoe wall zapatos'),
+  'babilonia-sofa-retail': babiloniaModel('muebles', 'sofa-retail-01', 'Mueble · Sofá de local', 0.9, 'mueble sofa sillon retail banco'),
+  'babilonia-stool-round-01': babiloniaModel('muebles', 'stool-round-01', 'Mueble · Banco redondo 01', 0.48, 'mueble banco stool round asiento'),
+  'babilonia-stool-round-02': babiloniaModel('muebles', 'stool-round-02', 'Mueble · Banco redondo 02', 0.48, 'mueble banco stool round asiento'),
+  'babilonia-table-display': babiloniaModel('muebles', 'table-display-01', 'Mueble · Mesa exhibidora', 0.85, 'mueble mesa table display exhibidor'),
+
+  'babilonia-arcade-car-racer': babiloniaModel('arcades-y-exhibidores', 'arcade-car-racer', 'Arcade · Carreras', 1.9, 'arcade auto carrera racer juego'),
+  'babilonia-arcade-light-gun': babiloniaModel('arcades-y-exhibidores', 'arcade-light-gun', 'Arcade · Disparos', 1.9, 'arcade disparos pistola light gun juego', { castShadow: false }),
+  'babilonia-arcade-pacman': babiloniaModel('arcades-y-exhibidores', 'arcade-pacman', 'Arcade · Pac-Man', 1.9, 'arcade pacman pac man juego'),
+  'babilonia-figure-zany-sword': babiloniaModel('arcades-y-exhibidores', 'arcade-zany-sword', 'Exhibidor · Figura Zany Sword', 1.9, 'exhibidor figura estatua zany sword fnaf'),
+  'babilonia-display-kobe': babiloniaModel('arcades-y-exhibidores', 'display-kobe', 'Exhibidor · Kobe', 2.45, 'exhibidor estatua kobe basket basketball', { castShadow: false }),
+
+  // Por ahora son modelos decorativos editables. No reemplazan los autos
+  // manejables ni agregan colisiones o interacciones de vehículo.
+  'babilonia-auto-pepper': babiloniaModel('autos', 'pepper-optimizado', 'Auto decorativo · Pepper', 1.5, 'auto carroceria pepper coche', { castShadow: false, collidable: false }),
+  'babilonia-auto-toyota': babiloniaModel('autos', 'toyota-optimizado', 'Auto decorativo · Toyota', 1.55, 'auto carroceria toyota coche', { castShadow: false, collidable: false }),
 });
 
 // ⚠️ LAS REMERAS NO VAN EN `ADDABLE_MODELS`.
