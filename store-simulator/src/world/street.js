@@ -13,7 +13,7 @@
 // (ver nota al final del archivo).
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
-import { towerFacade, veredaTile, hexPaver, greenShutter, whiteFloor, lightWood } from './textures.js';
+import { towerFacade, veredaGranitica, VEREDA_METROS, hexPaverPs3, HEX_METROS, greenShutter, whiteFloor, lightWood } from './textures.js';
 import { buildBurelaFrente } from './burelaFrente.js';
 import { buildBurelaAlrededores } from './burelaAlrededores.js';
 import { buildBurelaCielo } from './burelaCielo.js';
@@ -200,8 +200,31 @@ export function buildStreet(scene, { reflectionSize = 512, reflectionFrameInterv
   g.name = 'Burela 2570 · local y galeria';
   g.userData.editorWorldRoot = true;
 
-  const hexMat = new THREE.MeshStandardMaterial({ map: hexPaver(6, 3), roughness: 0.95 });
-  const veredaMat = new THREE.MeshStandardMaterial({ map: veredaTile(8, 4), roughness: 0.9 });
+  // ---- Los dos pisos de la vereda de Burela --------------------------------
+  // Recreados de las fotos que saco Kusher en el lugar: el baldoson hexagonal
+  // de hormigon y la baldosa granitica 20x20 con su cuadricula de cuadritos.
+  //
+  // ⚠️ LAS REPETICIONES SE CALCULAN, NO SE ELIGEN A OJO. Antes eran (6,3) y
+  // (8,4) fijas sobre planos de 57 x 3,5 m y 57 x 3,9 m: como el plano es 15
+  // veces mas ancho que largo y la repeticion era casi cuadrada, la baldosa
+  // salia ESTIRADA como 7 veces a lo ancho. Ahora cada textura declara cuantos
+  // metros cubre y la repeticion sale de dividir el tamano real del piso por
+  // esos metros, asi la baldosa mide lo mismo en los dos ejes.
+  const ANCHO_PISO = MAP_HALF_X * 2;
+  const LARGO_PLAZA = 3.5 - Z_STEP_FOOT;
+  const LARGO_VEREDA = Z_CURB - 3.5;
+  const hexTex = hexPaverPs3(ANCHO_PISO / HEX_METROS, LARGO_PLAZA / HEX_METROS);
+  const veredaTex = veredaGranitica(ANCHO_PISO / VEREDA_METROS, LARGO_VEREDA / VEREDA_METROS);
+  // El mapa de relieve es lo que hace que la junta se hunda de verdad en vez de
+  // ser un dibujo. `normalScale` bajo: es un piso, no una pared de piedra.
+  const hexMat = new THREE.MeshStandardMaterial({
+    map: hexTex.map, normalMap: hexTex.normalMap,
+    normalScale: new THREE.Vector2(0.6, 0.6), roughness: 0.95,
+  });
+  const veredaMat = new THREE.MeshStandardMaterial({
+    map: veredaTex.map, normalMap: veredaTex.normalMap,
+    normalScale: new THREE.Vector2(0.45, 0.45), roughness: 0.9,
+  });
   const hormigonMat = mat(HORMIGON, 0.9);
   const salviaMat = mat(SALVIA, 0.8);
   const cremaMat = mat(CREMA, 0.85);
