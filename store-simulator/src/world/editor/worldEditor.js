@@ -252,11 +252,17 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   function setScene(nextScene) {
     if (!nextScene || nextScene === currentScene) return;
     deselect();
+    // ⚠️ Las marcas verdes se borran al cambiar de escena. Si no, quedan
+    // apuntando a objetos de la escena anterior —que ya no existen— y al
+    // apretar Agrupar se armaria un conjunto de fantasmas.
+    borrarTodasLasMarcas();
     currentScene.remove(transformHelper);
     currentScene.remove(boxHelper);
+    currentScene.remove(grupoContornos);
     currentScene = nextScene;
     currentScene.add(transformHelper);
     currentScene.add(boxHelper);
+    currentScene.add(grupoContornos);
     refreshPanel();
   }
 
@@ -710,25 +716,70 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   const marcadasMundo = new Set();
   let gruposRestaurados = false;
 
+  // Contorno verde de lo marcado. Sin esto, marcar es invisible: se marcaban
+  // ocho casas y no habia forma de saber cuales, ni de darse cuenta de que una
+  // se habia desmarcado sin querer.
+  const contornos = new Map();
+  const grupoContornos = new THREE.Group();
+  grupoContornos.name = 'Editor · marcado para agrupar';
+  grupoContornos.userData.editorHelper = true;   // que el auto-registro lo ignore
+  currentScene.add(grupoContornos);
+
+  function dibujarMarca(id) {
+    const objeto = getEditableById(id)?.object3D;
+    if (!objeto) return;
+    objeto.updateMatrixWorld(true);
+    const caja = new THREE.Box3().setFromObject(objeto);
+    if (caja.isEmpty()) return;
+    const ayuda = new THREE.Box3Helper(caja, 0x39ff6a);
+    ayuda.userData.editorHelper = true;
+    grupoContornos.add(ayuda);
+    contornos.set(id, ayuda);
+  }
+
+  function borrarMarca(id) {
+    const ayuda = contornos.get(id);
+    if (!ayuda) return;
+    grupoContornos.remove(ayuda);
+    ayuda.geometry?.dispose?.();
+    contornos.delete(id);
+  }
+
+  function borrarTodasLasMarcas() {
+    for (const id of [...contornos.keys()]) borrarMarca(id);
+    marcadasMundo.clear();
+  }
+
+  function alternarMarca(id) {
+    if (grupos.esGrupo(id)) { setStatus('Eso ya es un conjunto. Usá Desagrupar.'); return; }
+    if (marcadasMundo.has(id)) {
+      marcadasMundo.delete(id);
+      borrarMarca(id);
+    } else {
+      marcadasMundo.add(id);
+      dibujarMarca(id);
+    }
+    const nombre = getEditableById(id)?.name ?? id;
+    setStatus(`${marcadasMundo.has(id) ? 'Marcado' : 'Desmarcado'}: ${nombre}`);
+    notaGrupos();
+  }
+
   function notaGrupos(extra = '') {
     const base = marcadasMundo.size
       ? `${marcadasMundo.size} objeto(s) marcado(s). Apretá Agrupar para juntarlos.`
-      : 'Seleccioná una casa y apretá Marcar. Marcá todas las que quieras y apretá Agrupar: después se mueven, rotan y escalan juntas con el cubo verde.';
+      : 'SHIFT + click va marcando en verde. Cuando tengas todas, apretá Agrupar: después se mueven, rotan y escalan juntas con el cubo verde.';
     panel.setGrupoNote(extra ? `${extra} · ${base}` : base);
   }
 
   function handleGrupoAction(accion) {
     if (accion === 'marcar') {
-      if (!state.selectedId) { setStatus('Seleccioná un objeto primero.'); return; }
-      if (grupos.esGrupo(state.selectedId)) { setStatus('Eso ya es un conjunto. Usá Desagrupar.'); return; }
-      if (marcadasMundo.has(state.selectedId)) marcadasMundo.delete(state.selectedId);
-      else marcadasMundo.add(state.selectedId);
-      notaGrupos();
+      if (!state.selectedId) { setStatus('Seleccioná un objeto primero, o usá SHIFT + click.'); return; }
+      alternarMarca(state.selectedId);
       return;
     }
 
     if (accion === 'limpiar') {
-      marcadasMundo.clear();
+      borrarTodasLasMarcas();
       notaGrupos('Marcas borradas');
       return;
     }
@@ -736,7 +787,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     if (accion === 'agrupar') {
       if (marcadasMundo.size < 2) { setStatus('Marcá al menos 2 objetos para agrupar.'); return; }
       const grupo = grupos.agrupar([...marcadasMundo]);
-      marcadasMundo.clear();
+      borrarTodasLasMarcas();
       if (!grupo) { setStatus('No se pudieron agrupar esos objetos.'); notaGrupos(); return; }
       selectId(grupo.id);
       notaGrupos(`${grupo.nombre}: ${grupo.miembros.length} objetos`);
@@ -930,7 +981,15 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     const root = findEditableRoot(hit);
     const id = root?.userData?.editorId;
     if (!id) return;
-    selectId(wantsGroupSelection(event) ? (parentForQuickGroup(id) ?? id) : id);
+
+    // ⚠️ SHIFT + click MARCA para agrupar (pedido de Kusher: "mantener SHIFT y
+    // ahi se van agrupando"). Antes SHIFT seleccionaba el grupo padre; esa
+    // funcion no se perdio, quedo en el boton PADRE del panel.
+    if (wantsGroupSelection(event)) {
+      alternarMarca(id);
+      return;
+    }
+    selectId(id);
   }
 
   function onKeyDown(event) {
