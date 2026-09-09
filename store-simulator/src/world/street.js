@@ -15,6 +15,8 @@ import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { towerFacade, veredaTile, hexPaver, greenShutter, whiteFloor, lightWood } from './textures.js';
 import { buildBurelaFrente } from './burelaFrente.js';
+import { buildBurelaAlrededores } from './burelaAlrededores.js';
+import { buildBurelaCielo } from './burelaCielo.js';
 import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
 import { addSampleGarments } from './garmentModels.js';
@@ -363,13 +365,26 @@ export function buildStreet(scene, { reflectionSize = 512, reflectionFrameInterv
   //
   // No lleva colision: queda del otro lado de la pared invisible de la calle,
   // asi que el jugador nunca la toca.
-  buildBurelaFrente(scene);
+  const frente = buildBurelaFrente(scene);
+
+  // ---- El barrio alrededor y el cielo ---------------------------------------
+  // Mismo motivo que arriba para que vayan ULTIMOS: los ids del editor se arman
+  // por posicion en el arbol.
+  //
+  // El barrio llena lo que quedaba vacio (la calle se cortaba en el aire a los
+  // dos lados, arriba de los techos de enfrente no habia nada, y desde arriba
+  // se veia el borde del mundo). El cielo reemplaza el color plano por una
+  // cupula con degradado, nubes y resplandor del sol.
+  buildBurelaAlrededores(scene);
+  const cielo = buildBurelaCielo(scene);
 
   return {
     colliders,
     selectors,
     whiteLightSwitch,
-    outdoorLighting: { scene, sun, hemisphere, sunDisc, moonDisc },
+    // `cielo` viaja con el resto de la iluminacion porque se repinta con la
+    // hora: `dayNightCycle` ya recibe este objeto en cada actualizacion.
+    outdoorLighting: { scene, sun, hemisphere, sunDisc, moonDisc, cielo, rellenoFrente: frente.relleno },
   };
 }
 

@@ -444,13 +444,30 @@ function terminar(cubos, mats, grupo, casa) {
 // soleada. Intensidad baja a proposito: la vereda de enfrente sigue siendo el
 // lado en sombra, solo que ahora se ve.
 // Medido: el frente del local cambia menos de 2/255 por canal.
+//
+// ⚠️ Y SIGUE AL RELOJ. La primera version tenia la intensidad clavada en 2.35:
+// a las 22 h el cielo estaba de noche y la cuadra de enfrente seguia iluminada
+// como al mediodia. Se ve de una en la captura nocturna. Ahora se escala con la
+// misma `lightIntensity` de la paleta (2,8 al mediodia, 0,52 de noche), con un
+// piso de 0,12 para que de noche quede oscura pero no negra — una fachada
+// totalmente negra se lee como un agujero, no como una casa a oscuras.
+const RELLENO_BASE = 2.35;
+const RELLENO_MEDIODIA = 2.8;   // lightIntensity de la paleta a las 12
+
 function luzDeRelleno(scene) {
-  const luz = new THREE.DirectionalLight(0xf2efe6, 2.35);
+  const luz = new THREE.DirectionalLight(0xf2efe6, RELLENO_BASE);
   luz.position.set(-6, 13, -14);
   luz.target.position.set(0, 3, Z_FACHADA);
   luz.castShadow = false;
   luz.name = 'Relleno cuadra de enfrente';
   scene.add(luz, luz.target);
+  return {
+    aplicar(palette) {
+      const factor = Math.max(palette.lightIntensity / RELLENO_MEDIODIA, 0.12);
+      luz.intensity = RELLENO_BASE * factor;
+      luz.color.copy(palette.light);
+    },
+  };
 }
 
 export function buildBurelaFrente(scene) {
@@ -459,7 +476,7 @@ export function buildBurelaFrente(scene) {
   raiz.name = 'Cuadra de enfrente Burela';
   scene.add(raiz);
 
-  luzDeRelleno(scene);
+  const relleno = luzDeRelleno(scene);
   vereda(raiz);
   arboles(raiz);
 
@@ -478,5 +495,5 @@ export function buildBurelaFrente(scene) {
     // mismo objeto: dos entradas distintas guardando la posicion del mismo
     // mueble, y al recargar ganaba la ultima. Se saco.
   }
-  return { raiz, mallas };
+  return { raiz, mallas, relleno };
 }

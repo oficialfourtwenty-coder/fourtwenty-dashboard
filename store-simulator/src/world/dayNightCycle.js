@@ -286,6 +286,13 @@ function applyLighting(lighting, renderer, sample) {
     lighting.moonDisc.position.copy(sample.moonPosition);
     lighting.moonDisc.visible = sample.moonVisible;
   }
+  // La cupula de cielo de Burela (`burelaCielo.js`) se repinta con esta misma
+  // paleta: degradado, nubes y resplandor del sol. Es opcional a proposito —
+  // las escenas de los pisos no la tienen y pasan un `lighting` sin ella.
+  lighting.cielo?.aplicar(sample);
+  // La luz de relleno de la cuadra de enfrente tambien: tenia la intensidad
+  // clavada y de noche las fachadas quedaban iluminadas como al mediodia.
+  lighting.rellenoFrente?.aplicar(palette);
 
   renderer.toneMappingExposure = palette.exposure;
 }
