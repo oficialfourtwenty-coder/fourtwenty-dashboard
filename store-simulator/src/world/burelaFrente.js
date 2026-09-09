@@ -186,10 +186,18 @@ function alaTejas(cubos, { x, y, w, vuelo = 0.55, color = '#9c4a34' }) {
 
 // ---- Las ocho casas de la cuadra ------------------------------------------
 // Cada una sale de una foto concreta. El comentario dice cual.
+//
+// ⚠️ EL ORDEN DE ESTA LISTA ES EL ORDEN EN QUE SE VEN, de izquierda a derecha,
+// parado en la vereda mirando el frente. NO es el orden de la `x` creciente:
+// mirando hacia +Z, la izquierda de la pantalla es +X, asi que la primera de la
+// lista es la de x MAS GRANDE (34.5) y la ultima la de x mas chica (-30).
+// Si hace falta volver a dar vuelta la cuadra entera, la cuenta es
+// `x nueva = 4.5 - x vieja` (espejo alrededor del centro de la cuadra): asi se
+// conservan los anchos y las casas siguen pegadas una a la otra.
 const CUADRA = [
   {
     id: 'casa-blanca-terraza', nombre: 'Enfrente · casa blanca con terraza (2593)',
-    x: -30, w: 9.5, foto: 'Burela 2593, la casa blanca de la izquierda',
+    x: 34.5, w: 9.5, foto: 'Burela 2593, la casa blanca de la izquierda',
     build(c, { x, w }) {
       const h = 6.2;
       caja(c, 'revoque', '#e9e6dc', w, h, FONDO, x, h / 2, Z_FACHADA + FONDO / 2, 1.6);
@@ -210,7 +218,7 @@ const CUADRA = [
   },
   {
     id: 'edificio-verde', nombre: 'Enfrente · edificio verde salvia con balcones (2593)',
-    x: -18.5, w: 14, foto: 'Burela 2593, el edificio verde de 3 pisos',
+    x: 23, w: 14, foto: 'Burela 2593, el edificio verde de 3 pisos',
     build(c, { x, w }) {
       const h = PISO * 3 + 0.6;
       caja(c, 'revoque', '#c3cbaa', w, h, FONDO, x, h / 2, Z_FACHADA + FONDO / 2, 1.8);
@@ -245,7 +253,7 @@ const CUADRA = [
   },
   {
     id: 'casa-marron', nombre: 'Enfrente · casa marron con persiana (2571)',
-    x: -8.0, w: 7.5, foto: 'Burela 2571, el frente marron liso con la persiana',
+    x: 12.5, w: 7.5, foto: 'Burela 2571, el frente marron liso con la persiana',
     build(c, { x, w }) {
       const h = 4.6;
       caja(c, 'revoque', '#a98a63', w, h, FONDO, x, h / 2, Z_FACHADA + FONDO / 2, 1.5);
@@ -260,7 +268,7 @@ const CUADRA = [
   },
   {
     id: 'casa-ladrillo-teja', nombre: 'Enfrente · casa de ladrillo con tejas (2561)',
-    x: -0.5, w: 8.0, foto: 'Burela 2561, ladrillo a la vista con techo de tejas',
+    x: 5, w: 8.0, foto: 'Burela 2561, ladrillo a la vista con techo de tejas',
     build(c, { x, w }) {
       const h = 6.0;
       caja(c, 'ladrillo', '#9c5f47', w, h, FONDO, x, h / 2, Z_FACHADA + FONDO / 2, 1.1);
@@ -279,7 +287,7 @@ const CUADRA = [
   },
   {
     id: 'casa-beige-alero', nombre: 'Enfrente · casa beige con alero de tejas (2541)',
-    x: 8.0, w: 7.5, foto: 'Burela 2541, la casa baja beige con el alerito de tejas',
+    x: -3.5, w: 7.5, foto: 'Burela 2541, la casa baja beige con el alerito de tejas',
     build(c, { x, w }) {
       const h = 3.7;
       caja(c, 'revoque', '#c9bda4', w, h, FONDO, x, h / 2, Z_FACHADA + FONDO / 2, 1.5);
@@ -294,7 +302,7 @@ const CUADRA = [
   },
   {
     id: 'casa-turquesa', nombre: 'Enfrente · casa blanca con puertas turquesa (2515)',
-    x: 16.5, w: 9.0, foto: 'Burela 2515, las puertas turquesa y el porton verde',
+    x: -12, w: 9.0, foto: 'Burela 2515, las puertas turquesa y el porton verde',
     build(c, { x, w }) {
       const h = 3.9;
       caja(c, 'revoque', '#dedbd0', w, h, FONDO, x, h / 2, Z_FACHADA + FONDO / 2, 1.5);
@@ -311,7 +319,7 @@ const CUADRA = [
   },
   {
     id: 'rotiseria-ladrillo', nombre: 'Enfrente · edificio de ladrillo con rotiseria (2502)',
-    x: 26.0, w: 10.0, foto: 'Burela 2502, el edificio de ladrillo con la rotiseria abajo',
+    x: -21.5, w: 10.0, foto: 'Burela 2502, el edificio de ladrillo con la rotiseria abajo',
     build(c, { x, w }) {
       const h = PISO * 3 + 0.4;
       caja(c, 'ladrillo', '#a05f42', w, h, FONDO, x, h / 2, Z_FACHADA + FONDO / 2, 1.1);
@@ -337,7 +345,7 @@ const CUADRA = [
   },
   {
     id: 'casa-zocalo-azul', nombre: 'Enfrente · casa blanca con zocalo celeste (2502)',
-    x: 34.5, w: 8.0, foto: 'Burela 2502, la casa blanca de zocalo celeste',
+    x: -30, w: 8.0, foto: 'Burela 2502, la casa blanca de zocalo celeste',
     build(c, { x, w }) {
       const h = 3.6;
       caja(c, 'revoque', '#e4e0d5', w, h, FONDO, x, h / 2, Z_FACHADA + FONDO / 2, 1.5);
@@ -381,7 +389,9 @@ function arboles(grupo) {
   // un boulevard de chupetines y tapaban justo el medio de cada fachada. En las
   // fotos hay pocos, desparejos, y varios flacos. Se eligen a mano y cada uno
   // sale de distinto tamaño.
-  for (const [x, escala] of [[-25.5, 1.0], [-13, 0.72], [-1.5, 0.95], [10.5, 0.68], [21, 1.05], [33, 0.8]]) {
+  // Espejados junto con las casas (x nueva = 4.5 - x vieja) para que cada arbol
+  // siga cayendo en el mismo hueco entre frentes que antes.
+  for (const [x, escala] of [[30, 1.0], [17.5, 0.72], [6, 0.95], [-6, 0.68], [-16.5, 1.05], [-28.5, 0.8]]) {
     const alto = (3.2 + ((n * 37) % 9) / 10) * escala;
     const t = new THREE.CylinderGeometry(0.15 * escala, 0.23 * escala, alto, 6);
     t.translate(x, alto / 2, Z_CORDON_FRENTE + 1.1);
