@@ -28,13 +28,15 @@ export function getDestination(id) {
 
 function buildSectionScene(destination, { environment, shadows, onElevatorEnter, onArcadeInteract }) {
   const theme = ps3ThemeForDestination(destination.id);
+  const isOrigin = destination.id === 1;
+  const originBounds = { minX: -5.52, maxX: 5.52, minZ: -3.72, maxZ: 11.68 };
   const scene = new THREE.Scene();
   scene.name = `Escena unica · ${destination.hudLabel}`;
   scene.userData.destinationId = destination.id;
   scene.userData.loadedSourceFloor = destination.sourceFloor;
   scene.userData.floorSize = {
-    width: PS3_FLOOR_PROFILE.width,
-    depth: PS3_FLOOR_PROFILE.depth,
+    width: isOrigin ? 11.8 : PS3_FLOOR_PROFILE.width,
+    depth: isOrigin ? 16.2 : PS3_FLOOR_PROFILE.depth,
     areaScale: 2.6,
   };
   scene.userData.visualProfile = `ps3-${theme.key}`;
@@ -53,16 +55,20 @@ function buildSectionScene(destination, { environment, shadows, onElevatorEnter,
     productFloor: destination.sourceFloor,
   }).colliders;
 
+  const elevatorPosition = isOrigin ? [0, 0, 10.85] : PS3_FLOOR_PROFILE.elevatorPosition;
+  const arcadeConfig = isOrigin
+    ? { ...PS3_FLOOR_PROFILE.arcadeConfig, position: [-4.65, 0, 7.25] }
+    : PS3_FLOOR_PROFILE.arcadeConfig;
   const elevator = new ElevatorController(scene, {
     id: `elevator-destination-${destination.id}`,
     name: `Ascensor · ${destination.hudLabel}`,
-    position: PS3_FLOOR_PROFILE.elevatorPosition,
+    position: elevatorPosition,
     rotationY: Math.PI,
     onEnter: onElevatorEnter,
   });
   const minigameArcade = createOriginArcade({
     onInteract: onArcadeInteract,
-    config: PS3_FLOOR_PROFILE.arcadeConfig,
+    config: arcadeConfig,
   });
   scene.add(minigameArcade.root);
 
@@ -83,7 +89,7 @@ function buildSectionScene(destination, { environment, shadows, onElevatorEnter,
     colliders,
     dynamicColliders: [],
     collidersDirty: true,
-    bounds: PS3_FLOOR_PROFILE.bounds,
+    bounds: isOrigin ? originBounds : PS3_FLOOR_PROFILE.bounds,
     ceiling: PS3_FLOOR_PROFILE.height,
     sampleGround: () => 0,
   };

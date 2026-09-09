@@ -10,6 +10,7 @@ import { bindProductVisual } from './productVisuals.js';
 import { bindGarmentToProduct } from './garmentPrints.js';
 import { bindStackToProduct, createDisplayTable, createFoldedStack } from './displayTable.js';
 import { getEditableById, registerEditableObject } from './editor/editableRegistry.js';
+import { addOriginStoreLayout } from './originStoreLayout.js';
 
 const MATERIAL_ROOT = 'assets/materials/terrace-ps3';
 const textureLoader = new THREE.TextureLoader();
@@ -277,6 +278,11 @@ function buildMaterials(theme) {
       roughnessMap: concreteArm,
       color: 0x5d615f,
       roughness: 0.92,
+    }),
+    originFloor: new THREE.MeshStandardMaterial({
+      color: 0xc5b7a5,
+      roughness: 0.78,
+      metalness: 0.03,
     }),
     brick: new THREE.MeshStandardMaterial({
       map: brickColor,
@@ -931,12 +937,14 @@ function addOriginDetails(root, mats, theme, productFloor = null) {
 // invisible.
 function addOriginFloor(root, mats, theme) {
   const b = PS3_FLOOR_PROFILE.bounds;
-  const ancho = (b.maxX - b.minX) + 0.8;
-  const fondo = (b.maxZ - b.minZ) + 0.8;
-  const centroX = (b.minX + b.maxX) / 2;
-  const centroZ = (b.minZ + b.maxZ) / 2;
+  const esOrigen = theme.key === 'origen';
+  const ancho = esOrigen ? 11.8 : (b.maxX - b.minX) + 0.8;
+  const fondo = esOrigen ? 16.2 : (b.maxZ - b.minZ) + 0.8;
+  const centroX = esOrigen ? 0 : (b.minX + b.maxX) / 2;
+  const centroZ = esOrigen ? 3.95 : (b.minZ + b.maxZ) / 2;
 
-  const piso = roundedBox(ancho, 0.3, fondo, mats.concreteDark ?? mats.concrete, 0.1, 2);
+  const materialPiso = esOrigen ? mats.originFloor : (mats.concreteDark ?? mats.concrete);
+  const piso = roundedBox(ancho, 0.3, fondo, materialPiso, 0.1, 2);
   piso.name = themedName(theme, 'piso');
   piso.position.set(centroX, -0.15, centroZ);
   piso.receiveShadow = true;
@@ -1351,6 +1359,8 @@ function addThemeDetails(root, mats, theme, productFloor = null) {
   // si hay que volver atras; hoy no las llama nadie.
   addOriginFloor(root, mats, theme);
 
+  if (theme?.key === 'origen') addOriginStoreLayout(root);
+
   // ÚNICA excepción a "los pisos arrancan vacíos": el exhibidor de Kobe va
   // solo en HOOP SEASON (pedido de Kusher, 03/09). Es el objeto más caro del
   // pack de Fer —1,6 MB y 45 mallas— así que se carga en UN piso, no en los
@@ -1385,10 +1395,11 @@ function addKobeDisplay(root) {
 }
 
 function addLights(scene, shadows, mats, theme) {
-  scene.add(new THREE.HemisphereLight(0xcde1e2, 0x3f352d, 1.08));
-  scene.add(new THREE.AmbientLight(0xfff7ea, 0.22));
+  const lightScale = theme.key === 'origen' ? 0.68 : 1;
+  scene.add(new THREE.HemisphereLight(0xcde1e2, 0x3f352d, 1.08 * lightScale));
+  scene.add(new THREE.AmbientLight(0xfff7ea, 0.22 * lightScale));
 
-  const daylight = new THREE.DirectionalLight(0xffe2b8, 1.72);
+  const daylight = new THREE.DirectionalLight(0xffe2b8, 1.72 * lightScale);
   daylight.position.set(-7, 10, -8);
   daylight.target.position.set(0, 0.7, 4.5);
   daylight.castShadow = shadows;
@@ -1405,7 +1416,7 @@ function addLights(scene, shadows, mats, theme) {
   }
   scene.add(daylight, daylight.target);
 
-  const frontFill = new THREE.DirectionalLight(0xbfd8e2, 0.72);
+  const frontFill = new THREE.DirectionalLight(0xbfd8e2, 0.72 * lightScale);
   frontFill.position.set(6, 7, -8);
   frontFill.target.position.set(0, 1.1, 4.2);
   scene.add(frontFill, frontFill.target);
@@ -1415,13 +1426,13 @@ function addLights(scene, shadows, mats, theme) {
     [3.1, 4.8, 0xd9ecdf, 5.8],
     [0, 10.2, 0xffcca0, 6.2],
   ]) {
-    const spot = new THREE.SpotLight(color, intensity, 8.2, 0.8, 0.72, 1.4);
+    const spot = new THREE.SpotLight(color, intensity * lightScale, 8.2, 0.8, 0.72, 1.4);
     spot.position.set(x, 3.72, z);
     spot.target.position.set(x * 0.82, 0, z + 0.35);
     scene.add(spot, spot.target);
   }
 
-  const signGlow = new THREE.PointLight(theme.accentHex, 1.8, 5.5, 2);
+  const signGlow = new THREE.PointLight(theme.accentHex, 1.8 * lightScale, 5.5, 2);
   signGlow.position.set(0, 2.8, 12.2);
   scene.add(signGlow);
 
@@ -1671,7 +1682,7 @@ export function buildPs3FloorScene(scene, {
   createPlanter(root, { x: 5.72, z: -3.85, scale: 0.9, mats, theme });
   }
   addThemeDetails(root, mats, theme, productFloor);
-  addArtworkFrames(root, mats, theme);
+  if (theme.key !== 'origen') addArtworkFrames(root, mats, theme);
 
   root.traverse((object) => {
     if (!object.isMesh && !object.isInstancedMesh) return;
