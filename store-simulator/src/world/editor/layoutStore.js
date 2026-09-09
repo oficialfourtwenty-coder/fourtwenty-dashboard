@@ -1,6 +1,7 @@
 const BASE_LAYOUT_URL = '/assets/layouts/furniture-layout.json';
 const LOCAL_STORAGE_KEY = 'fourtwenty-editor-layout-burela-retro';
 const HOOP_BASE_MIGRATION_KEY = 'fourtwenty-editor-hoop-base-all-floors-v1';
+const ORIGIN_RESET_MIGRATION_KEY = 'fourtwenty-editor-origin-reset-v1';
 const HOOP_DESTINATION_ID = 2;
 const HOOP_BASE_TARGETS = [1, 3, 4, 5];
 
@@ -102,9 +103,29 @@ function migrateHoopBaseLayout(layout) {
   }
 }
 
+function migrateOriginToUploadedBase(layout) {
+  try {
+    if (localStorage.getItem(ORIGIN_RESET_MIGRATION_KEY) === '1') return layout;
+    const migrated = layout.filter((item) => {
+      const id = String(item?.id ?? '');
+      return !id.startsWith('destino-1:')
+        && id !== 'elevator-destination-1'
+        && id !== 'origin-minigame-arcade';
+    });
+    localStorage.setItem(LOCAL_STORAGE_KEY, formatLayoutJSON(migrated));
+    localStorage.setItem(ORIGIN_RESET_MIGRATION_KEY, '1');
+    console.info('FOURTWENTY editor: ORIGEN restaurado a la version subida.');
+    return migrated;
+  } catch (error) {
+    console.warn('No se pudo restaurar ORIGEN a la version subida.', error);
+    return layout;
+  }
+}
+
 export async function loadInitialLayout() {
   const local = getLocalLayout();
-  if (local) return migrateHoopBaseLayout(local);
+  if (local) return migrateOriginToUploadedBase(migrateHoopBaseLayout(local));
+  try { localStorage.setItem(ORIGIN_RESET_MIGRATION_KEY, '1'); } catch { /* sin persistencia */ }
   return loadBaseLayout();
 }
 
@@ -147,6 +168,7 @@ export function clearLocalLayout() {
   try {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
     localStorage.removeItem(HOOP_BASE_MIGRATION_KEY);
+    localStorage.removeItem(ORIGIN_RESET_MIGRATION_KEY);
     return true;
   } catch (error) {
     console.warn('No se pudo limpiar el layout local.', error);
