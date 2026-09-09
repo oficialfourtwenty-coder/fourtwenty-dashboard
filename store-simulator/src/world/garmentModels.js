@@ -37,6 +37,12 @@ const cache = new Map();
 const ROTACION_DE_PIE = -Math.PI / 2;
 
 export const PRENDAS_GLB = Object.freeze({
+  percha: {
+    nombre: 'Percha',
+    archivo: '/assets/garments/remera-oversize.glb',
+    soloPercha: true,
+    muestra: false,
+  },
   'remera-oversize': {
     nombre: 'Remera oversize',
     archivo: '/assets/garments/remera-oversize.glb',
@@ -138,6 +144,14 @@ export async function addGarmentModel(scene, clave, {
   modelo.rotation.x = preset.rotacionX ?? ROTACION_DE_PIE;
   root.add(modelo);
 
+  if (preset.soloPercha) {
+    const telaParaQuitar = [];
+    modelo.traverse((hijo) => {
+      if (hijo.isMesh && /^Remera/i.test(hijo.name)) telaParaQuitar.push(hijo);
+    });
+    telaParaQuitar.forEach((hijo) => hijo.removeFromParent());
+  }
+
   // El material se clona por prenda: si no, cambiarle el color a una se lo
   // cambia a TODAS, porque el clon del GLB comparte el material del original.
   let tela = null;
@@ -146,7 +160,7 @@ export async function addGarmentModel(scene, clave, {
     hijo.castShadow = true;
     hijo.receiveShadow = true;
     hijo.material = hijo.material.clone();
-    if (preset.tela.test(hijo.name)) tela = hijo;
+    if (preset.tela?.test(hijo.name)) tela = hijo;
   });
 
   root.position.fromArray(position);
@@ -156,15 +170,17 @@ export async function addGarmentModel(scene, clave, {
   root.scale.setScalar(scale * (preset.escala ?? 1));
   root.userData.editorCollider = false;   // una prenda colgada no frena a BOB
   // Marca para el editor de prendas: con esto sabe cual malla pintar.
-  root.userData.garmentModel = { clave, telaNombre: tela?.name ?? null };
+  if (!preset.soloPercha) root.userData.garmentModel = { clave, telaNombre: tela?.name ?? null };
   scene.add(root);
 
   // ⚠️ El diseño guardado se aplica ACA y no al terminar de armar la escena.
   // El GLB se baja de forma asincronica: cuando `buildPs3FloorScene` llama a
   // `applySavedGlbGarmentDesigns` la prenda todavia no existe en la escena, asi
   // que no la encontraba y el diseño de Kusher no aparecia nunca.
-  const diseño = diseñoDe(root);
-  if (diseño.imagen || diseño.color) pintarPrenda(root, diseño);
+  if (!preset.soloPercha) {
+    const diseño = diseñoDe(root);
+    if (diseño.imagen || diseño.color) pintarPrenda(root, diseño);
+  }
 
   registerEditableObject({
     id: id ?? `prenda:${clave}:${Math.random().toString(36).slice(2, 8)}`,
@@ -198,7 +214,7 @@ export function addSampleGarments(scene, {
   // dejaba una de las dos colgando al lado del barral, en el aire.
   eje = 'x',
 } = {}) {
-  const muestras = Object.keys(PRENDAS_GLB);
+  const muestras = Object.keys(PRENDAS_GLB).filter((clave) => PRENDAS_GLB[clave].muestra !== false);
   muestras.forEach((clave, i) => {
     const salto = i * 0.32;
     addGarmentModel(scene, clave, {

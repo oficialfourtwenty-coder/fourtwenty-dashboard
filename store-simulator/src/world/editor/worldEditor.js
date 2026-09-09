@@ -154,7 +154,11 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
         key: `mueble:${clave}`, name: m.nombre, searchTerms: m.buscar,
       })),
       ...Object.entries(PRENDAS_GLB).map(([clave, p]) => ({
-        key: `prenda:${clave}`, name: p.nombre, searchTerms: 'remera prenda ropa colgar fer chelo',
+        key: `prenda:${clave}`,
+        name: p.nombre,
+        searchTerms: clave === 'percha'
+          ? 'percha hanger gancho ropa colgar'
+          : 'remera prenda ropa colgar fer chelo',
       })),
     ],
     onMode: setMode,
@@ -563,7 +567,9 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       if (!puesta) { setStatus(`No se pudo colgar ${clave}.`); return; }
       selectId(puesta.root.userData.editorId);
       notifyWorldChanged();
-      saveNow(`${puesta.root.name} colgada. Click derecho para diseñarla.`);
+      saveNow(clave === 'percha'
+        ? `${puesta.root.name} agregada.`
+        : `${puesta.root.name} colgada. Click derecho para diseñarla.`);
       return;
     }
 
