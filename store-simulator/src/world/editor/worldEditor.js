@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
+import { crearSistemaDeGrupos } from './gruposDeMundo.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { addFurnitureItem } from '../furniture.js';
 import { createPiece, groupPieces, mergePiece, PIEZAS, setPieceTexture } from './pieceBuilder.js';
@@ -182,6 +183,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     onAddModel: addModelFromPreset,
     onPiece: handlePieceAction,
     onPieceTexture: applyPieceTexture,
+    onGrupo: handleGrupoAction,
   });
 
   // Numeracion por tipo de prenda, para que cada copia tenga nombre propio.
@@ -276,6 +278,14 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       orbit.enabled = true;
       orbit.update();
       panel.show();
+      // Los conjuntos guardados se rearman recien aca: para que el mango caiga
+      // en el centro de verdad, el layout ya tiene que estar aplicado. Al abrir
+      // el editor eso siempre paso.
+      if (!gruposRestaurados) {
+        gruposRestaurados = true;
+        const cuantos = grupos.restaurar();
+        if (cuantos) notaGrupos(`${cuantos} conjunto(s) guardado(s)`);
+      }
       setStatus('Edit Mode activo. Click izq: orbitar / seleccionar · click der: pan · rueda: zoom.');
     } else {
       deselect();
@@ -689,6 +699,65 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     }
   }
 
+  // ---- Juntar objetos del mundo (ver editor/gruposDeMundo.js) --------------
+  // Lo pidio Kusher para poder correr una cuadra entera de una en vez de casa
+  // por casa. El grupo NO reparenta nada: es una lista de ids y un mango que
+  // reparte el movimiento. Ver la nota larga de ese archivo.
+  const grupos = crearSistemaDeGrupos({
+    getScene: () => currentScene,
+    onCambio: () => { notifyWorldChanged(); refreshPanel(); },
+  });
+  const marcadasMundo = new Set();
+  let gruposRestaurados = false;
+
+  function notaGrupos(extra = '') {
+    const base = marcadasMundo.size
+      ? `${marcadasMundo.size} objeto(s) marcado(s). Apretá Agrupar para juntarlos.`
+      : 'Seleccioná una casa y apretá Marcar. Marcá todas las que quieras y apretá Agrupar: después se mueven, rotan y escalan juntas con el cubo verde.';
+    panel.setGrupoNote(extra ? `${extra} · ${base}` : base);
+  }
+
+  function handleGrupoAction(accion) {
+    if (accion === 'marcar') {
+      if (!state.selectedId) { setStatus('Seleccioná un objeto primero.'); return; }
+      if (grupos.esGrupo(state.selectedId)) { setStatus('Eso ya es un conjunto. Usá Desagrupar.'); return; }
+      if (marcadasMundo.has(state.selectedId)) marcadasMundo.delete(state.selectedId);
+      else marcadasMundo.add(state.selectedId);
+      notaGrupos();
+      return;
+    }
+
+    if (accion === 'limpiar') {
+      marcadasMundo.clear();
+      notaGrupos('Marcas borradas');
+      return;
+    }
+
+    if (accion === 'agrupar') {
+      if (marcadasMundo.size < 2) { setStatus('Marcá al menos 2 objetos para agrupar.'); return; }
+      const grupo = grupos.agrupar([...marcadasMundo]);
+      marcadasMundo.clear();
+      if (!grupo) { setStatus('No se pudieron agrupar esos objetos.'); notaGrupos(); return; }
+      selectId(grupo.id);
+      notaGrupos(`${grupo.nombre}: ${grupo.miembros.length} objetos`);
+      saveNow(`${grupo.nombre} armado con ${grupo.miembros.length} objetos. Movelo con el cubo verde.`);
+      return;
+    }
+
+    if (accion === 'desagrupar') {
+      if (!state.selectedId || !grupos.esGrupo(state.selectedId)) {
+        setStatus('Seleccioná un conjunto (el cubo verde) para desagruparlo.');
+        return;
+      }
+      const nombre = getEditableById(state.selectedId)?.name ?? 'Conjunto';
+      grupos.desagrupar(state.selectedId);
+      deselect();
+      notaGrupos(`${nombre} deshecho`);
+      setStatus(`${nombre} deshecho. Los objetos quedaron donde estaban.`);
+      return;
+    }
+  }
+
   async function applyPieceTexture(file) {
     if (!state.selectedId) { setStatus('Seleccioná una pieza primero.'); return; }
     setStatus('Procesando la imagen…');
@@ -931,6 +1000,9 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     if (!event.value && state.selectedObject) saveNow('Layout local guardado.');
   });
   transformControls.addEventListener('objectChange', () => {
+    // Si lo que se movio es el mango de un conjunto, primero se reparte el
+    // movimiento entre sus miembros y recien despues se refresca todo.
+    if (state.selectedId) grupos.propagar(state.selectedId);
     updateHelper();
     refreshSelected(); // liviano: no reconstruye la lista en cada frame de drag
     notifyWorldChanged();
@@ -949,6 +1021,11 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     setEnabled,
     setScene,
     selectId,
+    // Se expone para poder VERIFICAR desde afuera que el conjunto se mueve
+    // entero: arrastrar el gizmo no se puede simular en el navegador de las
+    // pruebas, asi que la unica forma de comprobarlo es mover el mango a mano
+    // y pedirle que reparta. Mismo criterio que `window.__colliders()`.
+    grupos,
     dispose() {
       clearTimeout(saveTimer);
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);

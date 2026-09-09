@@ -158,6 +158,17 @@ export function createEditorPanel(callbacks = {}) {
         <div class="we-color-note" data-field="pieceNote">Marcá varias piezas y apretá Agrupar. Fusionar las junta en una sola malla cuando terminaste.</div>
       </div>
 
+      <div class="we-section we-build">
+        <div class="we-label">Juntar objetos</div>
+        <div class="we-grid">
+          ${button('Marcar', 'grupo:marcar')}
+          ${button('Agrupar', 'grupo:agrupar')}
+          ${button('Soltar marcas', 'grupo:limpiar')}
+          ${button('Desagrupar', 'grupo:desagrupar')}
+        </div>
+        <div class="we-color-note" data-field="grupoNote">Seleccioná una casa y apretá Marcar. Marcá todas las que quieras y apretá Agrupar: después se mueven, rotan y escalan juntas con el cubo verde.</div>
+      </div>
+
       <div class="we-section">
         <div class="we-label">Objects <span data-field="objectCount"></span></div>
         <input type="text" data-field="filter" placeholder="filtrar por nombre…" autocomplete="off" spellcheck="false">
@@ -244,6 +255,7 @@ export function createEditorPanel(callbacks = {}) {
     lightRangeSection: root.querySelector('[data-field="lightRangeSection"]'),
     pieceTexture: root.querySelector('[data-field="pieceTexture"]'),
     pieceNote: root.querySelector('[data-field="pieceNote"]'),
+    grupoNote: root.querySelector('[data-field="grupoNote"]'),
   };
 
   // lista con filtro: con TODO el mundo registrado son cientos de objetos
@@ -333,6 +345,7 @@ export function createEditorPanel(callbacks = {}) {
 
   fields.filter.addEventListener('input', renderObjectList);
   const setPieceNote = (texto) => { fields.pieceNote.textContent = texto; };
+  const setGrupoNote = (texto) => { fields.grupoNote.textContent = texto; };
 
   fields.pieceTexture.addEventListener('change', (event) => {
     const file = event.target.files?.[0];
@@ -359,6 +372,7 @@ export function createEditorPanel(callbacks = {}) {
     const action = actionButton.dataset.action;
     if (action === 'piece:textura') { fields.pieceTexture.click(); return; }
     if (action.startsWith('piece:')) { callbacks.onPiece?.(action.split(':')[1]); return; }
+    if (action.startsWith('grupo:')) { callbacks.onGrupo?.(action.split(':')[1]); return; }
     if (action.startsWith('mode:')) callbacks.onMode?.(action.split(':')[1]);
     else if (action.startsWith('light-range:')) callbacks.onLightRangeInput?.(Number(action.split(':')[1]));
     else if (action === 'space') callbacks.onToggleSpace?.();
@@ -427,6 +441,7 @@ export function createEditorPanel(callbacks = {}) {
   return {
     root,
     setPieceNote,
+    setGrupoNote,
     show() { root.classList.add('is-visible'); },
     hide() { root.classList.remove('is-visible'); },
     setState(state) {
