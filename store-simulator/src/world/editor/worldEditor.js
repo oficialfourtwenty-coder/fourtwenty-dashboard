@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { crearSistemaDeGrupos } from './gruposDeMundo.js';
+import { crearHistorial, fotoDeTransform, aplicarFoto } from './deshacer.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { addFurnitureItem } from '../furniture.js';
 import { createPiece, groupPieces, mergePiece, PIEZAS, setPieceTexture } from './pieceBuilder.js';
@@ -716,6 +717,42 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   const marcadasMundo = new Set();
   let gruposRestaurados = false;
 
+  // ---- Deshacer (Ctrl+Z / Cmd+Z) — ver editor/deshacer.js -------------------
+  const historial = crearHistorial();
+
+  function deshacerUltimo() {
+    const que = historial.deshacer();
+    if (!que) { setStatus('No hay nada mas para deshacer.'); return; }
+    updateHelper();
+    notifyWorldChanged();
+    refreshPanel();
+    saveNow(`Deshecho: ${que}`);
+  }
+
+  // Foto de un objeto y, si es el mango de un conjunto, TAMBIEN de sus
+  // miembros. Sin esto, deshacer el movimiento de un conjunto devolvia el cubo
+  // verde a su lugar y dejaba las ocho casas movidas.
+  function fotoParaDeshacer(id) {
+    const entry = getEditableById(id);
+    if (!entry?.object3D) return null;
+    const fotos = [[id, fotoDeTransform(entry.object3D)]];
+    if (grupos.esGrupo(id)) {
+      for (const miembroId of grupos.miembrosDe(id)) {
+        const m = getEditableById(miembroId)?.object3D;
+        if (m) fotos.push([miembroId, fotoDeTransform(m)]);
+      }
+    }
+    return fotos;
+  }
+
+  function restaurarFotos(fotos) {
+    for (const [id, foto] of fotos) {
+      const o = getEditableById(id)?.object3D;
+      if (o) aplicarFoto(o, foto);
+    }
+    grupos.reanclar?.(fotos[0][0]);
+  }
+
   // Contorno verde de lo marcado. Sin esto, marcar es invisible: se marcaban
   // ocho casas y no habia forma de saber cuales, ni de darse cuenta de que una
   // se habia desmarcado sin querer.
@@ -790,6 +827,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       borrarTodasLasMarcas();
       if (!grupo) { setStatus('No se pudieron agrupar esos objetos.'); notaGrupos(); return; }
       selectId(grupo.id);
+      historial.anotar(`agrupar ${grupo.miembros.length} objetos`, () => { grupos.desagrupar(grupo.id); deselect(); });
       notaGrupos(`${grupo.nombre}: ${grupo.miembros.length} objetos`);
       saveNow(`${grupo.nombre} armado con ${grupo.miembros.length} objetos. Movelo con el cubo verde.`);
       return;
@@ -910,17 +948,44 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     }
     selectId(entry.id);
     notifyWorldChanged();
-    saveNow(`Duplicado: ${entry.name}.`);
+    historial.anotar(`duplicar ${entry.name}`, () => { removeEditable(entry.id); deselect(); });
+    saveNow(`Duplicado: ${entry.name}. Ctrl+Z lo saca.`);
   }
 
   function deleteSelected() {
     if (!state.selectedId) return;
-    const entry = getEditableById(state.selectedId);
-    const result = removeEditable(state.selectedId);
+    const id = state.selectedId;
+    const entry = getEditableById(id);
+    // ⚠️ Se guarda TODO lo necesario ANTES de borrar: el objeto, de que padre
+    // colgaba y en que posicion de la lista de hijos. El indice importa porque
+    // el editor arma los ids por posicion en el arbol: si al restaurar la copia
+    // se agrega al final en vez de en su lugar, los ids de sus hermanos se
+    // corren y el layout guardado se aplica a los objetos equivocados.
+    const objeto = entry?.object3D;
+    const padre = objeto?.parent ?? null;
+    const indice = padre ? padre.children.indexOf(objeto) : -1;
+    const copiaEntrada = entry ? { ...entry } : null;
+    const nombre = entry?.name ?? id;
+
+    const result = removeEditable(id);
     deselect();
     notifyWorldChanged();
-    if (result === 'removed') saveNow(`${entry.name} borrado.`);
-    else if (result === 'hidden') saveNow(`${entry.name} oculto (en la lista podes volver a mostrarlo).`);
+
+    if (result === 'removed' && padre && copiaEntrada) {
+      historial.anotar(`borrar ${nombre}`, () => {
+        if (indice >= 0 && indice <= padre.children.length) {
+          padre.children.splice(indice, 0, objeto);
+          objeto.parent = padre;
+        } else {
+          padre.add(objeto);
+        }
+        registerEditableObject(copiaEntrada);
+      });
+      saveNow(`${nombre} borrado. Ctrl+Z lo trae de vuelta.`);
+    } else if (result === 'hidden') {
+      historial.anotar(`ocultar ${nombre}`, () => setEditableVisible(id, true));
+      saveNow(`${nombre} oculto. Ctrl+Z lo vuelve a mostrar.`);
+    }
   }
 
   function toggleSelectedVisible() {
@@ -1025,6 +1090,12 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
         event.preventDefault();
         event.stopPropagation();
         duplicateSelected();
+      } else if (event.code === 'KeyZ' && !typing) {
+        // Ctrl+Z en Windows/Linux y Cmd+Z en la Mac de Kusher: los dos entran
+        // por aca porque la guarda de arriba mira metaKey O ctrlKey.
+        event.preventDefault();
+        event.stopPropagation();
+        deshacerUltimo();
       }
       return;
     }
@@ -1052,11 +1123,25 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     if (event.code === 'Delete' || event.code === 'Backspace') deleteSelected();
   }
 
+  // Foto de antes de empezar a arrastrar. Se anota UNA vuelta atras por
+  // arrastre y no una por cuadro: si no, deshacer un movimiento tomaria
+  // cientos de Ctrl+Z para volver al punto de partida.
+  let fotoAntesDeArrastrar = null;
   transformControls.addEventListener('dragging-changed', (event) => {
     input?.keys?.clear?.();
     // mientras se arrastra el gizmo, la órbita no debe pelear por el mouse
     orbit.enabled = state.enabled && !event.value;
-    if (!event.value && state.selectedObject) saveNow('Layout local guardado.');
+    if (event.value) {
+      fotoAntesDeArrastrar = state.selectedId ? fotoParaDeshacer(state.selectedId) : null;
+      return;
+    }
+    if (fotoAntesDeArrastrar?.length) {
+      const fotos = fotoAntesDeArrastrar;
+      const nombre = getEditableById(fotos[0][0])?.name ?? 'objeto';
+      historial.anotar(`mover ${nombre}`, () => restaurarFotos(fotos));
+      fotoAntesDeArrastrar = null;
+    }
+    if (state.selectedObject) saveNow('Layout local guardado.');
   });
   transformControls.addEventListener('objectChange', () => {
     // Si lo que se movio es el mango de un conjunto, primero se reparte el

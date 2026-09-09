@@ -185,6 +185,21 @@ export function crearSistemaDeGrupos({ getScene, onCambio }) {
 
   function esGrupo(id) { return grupos.has(id); }
 
+  function miembrosDe(id) { return grupos.get(id)?.miembros ?? []; }
+
+  /**
+   * Vuelve a tomar como punto de partida la posicion actual del mango.
+   * ⚠️ Hace falta despues de un DESHACER: si el mango vuelve a su lugar viejo
+   * sin avisar, el proximo arrastre calcularia el delta contra la posicion de
+   * antes de deshacer y el conjunto pegaria un salto.
+   */
+  function reanclar(id) {
+    const grupo = grupos.get(id);
+    if (!grupo) return;
+    grupo.mango.updateMatrixWorld(true);
+    grupo.previaInversa.copy(grupo.mango.matrixWorld).invert();
+  }
+
   function nombresDe(id) {
     const grupo = grupos.get(id);
     if (!grupo) return [];
@@ -218,5 +233,5 @@ export function crearSistemaDeGrupos({ getScene, onCambio }) {
     return [...grupos.values()].map((g) => ({ id: g.id, nombre: g.nombre, miembros: g.miembros }));
   }
 
-  return { agrupar, desagrupar, propagar, esGrupo, nombresDe, restaurar, listar, exportar };
+  return { agrupar, desagrupar, propagar, esGrupo, miembrosDe, reanclar, nombresDe, restaurar, listar, exportar };
 }

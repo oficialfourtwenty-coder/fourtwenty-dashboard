@@ -110,7 +110,7 @@ export function createEditorPanel(callbacks = {}) {
     <div class="we-head">
       <div class="we-title">FOURTWENTY WORLD EDITOR</div>
       <div class="we-sub">T/Tab ON-OFF · 1 move · 2 rotate · 3 scale · Q space · G snap<br>
-      Ctrl+C copiar · Ctrl+V pegar · Ctrl+D duplicar · Supr borrar · P grupo padre</div>
+      Ctrl+C copiar · Ctrl+V pegar · Ctrl+D duplicar · Ctrl+Z deshacer · Supr borrar · P grupo padre · SHIFT+click marcar</div>
     </div>
     <div class="we-body">
       <div class="we-row"><span>Estado</span><span class="we-pill" data-field="enabled">OFF</span></div>
