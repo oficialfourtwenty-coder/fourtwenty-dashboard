@@ -169,22 +169,10 @@ function coronarTechos(cubos, azar, { x0, x1, z, alto, cantidad }) {
 // cuadra. Por eso las calles transversales van justo en sus dos puntas.
 const CUADRA_X0 = -34.75, CUADRA_X1 = 39.25;
 const ANCHO_CALLE = 12;          // entre lineas de edificacion
-const CALZADA = 8;               // asfalto; los 4 restantes son las dos veredas
-// La calzada queda 5 cm por debajo de la vereda, igual que el asfalto de
-// `street.js`. ⚠️ La primera version tenia las dos a la misma altura y la calle
-// quedaba al ras: no se leia el cordon por ningun lado.
-const Y_ASFALTO = -0.05, Y_VEREDA = 0;
 const OCHAVA = 4;                // el corte a 45 grados de la esquina
-const Z_CORDON_NUESTRO = 7.4;    // el cordon de nuestra vereda, en street.js
 
 // Centro de cada calle transversal.
 const CRUCES = [CUADRA_X0 - ANCHO_CALLE / 2, CUADRA_X1 + ANCHO_CALLE / 2];
-
-// Una losa horizontal con la cara de ARRIBA a la altura pedida (no el centro:
-// asi se puede pensar en "la vereda esta en 0" sin hacer cuentas).
-function losa(cubos, color, w, d, x, z, arriba) {
-  caja(cubos, 'lejos', color, w, 0.24, d, x, arriba - 0.12, z);
-}
 
 // ---- Una calle que corta la cuadra -----------------------------------------
 // Es lo que mas cambia la escena. Sin esto la cuadra de enfrente es una cinta
@@ -196,12 +184,8 @@ function calleTransversal(cubos, azar, cx) {
   const z1 = Z_FACHADA + 46;      // y se va hasta donde la niebla la come
   const largo = z1 - z0, cz = (z0 + z1) / 2;
 
-  losa(cubos, '#3a3a3c', CALZADA, largo, cx, cz, Y_ASFALTO);
-  for (const lado of [-1, 1]) {
-    const anchoVereda = (ANCHO_CALLE - CALZADA) / 2;
-    losa(cubos, '#b4aea2', anchoVereda, largo, cx + lado * (CALZADA + anchoVereda) / 2, cz, Y_VEREDA);
-    caja(cubos, 'lejos', '#8a8880', 0.35, 0.16, largo, cx + lado * CALZADA / 2, 0.08, cz);
-  }
+  // Igual que arriba: aca va el HUECO entre manzanas y los frentes que lo
+  // miran, pero el piso de la calle no. Lo arma Kusher.
 
   // Los frentes que miran a ESTA calle: son los costados de las manzanas
   // vecinas, y son los que dan la fuga porque se ven de canto, alejandose.
@@ -270,14 +254,20 @@ export function buildBurelaAlrededores(scene) {
     });
   }
 
-  // La calzada y las veredas de Burela van de punta a punta y NO se cortan en
-  // los cruces: en una esquina el asfalto es continuo en las dos direcciones.
-  losa(cubos, '#3a3a3c', 156, Z_CORDON_FRENTE - Z_CORDON_NUESTRO, 0,
-    (Z_CORDON_FRENTE + Z_CORDON_NUESTRO) / 2, Y_ASFALTO);
-  losa(cubos, '#b4aea2', 156, 6.0, 0, Z_CORDON_FRENTE + 3.0, Y_VEREDA);
-  losa(cubos, '#b4aea2', 156, 4.4, 0, 4.6, Y_VEREDA);
-  caja(cubos, 'lejos', '#8a8880', 156, 0.16, 0.35, 0, 0.08, Z_CORDON_FRENTE);
-  caja(cubos, 'lejos', '#8a8880', 156, 0.16, 0.35, 0, 0.08, Z_CORDON_NUESTRO);
+  // ⚠️ ACA NO VA NINGUN PISO NI NINGUN CORDON, Y ES A PROPOSITO.
+  //
+  // Tenia losas de vereda y de asfalto de 156 m de largo cruzando todo el mapa,
+  // mas dos cordones. Fue un error y Kusher lo vio enseguida:
+  //   · la losa de vereda quedaba a la MISMA altura (y=0) que el piso que el ya
+  //     tenia, asi que las dos superficies peleaban por el mismo pixel — eso es
+  //     el rayado que se ve en la captura, y ademas lagueaba;
+  //   · el cordon caia justo encima del `Cordon calle Burela` de street.js, o
+  //     sea dos cordones pisados;
+  //   · encima tapaba la vereda que Kusher habia acomodado a mano, una por una.
+  //
+  // REGLA: el piso de la zona jugable es de Kusher. Este archivo pone la MASA
+  // del barrio (paredes, techos, siluetas) y NADA que se pise ni que compita
+  // con algo que ya exista. Las calles las arma el con el editor.
 
   for (const cx of CRUCES) calleTransversal(cubos, azar, cx);
 
