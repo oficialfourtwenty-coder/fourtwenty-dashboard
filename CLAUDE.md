@@ -1054,9 +1054,37 @@ ahora: no adelantarlo.
   no toca (ni corrige, ni reordena, ni aplasta) los commits que vienen de
   nosotros. Un commit por piso, asi Kusher puede tomar unos y otros no.
 - ⚠️ `furniture-layout.json` y `productos.json` son exportaciones de archivo
-  ENTERO que Kusher tambien regenera. No se fusionan: gana uno y el trabajo del
-  otro desaparece en silencio. Van en commits propios, nunca mezclados con
-  codigo, y hay que hacer `pull` antes de exportar.
+  ENTERO que Kusher tambien regenera. No se fusionan solos: gana uno y el
+  trabajo del otro desaparece en silencio. Van en commits propios, nunca
+  mezclados con codigo, y hay que hacer `pull` antes de exportar.
+
+### Trabajar los DOS a la vez sobre el layout (Kusher en Burela, Fer en un piso)
+
+El codigo viaja por git y no tiene problema: Fer hace `pull` y ve la Burela
+nueva. Lo que NO viaja son las posiciones que cada uno acomoda con `T`: viven
+en el `localStorage` de su maquina hasta que se exporta el JSON.
+
+Y `furniture-layout.json` es UN SOLO archivo con Burela y los cinco pisos
+juntos, asi que si los dos exportan, el segundo borra al primero.
+
+Se puede fusionar porque **cada objeto de un piso lleva el numero de piso en el
+id** (`destino-1:...`, `elevator-destination-1`, `origin-minigame-arcade...`) y
+los de Burela no llevan prefijo. La herramienta:
+
+```bash
+cd store-simulator
+node tools/layout/fusionar-layouts.mjs \
+  --burela ~/Downloads/layout-kusher.json \
+  --pisos  ~/Downloads/layout-fer.json
+```
+
+Toma de Fer SOLO los pisos que su archivo trae de verdad, y todo lo demas
+—Burela y los pisos que no toco— de Kusher. Imprime que se uso y que se
+ignoro, y avisa fuerte si una escena queda con menos objetos que antes.
+Burela nunca sale del archivo de Fer, aunque su export la traiga.
+
+Ciclo: los dos exportan cuando tienen algo que valga la pena, se fusiona, se
+prueba en el juego, se commitea el archivo solo, y los dos hacen `pull`.
 - Entrega Pull Request pequeno con objetivo, commit, archivos, peso, build y
   capturas. Kusher decide si se integra completo, por commit o se rechaza.
 - No copiar fragmentos manualmente entre computadoras si existe un commit.
