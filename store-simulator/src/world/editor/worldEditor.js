@@ -285,6 +285,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       orbit.enabled = true;
       orbit.update();
       panel.show();
+      grupos.mostrarMangos(true);
       // Los conjuntos guardados se rearman recien aca: para que el mango caiga
       // en el centro de verdad, el layout ya tiene que estar aplicado. Al abrir
       // el editor eso siempre paso.
@@ -296,6 +297,11 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       setStatus('Edit Mode activo. Click izq: orbitar / seleccionar · click der: pan · rueda: zoom.');
     } else {
       deselect();
+      // ⚠️ Al cerrar el editor se apaga TODO lo verde: las marcas y los mangos
+      // de los conjuntos. Son ayudas para construir, no parte del mundo, y
+      // Kusher las veia quedar colgadas ("tambien queda eso verde").
+      borrarTodasLasMarcas();
+      grupos.mostrarMangos(false);
       frameEditor.cerrar();
       cuadroSeleccionado = null;
       orbit.enabled = false;
@@ -955,6 +961,46 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   function deleteSelected() {
     if (!state.selectedId) return;
     const id = state.selectedId;
+
+    // ⚠️ BORRAR UN CONJUNTO BORRA SUS CASAS, no el cubito verde.
+    // Kusher lo reporto asi: "agrupo dos cosas y no las puedo borrar juntas".
+    // Antes Supr sobre el conjunto sacaba solo el mango y dejaba los objetos
+    // sueltos en su lugar, que es exactamente lo contrario de lo que uno espera
+    // al borrar un conjunto.
+    if (grupos.esGrupo(id)) {
+      const miembros = [...grupos.miembrosDe(id)];
+      const nombreConjunto = getEditableById(id)?.name ?? 'Conjunto';
+      const vueltas = [];
+      for (const miembroId of miembros) {
+        const e = getEditableById(miembroId);
+        const objeto = e?.object3D;
+        const padre = objeto?.parent ?? null;
+        const indice = padre ? padre.children.indexOf(objeto) : -1;
+        const copia = e ? { ...e } : null;
+        const resultado = removeEditable(miembroId);
+        if (resultado === 'removed' && padre && copia) {
+          vueltas.push(() => {
+            if (indice >= 0 && indice <= padre.children.length) {
+              padre.children.splice(indice, 0, objeto);
+              objeto.parent = padre;
+            } else padre.add(objeto);
+            registerEditableObject(copia);
+          });
+        } else if (resultado === 'hidden') {
+          vueltas.push(() => setEditableVisible(miembroId, true));
+        }
+      }
+      grupos.desagrupar(id);
+      deselect();
+      notifyWorldChanged();
+      historial.anotar(`borrar ${nombreConjunto} (${miembros.length} objetos)`, () => {
+        for (const volver of vueltas) volver();
+        grupos.agrupar(miembros, nombreConjunto);
+      });
+      saveNow(`${nombreConjunto} borrado con sus ${miembros.length} objetos. Ctrl+Z los trae de vuelta.`);
+      return;
+    }
+
     const entry = getEditableById(id);
     // ⚠️ Se guarda TODO lo necesario ANTES de borrar: el objeto, de que padre
     // colgaba y en que posicion de la lista de hijos. El indice importa porque

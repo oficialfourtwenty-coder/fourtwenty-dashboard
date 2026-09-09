@@ -86,8 +86,8 @@ export function crearSistemaDeGrupos({ getScene, onCambio }) {
     mango.name = nombre;
     mango.position.copy(centro);
     const marca = new THREE.Mesh(
-      new THREE.BoxGeometry(0.6, 0.6, 0.6),
-      new THREE.MeshBasicMaterial({ color: 0x39ff6a, wireframe: true, depthTest: false, transparent: true, opacity: 0.85 }),
+      new THREE.BoxGeometry(0.45, 0.45, 0.45),
+      new THREE.MeshBasicMaterial({ color: 0x39ff6a, wireframe: true, depthTest: false, transparent: true, opacity: 0.6 }),
     );
     marca.name = `${nombre} · mango`;
     marca.renderOrder = 999;
@@ -185,6 +185,16 @@ export function crearSistemaDeGrupos({ getScene, onCambio }) {
 
   function esGrupo(id) { return grupos.has(id); }
 
+  /**
+   * Muestra o esconde TODOS los mangos.
+   * ⚠️ Kusher lo reporto asi: "tambien queda eso verde". Los cubos verdes son
+   * los agarres de los conjuntos y no tienen por que verse jugando: solo hacen
+   * falta con el editor abierto. Se apagan al cerrar el editor.
+   */
+  function mostrarMangos(visible) {
+    for (const grupo of grupos.values()) grupo.mango.visible = visible;
+  }
+
   function miembrosDe(id) { return grupos.get(id)?.miembros ?? []; }
 
   /**
@@ -233,5 +243,5 @@ export function crearSistemaDeGrupos({ getScene, onCambio }) {
     return [...grupos.values()].map((g) => ({ id: g.id, nombre: g.nombre, miembros: g.miembros }));
   }
 
-  return { agrupar, desagrupar, propagar, esGrupo, miembrosDe, reanclar, nombresDe, restaurar, listar, exportar };
+  return { agrupar, desagrupar, propagar, esGrupo, mostrarMangos, miembrosDe, reanclar, nombresDe, restaurar, listar, exportar };
 }
