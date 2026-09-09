@@ -39,8 +39,6 @@ import { Z_CORDON_FRENTE, Z_FACHADA } from './burelaFrente.js';
 // ---- Donde termina lo jugable ---------------------------------------------
 // La zona caminable llega a x = ±28,5 y la cuadra de enfrente ocupa
 // x = -34,75 a 39,25. De ahi para afuera arranca esto.
-const X_FIN_OESTE = -35;
-const X_FIN_ESTE = 39.5;
 const FONDO_FRENTE = 11;                      // profundidad de las casas de enfrente
 const Z_FONDO_MANZANA = Z_FACHADA + FONDO_FRENTE;  // 28,2: donde termina la cuadra de enfrente
 // Nuestra vereda: la galeria del local mira al norte desde z ~ -4,5.
@@ -87,9 +85,12 @@ function escalarUV(geo, w, h, d, metros) {
   }
 }
 
-function caja(cubos, material, color, w, h, d, x, y, z, metros = 1.2) {
+function caja(cubos, material, color, w, h, d, x, y, z, metros = 1.2, giroY = 0) {
   const g = new THREE.BoxGeometry(w, h, d);
   escalarUV(g, w, h, d, metros);
+  // El giro va ANTES de mover: `rotateY` gira alrededor del origen, asi que si
+  // se rota despues de trasladar, la pieza sale despedida lejos.
+  if (giroY) g.rotateY(giroY);
   g.translate(x, y, z);
   pintar(g, color);
   (cubos[material] ??= []).push(g);
@@ -160,19 +161,104 @@ function coronarTechos(cubos, azar, { x0, x1, z, alto, cantidad }) {
   }
 }
 
+// ---- La grilla de cuadras --------------------------------------------------
+// ⚠️ DE DONDE SALE LA MEDIDA DE LA CUADRA, que no la invente. Las fotos de
+// Street View que paso Kusher van de Burela 2502 a 2593. En Buenos Aires la
+// numeracion da 100 numeros por cuadra, asi que esas seis fotos son UNA cuadra
+// entera, de esquina a esquina — y la cuadra recreada (x -34,75 a 39,25) es esa
+// cuadra. Por eso las calles transversales van justo en sus dos puntas.
+const CUADRA_X0 = -34.75, CUADRA_X1 = 39.25;
+const ANCHO_CALLE = 12;          // entre lineas de edificacion
+const CALZADA = 8;               // asfalto; los 4 restantes son las dos veredas
+// La calzada queda 5 cm por debajo de la vereda, igual que el asfalto de
+// `street.js`. ⚠️ La primera version tenia las dos a la misma altura y la calle
+// quedaba al ras: no se leia el cordon por ningun lado.
+const Y_ASFALTO = -0.05, Y_VEREDA = 0;
+const OCHAVA = 4;                // el corte a 45 grados de la esquina
+const Z_CORDON_NUESTRO = 7.4;    // el cordon de nuestra vereda, en street.js
+
+// Centro de cada calle transversal.
+const CRUCES = [CUADRA_X0 - ANCHO_CALLE / 2, CUADRA_X1 + ANCHO_CALLE / 2];
+
+// Una losa horizontal con la cara de ARRIBA a la altura pedida (no el centro:
+// asi se puede pensar en "la vereda esta en 0" sin hacer cuentas).
+function losa(cubos, color, w, d, x, z, arriba) {
+  caja(cubos, 'lejos', color, w, 0.24, d, x, arriba - 0.12, z);
+}
+
+// ---- Una calle que corta la cuadra -----------------------------------------
+// Es lo que mas cambia la escena. Sin esto la cuadra de enfrente es una cinta
+// continua sin una sola esquina, y encima tapa TODAS las lineas de fuga: no hay
+// por donde ver lejos. Una calle perpendicular alejandose es lo que hace que se
+// vea profundidad de verdad.
+function calleTransversal(cubos, azar, cx) {
+  const z0 = -30;                 // arranca detras de nuestra manzana
+  const z1 = Z_FACHADA + 46;      // y se va hasta donde la niebla la come
+  const largo = z1 - z0, cz = (z0 + z1) / 2;
+
+  losa(cubos, '#3a3a3c', CALZADA, largo, cx, cz, Y_ASFALTO);
+  for (const lado of [-1, 1]) {
+    const anchoVereda = (ANCHO_CALLE - CALZADA) / 2;
+    losa(cubos, '#b4aea2', anchoVereda, largo, cx + lado * (CALZADA + anchoVereda) / 2, cz, Y_VEREDA);
+    caja(cubos, 'lejos', '#8a8880', 0.35, 0.16, largo, cx + lado * CALZADA / 2, 0.08, cz);
+  }
+
+  // Los frentes que miran a ESTA calle: son los costados de las manzanas
+  // vecinas, y son los que dan la fuga porque se ven de canto, alejandose.
+  for (const lado of [-1, 1]) {
+    const xf = cx + lado * (ANCHO_CALLE / 2);
+    // hacia el fondo (la manzana de enfrente) y hacia atras (la nuestra)
+    for (const [za, zb, alt] of [[Z_FACHADA + 2, z1 - 4, 12], [z0 + 4, Z_NUESTRA_FACHADA - 10, 9]]) {
+      let z = za;
+      while (z < zb) {
+        const fondo = Math.min(5 + azar() * 7, zb - z);
+        if (fondo < 2.5) break;
+        const alto = 4.5 + azar() * (alt - 4.5);
+        const color = COLORES_CERCA[Math.floor(azar() * COLORES_CERCA.length)];
+        caja(cubos, azar() < 0.3 ? 'ladrillo' : 'revoque', color,
+          9, alto, fondo, xf + lado * 4.5, alto / 2, z + fondo / 2);
+        caja(cubos, 'lejos', COLORES_TECHO[Math.floor(azar() * COLORES_TECHO.length)],
+          9.4, 0.35, fondo + 0.4, xf + lado * 4.5, alto + 0.17, z + fondo / 2);
+        z += fondo + 0.15;
+      }
+    }
+  }
+
+  // ---- Las OCHAVAS ---------------------------------------------------------
+  // El corte a 45 grados de la esquina. Es obligatorio por codigo en Buenos
+  // Aires desde 1887 y es LA firma visual de la ciudad: sin ochava las esquinas
+  // se leen en angulo recto y quedan raras aunque uno no sepa por que.
+  // Cuatro por cruce: las dos de la vereda de enfrente y las dos de la nuestra.
+  for (const lado of [-1, 1]) {
+    const xe = cx + lado * (ANCHO_CALLE / 2);
+    for (const [z, alto] of [[Z_FACHADA, 7.5], [Z_NUESTRA_FACHADA - 9, 6.5]]) {
+      const haciaAdentro = z > 0 ? 1 : -1;
+      caja(cubos, 'revoque', '#cfc7b8', OCHAVA, alto, OCHAVA,
+        xe + lado * OCHAVA * 0.30, alto / 2, z + haciaAdentro * OCHAVA * 0.30,
+        1.2, Math.PI / 4);
+    }
+  }
+}
+
 export function buildBurelaAlrededores(scene) {
   const azar = dado(4200420);
   const mats = materiales();
   const cubos = {};
 
   // ===========================================================================
-  // 1) LA CALLE QUE SIGUE — es lo mas importante de todo el archivo.
+  // 1) LA CALLE QUE SIGUE, CORTADA EN CUADRAS.
   // Parado en la vereda y mirando a lo largo de la calle, antes se veia el
-  // asfalto cortarse en el aire. Ahora la cuadra continua para los dos lados
-  // con las DOS veredas, asi que la calle se va cerrando en perspectiva y se
-  // pierde en la niebla, que es lo que hace una calle de verdad.
+  // asfalto cortarse en el aire. Despues quedo continua, pero era una tira
+  // infinita de casas pegadas sin una sola esquina. Ahora tiene las calles
+  // transversales, asi que se lee como cuadras.
   // ===========================================================================
-  for (const [x0, x1] of [[-78, X_FIN_OESTE], [X_FIN_ESTE, 78]]) {
+  // ⚠️ Los tramos EMPIEZAN despues de cada calle transversal: por eso -46,75 y
+  // 51,25 y no las puntas de la cuadra recreada. Ese hueco es el cruce.
+  const TRAMOS = [
+    [-78, CUADRA_X0 - ANCHO_CALLE],
+    [CUADRA_X1 + ANCHO_CALLE, 78],
+  ];
+  for (const [x0, x1] of TRAMOS) {
     // Vereda de enfrente (la misma linea que las casas recreadas).
     tiraDeCasas(cubos, azar, {
       x0, x1, z: Z_FACHADA, fondo: FONDO_FRENTE, altoMin: 4.5, altoMax: 11.5, material: 'mixto',
@@ -182,13 +268,18 @@ export function buildBurelaAlrededores(scene) {
     tiraDeCasas(cubos, azar, {
       x0, x1, z: Z_NUESTRA_FACHADA - 9, fondo: 9, altoMin: 4.0, altoMax: 9.5, material: 'mixto',
     });
-    // Calzada y cordones: el asfalto de street.js llega a x = ±(28,5+10). Se
-    // continua con una tira lisa; a esta distancia el adoquin no se distingue.
-    const ancho = x1 - x0, cx = (x0 + x1) / 2;
-    caja(cubos, 'lejos', '#3a3a3c', ancho, 0.06, Z_CORDON_FRENTE - 6.6, cx, -0.03, (Z_CORDON_FRENTE + 6.6) / 2 + 0.4);
-    caja(cubos, 'lejos', '#8a8880', ancho, 0.14, 3.2, cx, 0.07, Z_CORDON_FRENTE + 1.6);
-    caja(cubos, 'lejos', '#b4aea2', ancho, 0.12, 4.4, cx, 0.06, 4.6);
   }
+
+  // La calzada y las veredas de Burela van de punta a punta y NO se cortan en
+  // los cruces: en una esquina el asfalto es continuo en las dos direcciones.
+  losa(cubos, '#3a3a3c', 156, Z_CORDON_FRENTE - Z_CORDON_NUESTRO, 0,
+    (Z_CORDON_FRENTE + Z_CORDON_NUESTRO) / 2, Y_ASFALTO);
+  losa(cubos, '#b4aea2', 156, 6.0, 0, Z_CORDON_FRENTE + 3.0, Y_VEREDA);
+  losa(cubos, '#b4aea2', 156, 4.4, 0, 4.6, Y_VEREDA);
+  caja(cubos, 'lejos', '#8a8880', 156, 0.16, 0.35, 0, 0.08, Z_CORDON_FRENTE);
+  caja(cubos, 'lejos', '#8a8880', 156, 0.16, 0.35, 0, 0.08, Z_CORDON_NUESTRO);
+
+  for (const cx of CRUCES) calleTransversal(cubos, azar, cx);
 
   // ===========================================================================
   // 2) EL FONDO DE LA MANZANA DE ENFRENTE.

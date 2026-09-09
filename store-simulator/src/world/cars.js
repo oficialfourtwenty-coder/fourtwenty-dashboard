@@ -26,6 +26,9 @@ import { gltfLoader } from './gltfLoaders.js';
 // de respaldo. El lector compartido de `gltfLoaders.js` ya viene con Draco.
 const cargadorDeAutos = gltfLoader;
 
+// Repintado de la carroceria de un GLB (ver `glbMatiz` mas abajo).
+import { repintarCarroceria } from './carPaint.js';
+
 const CAR_SPECS = [
   {
     id: 'car-up-luca',
@@ -77,7 +80,12 @@ const CAR_SPECS = [
     },
     // medidas reales del Corolla (m)
     length: 4.62, width: 1.78, height: 1.44, wheelbase: 2.70,
-    bodyColor: 0xF0F0EA,      // BLANCO (auto real de Fer)
+    bodyColor: 0xF0F0EA,      // color del auto PROCEDURAL (el de respaldo)
+    // ⚠️ El GLB de Fer viene ROJO y su color NO sale de `bodyColor`: sale de una
+    // textura de paleta adentro del archivo. Kusher lo pidio AZUL, asi que se
+    // repinta al cargar (`carPaint.js`). 0,60 de vuelta = azul de auto.
+    // Poner `null` para dejarlo del color original del modelo.
+    glbMatiz: 0.60,
     roofColor: 0xF0F0EA,
     rimColor: 0x17181A,       // llantas NEGRAS
     mirrorColor: 0x17181A,    // espejos laterales NEGROS
@@ -479,6 +487,10 @@ class Car {
         normalizeGLTFHeight(model, this.spec.height);
         model.name = `${this.model} · modelo real`;
         model.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+        if (this.spec.glbMatiz != null) {
+          const pintado = repintarCarroceria(THREE, model, this.spec.glbMatiz);
+          console.info(`[cars] ${this.id} repintado: ${pintado.pixeles} pixeles de paleta en ${pintado.texturas} textura(s)`);
+        }
         this.root.add(model);
         this.realModel = model;
         this.interactionRevision += 1;
@@ -534,15 +546,30 @@ class Car {
     }
   }
 
-  // Colisión: conserva las medidas funcionales del auto aunque el GLB incluya
-  // geometría decorativa fuera de la carrocería.
+  // Colisión: la caja sale del auto QUE SE VE.
+  //
+  // ⚠️ ANTES SALIA DEL AUTO PROCEDURAL, EL DE RESPALDO — el que está escondido
+  // desde que carga el GLB. Y los dos no coinciden: el procedural se arma a lo
+  // largo del eje X y el GLB del Corolla viene girado 90 grados, así que quedaba
+  // una pared invisible de 4,62 m CRUZANDO la calle mientras el auto que se ve
+  // mide 1,31 m de ancho. O sea 1,7 m de nada a cada lado. Kusher lo reportó
+  // como "un marco más grande de espacio invisible que no se puede pasar por al
+  // lado": no era un margen de más, era otra caja.
+  //
+  // Medido con el visor de colisiones (tecla `K`), que es la única forma de ver
+  // esto: una caja de colisión no se dibuja sola.
+  //
+  // Se usa el GLB si está, y el procedural sólo mientras el GLB no cargó.
   getColliders() {
     this.root.updateWorldMatrix(true, true);
     this._colliders.length = 0;
-    this._box.setFromObject(this.proceduralBody);
+    const visible = this.realModel ?? this.proceduralBody;
+    this._box.setFromObject(visible);
     if (!this._box.isEmpty()) {
       this._colliders.push({
         minX: this._box.min.x, maxX: this._box.max.x,
+        // minY 0 para que no se pueda pasar por abajo; el maxY mínimo de 1,2
+        // evita que un auto bajo cuente como escalón y se lo pueda subir.
         minY: 0, maxY: Math.max(this._box.max.y, 1.2),
         minZ: this._box.min.z, maxZ: this._box.max.z,
         source: this.root.name,

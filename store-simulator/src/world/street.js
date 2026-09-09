@@ -211,9 +211,13 @@ export function buildStreet(scene, { reflectionSize = 512, reflectionFrameInterv
 
   // ---- Suelos --------------------------------------------------------------
   // calzada (adoquín oscuro), cordón, vereda gris, plaza hexagonal
-  const street = new THREE.Mesh(new THREE.PlaneGeometry(MAP_HALF_X * 2 + 20, 8), mat(0x3a3a3c, 0.95));
+  // ⚠️ 11 m de fondo, no 8. La vereda de enfrente se ensancho y su cordon paso
+  // de z=14 a z=15,6 (ver Z_CORDON_FRENTE en burelaFrente.js); con los 8 de
+  // antes el asfalto terminaba en 14 y quedaba una franja de suelo pelado entre
+  // la calzada y el cordon nuevo.
+  const street = new THREE.Mesh(new THREE.PlaneGeometry(MAP_HALF_X * 2 + 20, 11), mat(0x3a3a3c, 0.95));
   street.name = 'Calle Burela · asfalto';
-  street.rotation.x = -Math.PI / 2; street.position.set(0, -0.05, Z_STREET + 2); scene.add(street);
+  street.rotation.x = -Math.PI / 2; street.position.set(0, -0.05, Z_STREET + 2.6); scene.add(street);
   g.add(named(box(MAP_HALF_X * 2 + 4, 0.15, 0.4, 0, 0.075, Z_CURB, mat(0x8a8880, 0.9)), 'Cordon calle Burela'));
   const vereda = new THREE.Mesh(new THREE.PlaneGeometry(MAP_HALF_X * 2, Z_CURB - 3.5), veredaMat);
   vereda.name = 'Vereda gris frente al local';

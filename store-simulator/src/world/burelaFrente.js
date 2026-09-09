@@ -38,8 +38,21 @@ import { ladrilloTex, revoqueTex, tejaTex, persianaTex } from './texturasBurela.
 // ---- Donde va -------------------------------------------------------------
 // El asfalto de `street.js` llega hasta z=14. De ahi para adelante es la vereda
 // de enfrente, y las fachadas arrancan en Z_FACHADA.
-export const Z_CORDON_FRENTE = 14.0;
-export const Z_FACHADA = 17.2;
+//
+// ⚠️ LA VEREDA DE ENFRENTE ERA DEMASIADO ANGOSTA (pedido de Kusher). Con el
+// cordon en 14,0 y las fachadas en 17,2 quedaban 3,2 m de vereda y 6,6 m de
+// calzada: las casas estaban pegadas al asfalto y la calle se veia chica.
+// Mirando el aereo de Burela 2570 la proporcion real es la contraria — la
+// vereda es ancha, con los arboles adentro, y la calzada entra dos autos mas
+// los estacionados.
+// Ahora: vereda 6,0 m (casi el doble) y calzada 8,2 m contando desde nuestro
+// cordon, que esta en z=7,4.
+// Todo lo demas cuelga de estos dos numeros —las casas, el cordon, los arboles
+// (Z_CORDON_FRENTE + 1,1) y el barrio de `burelaAlrededores.js`— asi que se
+// corre solo. Lo unico que hubo que estirar aparte es el asfalto de
+// `street.js`, que llegaba justo hasta el cordon viejo.
+export const Z_CORDON_FRENTE = 15.6;
+export const Z_FACHADA = 21.6;
 const FONDO = 11;            // profundidad del volumen de cada casa
 const PISO = 3.15;           // alto de un piso
 
