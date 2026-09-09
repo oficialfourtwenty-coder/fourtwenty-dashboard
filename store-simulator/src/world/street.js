@@ -14,6 +14,7 @@
 import * as THREE from 'three';
 import { Reflector } from 'three/addons/objects/Reflector.js';
 import { towerFacade, veredaTile, hexPaver, greenShutter, whiteFloor, lightWood } from './textures.js';
+import { buildBurelaFrente } from './burelaFrente.js';
 import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
 import { addSampleGarments } from './garmentModels.js';
@@ -347,6 +348,23 @@ export function buildStreet(scene, { reflectionSize = 512, reflectionFrameInterv
   scene.add(g);
   scene.add(sunDisc);
   scene.add(moonDisc);
+
+  // ---- La cuadra de ENFRENTE (recreada de las fotos de Burela) -------------
+  // Antes de esto, cruzando la calle habia un kit de ciudad generico —casitas
+  // beige de dibujito— que no se parecia a Burela. Parado en la vereda, la
+  // mitad de lo que ve el jugador es esa pared de enfrente.
+  //
+  // ⚠️ VA ULTIMA, DESPUES DE TODO. El editor arma los ids por POSICION en el
+  // arbol, asi que meter un grupo nuevo en el medio corre el indice de todos
+  // los hermanos que vienen despues y el layout guardado de Kusher se aplica a
+  // los objetos equivocados. Se probo: agregandola en el medio aparecian tres
+  // veredas, una casa en x=-3177 y una pared gris tapando la calle. Es la misma
+  // razon por la que el local conserva el indice 49 y el sol se suma al final.
+  //
+  // No lleva colision: queda del otro lado de la pared invisible de la calle,
+  // asi que el jugador nunca la toca.
+  buildBurelaFrente(scene);
+
   return {
     colliders,
     selectors,
