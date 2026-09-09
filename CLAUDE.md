@@ -1,9 +1,10 @@
 # Simulador Bobilonia Maestro - contexto obligatorio
 
-Ultima actualizacion documental: 3 de septiembre de 2026.
+Ultima actualizacion documental: 9 de septiembre de 2026.
 
-**El plan de trabajo vigente esta en la seccion 3.** Es el orden que decidio
-Kusher el 03/09 y es lo que hay que mirar antes de elegir en que trabajar.
+**El plan de trabajo vigente esta en la seccion 3.** Son las 3 fases que armo
+Kusher en Notion el 09/09, con el reparto de trabajo entre nosotros y Fer. Es
+lo que hay que mirar antes de elegir en que trabajar.
 
 Este archivo es la fuente de contexto que deben leer Claude, Claude Code, Codex
 y cualquier colaborador antes de trabajar. El dueno no programa: explicar los
@@ -114,97 +115,109 @@ Decisiones vigentes del dueno:
   hermosa sin compra real no sirve comercialmente.
 - La posible plataforma para alquilar tiendas virtuales a otras marcas queda
   completamente pausada hasta 2027. No debe consumir trabajo actual.
-- **FT$ SI va a existir** (decision del 03/09, cambia lo anterior). Es la moneda
-  propia de la marca y es el motivo por el que hace falta el login: sin cuenta
-  no hay donde guardar un saldo. Va en el **ultimo** paso del plan (seccion 3,
-  paso 5), despues de la compra real. Hasta entonces no se construye ni la
-  economia ni la base de saldos.
+- **FT$ SI va a existir.** Es la moneda propia de la marca y es el motivo por
+  el que hace falta el login: sin cuenta no hay donde guardar un saldo. Va en
+  la **fase 2** del plan (seccion 3), junto con la compra y el login — los tres
+  comparten el mismo backend. Hasta que exista ese servidor no se construye ni
+  la economia ni la base de saldos.
 
-## 3. PLAN VIGENTE — el orden que decidio Kusher (03/09/2026)
+## 3. PLAN VIGENTE — las 3 fases de Notion (09/09/2026)
 
-**Esta es la lista de lo que falta, en el orden en que se hace.** La dicto
-Kusher el 03/09 y reemplaza al calendario de agosto, que quedo viejo (ver
-seccion 3.b, se conserva solo como referencia de lo ya hecho).
+**Este es el plan vigente.** Sale de Notion, en
+`FOURTWENTY / PROYECTOS / BOBILONIA SIMULADOR`, y reemplaza a los 5 pasos del
+03/09 y al calendario de agosto (seccion 3.b, se conserva solo como referencia
+de lo ya hecho).
 
-### Paso 1 — Texturas de los pisos
+⚠️ La pagina vieja de Notion **"PLAN MAESTRO — Simulador Bobilonia Maestro"
+quedo desactualizada** (ultima edicion 01/08): habla de la rama
+`version-final-final-final` y de Cloudflare. No usarla como plan.
 
-- Fer esta armando los cinco pisos, pero **le salen todos blancos**: geometria
-  sin material.
-- Falta ponerle **textura a todo**. Es el trabajo que esta abierto ahora.
-- Encaja con el criterio de fondo del proyecto (seccion 5): la geometria simple
-  esta bien, lo que hace que se vea como PS3 es la textura.
+### Reparto del trabajo (decidido por Kusher el 09/09)
 
-### Paso 2 — Prendas y sistema de compra
+- **Fer:** los pisos — estetica, orden, muebles, texturas y poner las prendas
+  fisicamente adentro. Ademas, el comic de la Twenty Time.
+- **Kusher + Claude Code:** Calle Burela entera, BOB y el sistema de
+  vestimenta, los juegos, la compra, el login y los FT$.
+- ⚠️ La fase de Notion se llama "ARMADO DE PISOS x6", pero **Burela la hacemos
+  nosotros**: a Fer le quedan los cinco pisos del ascensor (ORIGEN, HOOP
+  SEASON, CULTURA, BOB y TERRAZA).
 
-- Con los pisos ya armados, **cargar las prendas**.
-- **Hacer el sistema de compra.** Sigue siendo la condicion de lanzamiento
-  (seccion 7 y seccion 12): sin compra real verificada la version no es
-  publicable.
+### FASE 1 — Armado de los pisos (FER)
 
-### Paso 3 — Un juego por piso
+Terminada cuando: los pisos quedan ordenados, con texturas, muebles finales y
+las prendas puestas fisicamente adentro.
 
-- Cada piso tiene que tener su propio juego. Hoy los cinco abren el mismo
-  (BOB'S MAZE) desde la arcade, solo para probar recorrido y rendimiento.
-- Ya existe la capa generica de minijuegos y cada juego vive en su propio
-  archivo `src/minigames/<juego>.js`, asi que ahi no hay conflicto entre
-  agentes.
-- ⚠️ **Antes del primer minijuego 3D hay que pausar el bucle de render
-  principal** mientras el juego este abierto. Hoy el mundo se sigue dibujando
-  por detras: con un juego 2D no se nota, con uno 3D si.
+1. Idea estetica y planos de los pisos.
+2. Armado del archivo de muebles.
+3. Cargado de texturas.
+4. Orden de muebles y piso final.
+5. Cargar los productos de forma fisica en el piso.
 
-### Paso 4 — GLB finales y detalles de Burela
+### FASE 2 — Burela (NOSOTROS)
 
-- Recien con los pisos amueblados, la compra andando y los juegos hechos:
-  **cargar los GLB definitivos** y terminar los detalles del mundo de Burela.
-- Se deja para despues a proposito: son los assets mas caros y no conviene
-  congelarlos antes de saber que entra y que no.
+Terminada cuando: Burela final con todos los GLB interactivos andando,
+productos cargados y la compra funcionando con Tiendanube.
 
-### Paso 5 — Login, tu BOB y los FT$ (LO ULTIMO)
+1. Arquitectura de Burela — piso de carga final.
+2. GLB interactivos: local final, autos, banapod y puesto de la Twenty Time.
+3. Cambiar el ascensor.
+4. Carga de vestimenta.
+5. Login por usuario + avatar final.
+6. Guardar el BOB de cada usuario.
+7. Cargado de productos + plan de venta oficial.
+8. Los 6 juegos, uno por piso.
+9. Base de datos de FT$ y conexion con los juegos.
 
-Decision de Kusher, textual: poder loguearse para usar **tu** BOB, y que
-**como lo vistas, los FT$ que gastes y lo que hagas quede guardado** para
-seguir usandolo.
+### FASE 3 — Optimizacion y chequeo final
 
-⚠️ **Kusher decidio que esto va AL FINAL**, despues de la compra. Es su
-decision y manda. Queda anotado aca lo que hay que tener en cuenta cuando se
-llegue, no para discutirlo antes:
+Terminada cuando: los archivos quedan optimizados y el simulador chequeado en
+tamaño, peso y uso.
 
-- **El saldo de FT$ NO puede vivir en el navegador, nunca.** Si vive ahi,
-  cualquiera abre las herramientas del navegador, se escribe el saldo que
-  quiera y lo canjea. No hace falta saber programar. **El saldo vive en el
-  servidor** y el navegador solo puede pedir, nunca decidir. Es la misma regla
-  que ya rige para el precio (seccion 7).
-- **Lo mismo vale para el guardado del avatar**: hoy el BOB elegido y el layout
+1. Optimizacion de archivos.
+2. Chequeo final de tamaño, peso y uso.
+
+### Lo que hay que tener en cuenta al llegar a cada cosa
+
+**Compra.** Sigue siendo la condicion de lanzamiento (secciones 7 y 12): sin
+una compra real verificada la version no es publicable.
+
+**Juegos.** Ya existe la capa generica y cada juego vive en su propio archivo
+`src/minigames/<juego>.js`, asi que ahi no hay conflicto entre agentes.
+⚠️ Antes del primer minijuego 3D hay que **pausar el bucle de render
+principal** mientras el juego este abierto. Hoy el mundo se sigue dibujando por
+detras: con un juego 2D no se nota, con uno 3D si.
+
+**FT$ y login.** ⚠️ El saldo de FT$ **NO puede vivir en el navegador, nunca.**
+Si vive ahi, cualquiera abre las herramientas del navegador, se escribe el
+saldo que quiera y lo canjea; no hace falta saber programar. **El saldo vive en
+el servidor** y el navegador solo puede pedir, nunca decidir. Es la misma regla
+que ya rige para el precio (seccion 7).
+
+- Lo mismo vale para el guardado del avatar: hoy el BOB elegido y el layout
   viven en `localStorage`, o sea por computadora. Para que "tu BOB" te siga a
   otra maquina tiene que estar en el servidor, atado a la cuenta.
 - **Tiendanube NO tiene login de clientes para apps externas.** No existe un
   "entra con tu cuenta de Tiendanube". Lo que si se puede: cuenta propia del
   simulador (mail y clave) y cruzar ese mail contra la API de clientes de
   Tiendanube del lado del servidor para reconocer al comprador.
-- **FT$ y la compra necesitan el MISMO backend** (servidor, cuentas, base de
-  datos, validacion del lado servidor). Como la compra va en el paso 2, para
-  cuando se llegue al paso 5 ese backend ya deberia existir: los FT$ se montan
-  encima, no se empieza de cero.
-- **Consecuencia del orden elegido:** no tiene sentido dar FT$ antes de que
-  exista el login, porque un saldo sin cuenta no se puede guardar ni defender.
-  Los FT$ entran junto con el login, no antes.
+- FT$, login y compra necesitan el **mismo backend** (servidor, cuentas, base
+  de datos, validacion del lado servidor). Se montan uno encima del otro; no se
+  empieza dos veces.
 
-### Vestir a BOB estilo GTA (queda dentro del paso 5)
+**Vestir a BOB estilo GTA (va dentro de "Carga de vestimenta").**
 
-- Kusher pregunto si en vez de 10 BOBs distintos se puede hacer **uno solo y
-  vestirlo** con la ropa que compra adentro del simulador. **Si, y es mejor**:
-  es como esta hecho GTA — un cuerpo, y las prendas son mallas aparte pegadas
-  al mismo esqueleto. Fer ya modela las prendas en GLB.
+- En vez de 10 BOBs distintos va **uno solo y se lo viste**. Es como esta hecho
+  GTA: un cuerpo, y las prendas son mallas aparte pegadas al mismo esqueleto.
+  Fer ya modela las prendas en GLB.
 - Se combina con lo que ya existe: se elige **pelaje** (los 10 de
   `bobSkins.js`, que cuestan 0 KB) **y** ropa.
 - ⚠️ **Requisito duro: el rig definitivo de BOB, con los nombres de huesos
-  congelados.** El rig fue reparado muchas veces; si cambia despues, toda prenda
-  hecha antes deja de encajar. Es el mismo pendiente ya anotado en la seccion de
-  prendas.
-- Kusher ademas quiere **cargar el mismo los 10 BOBs a mano** cuando los tenga
-  hechos. El sistema actual acepta las dos cosas: `BOB_SKINS` en
-  `player/bobSkins.js` es una lista de recetas de color, y si algun dia hay
-  modelos propios se cambia esa lista por archivos sin tocar la pantalla.
+  congelados.** El rig fue reparado muchas veces; si cambia despues, toda
+  prenda hecha antes deja de encajar.
+- Kusher ademas quiere cargar el mismo los 10 BOBs a mano cuando los tenga
+  hechos. El sistema acepta las dos cosas: `BOB_SKINS` en `player/bobSkins.js`
+  es una lista de recetas de color, y si algun dia hay modelos propios se
+  cambia esa lista por archivos sin tocar la pantalla.
 
 ## 3.b Prioridades de agosto de 2026 (VIEJO — solo referencia)
 
@@ -1029,9 +1042,21 @@ ahora: no adelantarlo.
 
 ### Fer
 
+- **Que le toca (09/09): la fase 1 entera** — estetica, orden, muebles,
+  texturas y poner las prendas fisicamente adentro de los cinco pisos del
+  ascensor. Ademas el comic de la Twenty Time. Burela NO es suya.
 - Fer trabaja en su computadora, con su Codex y una rama aislada.
-- Debe partir de la rama oficial actual, no de un backup viejo.
-- No hace push directo a ramas oficiales.
+- Clona nuestra ultima version y trabaja libremente sobre ella; nunca hace
+  push a una rama oficial. Cuando termina, nosotros pasamos su trabajo a la
+  oficial.
+- ⚠️ Para que ese pase sea limpio: sus commits van todos **arriba** de los
+  nuestros y sin mezclarse. Se sincroniza con `git rebase`, nunca con merge, y
+  no toca (ni corrige, ni reordena, ni aplasta) los commits que vienen de
+  nosotros. Un commit por piso, asi Kusher puede tomar unos y otros no.
+- ⚠️ `furniture-layout.json` y `productos.json` son exportaciones de archivo
+  ENTERO que Kusher tambien regenera. No se fusionan: gana uno y el trabajo del
+  otro desaparece en silencio. Van en commits propios, nunca mezclados con
+  codigo, y hay que hacer `pull` antes de exportar.
 - Entrega Pull Request pequeno con objetivo, commit, archivos, peso, build y
   capturas. Kusher decide si se integra completo, por commit o se rechaza.
 - No copiar fragmentos manualmente entre computadoras si existe un commit.
@@ -1117,9 +1142,9 @@ lanzamiento web deben cumplirse todos estos puntos:
 ## 13. No hacer sin nueva aprobacion
 
 - No optimizar mobile durante la fase web.
-- No construir FT$ **todavia**: esta aprobado, pero es el paso 5 del plan y va
-  despues de la compra. Adelantarlo sin servidor deja el saldo en el navegador,
-  donde cualquiera se lo edita.
+- No construir FT$ antes de que exista el backend. Esta aprobado y va en la
+  fase 2 del plan, junto con la compra y el login. Adelantarlo sin servidor
+  deja el saldo en el navegador, donde cualquiera se lo edita.
 - No construir la plataforma multi-marca 2027.
 - No asumir una arquitectura de pago como aprobada.
 - No reemplazar todo el mundo de una vez sin pedido directo; normalmente mostrar
