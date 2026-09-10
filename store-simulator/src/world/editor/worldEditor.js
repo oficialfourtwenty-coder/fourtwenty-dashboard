@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { crearSistemaDeGrupos } from './gruposDeMundo.js';
 import { crearHistorial, fotoDeTransform, aplicarFoto } from './deshacer.js';
+import { leerMando, BOTON } from './mandoEditor.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { addFurnitureItem } from '../furniture.js';
 import { createPiece, groupPieces, mergePiece, PIEZAS, setPieceTexture } from './pieceBuilder.js';
@@ -286,6 +287,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       orbit.update();
       panel.show();
       grupos.mostrarMangos(true);
+      arrancarMando(true);
       // Los conjuntos guardados se rearman recien aca: para que el mango caiga
       // en el centro de verdad, el layout ya tiene que estar aplicado. Al abrir
       // el editor eso siempre paso.
@@ -302,6 +304,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       // Kusher las veia quedar colgadas ("tambien queda eso verde").
       borrarTodasLasMarcas();
       grupos.mostrarMangos(false);
+      arrancarMando(false);
       frameEditor.cerrar();
       cuadroSeleccionado = null;
       orbit.enabled = false;
@@ -725,6 +728,108 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
 
   // ---- Deshacer (Ctrl+Z / Cmd+Z) — ver editor/deshacer.js -------------------
   const historial = crearHistorial();
+
+  // ---- Editar con el joystick (ver editor/mandoEditor.js) -------------------
+  // Kusher lo pidio para acomodar mas rapido: con el mouse cada objeto son
+  // cuatro agarres de gizmo; con los sticks se empuja y ya.
+  //
+  //   stick izquierdo   mover en el plano (RELATIVO A LA CAMARA)
+  //   L2 / R2           bajar / subir
+  //   stick derecho ←→  rotar          ↑↓  agrandar / achicar
+  //   L1 mantenido      fino (lento)
+  //   ✕ duplicar   ○ soltar   Options guardar
+  //
+  // ⚠️ MOVER ES RELATIVO A LA CAMARA, no a los ejes del mundo. Empujando el
+  // stick para adelante el objeto se aleja EN PANTALLA, mire uno de donde
+  // mire. Con ejes del mundo, despues de orbitar media vuelta el stick mueve
+  // al reves y no hay forma de acostumbrarse.
+  const VEL_MOVER = 3.2;      // m/s
+  const VEL_SUBIR = 1.6;      // m/s
+  const VEL_GIRAR = 1.4;      // rad/s
+  const VEL_ESCALAR = 0.7;    // por segundo
+  const FINO = 0.22;
+
+  let mandoLazo = 0;
+  let mandoAntes = new Set();
+  let mandoUltimo = 0;
+  let fotoGesto = null;       // foto de antes de empezar a empujar el stick
+  const adelante = new THREE.Vector3();
+  const derecha = new THREE.Vector3();
+
+  function pasoDelMando() {
+    mandoLazo = requestAnimationFrame(pasoDelMando);
+    const ahora = performance.now();
+    const dt = Math.min((ahora - mandoUltimo) / 1000, 0.1);
+    mandoUltimo = ahora;
+
+    const mando = leerMando();
+    if (!mando) { mandoAntes.clear(); return; }
+
+    // botones: solo el flanco (recien apretados)
+    const nuevos = new Set();
+    for (const b of mando.apretados) if (!mandoAntes.has(b)) nuevos.add(b);
+    mandoAntes = new Set(mando.apretados);
+
+    if (nuevos.has(BOTON.OPTIONS)) saveNow('Layout local guardado (joystick).');
+    if (nuevos.has(BOTON.CIRCULO)) deselect();
+    if (nuevos.has(BOTON.CRUZ)) duplicateSelected();
+
+    const entry = getEditableById(state.selectedId);
+    if (!entry?.object3D || entry.locked) { fotoGesto = null; return; }
+    const objeto = entry.object3D;
+
+    if (!mando.activo) {
+      // Al soltar todo se cierra el gesto: UNA sola vuelta atras por empujon.
+      if (fotoGesto) {
+        const fotos = fotoGesto;
+        historial.anotar(`mover ${entry.name} (joystick)`, () => restaurarFotos(fotos));
+        fotoGesto = null;
+        saveNow('Layout local guardado.');
+      }
+      return;
+    }
+    if (!fotoGesto) fotoGesto = fotoParaDeshacer(state.selectedId);
+
+    const k = (mando.preciso ? FINO : 1) * dt;
+
+    // Ejes de la camara aplastados contra el piso: asi "adelante" es adelante
+    // en pantalla y no hacia el cielo cuando se mira desde arriba.
+    camera.getWorldDirection(adelante);
+    adelante.y = 0;
+    if (adelante.lengthSq() < 1e-6) adelante.set(0, 0, 1);
+    adelante.normalize();
+    derecha.set(adelante.z, 0, -adelante.x);
+
+    if (mando.mover.x || mando.mover.z) {
+      objeto.position.addScaledVector(adelante, mando.mover.z * VEL_MOVER * k);
+      objeto.position.addScaledVector(derecha, -mando.mover.x * VEL_MOVER * k);
+    }
+    if (mando.subir) objeto.position.y += mando.subir * VEL_SUBIR * k;
+    if (mando.girar) objeto.rotation.y += mando.girar * VEL_GIRAR * k;
+    if (mando.escalar) {
+      // Multiplicativo, no sumado: asi achicar y agrandar cuestan lo mismo y
+      // un objeto nunca puede cruzar el cero y quedar del reves.
+      const f = Math.exp(mando.escalar * VEL_ESCALAR * k);
+      objeto.scale.multiplyScalar(f);
+    }
+    objeto.updateMatrixWorld(true);
+
+    grupos.propagar(state.selectedId);
+    updateHelper();
+    refreshSelected();
+    notifyWorldChanged();
+    scheduleSave();
+  }
+
+  function arrancarMando(prender) {
+    cancelAnimationFrame(mandoLazo);
+    mandoLazo = 0;
+    fotoGesto = null;
+    mandoAntes.clear();
+    if (!prender) return;
+    mandoUltimo = performance.now();
+    mandoLazo = requestAnimationFrame(pasoDelMando);
+  }
 
   function deshacerUltimo() {
     const que = historial.deshacer();
@@ -1218,6 +1323,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     grupos,
     dispose() {
       clearTimeout(saveTimer);
+      arrancarMando(false);
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('keydown', onKeyDown, true);
       window.removeEventListener('fourtwenty:editable-registry-change', refreshPanel);
