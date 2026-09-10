@@ -218,6 +218,7 @@ export class Player {
       this.gestos = {
         golpe: gesto(/box|punch|golpe|fight/i, 'GOLPE'),
         baile: gesto(/unsteady|dance|baile|idle_2|tamba/i, 'BAILE'),
+        pelota: gesto(/dribbl|basket|pelota/i, 'PELOTA'),
       };
       this._gesto = null;          // el que esta sonando ahora
       this._gestoHasta = 0;        // en que segundo del reloj interno termina

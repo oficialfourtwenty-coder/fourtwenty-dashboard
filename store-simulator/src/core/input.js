@@ -27,6 +27,7 @@ const ZONA_MUERTA = 0.18;   // los sticks del DualSense siempre tiemblan un poco
 //   ✕  Cruz                 saltar
 //   R1                      golpe  (= tecla F)
 //   L1                      baile  (= tecla B)
+//   R2                      picar la pelota (= tecla N)
 //
 // ⚠️ Las que ya existian como TECLA se mandan como tecla sintetica en vez de
 // cablearlas de nuevo: el que escucha la T, la K o la C ya existe y anda. Un
@@ -65,6 +66,7 @@ export class Input {
       if (!isTypingTarget(e.target)) {
         if (e.code === 'KeyF') this._gestoPedido = 'golpe';
         if (e.code === 'KeyB') this._gestoPedido = 'baile';
+        if (e.code === 'KeyN') this._gestoPedido = 'pelota';
       }
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
@@ -77,7 +79,7 @@ export class Input {
     });
 
     window.addEventListener('gamepadconnected', (e) => {
-      console.info(`FOURTWENTY: joystick conectado — ${e.gamepad.id}. Stick izq mover · L3 correr · ✕ saltar · R1 golpe · L1 baile · ○ interactuar · ▢ Banapod · △ editor · L2 ver colisiones.`);
+      console.info(`FOURTWENTY: joystick conectado — ${e.gamepad.id}. Stick izq mover · L3 correr · ✕ saltar · R1 golpe · L1 baile · R2 pelota · ○ interactuar · ▢ Banapod · △ editor · L2 ver colisiones.`);
     });
     window.addEventListener('gamepaddisconnected', () => {
       this._padAntes.clear();
@@ -165,6 +167,7 @@ export class Input {
     if (nuevos.has(BOTON.CRUZ)) this._saltoPedido = true;   // saltar
     if (nuevos.has(BOTON.R1)) this._gestoPedido = 'golpe';
     if (nuevos.has(BOTON.L1)) this._gestoPedido = 'baile';
+    if (nuevos.has(BOTON.R2)) this._gestoPedido = 'pelota';
 
     // ⚠️ Con el editor abierto BOB no se actualiza, asi que nadie consume el
     // salto: sin esta linea, la ✕ apretada dentro del editor (donde sirve para
