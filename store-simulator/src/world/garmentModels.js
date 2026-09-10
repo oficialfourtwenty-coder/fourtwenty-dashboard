@@ -114,7 +114,10 @@ function cargar(archivo) {
 export async function addGarmentModel(scene, clave, {
   position = [0, 0, 0],
   rotationY = 0,
+  rotation = null,
   scale = 1,
+  finalScale = null,
+  color = null,
   id = null,
   name = null,
   // En que escena se colgo. Se guarda para que al recargar vuelva SOLO ahi:
@@ -125,6 +128,11 @@ export async function addGarmentModel(scene, clave, {
   // guardarlas las duplicaba —una del codigo y otra del layout— y la copia se
   // multiplicaba en cada refresco.
   persistente = false,
+  // Cuando una prenda forma parte de un objeto agrupado, su padre y registro
+  // los maneja pieceBuilder. Así conserva el GLB real sin aparecer dos veces
+  // en el editor ni guardarse como una caja.
+  parent = null,
+  registerEditable = true,
 } = {}) {
   const preset = PRENDAS_GLB[clave];
   if (!preset || !scene) return null;
@@ -164,14 +172,16 @@ export async function addGarmentModel(scene, clave, {
   });
 
   root.position.fromArray(position);
-  root.rotation.y = rotationY;
+  if (Array.isArray(rotation) && rotation.length >= 3) root.rotation.set(rotation[0], rotation[1], rotation[2]);
+  else root.rotation.y = rotationY;
   // La escala de correccion del modelo se multiplica por la que pida quien lo
   // coloca, asi el hoodie entra ya corregido sin que nadie tenga que acordarse.
-  root.scale.setScalar(scale * (preset.escala ?? 1));
+  if (Array.isArray(finalScale) && finalScale.length >= 3) root.scale.fromArray(finalScale);
+  else root.scale.setScalar(scale * (preset.escala ?? 1));
   root.userData.editorCollider = false;   // una prenda colgada no frena a BOB
   // Marca para el editor de prendas: con esto sabe cual malla pintar.
   if (!preset.soloPercha) root.userData.garmentModel = { clave, telaNombre: tela?.name ?? null };
-  scene.add(root);
+  (parent ?? scene).add(root);
 
   // ⚠️ El diseño guardado se aplica ACA y no al terminar de armar la escena.
   // El GLB se baja de forma asincronica: cuando `buildPs3FloorScene` llama a
@@ -179,21 +189,26 @@ export async function addGarmentModel(scene, clave, {
   // que no la encontraba y el diseño de Kusher no aparecia nunca.
   if (!preset.soloPercha) {
     const diseño = diseñoDe(root);
+    const colorGuardado = typeof color === 'number'
+      ? `#${(color & 0xffffff).toString(16).padStart(6, '0')}`
+      : color;
+    if (colorGuardado) diseño.color = colorGuardado;
     if (diseño.imagen || diseño.color) pintarPrenda(root, diseño);
   }
 
-  registerEditableObject({
+  if (registerEditable) registerEditableObject({
     id: id ?? `prenda:${clave}:${Math.random().toString(36).slice(2, 8)}`,
     name: root.name,
     type: 'prenda',
     object3D: root,
-    position,
-    rotation: [0, rotationY, 0],
-    scale: [scale, scale, scale],
+    position: root.position.toArray(),
+    rotation: [root.rotation.x, root.rotation.y, root.rotation.z],
+    scale: root.scale.toArray(),
     castShadow: true,
     receiveShadow: true,
     locked: false,
     visible: true,
+    color,
     // Sin esto una prenda agregada a mano desaparece al refrescar: el layout
     // guarda DONDE esta, no que archivo cargar. Lo reconstruye
     // `restorePrendasGlb`, igual que `restoreMuebles` con los muebles.
@@ -256,8 +271,9 @@ export function restorePrendasGlb(scene, layout, destinoDeLaEscena) {
       id: item.id,
       name: item.name,
       position: item.position ?? [0, 0, 0],
-      rotationY: item.rotation?.[1] ?? 0,
-      scale: item.scale?.[0] ?? 1,
+      rotation: item.rotation ?? [0, 0, 0],
+      finalScale: item.scale ?? [1, 1, 1],
+      color: item.color ?? null,
       destinationId: destinoDeLaEscena,
       persistente: true,
     })

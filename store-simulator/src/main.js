@@ -1544,6 +1544,7 @@ async function handleElevatorEntered(elevator) {
 function activateDestination(destinationId) {
   const destination = getDestination(destinationId);
   if (!destination) throw new Error(`Destino de ascensor invalido: ${destinationId}`);
+  renderer.toneMappingExposure = destination.id === 1 ? 1.08 : 1.0;
 
   if (activeDestinationRecord) {
     clearDestinationEditorSync(activeDestinationRecord);

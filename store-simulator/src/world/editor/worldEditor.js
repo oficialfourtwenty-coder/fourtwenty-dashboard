@@ -12,6 +12,7 @@ import { cuadroDesde, getFrameEditor } from '../../ui/frameEditor.js';
 import { ADDABLE_MODELS, searchableModelPresets } from './modelCatalog.js';
 import { MUEBLES_PS3, crearMueblePs3 } from '../terracePs3Trial.js';
 import { PRENDAS_GLB, addGarmentModel } from '../garmentModels.js';
+import { BORDADOS } from '../../ui/garmentGlbEditor.js';
 import {
   applyLayout,
   duplicateEditable,
@@ -162,6 +163,11 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
         searchTerms: clave === 'percha'
           ? 'percha hanger gancho ropa colgar'
           : 'remera prenda ropa colgar fer chelo',
+      })),
+      ...BORDADOS.map((bordado) => ({
+        key: `bordado:${bordado.archivo}`,
+        name: `Bordado · ${bordado.nombre}`,
+        searchTerms: `bordado logo parche estampa ${bordado.nombre}`,
       })),
     ],
     onMode: setMode,
@@ -537,6 +543,54 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   }
 
   async function addModelFromPreset(key) {
+    if (key.startsWith('bordado:')) {
+      const archivo = key.slice('bordado:'.length);
+      const bordado = BORDADOS.find((item) => item.archivo === archivo);
+      if (!bordado) { setStatus(`Bordado no encontrado: ${archivo}.`); return; }
+      setStatus(`Preparando ${bordado.nombre}...`);
+      try {
+        const ruta = `/assets/bordados/${archivo}`;
+        const respuesta = await fetch(ruta);
+        if (!respuesta.ok) throw new Error(`archivo ${respuesta.status}`);
+        const blob = await respuesta.blob();
+        // Se recorta el margen transparente y se guarda liviano. Asi el plano
+        // se selecciona por el dibujo real, no por el lienzo vacio del PNG.
+        const imagen = await leerImagen(new File([blob], archivo, { type: blob.type || 'image/png' }), {
+          maxLado: 512,
+          quitarFondo: 'auto',
+        });
+        // Nace frente a BOB, a la altura del pecho y mirando hacia el jugador.
+        // Antes aparecia al ras del piso y de canto: existia, pero no se veia.
+        const posicion = spawnPositionInFront(3.5);
+        posicion[1] += 1.4;
+        const frente = directionInFrontOfPlayer();
+        const giroHaciaBob = Math.atan2(-frente.x, -frente.z);
+        const proporcion = imagen.ancho / Math.max(1, imagen.alto);
+        const entry = createPiece(currentScene, 'plano', {
+          name: `Bordado · ${bordado.nombre}`,
+          position: posicion,
+          rotation: [0, giroHaciaBob, 0],
+          // El plano base mide 0,5 m: asi nace con 1 m de alto, claramente
+          // visible. Despues se achica con Scale para apoyarlo sobre la prenda.
+          scale: [Math.max(0.35, proporcion * 2), 2, 1],
+          color: 0xffffff,
+          textura: imagen.url,
+          unlit: true,
+          destinationId: destinoDeLaEscenaActual(),
+        });
+        if (!entry) throw new Error('no se pudo crear el plano');
+        entry.object3D.castShadow = false;
+        entry.object3D.receiveShadow = false;
+        entry.object3D.userData.editorCollider = false;
+        selectId(entry.id);
+        notifyWorldChanged();
+        saveNow(`${bordado.nombre} agregado como objeto.`);
+      } catch (error) {
+        setStatus(`No se pudo agregar el bordado: ${error.message}`);
+      }
+      return;
+    }
+
     // Muebles del catalogo de pisos: no son GLB ni copias de algo que este en
     // escena, se CONSTRUYEN con la misma funcion que los hacia antes. Es lo que
     // permite volver a armar un piso vaciado.
@@ -676,7 +730,10 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
 
   function handlePieceAction(accion) {
     if (PIEZAS[accion]) {
-      const entry = createPiece(currentScene, accion, { position: spawnPositionInFront().toArray?.() ?? spawnPositionInFront() });
+      const entry = createPiece(currentScene, accion, {
+        position: spawnPositionInFront().toArray?.() ?? spawnPositionInFront(),
+        destinationId: destinoDeLaEscenaActual(),
+      });
       if (!entry) { setStatus('No se pudo crear la pieza.'); return; }
       selectId(entry.id);
       notifyWorldChanged();

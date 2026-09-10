@@ -1,3 +1,8 @@
+import originSofaUrl from '../../assets/origen/origen-sofa-v1.glb?url';
+import originGlassTableUrl from '../../assets/origen/origen-glass-table-v1.glb?url';
+import originDrDreVinylUrl from '../../assets/origen/origen-vinyl-dr-dre-v1.glb?url';
+import originVinylCabinetUrl from '../../assets/origen/origen-vinyl-cabinet-v1.glb?url';
+
 export const MODEL_CATALOG_MIGRATION_KEY = 'fourtwenty-editor-model-catalog-v3';
 
 const KENNEY_CITY_PATH = 'assets/furniture/kenney-modular-city';
@@ -78,6 +83,38 @@ const PACK_BABILONIA = {
 };
 
 export const ADDABLE_MODELS = Object.freeze({
+  'origen-sofa': {
+    name: 'ORIGEN · Sofa lateral',
+    model: originSofaUrl,
+    height: 1.03,
+    castShadow: true,
+    collidable: true,
+    searchTerms: 'origen sofa sillon lounge cuero asiento',
+  },
+  'origen-mesa-vidrio': {
+    name: 'ORIGEN · Mesa de vidrio',
+    model: originGlassTableUrl,
+    height: 0.5,
+    castShadow: true,
+    collidable: true,
+    searchTerms: 'origen mesa vidrio cristal lounge',
+  },
+  'origen-vinilo-dr-dre': {
+    name: 'ORIGEN · Vinilo Dr. Dre',
+    model: originDrDreVinylUrl,
+    height: 0.011,
+    castShadow: true,
+    collidable: false,
+    searchTerms: 'origen vinilo disco dr dre chronic musica',
+  },
+  'origen-mueble-vinilos': {
+    name: 'ORIGEN · Mueble de vinilos',
+    model: originVinylCabinetUrl,
+    height: 1.2,
+    castShadow: true,
+    collidable: true,
+    searchTerms: 'origen mueble vinilos discos musica estante',
+  },
   cantero: {
     name: 'Cantero',
     sourceId: 'calle-kit:26',

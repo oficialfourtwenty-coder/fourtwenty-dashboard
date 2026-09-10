@@ -19,6 +19,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { getEditableById, registerEditableObject, unregisterEditableObject } from './editableRegistry.js';
+import { addGarmentModel } from '../garmentModels.js';
 
 export const PIEZAS = Object.freeze({
   caja: { nombre: 'Caja', crear: () => new THREE.BoxGeometry(0.5, 0.5, 0.5) },
@@ -47,19 +48,21 @@ function texturaDesde(dataUrl) {
   return texture;
 }
 
-function materialDePieza({ color = 0xb9b3a6, textura = null } = {}) {
-  return new THREE.MeshStandardMaterial({
+function materialDePieza({ color = 0xb9b3a6, textura = null, unlit = false } = {}) {
+  const parametros = {
     color,
     map: texturaDesde(textura),
-    roughness: 0.85,
-    metalness: 0,
     // Recorta el fondo transparente de una textura sin meter la pieza en la
     // cola de transparentes, que se ordena mal contra la geometria del mundo.
     alphaTest: 0.02,
     // Una pieza suelta se mira de los dos lados mientras se la acomoda: con
     // FrontSide desaparece al pasar la camara detras y parece que se borro.
     side: THREE.DoubleSide,
-  });
+  };
+  // Los bordados son graficos, no muebles: tienen que conservar sus colores
+  // aunque el piso este oscuro. MeshBasicMaterial los hace siempre legibles.
+  if (unlit) return new THREE.MeshBasicMaterial(parametros);
+  return new THREE.MeshStandardMaterial({ ...parametros, roughness: 0.85, metalness: 0 });
 }
 
 let contador = 0;
@@ -83,12 +86,14 @@ export function createPiece(scene, tipo, {
   name = null,
   color = 0xb9b3a6,
   textura = null,
+  unlit = false,
+  destinationId = null,
   visible = true,
 } = {}) {
   const preset = PIEZAS[tipo];
   if (!preset || !scene) return null;
 
-  const mesh = new THREE.Mesh(preset.crear(), materialDePieza({ color, textura }));
+  const mesh = new THREE.Mesh(preset.crear(), materialDePieza({ color, textura, unlit }));
   mesh.name = name ?? `${preset.nombre} ${contador + 1}`;
   mesh.position.fromArray(position);
   mesh.rotation.set(rotation[0], rotation[1], rotation[2]);
@@ -100,6 +105,7 @@ export function createPiece(scene, tipo, {
   scene.add(mesh);
 
   const entryId = id ?? idDePieza(tipo);
+  const destino = Number(destinationId ?? scene.userData?.ps3DestinationId ?? scene.userData?.destinationId ?? 0);
   const entry = registerEditableObject({
     id: entryId,
     name: mesh.name,
@@ -111,7 +117,7 @@ export function createPiece(scene, tipo, {
     locked: false,
     visible,
     // Marca de reconstruccion: sin esto la pieza desaparece al refrescar.
-    piece: { tipo, textura, color },
+    piece: { tipo, textura, color, unlit, destinationId: destino },
   });
   return entry;
 }
@@ -185,7 +191,8 @@ export function groupPieces(scene, ids, nombre = 'Objeto armado') {
     piezas.push({
       tipo: entrada.piece?.tipo ?? 'caja',
       textura: entrada.piece?.textura ?? null,
-      color: entrada.piece?.color ?? 0xb9b3a6,
+      color: entrada.color ?? entrada.piece?.color ?? null,
+      ...(entrada.prendaGlb ? { prendaGlb: { ...entrada.prendaGlb } } : {}),
       position: objeto.position.toArray(),
       rotation: [objeto.rotation.x, objeto.rotation.y, objeto.rotation.z],
       scale: objeto.scale.toArray(),
@@ -206,7 +213,11 @@ export function groupPieces(scene, ids, nombre = 'Objeto armado') {
     receiveShadow: true,
     locked: false,
     visible: true,
-    piece: { tipo: 'grupo', piezas },
+    piece: {
+      tipo: 'grupo',
+      piezas,
+      destinationId: Number(entradas[0]?.piece?.destinationId ?? scene.userData?.ps3DestinationId ?? scene.userData?.destinationId ?? 0),
+    },
   });
 }
 
@@ -282,9 +293,13 @@ export function mergePiece(id) {
  */
 export function restorePieces(scene, layout) {
   if (!Array.isArray(layout) || !scene) return 0;
+  const destinoDeLaEscena = Number(scene.userData?.ps3DestinationId ?? scene.userData?.destinationId ?? 0);
   let creadas = 0;
   for (const item of layout) {
     if (item?.type !== 'pieza' || !item.piece || getEditableById(item.id)?.object3D) continue;
+    // Las piezas antiguas sin destino pertenecen a Burela (0). Las nuevas se
+    // reconstruyen solamente en el piso donde fueron creadas.
+    if (Number(item.piece.destinationId ?? 0) !== destinoDeLaEscena) continue;
 
     if (item.piece.tipo === 'grupo') {
       const grupo = new THREE.Group();
@@ -296,6 +311,27 @@ export function restorePieces(scene, layout) {
       grupo.userData.editorCollider = true;
       scene.add(grupo);
       for (const p of item.piece.piezas ?? []) {
+        if (p.prendaGlb?.clave) {
+          addGarmentModel(scene, p.prendaGlb.clave, {
+            name: p.name,
+            position: p.position ?? [0, 0, 0],
+            rotation: p.rotation ?? [0, 0, 0],
+            finalScale: p.scale ?? [1, 1, 1],
+            color: p.color ?? null,
+            destinationId: destinoDeLaEscena,
+            parent: grupo,
+            registerEditable: false,
+          }).then(() => {
+            // La carga es asíncrona. Volver a registrar el mismo grupo marca
+            // también el GLB recién llegado como parte del objeto editable.
+            registerEditableObject({
+              id: item.id, name: grupo.name, type: 'pieza', object3D: grupo,
+              castShadow: true, receiveShadow: true, locked: false,
+              visible: item.visible !== false, piece: item.piece,
+            }, { silent: true });
+          }).catch((error) => console.warn('No se pudo restaurar una prenda agrupada.', error));
+          continue;
+        }
         const preset = PIEZAS[p.tipo] ?? PIEZAS.caja;
         const malla = new THREE.Mesh(preset.crear(), materialDePieza(p));
         malla.name = p.name ?? preset.nombre;
@@ -328,6 +364,8 @@ export function restorePieces(scene, layout) {
       scale: item.scale,
       color: item.piece.color,
       textura: item.piece.textura,
+      unlit: item.piece.unlit === true,
+      destinationId: destinoDeLaEscena,
       visible: item.visible !== false,
     });
     if (entry) creadas++;

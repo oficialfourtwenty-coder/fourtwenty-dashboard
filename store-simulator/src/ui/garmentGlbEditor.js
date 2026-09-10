@@ -32,6 +32,15 @@ const LADO_SIN_IMAGEN = 512;   // color plano: no hace falta resolucion
 // propia textura de 2048: veinte prendas eran 320 MB de memoria de video.
 const cacheDeTexturas = new Map();
 const PANEL_ID = 'ft-garment-glb-editor';
+export const BORDADOS = Object.freeze([
+  { archivo: 'fourtwenty-blanco.png', nombre: 'FOURTWENTY blanco' },
+  { archivo: 'fourtwenty-negro.png', nombre: 'FOURTWENTY negro' },
+  { archivo: 'cannabis-verde.png', nombre: 'Hoja verde' },
+  { archivo: 'cannabis-negro.png', nombre: 'Hoja negra' },
+  { archivo: 'cannabis-blanco.png', nombre: 'Hoja blanca' },
+  { archivo: '420-blanco.png', nombre: '420 blanco' },
+  { archivo: '420-negro.png', nombre: '420 negro' },
+]);
 
 // Arranca sobre el pecho del frente. Sale de medir en que UV caen los vertices
 // del pecho-frente del GLB; es un punto de partida, no una jaula: se mueve.
@@ -107,7 +116,7 @@ export function diseñoDe(prenda) {
 // ---------------------------------------------------------------------------
 // El lienzo: aca esta todo el trabajo real
 // ---------------------------------------------------------------------------
-export function pintarPrenda(prenda, diseño) {
+export function pintarPrenda(prenda, diseño, { usarCache = true, lado = null } = {}) {
   const tela = telaDe(prenda);
   if (!tela?.material) return null;
 
@@ -115,8 +124,10 @@ export function pintarPrenda(prenda, diseño) {
 
   // Misma pinta => misma textura. Se compara el diseño entero, imagen incluida.
   const clave = JSON.stringify(diseño);
-  const cacheada = cacheDeTexturas.get(clave);
+  const cacheada = usarCache ? cacheDeTexturas.get(clave) : null;
   if (cacheada) {
+    tela.userData.texturaTemporal?.dispose?.();
+    delete tela.userData.texturaTemporal;
     tela.material.map = cacheada.textura;
     tela.material.color.set(0xffffff);
     tela.material.needsUpdate = true;
@@ -125,7 +136,7 @@ export function pintarPrenda(prenda, diseño) {
   }
 
   const lienzo = document.createElement('canvas');
-  lienzo.width = lienzo.height = diseño.imagen ? LADO : LADO_SIN_IMAGEN;
+  lienzo.width = lienzo.height = lado ?? (diseño.imagen ? LADO : LADO_SIN_IMAGEN);
   tela.userData.lienzoPrenda = lienzo;
   const ctx = lienzo.getContext('2d');
   // Sin esto el logo sale con escalones al achicarlo.
@@ -144,8 +155,18 @@ export function pintarPrenda(prenda, diseño) {
     textura.colorSpace = THREE.SRGBColorSpace;
     textura.anisotropy = 16;
     textura.needsUpdate = true;
-    cacheDeTexturas.set(clave, { textura, lienzo });
     tela.material.map = textura;
+    if (usarCache) {
+      tela.userData.texturaTemporal?.dispose?.();
+      delete tela.userData.texturaTemporal;
+      cacheDeTexturas.set(clave, { textura, lienzo });
+      // Evita que una sesion larga conserve para siempre cada prueba anterior.
+      while (cacheDeTexturas.size > 12) cacheDeTexturas.delete(cacheDeTexturas.keys().next().value);
+    } else {
+      const anterior = tela.userData.texturaTemporal;
+      tela.userData.texturaTemporal = textura;
+      if (anterior && anterior !== textura) anterior.dispose();
+    }
     // ⚠️ El color del material se lleva a BLANCO: si queda tenido, multiplica
     // la textura y el diseño sale con ese tinte encima.
     tela.material.color.set(0xffffff);
@@ -232,6 +253,10 @@ function inyectarCss() {
     #${PANEL_ID} input[type="range"] { width: 100%; }
     #${PANEL_ID} input[type="color"] { width: 100%; height: 30px; padding: 2px; cursor: pointer; }
     #${PANEL_ID} .gg-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    #${PANEL_ID} .gg-bordados { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+    #${PANEL_ID} .gg-bordados button { padding: 4px; min-height: 68px; font-size: 8px; }
+    #${PANEL_ID} .gg-bordados img { display: block; width: 100%; height: 42px; object-fit: contain;
+      margin-bottom: 3px; background: #24262a; }
     /* La PREVIA del mapa plano: es lo que convierte esto en un photoshop.
        Sin verlo, mover el diseño es adivinar. */
     #${PANEL_ID} .gg-previa { width: 100%; aspect-ratio: 1; margin-top: 6px;
@@ -257,6 +282,9 @@ export function createGarmentGlbEditor() {
     <input type="color" data-f="color" value="#ffffff">
 
     <div class="gg-label">Diseño</div>
+    <div class="gg-bordados">
+      ${BORDADOS.map(({ archivo, nombre }) => `<button data-bordado="/assets/bordados/${archivo}" title="${nombre}"><img src="/assets/bordados/thumbs/${archivo}" alt="" loading="lazy" decoding="async"><span>${nombre}</span></button>`).join('')}
+    </div>
     <div class="gg-fila">
       <button data-a="subir">Subir imagen</button>
       <button data-a="quitar">Quitar</button>
@@ -296,6 +324,7 @@ export function createGarmentGlbEditor() {
 
   let prenda = null;
   let diseño = { ...DISEÑO_BASE };
+  let timerPrevia = null;
   // Como tratar el fondo de la proxima imagen que se suba.
   let modoFondo = 'auto';
   const TEXTO_FONDO = { auto: 'Fondo: automático', true: 'Fondo: quitar', false: 'Fondo: dejar' };
@@ -306,15 +335,16 @@ export function createGarmentGlbEditor() {
   };
 
   function refrescarPrevia() {
-    const lienzo = prenda && pintarPrenda(prenda, diseño);
-    // El repintado del lienzo grande puede tardar un frame si hay imagen: se
-    // copia despues para que la previa no salga en blanco.
-    requestAnimationFrame(() => {
-      if (!lienzo) return;
-      const ctx = f.previa.getContext('2d');
-      ctx.clearRect(0, 0, 256, 256);
-      ctx.drawImage(lienzo, 0, 0, 256, 256);
-    });
+    clearTimeout(timerPrevia);
+    timerPrevia = window.setTimeout(() => {
+      const lienzo = prenda && pintarPrenda(prenda, diseño, { usarCache: false, lado: 1024 });
+      requestAnimationFrame(() => {
+        if (!lienzo) return;
+        const ctx = f.previa.getContext('2d');
+        ctx.clearRect(0, 0, 256, 256);
+        ctx.drawImage(lienzo, 0, 0, 256, 256);
+      });
+    }, 70);
   }
 
   function pintarControles() {
@@ -336,6 +366,16 @@ export function createGarmentGlbEditor() {
     refrescarPrevia();
   }
 
+  async function aplicarBordado(archivo) {
+    avisar('Procesando la imagen…');
+    const { url, recorte } = await leerImagen(archivo, { maxLado: 2048, quitarFondo: modoFondo });
+    diseño.imagen = url;
+    cambio();
+    if (recorte.quitado) avisar('Bordado puesto (se le quitó el fondo).');
+    else if (recorte.yaRecortada) avisar('Bordado puesto. El PNG ya venía sin fondo.');
+    else avisar('Bordado puesto.');
+  }
+
   f.u.addEventListener('input', () => { diseño.u = Number(f.u.value); cambio(); });
   f.v.addEventListener('input', () => { diseño.v = Number(f.v.value); cambio(); });
   f.rot.addEventListener('input', () => { diseño.rotacion = Number(f.rot.value); cambio(); });
@@ -347,6 +387,19 @@ export function createGarmentGlbEditor() {
   f.color.addEventListener('input', () => { diseño.color = f.color.value; cambio(); });
 
   panel.addEventListener('click', async (ev) => {
+    const bordado = ev.target?.closest?.('[data-bordado]');
+    if (bordado) {
+      ev.stopPropagation();
+      try {
+        const respuesta = await fetch(bordado.dataset.bordado);
+        if (!respuesta.ok) throw new Error(`archivo ${respuesta.status}`);
+        const blob = await respuesta.blob();
+        await aplicarBordado(new File([blob], bordado.dataset.bordado.split('/').pop(), { type: blob.type || 'image/png' }));
+      } catch (error) {
+        avisar(`No se pudo cargar: ${error.message}`, true);
+      }
+      return;
+    }
     const accion = ev.target?.dataset?.a;
     if (!accion) return;
     ev.stopPropagation();
@@ -370,6 +423,7 @@ export function createGarmentGlbEditor() {
       const todos = leerGuardado();
       todos[prenda.name] = diseño;
       const ok = guardar(todos);
+      pintarPrenda(prenda, diseño);
       avisar(ok ? 'Guardado en esta computadora.' : 'No entró: liberá espacio.', !ok);
     } else if (accion === 'cerrar') cerrar();
   });
@@ -377,18 +431,8 @@ export function createGarmentGlbEditor() {
   f.archivo.addEventListener('change', async () => {
     const archivo = f.archivo.files?.[0];
     if (!archivo) return;
-    avisar('Procesando la imagen…');
     try {
-      // Mismo procesado que las estampas: le saca el fondo plano y le recorta el
-      // margen vacio, asi un logo con fondo blanco no tapa media remera.
-      // maxLado 2048: el lienzo es de 2048 y bajar antes tira nitidez que no
-      // se recupera.
-      const { url, recorte } = await leerImagen(archivo, { maxLado: 2048, quitarFondo: modoFondo });
-      diseño.imagen = url;
-      cambio();
-      if (recorte.quitado) avisar('Imagen puesta (se le quitó el fondo).');
-      else if (recorte.yaRecortada) avisar('Imagen puesta. Tu PNG ya venía recortado: no se le tocó nada.');
-      else avisar('Imagen puesta.');
+      await aplicarBordado(archivo);
     } catch (error) {
       avisar(`No se pudo cargar: ${error.message}`, true);
     }
@@ -405,6 +449,7 @@ export function createGarmentGlbEditor() {
   }
 
   function cerrar() {
+    clearTimeout(timerPrevia);
     panel.classList.remove('is-open');
     prenda = null;
   }

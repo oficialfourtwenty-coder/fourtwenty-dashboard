@@ -279,10 +279,13 @@ function buildMaterials(theme) {
       color: 0x5d615f,
       roughness: 0.92,
     }),
-    originFloor: new THREE.MeshStandardMaterial({
-      color: 0xc5b7a5,
-      roughness: 0.78,
-      metalness: 0.03,
+    originFloor: new THREE.MeshPhysicalMaterial({
+      color: 0xd5c9bc,
+      roughness: 0.3,
+      metalness: 0.02,
+      clearcoat: 0.42,
+      clearcoatRoughness: 0.24,
+      envMapIntensity: 1.15,
     }),
     brick: new THREE.MeshStandardMaterial({
       map: brickColor,
@@ -1395,7 +1398,7 @@ function addKobeDisplay(root) {
 }
 
 function addLights(scene, shadows, mats, theme) {
-  const lightScale = theme.key === 'origen' ? 0.68 : 1;
+  const lightScale = theme.key === 'origen' ? 0.82 : 1;
   scene.add(new THREE.HemisphereLight(0xcde1e2, 0x3f352d, 1.08 * lightScale));
   scene.add(new THREE.AmbientLight(0xfff7ea, 0.22 * lightScale));
 
@@ -1421,19 +1424,31 @@ function addLights(scene, shadows, mats, theme) {
   frontFill.target.position.set(0, 1.1, 4.2);
   scene.add(frontFill, frontFill.target);
 
-  for (const [x, z, color, intensity] of [
-    [-3.2, 1.1, 0xffe1b5, 6.4],
-    [3.1, 4.8, 0xd9ecdf, 5.8],
-    [0, 10.2, 0xffcca0, 6.2],
-  ]) {
-    const spot = new THREE.SpotLight(color, intensity * lightScale, 8.2, 0.8, 0.72, 1.4);
+  const spots = theme.key === 'origen'
+    ? [
+        [0, 3.35, 0xffd4a1, 11.5],
+        [-4.7, 0.45, 0xffc889, 8.2],
+        [4.7, 0.45, 0xffc889, 8.2],
+      ]
+    : [
+        [-3.2, 1.1, 0xffe1b5, 6.4],
+        [3.1, 4.8, 0xd9ecdf, 5.8],
+        [0, 10.2, 0xffcca0, 6.2],
+      ];
+  for (const [x, z, color, intensity] of spots) {
+    const spot = new THREE.SpotLight(color, intensity * lightScale, 9.5, 0.72, 0.78, 1.5);
     spot.position.set(x, 3.72, z);
-    spot.target.position.set(x * 0.82, 0, z + 0.35);
+    spot.target.position.set(x, 0.2, z);
     scene.add(spot, spot.target);
   }
 
-  const signGlow = new THREE.PointLight(theme.accentHex, 1.8 * lightScale, 5.5, 2);
-  signGlow.position.set(0, 2.8, 12.2);
+  const signGlow = new THREE.PointLight(
+    theme.key === 'origen' ? 0xffc587 : theme.accentHex,
+    (theme.key === 'origen' ? 1.15 : 1.8) * lightScale,
+    5.5,
+    2,
+  );
+  signGlow.position.set(0, 2.8, theme.key === 'origen' ? -3.25 : 12.2);
   scene.add(signGlow);
 
   scene.userData.ps3FloorLightMaterial = mats.light;

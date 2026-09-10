@@ -106,23 +106,27 @@ function migrateHoopBaseLayout(layout) {
 function migrateOriginToUploadedBase(layout) {
   try {
     if (localStorage.getItem(ORIGIN_RESET_MIGRATION_KEY) === '1') return layout;
-    const migrated = layout.filter((item) => {
-      const id = String(item?.id ?? '');
-      return !id.startsWith('destino-1:')
-        && id !== 'elevator-destination-1'
-        && id !== 'origin-minigame-arcade';
-    });
-    localStorage.setItem(LOCAL_STORAGE_KEY, formatLayoutJSON(migrated));
+    // El reset automatico de ORIGEN ya cumplio su funcion. Desde ahora el piso
+    // se edita a mano y su guardado local es la fuente de verdad: borrarlo en
+    // una migracion destruiria los percheros y las prendas acomodadas.
     localStorage.setItem(ORIGIN_RESET_MIGRATION_KEY, '1');
-    console.info('FOURTWENTY editor: ORIGEN restaurado a la version subida.');
-    return migrated;
+    return layout;
   } catch (error) {
-    console.warn('No se pudo restaurar ORIGEN a la version subida.', error);
+    console.warn('No se pudo marcar la migracion de ORIGEN.', error);
     return layout;
   }
 }
 
 export async function loadInitialLayout() {
+  // Recuperacion manual: abrir una vez con `?restaurar-layout=1` descarta el
+  // borrador local y vuelve al JSON bueno. El parametro se quita enseguida para
+  // no borrar cambios nuevos durante la misma sesion.
+  const url = new URL(window.location.href);
+  if (url.searchParams.get('restaurar-layout') === '1') {
+    try { localStorage.removeItem(LOCAL_STORAGE_KEY); } catch { /* sin persistencia */ }
+    url.searchParams.delete('restaurar-layout');
+    window.history.replaceState({}, '', url);
+  }
   const local = getLocalLayout();
   if (local) return migrateOriginToUploadedBase(migrateHoopBaseLayout(local));
   try { localStorage.setItem(ORIGIN_RESET_MIGRATION_KEY, '1'); } catch { /* sin persistencia */ }
@@ -130,6 +134,10 @@ export async function loadInitialLayout() {
 }
 
 function destinationScope(item) {
+  const nestedDestination = item?.piece?.destinationId
+    ?? item?.mueble?.destinationId
+    ?? item?.prendaGlb?.destinationId;
+  if (Number.isFinite(Number(nestedDestination))) return Number(nestedDestination);
   const id = String(item?.id ?? '');
   const prefixed = id.match(/^destino-(\d+):/);
   if (prefixed) return Number(prefixed[1]);

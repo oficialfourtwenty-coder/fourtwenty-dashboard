@@ -41,10 +41,10 @@ function buildSectionScene(destination, { environment, shadows, onElevatorEnter,
   };
   scene.userData.visualProfile = `ps3-${theme.key}`;
   scene.userData.disposed = false;
-  scene.background = new THREE.Color(0x586a72);
-  scene.fog = new THREE.Fog(0x586a72, 34, 84);
+  scene.background = new THREE.Color(isOrigin ? 0x89927f : 0x586a72);
+  scene.fog = new THREE.Fog(isOrigin ? 0xb1a995 : 0x586a72, isOrigin ? 42 : 34, isOrigin ? 96 : 84);
   scene.environment = environment;
-  scene.environmentIntensity = 0.5;
+  scene.environmentIntensity = isOrigin ? 0.72 : 0.5;
 
   const environmentConfig = environmentForDestination(destination.id);
   scene.userData.environmentFile = environmentConfig.filename;
@@ -56,9 +56,6 @@ function buildSectionScene(destination, { environment, shadows, onElevatorEnter,
   }).colliders;
 
   const elevatorPosition = isOrigin ? [0, 0, 10.85] : PS3_FLOOR_PROFILE.elevatorPosition;
-  const arcadeConfig = isOrigin
-    ? { ...PS3_FLOOR_PROFILE.arcadeConfig, position: [-4.65, 0, 7.25] }
-    : PS3_FLOOR_PROFILE.arcadeConfig;
   const elevator = new ElevatorController(scene, {
     id: `elevator-destination-${destination.id}`,
     name: `Ascensor · ${destination.hudLabel}`,
@@ -66,11 +63,13 @@ function buildSectionScene(destination, { environment, shadows, onElevatorEnter,
     rotationY: Math.PI,
     onEnter: onElevatorEnter,
   });
-  const minigameArcade = createOriginArcade({
+  // ORIGEN usa ahora este lateral como lounge. Los demas pisos conservan su
+  // arcade y su minijuego sin cambios.
+  const minigameArcade = isOrigin ? null : createOriginArcade({
     onInteract: onArcadeInteract,
-    config: arcadeConfig,
+    config: PS3_FLOOR_PROFILE.arcadeConfig,
   });
-  scene.add(minigameArcade.root);
+  if (minigameArcade) scene.add(minigameArcade.root);
 
   // ⚠️ EL ESTADIO DE HOOP QUEDA APAGADO (10/08, pedido de Kusher).
   // Los cinco pisos arrancan vacios para que los arme a mano (ver la nota en
