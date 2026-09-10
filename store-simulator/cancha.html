@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FOURTWENTY · cancha HOOP SEASON</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: #10131a; overflow: hidden; }
+    #vista { display: block; width: 100vw; height: 100vh; }
+    .panel {
+      position: fixed; z-index: 5; color: #e9e6df; pointer-events: none;
+      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: rgba(10, 13, 18, 0.62); border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 8px; padding: 9px 12px; backdrop-filter: blur(6px);
+    }
+    #arriba { top: 14px; left: 14px; }
+    #abajo  { bottom: 14px; left: 14px; }
+    b { color: #39ff6a; font-weight: 600; }
+    .tecla { color: #ffd27a; }
+  </style>
+</head>
+<body>
+  <canvas id="vista"></canvas>
+
+  <div class="panel" id="arriba">
+    <div>CANCHA HOOP SEASON · <b id="vista-nombre">—</b></div>
+    <div id="medidor">midiendo…</div>
+    <div id="flags">—</div>
+  </div>
+
+  <div class="panel" id="abajo">
+    <span class="tecla">1-5</span> cámaras ·
+    <span class="tecla">O</span> oclusión ·
+    <span class="tecla">B</span> bloom ·
+    <span class="tecla">V</span> sombras ·
+    <span class="tecla">R</span> muñecos de 1,90 m ·
+    <span class="tecla">arrastrar</span> girar ·
+    <span class="tecla">rueda</span> acercar
+  </div>
+
+  <script type="module" src="/src/minigames/hoopSeason1v1/preview.js"></script>
+</body>
+</html>

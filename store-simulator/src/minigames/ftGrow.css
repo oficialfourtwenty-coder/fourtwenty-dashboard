@@ -1,0 +1,127 @@
+/* ft-grow.css - FT Grow Mini-Game Styles */
+
+.ft-grow-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #120e1a;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.ft-grow-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.ft-grow-hud {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.ft-grow-stat-box {
+  background: rgba(18, 14, 26, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  min-width: 120px;
+}
+
+.ft-grow-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #a0a5ba;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.ft-grow-bar-bg {
+  width: 100%;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+
+.ft-grow-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 5px;
+  transition: width 0.15s ease-out;
+}
+
+.ft-grow-bar-fill.growth {
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  box-shadow: 0 0 8px rgba(139, 195, 74, 0.6);
+}
+
+.ft-grow-bar-fill.health {
+  background: linear-gradient(90deg, #e91e63, #ff5722);
+  box-shadow: 0 0 8px rgba(233, 30, 99, 0.6);
+}
+
+.ft-grow-timer {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffeb3b;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  font-family: monospace;
+}
+
+.ft-grow-event-banner {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 87, 34, 0.9);
+  color: #ffffff;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(255, 87, 34, 0.5);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 12;
+  text-transform: uppercase;
+}
+
+.ft-grow-event-banner.active {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.ft-grow-controls-hint {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  pointer-events: none;
+  text-align: center;
+  background: rgba(0,0,0,0.4);
+  padding: 4px 10px;
+  border-radius: 12px;
+}

@@ -1,0 +1,345 @@
+#minigame-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+  display: none;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.94);
+  font-family: "Courier New", monospace;
+  color: #f7edb0;
+  touch-action: none;
+}
+
+#minigame-overlay.show { display: grid; }
+
+.minigame-frame {
+  position: relative;
+  width: min(100%, 980px);
+  height: min(100%, 1040px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #050507;
+  border: 1px solid #333877;
+  box-shadow: 0 0 40px rgba(42, 49, 171, 0.28);
+}
+
+.minigame-frame-wide {
+  width: min(100%, 1440px);
+  height: min(100%, 820px);
+  border-color: #403927;
+  box-shadow: 0 0 52px rgba(207, 173, 103, 0.2);
+}
+
+.minigame-stage { width: 100%; height: 100%; min-width: 0; min-height: 0; }
+
+.maze-game {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #050507;
+}
+
+.maze-status {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  box-sizing: border-box;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 14px;
+  border-bottom: 1px solid #292f79;
+  color: #fff0a6;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.maze-status strong { color: #f4f4f4; }
+
+.maze-canvas-wrap {
+  position: absolute;
+  inset: 42px 0 0;
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  contain: size;
+  background: #09090b;
+}
+
+.maze-canvas-wrap canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  touch-action: none;
+}
+
+.maze-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #08080a;
+  color: #fff0a6;
+  font-size: 14px;
+  letter-spacing: 3px;
+}
+
+.maze-loading[hidden] { display: none; }
+
+.bob-heist-game {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0c0b08;
+}
+
+.bob-heist-game canvas {
+  position: absolute;
+  inset: 42px 0 0;
+  display: block;
+  width: 100%;
+  height: calc(100% - 42px);
+  object-fit: contain;
+  background: #090807;
+  touch-action: none;
+}
+
+.bob-heist-3d {
+  background: #11100c;
+  font-family: Arial, sans-serif;
+}
+
+.bob-heist-3d .bob-heist-render {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #eee8db;
+}
+
+.bob-heist-3d .bob-heist-render canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.bob-heist-hud {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  box-sizing: border-box;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0 14px;
+  border-bottom: 1px solid #5d4c25;
+  background: #100f0c;
+  color: #f5e7a0;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.bob-heist-hud strong { color: #f4f4f4; }
+
+.bob-heist-hud-3d {
+  height: 58px;
+  justify-content: flex-start;
+  gap: 18px;
+  border-bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0));
+  color: #fff6c0;
+  font: 800 13px Arial, sans-serif;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+}
+
+.bob-heist-face {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 3px solid rgba(255, 220, 93, 0.72);
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 42%, #9b5627 0 45%, #392012 46% 100%);
+  color: #160d08;
+  font-size: 11px;
+}
+
+.bob-heist-bananas {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 92px;
+}
+
+.bob-heist-bananas i {
+  width: 16px;
+  height: 32px;
+  border-right: 7px solid #ffe12f;
+  border-radius: 50%;
+  transform: rotate(14deg);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
+}
+
+.bob-heist-bananas i.dim {
+  border-right-color: rgba(230, 230, 210, 0.25);
+}
+
+.bob-heist-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  z-index: 2;
+  max-width: min(760px, calc(100% - 28px));
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  padding: 9px 12px;
+  border: 1px solid rgba(240, 210, 105, 0.38);
+  background: rgba(8, 7, 5, 0.78);
+  color: #fff3b6;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.bob-heist-progress {
+  position: absolute;
+  left: 50%;
+  bottom: 54px;
+  z-index: 2;
+  width: min(320px, calc(100% - 40px));
+  height: 10px;
+  transform: translateX(-50%);
+  border: 1px solid #655833;
+  background: #11100c;
+}
+
+.bob-heist-progress[hidden] { display: none; }
+
+.bob-heist-progress i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #9b7cff, #ffe15c);
+}
+
+.bob-heist-minimap {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 2;
+  width: 148px;
+  height: 148px;
+  border: 3px solid rgba(255, 255, 255, 0.48);
+  border-radius: 999px;
+  background:
+    linear-gradient(rgba(255,255,255,0.06), rgba(255,255,255,0.06)),
+    repeating-linear-gradient(0deg, transparent 0 33px, rgba(255,255,255,0.1) 34px 35px),
+    repeating-linear-gradient(90deg, transparent 0 33px, rgba(255,255,255,0.1) 34px 35px),
+    rgba(24, 27, 24, 0.76);
+  box-shadow: inset 0 0 24px rgba(0,0,0,0.65), 0 5px 18px rgba(0,0,0,0.45);
+}
+
+.bob-heist-minimap b,
+.bob-heist-minimap i {
+  position: absolute;
+  display: block;
+  transform: translate(-50%, -50%);
+}
+
+.bob-heist-minimap b {
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 22px solid #fff;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+}
+
+.bob-heist-minimap i {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #ff3535;
+  box-shadow: 0 0 8px rgba(255, 44, 44, 0.8);
+}
+
+.bob-heist-action {
+  position: absolute;
+  right: 28px;
+  bottom: 30px;
+  z-index: 2;
+  width: 86px;
+  height: 86px;
+  border: 4px solid rgba(255,255,255,0.86);
+  border-radius: 999px;
+  background: rgba(0,0,0,0.42);
+  color: #fff;
+  font-size: 36px;
+  cursor: pointer;
+  box-shadow: 0 5px 18px rgba(0,0,0,0.42);
+}
+
+.minigame-result {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  box-sizing: border-box;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: rgba(3, 3, 5, 0.96);
+}
+
+.minigame-result[hidden] { display: none; }
+.minigame-result-kicker { color: #848bd8; font-size: 12px; letter-spacing: 3px; }
+.minigame-result-title { margin: 8px 0 20px; color: #fff; font-size: clamp(26px, 5vw, 52px); letter-spacing: 0; }
+.minigame-discount { color: #ffe06f; font-size: clamp(42px, 9vw, 92px); }
+.minigame-code { margin-top: 14px; padding: 10px 14px; background: #171717; color: #fff; font-size: 18px; }
+.minigame-note { color: #9b9b9b; font-size: 12px; }
+.minigame-result-actions { display: flex; gap: 10px; margin-top: 22px; }
+.minigame-result-actions button {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid #444bb0;
+  border-radius: 4px;
+  background: #12152f;
+  color: #fff;
+  font: 700 12px "Courier New", monospace;
+  cursor: pointer;
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  #minigame-overlay { padding: 4px; }
+  .minigame-frame { width: min(100%, 900px); height: 100%; }
+  .maze-status { height: 34px; font-size: 10px; }
+  .maze-canvas-wrap { inset: 34px 0 0; }
+  .bob-heist-hud { height: 34px; font-size: 10px; gap: 8px; padding: 0 8px; }
+  .bob-heist-game canvas { top: 34px; height: calc(100% - 34px); }
+  .bob-heist-3d .bob-heist-render canvas { top: 0; height: 100%; }
+  .bob-heist-hint { bottom: 7px; font-size: 10px; }
+  .bob-heist-hud-3d { height: 44px; }
+  .bob-heist-face { width: 38px; height: 38px; font-size: 9px; }
+  .bob-heist-minimap { width: 108px; height: 108px; left: 14px; bottom: 12px; }
+  .bob-heist-action { width: 62px; height: 62px; right: 16px; bottom: 15px; font-size: 26px; }
+}
