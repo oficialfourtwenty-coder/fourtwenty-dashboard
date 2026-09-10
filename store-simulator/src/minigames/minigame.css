@@ -92,6 +92,84 @@
 
 .maze-loading[hidden] { display: none; }
 
+.bob-heist-game {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0c0b08;
+}
+
+.bob-heist-game canvas {
+  position: absolute;
+  inset: 42px 0 0;
+  display: block;
+  width: 100%;
+  height: calc(100% - 42px);
+  object-fit: contain;
+  background: #090807;
+  touch-action: none;
+}
+
+.bob-heist-hud {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  box-sizing: border-box;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0 14px;
+  border-bottom: 1px solid #5d4c25;
+  background: #100f0c;
+  color: #f5e7a0;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.bob-heist-hud strong { color: #f4f4f4; }
+
+.bob-heist-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  z-index: 2;
+  max-width: min(760px, calc(100% - 28px));
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  padding: 9px 12px;
+  border: 1px solid rgba(240, 210, 105, 0.38);
+  background: rgba(8, 7, 5, 0.78);
+  color: #fff3b6;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.bob-heist-progress {
+  position: absolute;
+  left: 50%;
+  bottom: 54px;
+  z-index: 2;
+  width: min(320px, calc(100% - 40px));
+  height: 10px;
+  transform: translateX(-50%);
+  border: 1px solid #655833;
+  background: #11100c;
+}
+
+.bob-heist-progress[hidden] { display: none; }
+
+.bob-heist-progress i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #9b7cff, #ffe15c);
+}
+
 .minigame-result {
   position: absolute;
   inset: 0;
@@ -129,4 +207,7 @@
   .minigame-frame { width: min(100%, 900px); height: 100%; }
   .maze-status { height: 34px; font-size: 10px; }
   .maze-canvas-wrap { inset: 34px 0 0; }
+  .bob-heist-hud { height: 34px; font-size: 10px; gap: 8px; padding: 0 8px; }
+  .bob-heist-game canvas { top: 34px; height: calc(100% - 34px); }
+  .bob-heist-hint { bottom: 7px; font-size: 10px; }
 }

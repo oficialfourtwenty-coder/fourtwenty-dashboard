@@ -19,7 +19,7 @@ const LOADERS = {
   1: loadBobsMaze, // ORIGEN
   2: loadBobsMaze, // HOOP SEASON  → futuro: básquet
   3: loadFtGrow,   // CULTURA      → FT GROW
-  4: loadBobsMaze, // BOB
+  4: loadBobShopHeist, // BOB → sigilo en tienda FOURTWENTY
   5: loadBurelaDelivery, // TERRAZA → BURELA DELIVERY
 };
 
@@ -38,13 +38,18 @@ async function loadBurelaDelivery() {
   return createBurelaDeliveryGame;
 }
 
+async function loadBobShopHeist() {
+  const { createBobShopHeistGame } = await import('./bobShopHeist.js');
+  return createBobShopHeistGame;
+}
+
 // Nombre que muestra el cartel "E · JUGAR ..." al acercarse al arcade. Vive acá
 // para que agregar un juego sea un solo lugar a tocar.
 const NAMES = {
   1: "BOB'S MAZE",
   2: "BOB'S MAZE",
   3: 'FT GROW',
-  4: "BOB'S MAZE",
+  4: 'BOB SHOP HEIST',
   5: 'BURELA DELIVERY',
 };
 
