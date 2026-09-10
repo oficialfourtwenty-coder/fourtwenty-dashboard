@@ -33,6 +33,9 @@ const ZONA_MUERTA = 0.18;   // los sticks del DualSense siempre tiemblan un poco
 // afuera para simular a un usuario).
 import { BOTON } from './mando.js';
 
+// Escribiendo en un campo, el espacio es un espacio y no un salto.
+const isTypingTarget = (target) => !!target?.matches?.('input, textarea, select, [contenteditable="true"]');
+
 export class Input {
   constructor(domElement) {
     this.dom = domElement;
@@ -50,12 +53,19 @@ export class Input {
       if (e.repeat) return;
       this.keys.add(e.code);
       if (e.code === 'KeyE') this._interactQueued = true;
+      // Espacio salta, igual que la ✕ del joystick. Se corta el scroll de la
+      // pagina: sin esto, saltar corre la pantalla para abajo.
+      if (e.code === 'Space' && !isTypingTarget(e.target)) {
+        e.preventDefault();
+        this._saltoPedido = true;
+      }
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
     window.addEventListener('blur', () => {
       this.keys.clear();
       this.clearVirtualAxes();
       this._padAntes.clear();
+      this._saltoPedido = false;
     });
 
     window.addEventListener('gamepadconnected', (e) => {
@@ -145,6 +155,11 @@ export class Input {
     if (nuevos.has(BOTON.CUADRADO)) this._tecla('KeyC');    // Banapod
     if (nuevos.has(BOTON.TRIANGULO)) this._tecla('KeyT');   // editor
     if (nuevos.has(BOTON.CRUZ)) this._saltoPedido = true;   // saltar
+
+    // ⚠️ Con el editor abierto BOB no se actualiza, asi que nadie consume el
+    // salto: sin esta linea, la ✕ apretada dentro del editor (donde sirve para
+    // otra cosa) quedaria guardada y BOB pegaria un salto solo al cerrarlo.
+    if (editorAbierto) this._saltoPedido = false;
 
     // ⚠️ L2 = ver colisiones SOLO con el editor CERRADO. Adentro del editor L2
     // baja el objeto seleccionado (ver worldEditor), y las dos cosas en el

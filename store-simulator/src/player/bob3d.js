@@ -24,6 +24,15 @@ const ACCEL = 9;          // rampa de aceleración (~0.2s hasta velocidad)
 const DECEL = 11;         // frenada un poco más rápida
 const TURN_SPIN = 2.6;    // velocidad de giro con A/D (rad/s)
 const GRAVITY = 14;
+// Salto (tecla Espacio o ✕ del joystick). Con GRAVITY=14, un impulso de 4.6 da
+// una altura de v²/2g ≈ 0,75 m y 0,66 s en el aire: alcanza para subirse a un
+// cordon o a un cajon y no se siente lunar.
+// ⚠️ NO HAY ANIMACION DE SALTO. `bob.glb` trae solo BOB_idle, BOB_walk y
+// BOB_run: no existe un clip de salto, ni de baile, ni de golpe. Mientras esta
+// en el aire se le CONGELA la pose para que al menos no camine flotando. Un
+// salto animado de verdad (o un baile) necesita que se agregue el clip al
+// modelo; no se puede inventar desde el codigo.
+const SALTO = 4.6;
 
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const UP = new THREE.Vector3(0, 1, 0);
@@ -261,12 +270,23 @@ export class Player {
     // 4) Piso: subir escalones/rampas suave, caer con gravedad
     const ground = this.sampleGround(this.position.x, this.position.z, this.position.y);
     const diff = ground - this.position.y;
-    if (diff > -0.05) {
+
+    // ⚠️ `this.vy` es velocidad HACIA ABAJO (por eso mas abajo se RESTA). Para
+    // saltar se la pone en negativo. Y por eso la rama de "estoy en el piso"
+    // ahora exige ademas `vy >= 0`: sin esa condicion, el cuadro siguiente al
+    // salto BOB todavia esta a la altura del suelo, entraba por esa rama y se
+    // pegaba de vuelta al piso — el salto no despegaba nunca.
+    const pidioSaltar = input.consumeJump?.() ?? false;
+    if (pidioSaltar && diff > -0.05 && this.vy >= 0) this.vy = -SALTO;
+
+    if (diff > -0.05 && this.vy >= 0) {
       this.vy = 0;
+      this._enElAire = false;
       this.position.y += diff * Math.min(1, 18 * dt);
     } else {
       this.vy = Math.min(this.vy + GRAVITY * dt, 10);
       this.position.y = Math.max(ground, this.position.y - this.vy * dt);
+      this._enElAire = true;
     }
 
     // 5) Rotación del cuerpo: sigue al rumbo (calculado arriba). El lean
@@ -316,6 +336,16 @@ export class Player {
         this.actions.walk.weight = w;
         this.actions.idle.weight = 1 - w;
         this.actions.walk.timeScale = THREE.MathUtils.clamp(speed / WALK, 0.6, 1.8);
+      }
+      // ⚠️ En el aire se congela la pose. No hay clip de salto en `bob.glb`
+      // (solo idle/walk/run), y sin esto BOB sigue moviendo las piernas
+      // caminando por el aire, que es lo que mas canta. Congelado al menos
+      // parece un salto rigido y no un error.
+      // Se escribe en los dos casos (true y false): si solo se pausara, al
+      // aterrizar quedarian pausados para siempre.
+      if (this._enElAire || this._veniaDelAire) {
+        for (const a of Object.values(this.actions)) if (a) a.paused = this._enElAire;
+        this._veniaDelAire = this._enElAire;
       }
       this.mixer.update(dt);
     } else if (this.model && !this._isBillboard) {

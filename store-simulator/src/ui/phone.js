@@ -1,3 +1,5 @@
+import { conectarMandoAlBanapod } from './mandoBanapod.js';
+
 const PHONE_ID = 'ft-phone';
 const STYLE_ID = 'ft-phone-style';
 const BANAPOD_CLOSED_URL = '/assets/ui/banapod/banapod-closed-small.png';
@@ -529,5 +531,12 @@ export function createPhone({ music, cart, clock, isBlocked = () => false, onBef
     }
   }, true);
 
-  return { show, hide, toggle, isOpen: () => open, getView: () => currentView };
+  const api = { show, hide, toggle, isOpen: () => open, getView: () => currentView };
+
+  // Manejar el Banapod con el joystick. Se engancha aca y no en `main.js`
+  // porque `main.js` es archivo compartido con Codex y esto no necesita nada de
+  // ahi: le alcanza con el telefono ya creado.
+  conectarMandoAlBanapod(api);
+
+  return api;
 }
