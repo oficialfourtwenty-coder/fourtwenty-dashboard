@@ -256,7 +256,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": false,
+    "visible": true,
     "manageShadows": false
   },
   {
@@ -282,7 +282,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": false,
+    "visible": true,
     "manageShadows": false
   },
   {
@@ -308,7 +308,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": false,
+    "visible": true,
     "manageShadows": false
   },
   {
@@ -2934,7 +2934,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": false,
+    "visible": true,
     "manageShadows": false
   },
   {
