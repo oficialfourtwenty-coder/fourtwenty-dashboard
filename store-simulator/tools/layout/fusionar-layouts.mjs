@@ -34,6 +34,34 @@ const NOMBRE_BURELA = 'BURELA (calle, local, vereda)';
 
 // Misma cuenta que hace el juego en `layoutStore.js`. Si alla cambia, aca
 // tambien: son la misma regla escrita dos veces y tienen que coincidir.
+// ⚠️ EL AGUJERO QUE APARECIO EL 10/09, Y POR QUE.
+//
+// Los objetos que se CREAN adentro de un piso no llevan el numero de piso en el
+// id. Un perchero que Fer pone en ORIGEN se llama
+// `furniture:mueble-perchero-mtthq0ju`, una prenda `prenda:remera-oversize:n5wxkn`
+// y una pieza armada a mano `pieza:plano-mtuvhleg-1`. Ninguno dice ORIGEN.
+//
+// O sea que `escenaDe` los daba por Burela, y como Burela sale del archivo de
+// Kusher, TODO lo que Fer hubiera creado adentro de un piso desaparecia en
+// silencio. Justo lo que esta herramienta existe para evitar.
+//
+// No se puede arreglar mirando el id: el layout no guarda a que escena
+// pertenece cada objeto (sus campos son id, name, type, model, position,
+// rotation, scale, sombras, locked y visible — no hay escena).
+//
+// LA REGLA. A estos objetos se los trata por UNION en vez de "gana uno":
+//   · los que estan en el archivo de Kusher salen de ahi (su posicion manda)
+//   · los que SOLO estan en el de Fer se agregan
+// Como el id lleva un sufijo al azar, dos personas no pueden crear el mismo, y
+// asi sobreviven los dos trabajos sin decidir nada.
+//
+// ⚠️ Esto vale SOLO para los prefijos de abajo, que son los que generan el
+// constructor de piezas, el catalogo de muebles y las prendas. A un id de
+// POSICION (`calle-kit:49.62`) no se le aplica: esos son la escena construida y
+// son de Kusher. Si se agregaran por union, volverian objetos que Kusher borro.
+const CREADOS_A_MANO = ['prenda:', 'pieza:', 'furniture:', 'estampa:'];
+const esCreadoAMano = (item) => CREADOS_A_MANO.some((p) => String(item?.id ?? '').startsWith(p));
+
 function escenaDe(item) {
   const id = String(item?.id ?? '');
   let m = id.match(/^destino-(\d+):/);
@@ -115,9 +143,16 @@ if (!escenasDeFer.length) {
   process.exit(1);
 }
 
+const idsDeBurela = new Set(burela.map((item) => item.id));
+// Lo que Fer creo a mano y Kusher no tiene: se suma en vez de perderse.
+const creadosDeFer = pisos.filter(
+  (item) => escenaDe(item) === null && esCreadoAMano(item) && !idsDeBurela.has(item.id),
+);
+
 const resultado = [
   ...burela.filter((item) => !escenasDeFer.includes(escenaDe(item))),
   ...pisos.filter((item) => escenasDeFer.includes(escenaDe(item))),
+  ...creadosDeFer,
 ];
 
 console.log('\n─────────── FUSION DE LAYOUTS ───────────');
@@ -130,6 +165,17 @@ console.log(`\nDe FER (${rutaPisos}) — ${pisos.length} objetos:`);
 for (const [escena, n] of [...cuentaPisos].sort((a, b) => (a[0] ?? -1) - (b[0] ?? -1))) {
   const usado = escenasDeFer.includes(escena);
   console.log(`  ${usado ? '✔ se usa   ' : '· se ignora '}  ${String(n).padStart(4)}  ${nombreDe(escena)}`);
+}
+
+if (creadosDeFer.length) {
+  console.log(`\nAdemas se suman ${creadosDeFer.length} objeto(s) que Fer creo a mano y no llevan piso en el id:`);
+  const porTipo = new Map();
+  for (const item of creadosDeFer) {
+    const t = String(item.id).split(':')[0];
+    porTipo.set(t, (porTipo.get(t) ?? 0) + 1);
+  }
+  for (const [t, n] of porTipo) console.log(`  + ${String(n).padStart(4)}  ${t}`);
+  console.log('  (prendas, muebles y piezas armadas a mano no dicen en que piso estan)');
 }
 
 // ⚠️ Aviso fuerte si una escena que Kusher tenia llena queda vacia. Es la unica
