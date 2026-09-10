@@ -1,6 +1,6 @@
 # Simulador Bobilonia Maestro - contexto obligatorio
 
-Ultima actualizacion documental: 9 de septiembre de 2026.
+Ultima actualizacion documental: 10 de septiembre de 2026.
 
 **El plan de trabajo vigente esta en la seccion 3.** Son las 3 fases que armo
 Kusher en Notion el 09/09, con el reparto de trabajo entre nosotros y Fer. Es
@@ -78,6 +78,15 @@ producto que no esten escritas aqui.
   como la version mas nueva ni publicarla de nuevo.
 - La rama remota `migracion-cloudflare` es una propuesta separada, todavia no
   integrada a la version oficial.
+- **Rama en curso (09-10/09): `claude/fourtwenty-store-simulator-g3rigz`.**
+  Sale de la oficial y todavia NO esta integrada. Trae, en este orden: la cuadra
+  de enfrente de Burela con fotos reales, la esfera de cielo, el barrio
+  alrededor, las dos veredas rehechas, la colision de los autos y el Corolla
+  azul, agrupar objetos en el editor, Ctrl+Z, la herramienta para fusionar
+  layouts, el joystick entero (jugar, editar, camara y Banapod), el salto de
+  BOB, el BOB de septiembre con sus cinco clips y las herramientas de rig.
+  ⚠️ **No toca `main.js`, `minigameManager.js` ni `destinationScenes.js`**: todo
+  se engancha desde su propio archivo, a proposito, para no chocar con Codex.
 - Si GitHub y Notion difieren sobre archivos, ramas o commits, manda GitHub.
   Notion explica vision, decisiones y prioridades flexibles.
 
@@ -138,6 +147,10 @@ quedo desactualizada** (ultima edicion 01/08): habla de la rama
   fisicamente adentro. Ademas, el comic de la Twenty Time.
 - **Kusher + Claude Code:** Calle Burela entera, BOB y el sistema de
   vestimenta, los juegos, la compra, el login y los FT$.
+- **Los minijuegos (10/09):** Kusher los esta prototipando con **RosebudAI**, en
+  chats aparte. El BOB con sus animaciones se le pasa como archivo. Cuando un
+  juego este listo, entra al simulador en su propio
+  `src/minigames/<juego>.js` — ahi no hay conflicto entre agentes.
 - ⚠️ La fase de Notion se llama "ARMADO DE PISOS x6", pero **Burela la hacemos
   nosotros**: a Fer le quedan los cinco pisos del ascensor (ORIGEN, HOOP
   SEASON, CULTURA, BOB y TERRAZA).
@@ -307,6 +320,38 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
   no pisarlo a ciegas.
   Lo mismo vale para los diseños de cuadros, que tienen su propio EXPORTAR JSON.
 
+### Burela: cuadra de enfrente, cielo y barrio (09/09)
+
+- **La cuadra de enfrente esta recreada con las fotos reales** de Burela 2570:
+  ocho casas, en el orden que se ven desde el local (`burelaFrente.js`). La
+  vereda de enfrente paso de 3,2 a **6,0 m** para que se pueda caminar.
+- **Esfera de cielo** (`burelaCielo.js`): domo de radio 90 dibujado en un canvas
+  de 1024x512, atado al reloj del juego (amanece, atardece, anochece).
+  - ⚠️ **Los colores de la paleta estan en espacio LINEAL y un `<canvas>` habla
+    sRGB.** Sin convertir con `THREE.ColorManagement.fromWorkingColorSpace`, el
+    atardecer salia rojo fuego: `#ed7748` se escribia como (204,44,16).
+  - ⚠️ **Nada dibujado en el polo se ve como un dibujo: se ve como un remolino.**
+    Las nubes van solo entre el 18% y el 47% de la altura, y el halo del sol se
+    estira por `1/sin(angulo polar)`.
+- **El barrio alrededor** (`burelaAlrededores.js`): la masa de manzanas, techos
+  y un anillo de 46 siluetas en el horizonte. **Solo paredes, techos y siluetas:
+  NADA que se pise.** Costo +0,9% de triangulos y 0 KB de descarga.
+  - ⚠️ **El piso de la zona jugable es de Kusher.** El 09/09 agregue losas a
+    y=0 —el mismo plano que su vereda— y un cordon encima del que ya existia.
+    Kusher: "me creaste otro cordon, me arruinaste el piso de burela de la
+    vereda principal, antes lo habia ordenado uno por uno y ahora se superpone y
+    se laguea". Se borro todo eso. **No poner geometria de piso en Burela.**
+- **Los dos pisos de la vereda estan rehechos con las fotos que saco Kusher**
+  (`textures.js`): la baldosa granitica de 20x20 con tachas (`veredaGranitica`)
+  y la **hexagonal** (`hexPaverPs3`), las dos con normal map.
+  - ⚠️ El gris tiene que ser FRIO (`rgb(v-3, v, v+4)`). Un gris neutro bajo el
+    sol calido del juego se ve crema, no gris.
+- **Autos:** la caja de colision ahora sale del modelo VISIBLE, no del grupo
+  entero. Antes habia un marco invisible mas grande que el auto y no se podia
+  pasar al lado. El Corolla de Fer se repinta de azul en la carga
+  (`carPaint.js`): son 48 pixeles de una paleta compartida de 32x4, sin tocar
+  las luces traseras ni el interior.
+
 ### BOB
 
 - Modelo activo: `public/assets/bob/bob.glb`, **0,83 MB con Draco** (03/09).
@@ -335,10 +380,125 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
   corriendo run=1.
 - Antes de producir muchas prendas 3D se necesita un rig definitivo, estable,
   con nombres de huesos congelados y una prenda piloto verificada.
+
+### BOB DE SEPTIEMBRE (el de Meshy) — el que sale hoy por defecto
+
+**Kusher lo aprobo el 10/09 con estas palabras: "no es el final, pero este bob
+septiembre viene bien".** O sea que es la direccion buena, no la definitiva.
+
+- Archivo: `public/assets/bob/bob-meshy.glb`, **2,51 MB**, **24 huesos**.
+- ⚠️ **HOY ES EL `POR_DEFECTO` EN `bob3d.js` Y ESO ES PROVISORIO.** El de la
+  marca (`bob.glb`) pesa 0,72 MB y este 2,51 MB: son 1,8 MB mas en la primera
+  carga, que ya esta en el limite del presupuesto. **Antes de pasar a la rama
+  oficial hay que decidir**: volver a `bob.glb`, o comprimir este con Draco y
+  medir. Se sigue viendo el viejo con `?bob=viejo`.
+- ⚠️ **LOS DOS RIGS NO SON COMPATIBLES.** `bob.glb` tiene 41 huesos con nombres
+  `BOB_*`; este tiene 24 con nombres estilo Mixamo. Una prenda o una animacion
+  hecha para uno NO sirve para el otro. Esto es justamente lo que la seccion 3
+  llama "requisito duro: el rig definitivo con los nombres congelados": mientras
+  haya dos rigs vivos, cada cosa que se produzca sirve para uno solo.
+- **No tiene texturas: el color va POR VERTICE.** Se lo hornea
+  `tools/rig/pintar-bob.mjs`, que toma los colores del BOB de la marca por
+  zonas (pelaje, manos, pies, hocico, orejas, pelo) usando los HUESOS que pesan
+  cada vertice. El material se crea con `vertexColors: true` en `_pintar`.
+  ⚠️ Si algun dia se vuelve a exportar el modelo desde Meshy, **el color se
+  pierde** y hay que volver a hornearlo. Ya paso el 10/09: se subio el archivo
+  reexportado y BOB salio blanco.
+
+#### Los cinco clips y los "gestos"
+
+| clip | dura | que es |
+|---|---|---|
+| `Walking` | 1,07 s | caminar |
+| `Running` | 0,67 s | correr |
+| `Boxing_Practice` | 6,87 s | golpe (R1 / tecla F) |
+| `Unsteady_Walk` | 3,00 s | baile, tambaleo (L1 / tecla B) |
+| `Dribble` | 2,08 s | picar la pelota (R2 / tecla N) |
+
+Los tres ultimos son **gestos**: no se mezclan por velocidad como caminar y
+correr, se disparan de a uno, suenan enteros, tapan la mezcla de locomocion y
+vuelven solos. **Se cancelan si se empieza a caminar** — un clip de cuerpo
+entero mientras BOB se desplaza se ve como si patinara.
+
+#### ⚠️ DOS TRAMPAS QUE YA COSTARON TIEMPO, LAS DOS MEDIDAS
+
+**1. Reexportar desde Meshy CAMBIA los clips que ya estaban.** El 10/09 se
+subio el modelo con el baile nuevo y Kusher reporto: "cambiaste la forma de
+correr que estaba antes, el de ahora corre con los brazos arriba". Era cierto:
+de los 72 canales de `Walking` y de `Running`, 2 volvieron distintos, y el peor
+era `LeftArm.rotation` con **0,4343** de diferencia en cuaternion — el brazo en
+otro lado, no un redondeo. Se arregla con `tools/rig/clips-bob.mjs`, que copia
+los valores del archivo anterior encima. **Nunca dar por hecho que un
+reexportado conserva lo que ya andaba: hay que compararlo canal por canal.**
+
+**2. Los clips de Mixamo traen ROOT MOTION y hay que sacarselo.** Kusher lo
+reporto asi: "al apretar r1 o l1 los movimientos no siguen con el personaje,
+sino que se bugea, hace el movimiento, y vuelve a aparecer". No era el codigo.
+Medido en `Boxing_Practice`: las caderas arrancaban en (53,1 · 77,6 · -39,9)
+cuando caminando estan en (1,3 · 70,2 · 1,7). O sea que BOB saltaba medio metro
+al costado, boxeaba alla y volvia; ademas se iba caminando 113 unidades a lo
+largo del clip.
+`clips-bob.mjs` lo deja en el lugar en tres pasos: resta la recta primero→
+ultimo, **achica lo que sobra en horizontal hasta lo que se mueve la caminata**
+(6,5 x 6,4) y lo centra ahi. El ALTO no se toca: subir y bajar no lo saca del
+lugar, y aplastarlo le sacaria el agacharse y esquivar, que en un boxeo es el
+movimiento. Medido despues: el gesto corre a BOB 0,02 m.
+⚠️ Restar la recta SOLO no alcanza y esta medido: el boxeo seguia moviendose
+101,9 unidades. No es una deriva, el clip CAMINA por el ring, va y vuelve, y una
+recta no describe eso.
+
+#### Traer una animacion nueva (Mixamo u otra)
+
+```bash
+# 1. FBX -> GLB   (el binario esta en el paquete npm fbx2gltf)
+FBX2glTF -i Dribble.fbx -o dribble --binary
+
+# 2. pasarla al esqueleto de BOB, ya centrada
+cd store-simulator
+node tools/rig/traer-animacion.mjs \
+  public/assets/bob/bob-meshy.glb dribble.glb Dribble salida.glb
+
+# 3. mirarla renderizada, 6 cuadros en una tira
+node tools/smoke/foto-clip.mjs Dribble /tmp/tira.png
+```
+
+- ⚠️ **NO alcanza con copiar las rotaciones a los huesos del mismo nombre.** Las
+  poses de reposo son distintas: las caderas de BOB estan en reposo con la
+  rotacion (-0,579 · 0,304 · 0,535 · 0,535) y las de Mixamo en (0 · 0 · 0 · 1).
+  Copiadas tal cual, BOB queda hecho un nudo. Lo que se transfiere es cuanto
+  giro cada hueso RESPECTO de su reposo, con matrices de mundo.
+- ⚠️ **EL TORSO ESTA NUMERADO AL REVES.** Mixamo va `Hips → Spine → Spine1 →
+  Spine2` de abajo hacia arriba; BOB va `Hips → Spine02 → Spine01 → Spine`, o
+  sea que su `Spine` es el del PECHO. Emparejando por nombre, la rotacion de la
+  pelvis termina en el pecho. Por eso el mapa es una tabla escrita a mano y la
+  herramienta ademas comprueba que los dos huesos esten a la misma distancia de
+  las caderas.
+- Las escalas tampoco coinciden: BOB mide en centimetros (caderas a 75,3) y el
+  glb de Mixamo en metros. La proporcion se mide sola (mediana de los huesos
+  compartidos: 111,9x), no se escribe a mano.
+- **Como se comprueba que salio bien:** se compara, hueso por hueso y cuadro
+  por cuadro, cuanto gira cada uno respecto de su reposo, contra el original.
+  En el dribbling: 440 mediciones, diferencia promedio **0,018°** y peor 0,54°
+  (redondeo del remuestreo a 30 fps). Mirar la silueta no sirve; la tira de
+  fotos es confirmacion, no prueba.
 - Las dos texturas del GLB (`bob_basecolor` 156 KB y `bob_normal_fur` 345 KB,
   las dos 1024x1024) son ya la mitad del peso del archivo. Draco comprime la
   MALLA, no las texturas. Bajarlas es el proximo ahorro posible (~150-200 KB),
   pero toca al personaje protagonista: no hacerlo sin comparar a ojo.
+
+### BOB salta (10/09)
+
+- Con **✕** o la **barra espaciadora**. Impulso 4,6 contra `GRAVITY = 14`: sube
+  0,75 m de cuenta y 0,64 m medido en el juego, y esta 0,66 s en el aire.
+  Alcanza para subirse a un cordon o a un cajon.
+- ⚠️ **`this.vy` es velocidad HACIA ABAJO** (por eso se RESTA). Saltar es
+  ponerla en negativo. Y la rama de "estoy en el piso" exige ademas `vy >= 0`:
+  sin esa condicion, el cuadro siguiente al salto BOB todavia esta a la altura
+  del suelo, entraba por esa rama y se pegaba de vuelta al piso — el salto no
+  despegaba nunca.
+- **No hay clip de salto**, ni en `bob.glb` ni en el de Meshy. En el aire se le
+  CONGELA la pose para que al menos no camine flotando. Un salto animado de
+  verdad necesita que se agregue el clip al modelo.
 
 ### El dedo pegado al muslo: son DOS problemas, no uno
 
@@ -617,6 +777,47 @@ rotacion CERO: tiene que dar 0,0000 mm.
   era mentira) y la textura copiada a CADA pieza del grupo (si no, en pantalla
   se veia aplicada pero al recargar volvia sin imagen).
 
+### Editor: agrupar, deshacer y el cursor del joystick (09-10/09)
+
+**Juntar objetos para moverlos de a monton.** Kusher: "necesito un sistema para
+juntar las casas manualmente para mover el conjunto y no mover una por una".
+`src/world/editor/gruposDeMundo.js`.
+- **SHIFT + click** va marcando objetos (se dibuja el contorno en verde).
+  Despues **Agrupar**: aparece un mango, y moviendolo se mueve todo junto.
+- ⚠️ **NO se meten adentro de un grupo de verdad, y es a proposito.** El editor
+  arma los ids por POSICION en el arbol de la escena (`calle-kit:52.3` = hijo 3
+  del grupo 52). Sacar una casa de su grupo corre TODOS los hermanos que venian
+  despues y el layout guardado se aplica a los objetos equivocados. Ya paso:
+  aparecieron tres veredas, una casa en x=-3177 y una pared gris tapando la
+  calle. El grupo es una LISTA DE IDS y el mango un objeto vacio al final de la
+  escena; nadie cambia de padre.
+- La cuenta se hace con MATRICES DE MUNDO (`delta = mangoAhora x mangoAntes⁻¹`),
+  no sumando posiciones: asi rotar y escalar el conjunto pasa alrededor del
+  mango. Sumando posiciones, mover andaba pero rotar desarmaba la cuadra.
+- Los grupos viven en su propio guardado (`ft-grupos-mundo-v1`), NO en el
+  layout. El layout guarda donde esta cada objeto; esto guarda quien va con
+  quien.
+- ⚠️ Kusher reporto dos cosas que ya estan arregladas: **Borrar sobre un grupo
+  borra a todos sus miembros** (antes sacaba solo el mango), y **los cubos
+  verdes se apagan al cerrar el editor** ("tambien queda eso verde").
+
+**Deshacer con Ctrl+Z / Cmd+Z.** `src/world/editor/deshacer.js`. Cubre borrar,
+mover, duplicar y agrupar. Tope de 60 pasos.
+- ⚠️ Se puede deshacer un borrado porque `removeEditable` no destruye nada: a
+  una copia la saca del arbol y a un original solo lo esconde. **Si algun dia el
+  borrado pasa a liberar la geometria, esto deja de funcionar en silencio.**
+- ⚠️ Para saber si un objeto original esta borrado hay que mirar `visible`, NO
+  si sigue en el registro: los originales quedan registrados. Una prueba mia
+  midio mal justo por esto y reporto que las casas seguian ahi.
+
+**El cursor del joystick.** Con el editor abierto y **nada agarrado**, el stick
+izquierdo mueve una cruz verde por la pantalla: **✕** agarra lo que hay debajo,
+**▢** lo marca para agrupar (igual que SHIFT + click) y **○** lo suelta. Con
+algo agarrado, los sticks vuelven a mover/rotar/escalar y ✕ duplica.
+- Usa el MISMO rayo que el click del mouse, no una segunda forma de elegir.
+- ⚠️ No es un mouse de verdad: elige objetos del mundo, pero no aprieta los
+  botones del panel de la izquierda. Ese panel se sigue usando con el mouse.
+
 ### Cuadros editables por piso
 
 - **Los tres cuadros existen en los CINCO pisos** (04/08). Antes se creaban
@@ -739,6 +940,80 @@ rotacion CERO: tiene que dar 0,0000 mm.
   las que guardo Kusher en el editor.
 - El neon verde y el texto amarillo `WE ROLL DIFFERENT` permanecen encendidos.
 - Ciclo de sol/luna interpolado por hora, tambien visible en terraza.
+
+### Joystick — DualSense de PS5 (10/09)
+
+Kusher lo pidio para probar el simulador con el joystick enchufado a la Mac, y
+para acomodar objetos mas rapido: "quiero poder editar con el mismo jostick para
+agilizar la productividad de acomodar cosa por cosa". **No es para la version
+oficial todavia**: es para trabajar y para probar.
+
+No hace falta instalar nada: la Mac lo reconoce sola y el navegador lo lee con
+la Gamepad API. Anda por cable y por Bluetooth, y con cualquier joystick, no
+solo el de PS5.
+
+| Joystick | Tecla | Que hace |
+|---|---|---|
+| Stick izquierdo | W A S D | caminar |
+| **Stick derecho** | — | mirar (camara estilo GTA) |
+| **L3** (apretar el stick) | Shift | correr |
+| **○** | E | interactuar |
+| **△** | T | editor de mundo |
+| **L2 mantenido** | K | ver colisiones |
+| **▢** | C | abrir/cerrar el Banapod |
+| **✕** | Espacio | saltar |
+| **R1** | F | golpe |
+| **L1** | B | baile |
+| **R2** | N | picar la pelota |
+
+- ⚠️ **HAY QUE APRETAR UN BOTON PARA QUE APAREZCA.** El navegador no lista un
+  joystick hasta que le llega la primera pulsacion — es a proposito, para que
+  una pagina no sepa que tenes enchufado sin que lo uses. Si lo enchufas y no
+  anda, no esta roto: apreta cualquier boton.
+- ⚠️ **NO SE LEE POR EVENTOS, SE PREGUNTA CADA CUADRO.** `navigator.getGamepads()`
+  devuelve una FOTO del momento: guardarse la referencia deja los valores
+  congelados en los del primer cuadro.
+- El lector unico es `src/core/mando.js` (`leerMando()`), y lo usan el juego, la
+  camara, el editor y el Banapod. **No escribir otro.** Zona muerta RADIAL, no
+  por eje: recortando cada eje por separado, una diagonal apenas arriba del
+  umbral sale recta.
+- Las acciones que ya existian como TECLA se mandan como tecla sintetica
+  (`KeyT`, `KeyC`, `KeyK`) en vez de cablearlas de nuevo. Un `KeyboardEvent`
+  disparado sobre `window` SI lo reciben los listeners de la propia pagina; lo
+  que NO funciona es al reves (ver la seccion del teclado en las pruebas).
+
+**Camara con el stick derecho.** Gira alrededor de BOB y sube o baja la vista
+(picado de -0,30 a 1,00, casi cenital). El mouse SIGUE LIBRE para clickear
+productos: eso no cambio.
+⚠️ **La camara se queda donde la dejaste 1,4 s antes de volver sola** detras de
+BOB. Sin esa pausa peleaba con la mano: soltabas el stick y en el mismo cuadro
+empezaba a acomodarse, asi que mirar una vidriera era imposible.
+⚠️ **Con el editor abierto el stick derecho NO mueve la camara**: ahi gira y
+escala el objeto seleccionado, y las dos cosas juntas hacen imposible acomodar
+algo.
+
+**El Banapod se maneja con el pad.** La cruceta (o el stick izquierdo) mueve un
+selector entre los botones, el **panel tactil** o **✕** aprieta, y **○** vuelve
+atras — y si ya estas en la pantalla principal, lo cierra. Sobre una barra
+(la hora), izquierda y derecha cambian el valor en vez de saltar de boton.
+`src/ui/mandoBanapod.js`, enganchado desde `phone.js` para no tocar `main.js`.
+- El selector salta al boton que de verdad esta para ese lado, **midiendo la
+  pantalla**, no siguiendo el orden del HTML. ⚠️ Las cuatro apps estan puestas
+  asi de verdad: MUSICA y TIENDA arriba, RELOJ y CLUB(apagado) abajo. El reloj
+  esta ABAJO a la izquierda aunque sea el primero del HTML.
+- ⚠️ **El navegador NO puede leer DONDE apoyas el dedo en el panel tactil.** La
+  Gamepad API expone el CLICK del panel (boton 17) y nada mas. Las coordenadas
+  del dedo existen en el mando pero harian falta WebHID y otro permiso. Un
+  puntero libre arrastrado con el dedo no se puede hacer hoy.
+
+**Prueba automatica:** `node tools/smoke/mando-banapod.mjs` (34 comprobaciones,
+con `npm run dev` levantado). Reemplaza `navigator.getGamepads` por uno falso,
+asi que al juego le llega exactamente lo mismo que de un mando de verdad.
+⚠️ Ese navegador dibuja por software y va a ~2 cuadros por segundo: apretar un
+boton 90 ms no cae dentro de ningun cuadro y el juego no se entera. La prueba
+espera CUADROS, no milisegundos. Y ojo que ahora varios archivos preguntan por
+el joystick en el mismo cuadro, asi que contar esas preguntas sobreestima los
+cuadros.
 
 ### Mobile existente
 
@@ -927,6 +1202,15 @@ bastante menor. La pantalla de eleccion suma **10,7 kB** al bundle
   cada uno) y las cinco prendas de Fer (40-210 KB). **Draco no rinde a ese
   tamaño** —tiene costo fijo por archivo y puede agrandarlos—: se midieron y se
   dejaron como estan. Todo lo que pesaba de verdad ya esta comprimido.
+- ⚠️ **El BOB de septiembre suma 1,8 MB a la primera carga** (2,51 MB contra
+  0,72 MB del oficial). Es el `POR_DEFECTO` de `bob3d.js` **de forma provisoria**
+  para que Kusher lo pruebe sin agregar nada a la direccion. Antes de pasar esto
+  a la rama oficial hay que decidir: volver a `bob.glb`, o comprimir el nuevo
+  con Draco y medir. Con el sin comprimir, la primera carga se va a ~17,2 MB.
+- ⚠️ **El bucle de render principal NO se pausa con un minijuego abierto.** Hoy
+  el mundo se sigue dibujando por detras: con un juego 2D no se nota, con uno 3D
+  si. Kusher esta prototipando un juego para HOOP SEASON, asi que esto pasa a
+  ser lo primero de los juegos.
 - `/favicon.ico` devuelve 404 (no existe). Es cosmetico —la pestaña queda sin
   iconito— y es de antes; se deja porque elegir el icono es decision de marca.
 
@@ -1009,7 +1293,17 @@ ahora: no adelantarlo.
 - `src/world/floorEnvironmentCatalog.js`: imagen 360 elegida por carpeta/piso.
 - `src/world/dayNightCycle.js`: hora, paleta, sol y luna.
 - `src/world/editor/`: editor, catalogo, seleccion y persistencia.
-- `src/player/bob3d.js`: carga, movimiento y animacion de BOB.
+- `src/player/bob3d.js`: carga, movimiento, salto, animacion y gestos de BOB.
+- `src/core/input.js`: teclado, controles virtuales y mapa de botones del mando.
+- `src/core/mando.js`: **el unico** lector del joystick. No escribir otro.
+- `src/core/camera.js`: camara tercera persona + mirar con el stick derecho.
+- `src/ui/mandoBanapod.js`: manejar el Banapod con el pad del joystick.
+- `src/world/burelaFrente.js`: la cuadra de enfrente recreada con fotos.
+- `src/world/burelaCielo.js`: esfera de cielo atada al reloj.
+- `src/world/burelaAlrededores.js`: la masa del barrio y el horizonte.
+- `src/world/carPaint.js`: repintar la carroceria de un GLB de auto.
+- `src/world/editor/gruposDeMundo.js`: juntar objetos para moverlos de a monton.
+- `src/world/editor/deshacer.js`: Ctrl+Z del editor.
 - `src/world/cars.js`: GLB/fallback, posiciones y radios.
 - `src/ui/phone.js`: celular, musica, carrito, reloj y opcion 4.
 - `src/audio/musicPlayer.js`: estado musical compartido.
@@ -1021,6 +1315,21 @@ ahora: no adelantarlo.
 - `src/integrations/tiendanube/`: catalogo y futura integracion comercial.
 - `public/assets/layouts/furniture-layout.json`: posiciones oficiales del editor.
 - `public/assets/data/productos.json`: catalogo publicado del simulador.
+
+### Herramientas de linea de comandos
+
+Todas se corren desde `store-simulator/`.
+
+| comando | para que |
+|---|---|
+| `tools/layout/fusionar-layouts.mjs` | juntar el layout de Kusher (Burela) con el de Fer (pisos) |
+| `tools/rig/pintar-bob.mjs` | hornear el color de la marca por vertice en un modelo nuevo |
+| `tools/rig/clips-bob.mjs` | devolver caminar/correr originales y dejar los gestos en el lugar |
+| `tools/rig/traer-animacion.mjs` | pasar una animacion de Mixamo al esqueleto de BOB |
+| `tools/rig/despegar-cadenas.mjs` | despegar los pesos de la mano y el muslo |
+| `tools/rig/descoser-manos.mjs` | cortar la piel cosida entre mano y muslo |
+| `tools/smoke/mando-banapod.mjs` | 34 comprobaciones del joystick adentro del juego |
+| `tools/smoke/foto-clip.mjs` | ver un clip de BOB renderizado en una tira de 6 fotos |
 
 ## 10. Flujo de trabajo obligatorio
 
@@ -1136,6 +1445,7 @@ vez hace falta `npx playwright install chromium`):
 SMOKE_URL=http://127.0.0.1:5201 npm run smoke        # recorre Burela y los 5 pisos
 SMOKE_URL=http://127.0.0.1:5201 npm run diagnostico  # mide donde se va el tiempo
 SMOKE_URL=http://127.0.0.1:5201 npm run modelos      # los GLB siguen apareciendo?
+SMOKE_URL=http://127.0.0.1:5201 node tools/smoke/mando-banapod.mjs   # el joystick
 ```
 
 - ⚠️ Hasta el 03/09 `recorrido.mjs` **no leia `SMOKE_URL`**: solo aceptaba
@@ -1180,3 +1490,8 @@ lanzamiento web deben cumplirse todos estos puntos:
 - No subir musica sin permiso ni modelos sin revisar peso/licencia.
 - No cambiar rama oficial, nombre de version o fecha de lanzamiento por cuenta
   propia.
+- **No dar por definitivo ningun rig de BOB sin que lo diga Kusher.** Hoy
+  conviven dos incompatibles (`bob.glb` con 41 huesos y el de septiembre con
+  24). El de septiembre esta aprobado como direccion —"no es el final, pero este
+  bob septiembre viene bien"—, no como final. Mientras haya dos, cada prenda o
+  animacion que se produzca sirve para uno solo.
