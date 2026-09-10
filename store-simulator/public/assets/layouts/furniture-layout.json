@@ -7819,60 +7819,6 @@
     "manageShadows": false
   },
   {
-    "id": "calle-kit:15.5-copia-5",
-    "name": "Cantero principal izquierdo · arbusto 4 (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -22.18842422659064,
-      0.2558558062607095,
-      -17.53054468702502
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      40.17508318887885,
-      1.9620577016222904,
-      39.27706574758879
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.5",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:15.5-copia-6",
-    "name": "Cantero principal izquierdo · arbusto 4 (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      73.54461093693699,
-      -0.0514339065472853,
-      -17.53054468702502
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      125.64848864107103,
-      1.9620577016222904,
-      519.9579825633998
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.5",
-    "manageShadows": false
-  },
-  {
     "id": "calle-kit:1-copia-31",
     "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
     "type": "calle-kit",
@@ -8005,33 +7951,6 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:15.5-copia-7",
-    "name": "Cantero principal izquierdo · arbusto 4 (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      59.36209289059329,
-      -0.28975057828441275,
-      3.741345059997501
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      125.64848864107103,
-      1.5017641553886392,
-      -77.06437802824495
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.5",
     "manageShadows": false
   },
   {
