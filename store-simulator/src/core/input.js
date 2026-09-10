@@ -18,18 +18,20 @@
 // congelada con los valores del primer cuadro.
 const ZONA_MUERTA = 0.18;   // los sticks del DualSense siempre tiemblan un poco
 
-// Mapa de botones del "standard gamepad", que es como el navegador presenta al
-// DualSense. Los nombres de PlayStation al lado para poder leerlo.
-const BOTON = {
-  CRUZ: 0,        // X  — interactuar (lo mismo que la tecla E)
-  CIRCULO: 1,     // O
-  CUADRADO: 2,    // □  — celular (lo mismo que la tecla C)
-  TRIANGULO: 3,   // △
-  L1: 4,
-  R1: 5,          // correr
-  L2: 6,
-  R2: 7,          // correr
-};
+// ---- MAPA DE BOTONES (elegido por Kusher) ----------------------------------
+//   L3 (apretar stick izq)  correr
+//   ○  Circulo              interactuar   (= tecla E)
+//   △  Triangulo            editor        (= tecla T)
+//   L2 mantenido            ver colisiones(= tecla K)
+//   □  Cuadrado             abrir/cerrar el Banapod (= tecla C)
+//   ✕  Cruz                 saltar
+//
+// ⚠️ Las que ya existian como TECLA se mandan como tecla sintetica en vez de
+// cablearlas de nuevo: el que escucha la T, la K o la C ya existe y anda. Un
+// `KeyboardEvent` disparado sobre `window` SI lo reciben los listeners de la
+// propia pagina (lo que no funciona es al reves: mandarselo a Playwright desde
+// afuera para simular a un usuario).
+import { BOTON } from './mando.js';
 
 export class Input {
   constructor(domElement) {
@@ -41,6 +43,8 @@ export class Input {
     // FLANCO: sin esto, dejar la cruz apretada dispararia interactuar sesenta
     // veces por segundo.
     this._padAntes = new Set();
+    this._l2Antes = false;
+    this._saltoPedido = false;
 
     window.addEventListener('keydown', (e) => {
       if (e.repeat) return;
@@ -55,7 +59,7 @@ export class Input {
     });
 
     window.addEventListener('gamepadconnected', (e) => {
-      console.info(`FOURTWENTY: joystick conectado — ${e.gamepad.id}. Stick izquierdo mover · R2/R1 correr · X interactuar · ▢ celular.`);
+      console.info(`FOURTWENTY: joystick conectado — ${e.gamepad.id}. Stick izq mover · L3 correr · ✕ saltar · ○ interactuar · ▢ Banapod · △ editor · L2 ver colisiones.`);
     });
     window.addEventListener('gamepaddisconnected', () => {
       this._padAntes.clear();
@@ -107,11 +111,12 @@ export class Input {
     this.virtualAxes.z = 0;
   }
 
-  // Shift apretado → correr (estilo GTA). En el joystick, R2 o R1.
+  // Shift apretado → correr (estilo GTA). En el joystick, L3: apretar el stick
+  // izquierdo, como en los shooters. Deja los gatillos libres.
   sprinting() {
     if (this.keys.has('ShiftLeft') || this.keys.has('ShiftRight')) return true;
     const pad = this._pad();
-    return !!pad && (pad.buttons[BOTON.R2]?.pressed || pad.buttons[BOTON.R1]?.pressed);
+    return !!pad && !!pad.buttons[BOTON.L3]?.pressed;
   }
 
   // Lee los botones del joystick y devuelve los que se acaban de apretar
@@ -130,18 +135,40 @@ export class Input {
     return nuevos;
   }
 
-  // true una sola vez por pulsación de E o de la cruz (interactuar con lo más
-  // cercano). Tambien abre el celular con el cuadrado, porque el celular se
-  // abre con una tecla y con el joystick no hay teclado.
+  // true una sola vez por pulsación de E o del CIRCULO (interactuar con lo mas
+  // cercano). Se llama una vez por cuadro desde el bucle de `main.js`, y por eso
+  // es tambien el lugar donde se leen los demas botones.
   consumeInteract() {
     const nuevos = this._reciénApretados();
-    if (nuevos.has(BOTON.CUADRADO)) {
-      // Se manda la tecla C de verdad para no tener que cablear el celular
-      // aparte: quien escucha la C ya existe y funciona.
-      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyC', bubbles: true }));
+    const editorAbierto = !!window.__worldEditor?.isEnabled?.();
+
+    if (nuevos.has(BOTON.CUADRADO)) this._tecla('KeyC');    // Banapod
+    if (nuevos.has(BOTON.TRIANGULO)) this._tecla('KeyT');   // editor
+    if (nuevos.has(BOTON.CRUZ)) this._saltoPedido = true;   // saltar
+
+    // ⚠️ L2 = ver colisiones SOLO con el editor CERRADO. Adentro del editor L2
+    // baja el objeto seleccionado (ver worldEditor), y las dos cosas en el
+    // mismo gatillo se pelean.
+    if (!editorAbierto) {
+      const l2 = !!this._pad()?.buttons[BOTON.L2]?.pressed;
+      // El visor es un interruptor: se manda la K al apretar y otra al soltar,
+      // asi "mantenido" se comporta como mantenido.
+      if (l2 !== this._l2Antes) { this._tecla('KeyK'); this._l2Antes = l2; }
     }
-    const q = this._interactQueued || nuevos.has(BOTON.CRUZ);
+
+    const q = this._interactQueued || nuevos.has(BOTON.CIRCULO);
     this._interactQueued = false;
+    return q;
+  }
+
+  _tecla(code) {
+    window.dispatchEvent(new KeyboardEvent('keydown', { code, bubbles: true }));
+  }
+
+  // true una sola vez por pulsacion de la cruz. Lo consume `bob3d.update`.
+  consumeJump() {
+    const q = this._saltoPedido;
+    this._saltoPedido = false;
     return q;
   }
 }

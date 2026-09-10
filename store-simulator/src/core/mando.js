@@ -1,4 +1,5 @@
-// Leer el joystick para EDITAR (no para caminar).
+// Leer el joystick. Lo usan el juego (`core/input.js`), el editor
+// (`world/editor/worldEditor.js`) y el Banapod (`ui/phone.js`).
 //
 // Kusher lo pidio para "agilizar la productividad de acomodar cosa por cosa":
 // con el mouse, poner una casa es agarrar una flecha del gizmo, arrastrar,
@@ -12,20 +13,19 @@
 // cambia, el stick va a hacer las dos cosas a la vez.
 const ZONA_MUERTA = 0.20;   // un poco mas que caminando: acomodar pide pulso firme
 
+// Mapa del "standard gamepad", que es como el navegador presenta al DualSense.
 export const BOTON = {
-  CRUZ: 0,        // X  — duplicar
-  CIRCULO: 1,     // O  — soltar la seleccion
-  CUADRADO: 2,    // □
-  TRIANGULO: 3,   // △
-  L1: 4,          // mantener = movimiento fino
-  R1: 5,
-  L2: 6,          // bajar
-  R2: 7,          // subir
-  OPTIONS: 9,     // guardar
-  CRUCETA_ARRIBA: 12,
-  CRUCETA_ABAJO: 13,
-  CRUCETA_IZQ: 14,
-  CRUCETA_DER: 15,
+  CRUZ: 0, CIRCULO: 1, CUADRADO: 2, TRIANGULO: 3,
+  L1: 4, R1: 5, L2: 6, R2: 7,
+  SHARE: 8, OPTIONS: 9,
+  L3: 10,         // apretar el stick izquierdo
+  R3: 11,
+  CRUCETA_ARRIBA: 12, CRUCETA_ABAJO: 13, CRUCETA_IZQ: 14, CRUCETA_DER: 15,
+  PS: 16,
+  // ⚠️ El CLICK del panel tactil aparece aca en Chrome, pero el TOQUE (donde
+  // pusiste el dedo) NO existe en la Gamepad API: haria falta WebHID y un
+  // permiso aparte del navegador. Sirve como boton, no como superficie tactil.
+  TACTIL: 17,
 };
 
 // ⚠️ Zona muerta RADIAL, no por eje: recortando cada eje por separado, una

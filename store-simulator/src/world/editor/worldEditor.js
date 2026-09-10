@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { crearSistemaDeGrupos } from './gruposDeMundo.js';
 import { crearHistorial, fotoDeTransform, aplicarFoto } from './deshacer.js';
-import { leerMando, BOTON } from './mandoEditor.js';
+import { leerMando, BOTON } from '../../core/mando.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { addFurnitureItem } from '../furniture.js';
 import { createPiece, groupPieces, mergePiece, PIEZAS, setPieceTexture } from './pieceBuilder.js';
