@@ -25,6 +25,8 @@ const ZONA_MUERTA = 0.18;   // los sticks del DualSense siempre tiemblan un poco
 //   L2 mantenido            ver colisiones(= tecla K)
 //   □  Cuadrado             abrir/cerrar el Banapod (= tecla C)
 //   ✕  Cruz                 saltar
+//   R1                      golpe  (= tecla F)
+//   L1                      baile  (= tecla B)
 //
 // ⚠️ Las que ya existian como TECLA se mandan como tecla sintetica en vez de
 // cablearlas de nuevo: el que escucha la T, la K o la C ya existe y anda. Un
@@ -48,6 +50,7 @@ export class Input {
     this._padAntes = new Set();
     this._l2Antes = false;
     this._saltoPedido = false;
+    this._gestoPedido = null;
 
     window.addEventListener('keydown', (e) => {
       if (e.repeat) return;
@@ -59,6 +62,10 @@ export class Input {
         e.preventDefault();
         this._saltoPedido = true;
       }
+      if (!isTypingTarget(e.target)) {
+        if (e.code === 'KeyF') this._gestoPedido = 'golpe';
+        if (e.code === 'KeyB') this._gestoPedido = 'baile';
+      }
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
     window.addEventListener('blur', () => {
@@ -66,10 +73,11 @@ export class Input {
       this.clearVirtualAxes();
       this._padAntes.clear();
       this._saltoPedido = false;
+      this._gestoPedido = null;
     });
 
     window.addEventListener('gamepadconnected', (e) => {
-      console.info(`FOURTWENTY: joystick conectado — ${e.gamepad.id}. Stick izq mover · L3 correr · ✕ saltar · ○ interactuar · ▢ Banapod · △ editor · L2 ver colisiones.`);
+      console.info(`FOURTWENTY: joystick conectado — ${e.gamepad.id}. Stick izq mover · L3 correr · ✕ saltar · R1 golpe · L1 baile · ○ interactuar · ▢ Banapod · △ editor · L2 ver colisiones.`);
     });
     window.addEventListener('gamepaddisconnected', () => {
       this._padAntes.clear();
@@ -155,11 +163,13 @@ export class Input {
     if (nuevos.has(BOTON.CUADRADO)) this._tecla('KeyC');    // Banapod
     if (nuevos.has(BOTON.TRIANGULO)) this._tecla('KeyT');   // editor
     if (nuevos.has(BOTON.CRUZ)) this._saltoPedido = true;   // saltar
+    if (nuevos.has(BOTON.R1)) this._gestoPedido = 'golpe';
+    if (nuevos.has(BOTON.L1)) this._gestoPedido = 'baile';
 
     // ⚠️ Con el editor abierto BOB no se actualiza, asi que nadie consume el
     // salto: sin esta linea, la ✕ apretada dentro del editor (donde sirve para
     // otra cosa) quedaria guardada y BOB pegaria un salto solo al cerrarlo.
-    if (editorAbierto) this._saltoPedido = false;
+    if (editorAbierto) { this._saltoPedido = false; this._gestoPedido = null; }
 
     // ⚠️ L2 = ver colisiones SOLO con el editor CERRADO. Adentro del editor L2
     // baja el objeto seleccionado (ver worldEditor), y las dos cosas en el
@@ -184,6 +194,13 @@ export class Input {
   consumeJump() {
     const q = this._saltoPedido;
     this._saltoPedido = false;
+    return q;
+  }
+
+  /** 'golpe' | 'baile' | null, una sola vez por pulsacion. */
+  consumeGesto() {
+    const q = this._gestoPedido;
+    this._gestoPedido = null;
     return q;
   }
 }

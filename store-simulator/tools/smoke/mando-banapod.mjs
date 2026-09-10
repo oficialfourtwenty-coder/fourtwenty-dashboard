@@ -20,7 +20,7 @@ const URL_BASE = args.includes('--url')
   ? args[args.indexOf('--url') + 1]
   : (process.env.SMOKE_URL ?? 'http://127.0.0.1:5173');
 
-const BOTON = { CRUZ: 0, CIRCULO: 1, CUADRADO: 2, ARRIBA: 12, ABAJO: 13, IZQ: 14, DER: 15 };
+const BOTON = { CRUZ: 0, CIRCULO: 1, CUADRADO: 2, L1: 4, R1: 5, ARRIBA: 12, ABAJO: 13, IZQ: 14, DER: 15 };
 
 const fallos = [];
 const ok = (cond, texto) => {
@@ -183,6 +183,58 @@ try {
   // camina como estatua por el resto de la partida.
   const congelado = await page.evaluate(() => window.__bob._enElAire);
   ok(congelado === false, 'al aterrizar deja de estar en el aire');
+  // ── 5. Los gestos (golpe y baile) ───────────────────────────────────────
+  //
+  // ⚠️ NO SE MIRA UNA FOTO: se mide la POSE. Se guarda la posicion de todos los
+  // huesos, se dispara el gesto, y se vuelve a medir. Si BOB no se movio, la
+  // suma da cero y no hay forma de confundirse — mirar una captura y decir "se
+  // ve bien" ya hizo dar por buenos arreglos que estaban rotos.
+  console.log('\nGESTOS');
+  const pose = () => page.evaluate(() => {
+    const bob = window.__bob;
+    let suma = 0;
+    bob.model?.updateMatrixWorld(true);
+    bob.model?.traverse((o) => {
+      if (o.isBone) suma += Math.abs(o.position.x) + Math.abs(o.position.y) + Math.abs(o.position.z)
+        + Math.abs(o.quaternion.x) + Math.abs(o.quaternion.y) + Math.abs(o.quaternion.z) + Math.abs(o.quaternion.w);
+    });
+    return suma;
+  });
+
+  const disponibles = await page.evaluate(() => Object.entries(window.__bob.gestos ?? {})
+    .filter(([, a]) => a).map(([k]) => k));
+  ok(disponibles.includes('golpe'), `el modelo trae el GOLPE (${disponibles.join(', ') || 'ninguno'})`);
+  ok(disponibles.includes('baile'), `el modelo trae el BAILE (${disponibles.join(', ') || 'ninguno'})`);
+
+  for (const [boton, nombre] of [[BOTON.R1, 'golpe'], [BOTON.L1, 'baile']]) {
+    const antes = await pose();
+    await apretar(boton);
+    ok(await page.evaluate((n) => window.__bob._gesto?.userData?.nombre?.toLowerCase() === n, nombre) === true,
+      `arranca el ${nombre}`);
+    let maxDif = 0;
+    for (let i = 0; i < 10; i++) {
+      await cuadros(1);
+      maxDif = Math.max(maxDif, Math.abs(await pose() - antes));
+    }
+    ok(maxDif > 0.5, `el ${nombre} mueve los huesos de verdad (${maxDif.toFixed(2)})`);
+    // Que termine solo y devuelva el control: un gesto que se queda pegado deja
+    // a BOB en esa pose para el resto de la partida.
+    // ⚠️ La espera se calcula con el LARGO DEL CLIP, no con un numero redondo.
+    // El golpe dura 6,87 s y el juego avanza como mucho 0,05 s por cuadro: son
+    // ~140 cuadros. Con 60 fijos daba "no termina solo" un gesto que terminaba
+    // perfecto, y encima arrastraba al siguiente, que no podia arrancar.
+    const largo = await page.evaluate(() => window.__bob._gesto?.getClip?.().duration ?? 1);
+    const tope = Math.ceil(largo / 0.05) + 40;
+    for (let i = 0; i < tope && await page.evaluate(() => !!window.__bob._gesto); i++) await cuadros(1);
+    ok(await page.evaluate(() => !window.__bob._gesto), `el ${nombre} termina solo`);
+  }
+
+  // Caminando no se dispara: seria patinar por el piso.
+  await page.evaluate(() => { window.__pad.ejes[1] = -1; });
+  await cuadros(3);
+  await apretar(BOTON.R1);
+  ok(await page.evaluate(() => !window.__bob._gesto), 'caminando NO arranca el gesto');
+  await page.evaluate(() => { window.__pad.ejes[1] = 0; });
 } catch (error) {
   fallos.push(`explotó: ${error.message}`);
   console.error(error);

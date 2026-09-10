@@ -194,6 +194,38 @@ export class Player {
       this._sinIdle = !idleClip;
       this.actions.walk.weight = 1;
 
+      // ── GESTOS: los clips que NO son caminar/correr/quieto ────────────────
+      // Kusher pidio "algun otro movimiento a BOB, como que haga un salto o un
+      // golpe o un baile" y mando el modelo con los clips adentro. Estos NO se
+      // mezclan por velocidad como los de andar: se disparan de a uno, suenan
+      // enteros y vuelven solos.
+      //
+      // ⚠️ SON DEL RIG DE MESHY, NO DEL BOB OFICIAL. `bob-meshy.glb` tiene 24
+      // huesos y `bob.glb` 41, con otros nombres: estos clips NO se pueden
+      // pegar al BOB oficial copiandolos. Para que el BOB de la marca boxee hay
+      // que exportar el clip desde SU rig.
+      const gesto = (re, nombre) => {
+        const clip = clips.find((c) => re.test(c.name));
+        if (!clip) return null;
+        const a = this.mixer.clipAction(clip);
+        a.loop = THREE.LoopOnce;
+        a.clampWhenFinished = true;    // que no pegue un salto al ultimo cuadro
+        a.weight = 0;
+        a.enabled = false;
+        a.userData = { nombre };
+        return a;
+      };
+      this.gestos = {
+        golpe: gesto(/box|punch|golpe|fight/i, 'GOLPE'),
+        baile: gesto(/unsteady|dance|baile|idle_2|tamba/i, 'BAILE'),
+      };
+      this._gesto = null;          // el que esta sonando ahora
+      this._gestoHasta = 0;        // en que segundo del reloj interno termina
+      this._reloj = 0;
+
+      const hay = Object.entries(this.gestos).filter(([, a]) => a).map(([k]) => k);
+      console.info(`${this._modelo.archivo}: gestos disponibles → ${hay.join(', ') || 'ninguno'}`);
+
       console.info(`${this._modelo.archivo}: ${clips.length} clips → idle="${idleClip?.name ?? '(pose neutra)'}" walk="${(walkClip || runClip || clips[0]).name}" run="${this.actions.run ? runClip.name : '(usa el de caminar)'}"`);
     } else {
       console.info('bob.glb sin animation clips — animación procedural activada');
@@ -298,6 +330,32 @@ export class Player {
       this.rig.rotation.y = this.modelYaw;
     }
 
+    // 5.b) GESTOS (golpe / baile)
+    //
+    // ⚠️ SE CANCELAN AL CAMINAR. Un clip de cuerpo entero mientras BOB se
+    // desplaza se ve como si patinara por el piso: los pies hacen el gesto y el
+    // personaje viaja. Se corta apenas se empuja el stick, que es ademas lo que
+    // uno espera de un juego.
+    if (this.mixer && this.gestos) {
+      this._reloj += dt;
+      const pedido = input.consumeGesto?.();
+      const quietoDeVerdad = speed < 0.4 && !this._enElAire;
+      if (pedido && this.gestos[pedido] && quietoDeVerdad && !this._gesto) {
+        const a = this.gestos[pedido];
+        a.enabled = true;
+        a.reset();
+        a.play();
+        this._gesto = a;
+        this._gestoHasta = this._reloj + a.getClip().duration;
+      }
+      if (this._gesto && (this._reloj >= this._gestoHasta || !quietoDeVerdad)) {
+        this._gesto.enabled = false;
+        this._gesto.weight = 0;
+        this._gesto.stop();
+        this._gesto = null;
+      }
+    }
+
     // 6) Animación
     if (this.mixer) {
       if (this._sinIdle) {
@@ -346,6 +404,17 @@ export class Player {
       if (this._enElAire || this._veniaDelAire) {
         for (const a of Object.values(this.actions)) if (a) a.paused = this._enElAire;
         this._veniaDelAire = this._enElAire;
+      }
+      // ⚠️ El gesto TAPA a los de andar, no se suma. Se hace DESPUES de que las
+      // ramas de arriba repartieron los pesos: si se hiciera antes, la mezcla
+      // por velocidad los pisaria de vuelta y el gesto no se veria.
+      if (this._gesto) {
+        // Entra y sale en 0,12 s. Sin ese cruce el brazo salta de golpe a la
+        // pose del gesto y parece un tirón, no un movimiento.
+        const resta = Math.min(1, Math.min(this._reloj - (this._gestoHasta - this._gesto.getClip().duration),
+          this._gestoHasta - this._reloj) / 0.12);
+        this._gesto.weight = resta;
+        for (const a of Object.values(this.actions)) if (a && a !== this._gesto) a.weight *= 1 - resta;
       }
       this.mixer.update(dt);
     } else if (this.model && !this._isBillboard) {
