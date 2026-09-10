@@ -44,10 +44,9 @@ export const BORDADOS = Object.freeze([
 
 // Arranca sobre el pecho del frente. Sale de medir en que UV caen los vertices
 // del pecho-frente del GLB; es un punto de partida, no una jaula: se mueve.
-export const DISEÑO_BASE = Object.freeze({
-  color: null,        // null = el color con el que vino el GLB
+const LADO_BASE = Object.freeze({
   imagen: null,
-  u: 0.285,           // centro horizontal en el mapa (0 a 1)
+  u: 0.285,
   v: 0.835,           // centro vertical
   ancho: 0.16,
   alto: 0.16,
@@ -59,6 +58,37 @@ export const DISEÑO_BASE = Object.freeze({
   // debajo del logo. 0 lo apaga.
   relieve: 0.5,
 });
+
+const ladoBase = (lado) => ({
+  ...LADO_BASE,
+  // Frente y espalda ocupan sectores distintos del UV. Estos centros salen
+  // de medir los GLB reales, no de adivinar con sliders sobre el mapa entero.
+  u: lado === 'dorso' ? 0.70 : 0.285,
+});
+
+export const DISEÑO_BASE = Object.freeze({
+  color: null,        // null = el color con el que vino el GLB
+  frente: Object.freeze(ladoBase('frente')),
+  dorso: Object.freeze(ladoBase('dorso')),
+});
+
+// Compatibilidad con todo lo ya guardado: hasta esta mejora el diseño era un
+// solo objeto plano. Al abrirlo pasa al FRENTE y la espalda nace vacía.
+function normalizarDiseño(raw = {}) {
+  if (raw.frente || raw.dorso) {
+    return {
+      color: raw.color ?? null,
+      frente: { ...ladoBase('frente'), ...(raw.frente ?? {}) },
+      dorso: { ...ladoBase('dorso'), ...(raw.dorso ?? {}) },
+    };
+  }
+  const { color = null, ...ladoAnterior } = raw;
+  return {
+    color,
+    frente: { ...ladoBase('frente'), ...ladoAnterior },
+    dorso: ladoBase('dorso'),
+  };
+}
 
 export function esPrendaGlb(objeto) {
   return Boolean(objeto?.userData?.garmentModel);
@@ -110,7 +140,8 @@ function guardar(todos) {
 }
 
 export function diseñoDe(prenda) {
-  return { ...DISEÑO_BASE, ...(leerGuardado()[prenda?.name] ?? {}) };
+  const guardado = leerGuardado()[prenda?.name];
+  return normalizarDiseño(guardado ?? { color: prenda?.userData?.garmentModel?.color ?? null });
 }
 
 // ---------------------------------------------------------------------------
@@ -120,10 +151,15 @@ export function pintarPrenda(prenda, diseño, { usarCache = true, lado = null } 
   const tela = telaDe(prenda);
   if (!tela?.material) return null;
 
+  const completo = normalizarDiseño(diseño);
+  if (prenda.userData?.garmentModel && completo.color) {
+    prenda.userData.garmentModel.color = completo.color;
+  }
+
   tela.userData.colorOriginal ??= tela.material.color.getHex();
 
   // Misma pinta => misma textura. Se compara el diseño entero, imagen incluida.
-  const clave = JSON.stringify(diseño);
+  const clave = JSON.stringify(completo);
   const cacheada = usarCache ? cacheDeTexturas.get(clave) : null;
   if (cacheada) {
     tela.userData.texturaTemporal?.dispose?.();
@@ -136,7 +172,8 @@ export function pintarPrenda(prenda, diseño, { usarCache = true, lado = null } 
   }
 
   const lienzo = document.createElement('canvas');
-  lienzo.width = lienzo.height = lado ?? (diseño.imagen ? LADO : LADO_SIN_IMAGEN);
+  const tieneImagen = Boolean(completo.frente.imagen || completo.dorso.imagen);
+  lienzo.width = lienzo.height = lado ?? (tieneImagen ? LADO : LADO_SIN_IMAGEN);
   tela.userData.lienzoPrenda = lienzo;
   const ctx = lienzo.getContext('2d');
   // Sin esto el logo sale con escalones al achicarlo.
@@ -146,54 +183,48 @@ export function pintarPrenda(prenda, diseño, { usarCache = true, lado = null } 
 
   // Fondo: el color de la tela. Se pinta el lienzo ENTERO, no solo la zona del
   // dibujo — el mapa cubre toda la prenda y cualquier hueco saldria negro.
-  const color = diseño.color ?? `#${tela.userData.colorOriginal.toString(16).padStart(6, '0')}`;
+  const color = completo.color ?? `#${tela.userData.colorOriginal.toString(16).padStart(6, '0')}`;
   ctx.fillStyle = color;
   ctx.fillRect(0, 0, LADO_ACTUAL, LADO_ACTUAL);
 
-  const dibujar = () => {
-    const textura = new THREE.CanvasTexture(lienzo);
-    textura.colorSpace = THREE.SRGBColorSpace;
-    textura.anisotropy = 16;
-    textura.needsUpdate = true;
-    tela.material.map = textura;
-    if (usarCache) {
-      tela.userData.texturaTemporal?.dispose?.();
-      delete tela.userData.texturaTemporal;
-      cacheDeTexturas.set(clave, { textura, lienzo });
-      // Evita que una sesion larga conserve para siempre cada prueba anterior.
-      while (cacheDeTexturas.size > 12) cacheDeTexturas.delete(cacheDeTexturas.keys().next().value);
-    } else {
-      const anterior = tela.userData.texturaTemporal;
-      tela.userData.texturaTemporal = textura;
-      if (anterior && anterior !== textura) anterior.dispose();
-    }
-    // ⚠️ El color del material se lleva a BLANCO: si queda tenido, multiplica
-    // la textura y el diseño sale con ese tinte encima.
-    tela.material.color.set(0xffffff);
-    tela.material.needsUpdate = true;
-  };
+  const textura = new THREE.CanvasTexture(lienzo);
+  textura.colorSpace = THREE.SRGBColorSpace;
+  textura.anisotropy = 16;
+  tela.material.map = textura;
+  if (usarCache) {
+    tela.userData.texturaTemporal?.dispose?.();
+    delete tela.userData.texturaTemporal;
+    cacheDeTexturas.set(clave, { textura, lienzo });
+    while (cacheDeTexturas.size > 12) cacheDeTexturas.delete(cacheDeTexturas.keys().next().value);
+  } else {
+    const anterior = tela.userData.texturaTemporal;
+    tela.userData.texturaTemporal = textura;
+    if (anterior && anterior !== textura) anterior.dispose();
+  }
+  tela.material.color.set(0xffffff);
+  tela.material.needsUpdate = true;
 
-  if (!diseño.imagen) { dibujar(); return lienzo; }
-
-  const img = new Image();
-  img.onload = () => {
+  const dibujarLado = (config) => {
+    if (!config.imagen) return;
+    const img = new Image();
+    img.onload = () => {
     // La proporcion del archivo manda: estirar un logo para llenar un cuadrado
     // lo deforma. Se encaja dentro de la caja pedida sin deformarlo.
-    const caja = diseño.ancho * LADO_ACTUAL;
+    const caja = config.ancho * LADO_ACTUAL;
     const proporcion = img.width / Math.max(1, img.height);
     const w = proporcion >= 1 ? caja : caja * proporcion;
     const h = proporcion >= 1 ? caja / proporcion : caja;
     // El eje V del mapa va al reves que el Y del lienzo.
-    const cx = diseño.u * LADO_ACTUAL;
-    const cy = (1 - diseño.v) * LADO_ACTUAL;
+    const cx = config.u * LADO_ACTUAL;
+    const cy = (1 - config.v) * LADO_ACTUAL;
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate((diseño.rotacion ?? 0) * Math.PI / 180);
-    if (diseño.espejar) ctx.scale(-1, 1);
+    ctx.rotate((config.rotacion ?? 0) * Math.PI / 180);
+    if (config.espejar) ctx.scale(-1, 1);
 
     // RELIEVE: una copia oscura apenas corrida, debajo del logo. Es lo que hace
     // que se lea como hilo levantado sobre la tela y no como una calcomania.
-    const relieve = diseño.relieve ?? 0;
+    const relieve = config.relieve ?? 0;
     if (relieve > 0) {
       const corrimiento = Math.max(1, (relieve * LADO_ACTUAL) / 380);
       ctx.globalAlpha = 0.42 * relieve;
@@ -204,10 +235,13 @@ export function pintarPrenda(prenda, diseño, { usarCache = true, lado = null } 
     }
     ctx.drawImage(img, -w / 2, -h / 2, w, h);
     ctx.restore();
-    dibujar();
+      textura.needsUpdate = true;
+    };
+    img.src = config.imagen;
   };
-  img.onerror = () => dibujar();
-  img.src = diseño.imagen;
+
+  dibujarLado(completo.frente);
+  dibujarLado(completo.dorso);
   return lienzo;
 }
 
@@ -218,7 +252,7 @@ export function applySavedGlbGarmentDesigns(scene) {
   let pintadas = 0;
   scene?.traverse?.((o) => {
     if (!esPrendaGlb(o) || !todos[o.name]) return;
-    pintarPrenda(o, { ...DISEÑO_BASE, ...todos[o.name] });
+    pintarPrenda(o, normalizarDiseño(todos[o.name]));
     pintadas++;
   });
   return pintadas;
@@ -253,15 +287,20 @@ function inyectarCss() {
     #${PANEL_ID} input[type="range"] { width: 100%; }
     #${PANEL_ID} input[type="color"] { width: 100%; height: 30px; padding: 2px; cursor: pointer; }
     #${PANEL_ID} .gg-fila { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    #${PANEL_ID} .gg-lados { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
+    #${PANEL_ID} .gg-lados button.is-activo { background: #e7b94c; color: #14170f;
+      border-color: #e7b94c; font-weight: bold; }
     #${PANEL_ID} .gg-bordados { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
     #${PANEL_ID} .gg-bordados button { padding: 4px; min-height: 68px; font-size: 8px; }
     #${PANEL_ID} .gg-bordados img { display: block; width: 100%; height: 42px; object-fit: contain;
       margin-bottom: 3px; background: #24262a; }
-    /* La PREVIA del mapa plano: es lo que convierte esto en un photoshop.
-       Sin verlo, mover el diseño es adivinar. */
-    #${PANEL_ID} .gg-previa { width: 100%; aspect-ratio: 1; margin-top: 6px;
-      border: 1px solid rgba(255,255,255,0.16); background: #15161a;
-      image-rendering: auto; display: block; }
+    #${PANEL_ID} .gg-prenda { width: 100%; aspect-ratio: 4 / 5; margin: 6px 0;
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; background: #17191c;
+      image-rendering: auto; display: block; cursor: crosshair; touch-action: none; }
+    #${PANEL_ID} .gg-ayuda { margin: 4px 0 7px; text-align: center; font-size: 9px;
+      color: rgba(236,231,219,0.62); }
+    #${PANEL_ID} .gg-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+    #${PANEL_ID} .gg-presets button { font-size: 9px; padding: 5px 3px; }
     #${PANEL_ID} .gg-aviso { margin-top: 8px; font-size: 10px; color: rgba(236,231,219,0.62); min-height: 13px; }
     #${PANEL_ID} .gg-aviso.is-error { color: #ff8a6a; }
   `;
@@ -281,6 +320,19 @@ export function createGarmentGlbEditor() {
     <div class="gg-label">Color de la tela</div>
     <input type="color" data-f="color" value="#ffffff">
 
+    <div class="gg-lados">
+      <button data-lado="frente" class="is-activo">FRENTE</button>
+      <button data-lado="dorso">ESPALDA</button>
+    </div>
+
+    <canvas class="gg-prenda" data-f="prendaCanvas" width="560" height="700"></canvas>
+    <div class="gg-ayuda">ARRASTRÁ EL BORDADO DIRECTAMENTE SOBRE LA PRENDA</div>
+    <div class="gg-presets">
+      <button data-preset="centro">CENTRO</button>
+      <button data-preset="pecho">PECHO IZQ.</button>
+      <button data-preset="grande">GRANDE</button>
+    </div>
+
     <div class="gg-label">Diseño</div>
     <div class="gg-bordados">
       ${BORDADOS.map(({ archivo, nombre }) => `<button data-bordado="/assets/bordados/${archivo}" title="${nombre}"><img src="/assets/bordados/thumbs/${archivo}" alt="" loading="lazy" decoding="async"><span>${nombre}</span></button>`).join('')}
@@ -294,10 +346,6 @@ export function createGarmentGlbEditor() {
       <button data-a="relieve" data-f="relieveBtn">Bordado: sí</button>
     </div>
 
-    <div class="gg-label">Mover a lo ancho <span data-f="uTxt"></span></div>
-    <input type="range" data-f="u" min="0" max="1" step="0.005">
-    <div class="gg-label">Mover a lo alto <span data-f="vTxt"></span></div>
-    <input type="range" data-f="v" min="0" max="1" step="0.005">
     <div class="gg-label">Tamaño <span data-f="tamTxt"></span></div>
     <input type="range" data-f="tam" min="0.02" max="0.6" step="0.005">
     <div class="gg-label">Girar <span data-f="rotTxt"></span></div>
@@ -307,9 +355,6 @@ export function createGarmentGlbEditor() {
       <button data-a="espejar">Dar vuelta</button>
       <button data-a="reset">Volver al centro</button>
     </div>
-
-    <div class="gg-label">Como queda el mapa</div>
-    <canvas class="gg-previa" data-f="previa" width="256" height="256"></canvas>
 
     <div class="gg-fila" style="margin-top:10px">
       <button data-a="guardar">Guardar</button>
@@ -323,8 +368,15 @@ export function createGarmentGlbEditor() {
   for (const el of panel.querySelectorAll('[data-f]')) f[el.dataset.f] = el;
 
   let prenda = null;
-  let diseño = { ...DISEÑO_BASE };
+  let diseño = normalizarDiseño();
+  let ladoActivo = 'frente';
   let timerPrevia = null;
+  let arrastrando = false;
+  const imagenesPrevia = new Map();
+  const ZONAS = {
+    frente: { minU: 0.16, maxU: 0.41, minV: 0.58, maxV: 0.96 },
+    dorso: { minU: 0.57, maxU: 0.83, minV: 0.58, maxV: 0.96 },
+  };
   // Como tratar el fondo de la proxima imagen que se suba.
   let modoFondo = 'auto';
   const TEXTO_FONDO = { auto: 'Fondo: automático', true: 'Fondo: quitar', false: 'Fondo: dejar' };
@@ -334,31 +386,116 @@ export function createGarmentGlbEditor() {
     f.aviso.classList.toggle('is-error', error);
   };
 
+  const ladoActual = () => diseño?.[ladoActivo];
+  const limitar = (valor, min, max) => Math.max(min, Math.min(max, valor));
+
+  function dibujarSilueta() {
+    const canvas = f.prendaCanvas;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    const hoodie = prenda?.userData?.garmentModel?.clave === 'hoodie';
+    const lado = ladoActual();
+    ctx.clearRect(0, 0, w, h);
+    const fondo = ctx.createLinearGradient(0, 0, 0, h);
+    fondo.addColorStop(0, '#292c31');
+    fondo.addColorStop(1, '#111316');
+    ctx.fillStyle = fondo;
+    ctx.fillRect(0, 0, w, h);
+
+    // Silueta grande y limpia. No agrega imágenes: se dibuja en memoria.
+    ctx.beginPath();
+    ctx.moveTo(205, 135);
+    ctx.lineTo(135, 170);
+    ctx.lineTo(55, 300);
+    ctx.lineTo(125, 342);
+    ctx.lineTo(150, 270);
+    ctx.lineTo(145, 625);
+    ctx.quadraticCurveTo(280, 655, 415, 625);
+    ctx.lineTo(410, 270);
+    ctx.lineTo(435, 342);
+    ctx.lineTo(505, 300);
+    ctx.lineTo(425, 170);
+    ctx.lineTo(355, 135);
+    ctx.quadraticCurveTo(280, 182, 205, 135);
+    ctx.closePath();
+    ctx.fillStyle = diseño.color ?? '#d7d7d7';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.34)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    if (hoodie) {
+      ctx.beginPath();
+      ctx.moveTo(205, 143);
+      ctx.quadraticCurveTo(205, 35, 280, 30);
+      ctx.quadraticCurveTo(355, 35, 355, 143);
+      ctx.quadraticCurveTo(280, 195, 205, 143);
+      ctx.fillStyle = diseño.color ?? '#d7d7d7';
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = 'rgba(255,255,255,0.48)';
+    ctx.font = '700 18px Courier New, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(ladoActivo === 'frente' ? 'FRENTE' : 'ESPALDA', w / 2, h - 22);
+
+    if (!lado?.imagen) {
+      ctx.fillStyle = 'rgba(255,255,255,0.52)';
+      ctx.font = '15px Courier New, monospace';
+      ctx.fillText('ELEGÍ UN BORDADO', w / 2, 390);
+      return;
+    }
+
+    const zona = ZONAS[ladoActivo];
+    const area = { x: 150, y: 165, w: 260, h: 420 };
+    const nx = limitar((lado.u - zona.minU) / (zona.maxU - zona.minU), 0, 1);
+    const ny = limitar((zona.maxV - lado.v) / (zona.maxV - zona.minV), 0, 1);
+    const cx = area.x + nx * area.w;
+    const cy = area.y + ny * area.h;
+    const tamaño = limitar((lado.ancho / (zona.maxU - zona.minU)) * area.w, 22, 310);
+    let img = imagenesPrevia.get(lado.imagen);
+    if (!img) {
+      img = new Image();
+      imagenesPrevia.set(lado.imagen, img);
+      img.onload = dibujarSilueta;
+      img.src = lado.imagen;
+    }
+    if (!img.complete || !img.naturalWidth) return;
+    const proporcion = img.naturalWidth / Math.max(1, img.naturalHeight);
+    const iw = proporcion >= 1 ? tamaño : tamaño * proporcion;
+    const ih = proporcion >= 1 ? tamaño / proporcion : tamaño;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate((lado.rotacion ?? 0) * Math.PI / 180);
+    if (lado.espejar) ctx.scale(-1, 1);
+    ctx.drawImage(img, -iw / 2, -ih / 2, iw, ih);
+    ctx.restore();
+    ctx.strokeStyle = '#e7b94c';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cx - iw / 2 - 5, cy - ih / 2 - 5, iw + 10, ih + 10);
+  }
+
   function refrescarPrevia() {
     clearTimeout(timerPrevia);
+    dibujarSilueta();
     timerPrevia = window.setTimeout(() => {
-      const lienzo = prenda && pintarPrenda(prenda, diseño, { usarCache: false, lado: 1024 });
-      requestAnimationFrame(() => {
-        if (!lienzo) return;
-        const ctx = f.previa.getContext('2d');
-        ctx.clearRect(0, 0, 256, 256);
-        ctx.drawImage(lienzo, 0, 0, 256, 256);
-      });
+      if (prenda) pintarPrenda(prenda, diseño, { usarCache: false, lado: 1024 });
     }, 70);
   }
 
   function pintarControles() {
-    f.u.value = diseño.u;
-    f.v.value = diseño.v;
-    f.tam.value = diseño.ancho;
-    f.rot.value = diseño.rotacion ?? 0;
-    f.uTxt.textContent = `${Math.round(diseño.u * 100)}%`;
-    f.vTxt.textContent = `${Math.round(diseño.v * 100)}%`;
-    f.tamTxt.textContent = `${Math.round(diseño.ancho * 100)}%`;
-    f.rotTxt.textContent = `${Math.round(diseño.rotacion ?? 0)}°`;
+    const lado = ladoActual();
+    f.tam.value = lado.ancho;
+    f.rot.value = lado.rotacion ?? 0;
+    f.tamTxt.textContent = `${Math.round(lado.ancho * 100)}%`;
+    f.rotTxt.textContent = `${Math.round(lado.rotacion ?? 0)}°`;
     if (diseño.color) f.color.value = diseño.color;
     f.fondoBtn.textContent = TEXTO_FONDO[String(modoFondo)] ?? TEXTO_FONDO.auto;
-    f.relieveBtn.textContent = diseño.relieve > 0 ? 'Bordado: sí' : 'Bordado: no';
+    f.relieveBtn.textContent = lado.relieve > 0 ? 'Bordado: sí' : 'Bordado: no';
+    for (const boton of panel.querySelectorAll('[data-lado]')) {
+      boton.classList.toggle('is-activo', boton.dataset.lado === ladoActivo);
+    }
   }
 
   function cambio() {
@@ -369,22 +506,67 @@ export function createGarmentGlbEditor() {
   async function aplicarBordado(archivo) {
     avisar('Procesando la imagen…');
     const { url, recorte } = await leerImagen(archivo, { maxLado: 2048, quitarFondo: modoFondo });
-    diseño.imagen = url;
+    ladoActual().imagen = url;
     cambio();
     if (recorte.quitado) avisar('Bordado puesto (se le quitó el fondo).');
     else if (recorte.yaRecortada) avisar('Bordado puesto. El PNG ya venía sin fondo.');
     else avisar('Bordado puesto.');
   }
 
-  f.u.addEventListener('input', () => { diseño.u = Number(f.u.value); cambio(); });
-  f.v.addEventListener('input', () => { diseño.v = Number(f.v.value); cambio(); });
-  f.rot.addEventListener('input', () => { diseño.rotacion = Number(f.rot.value); cambio(); });
+  f.rot.addEventListener('input', () => { ladoActual().rotacion = Number(f.rot.value); cambio(); });
   f.tam.addEventListener('input', () => {
     // Ancho y alto van juntos: separarlos deforma el logo y nadie quiere eso.
-    diseño.ancho = diseño.alto = Number(f.tam.value);
+    ladoActual().ancho = ladoActual().alto = Number(f.tam.value);
     cambio();
   });
   f.color.addEventListener('input', () => { diseño.color = f.color.value; cambio(); });
+
+  for (const boton of panel.querySelectorAll('[data-lado]')) {
+    boton.addEventListener('click', () => {
+      ladoActivo = boton.dataset.lado;
+      cambio();
+      avisar(ladoActivo === 'dorso' ? 'Editando la espalda.' : 'Editando el frente.');
+    });
+  }
+
+  for (const boton of panel.querySelectorAll('[data-preset]')) {
+    boton.addEventListener('click', () => {
+      const lado = ladoActual();
+      const zona = ZONAS[ladoActivo];
+      const preset = boton.dataset.preset;
+      const nx = preset === 'pecho' ? 0.30 : 0.50;
+      const ny = preset === 'grande' ? 0.48 : 0.32;
+      lado.u = zona.minU + nx * (zona.maxU - zona.minU);
+      lado.v = zona.maxV - ny * (zona.maxV - zona.minV);
+      if (preset === 'grande') lado.ancho = lado.alto = 0.22;
+      cambio();
+    });
+  }
+
+  function moverDesdePuntero(ev) {
+    const lado = ladoActual();
+    if (!lado?.imagen) { avisar('Primero elegí un bordado.', true); return; }
+    const rect = f.prendaCanvas.getBoundingClientRect();
+    // Misma zona visual usada por dibujarSilueta, llevada de 560x700 a CSS.
+    const nx = limitar(((ev.clientX - rect.left) / rect.width - 150 / 560) / (260 / 560), 0, 1);
+    const ny = limitar(((ev.clientY - rect.top) / rect.height - 165 / 700) / (420 / 700), 0, 1);
+    const zona = ZONAS[ladoActivo];
+    lado.u = zona.minU + nx * (zona.maxU - zona.minU);
+    lado.v = zona.maxV - ny * (zona.maxV - zona.minV);
+    cambio();
+  }
+
+  f.prendaCanvas.addEventListener('pointerdown', (ev) => {
+    arrastrando = true;
+    f.prendaCanvas.setPointerCapture(ev.pointerId);
+    moverDesdePuntero(ev);
+  });
+  f.prendaCanvas.addEventListener('pointermove', (ev) => {
+    if (arrastrando) moverDesdePuntero(ev);
+  });
+  const terminarArrastre = () => { arrastrando = false; };
+  f.prendaCanvas.addEventListener('pointerup', terminarArrastre);
+  f.prendaCanvas.addEventListener('pointercancel', terminarArrastre);
 
   panel.addEventListener('click', async (ev) => {
     const bordado = ev.target?.closest?.('[data-bordado]');
@@ -404,12 +586,12 @@ export function createGarmentGlbEditor() {
     if (!accion) return;
     ev.stopPropagation();
     if (accion === 'subir') f.archivo.click();
-    else if (accion === 'quitar') { diseño.imagen = null; cambio(); avisar('Diseño quitado.'); }
-    else if (accion === 'espejar') { diseño.espejar = !diseño.espejar; cambio(); }
+    else if (accion === 'quitar') { ladoActual().imagen = null; cambio(); avisar('Diseño quitado de este lado.'); }
+    else if (accion === 'espejar') { ladoActual().espejar = !ladoActual().espejar; cambio(); }
     else if (accion === 'relieve') {
-      diseño.relieve = diseño.relieve > 0 ? 0 : 0.5;
+      ladoActual().relieve = ladoActual().relieve > 0 ? 0 : 0.5;
       cambio();
-      avisar(diseño.relieve ? 'Con relieve de bordado.' : 'Plano, sin relieve.');
+      avisar(ladoActual().relieve ? 'Con relieve de bordado.' : 'Plano, sin relieve.');
     } else if (accion === 'fondo') {
       // auto -> forzar quitado -> no tocar -> auto
       modoFondo = modoFondo === 'auto' ? true : (modoFondo === true ? false : 'auto');
@@ -417,7 +599,7 @@ export function createGarmentGlbEditor() {
       avisar('Volvé a subir la imagen para aplicar el cambio.');
     }
     else if (accion === 'reset') {
-      diseño = { ...diseño, u: DISEÑO_BASE.u, v: DISEÑO_BASE.v, ancho: DISEÑO_BASE.ancho, alto: DISEÑO_BASE.alto, rotacion: 0 };
+      diseño[ladoActivo] = ladoBase(ladoActivo);
       cambio();
     } else if (accion === 'guardar') {
       const todos = leerGuardado();
@@ -442,10 +624,11 @@ export function createGarmentGlbEditor() {
   function abrir(objetivo) {
     prenda = objetivo;
     diseño = diseñoDe(objetivo);
+    ladoActivo = 'frente';
     f.nombre.textContent = objetivo.name ?? 'prenda';
     panel.classList.add('is-open');
     cambio();
-    avisar('Subí tu diseño y movelo hasta donde lo quieras.');
+    avisar('Elegí un bordado y arrastralo sobre la prenda.');
   }
 
   function cerrar() {

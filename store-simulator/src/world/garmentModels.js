@@ -179,8 +179,15 @@ export async function addGarmentModel(scene, clave, {
   if (Array.isArray(finalScale) && finalScale.length >= 3) root.scale.fromArray(finalScale);
   else root.scale.setScalar(scale * (preset.escala ?? 1));
   root.userData.editorCollider = false;   // una prenda colgada no frena a BOB
+  const colorGuardado = typeof color === 'number'
+    ? `#${(color & 0xffffff).toString(16).padStart(6, '0')}`
+    : color;
   // Marca para el editor de prendas: con esto sabe cual malla pintar.
-  if (!preset.soloPercha) root.userData.garmentModel = { clave, telaNombre: tela?.name ?? null };
+  if (!preset.soloPercha) root.userData.garmentModel = {
+    clave,
+    telaNombre: tela?.name ?? null,
+    color: colorGuardado ?? null,
+  };
   (parent ?? scene).add(root);
 
   // ⚠️ El diseño guardado se aplica ACA y no al terminar de armar la escena.
@@ -189,11 +196,8 @@ export async function addGarmentModel(scene, clave, {
   // que no la encontraba y el diseño de Kusher no aparecia nunca.
   if (!preset.soloPercha) {
     const diseño = diseñoDe(root);
-    const colorGuardado = typeof color === 'number'
-      ? `#${(color & 0xffffff).toString(16).padStart(6, '0')}`
-      : color;
     if (colorGuardado) diseño.color = colorGuardado;
-    if (diseño.imagen || diseño.color) pintarPrenda(root, diseño);
+    if (diseño.frente?.imagen || diseño.dorso?.imagen || diseño.color) pintarPrenda(root, diseño);
   }
 
   if (registerEditable) registerEditableObject({
