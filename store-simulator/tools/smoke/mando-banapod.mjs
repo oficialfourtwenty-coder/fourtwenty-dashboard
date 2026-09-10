@@ -208,6 +208,16 @@ try {
 
   for (const [boton, nombre] of [[BOTON.R1, 'golpe'], [BOTON.L1, 'baile']]) {
     const antes = await pose();
+    const caderasAntes = await page.evaluate(() => {
+      const bob = window.__bob;
+      bob.model?.updateMatrixWorld(true);
+      let h = null;
+      bob.model?.traverse((o) => { if (o.isBone && /hips|pelvis/i.test(o.name) && !h) h = o; });
+      if (!h) return null;
+      const v = new h.position.constructor();
+      h.getWorldPosition(v);
+      return { x: v.x, y: v.y, z: v.z };
+    });
     await apretar(boton);
     ok(await page.evaluate((n) => window.__bob._gesto?.userData?.nombre?.toLowerCase() === n, nombre) === true,
       `arranca el ${nombre}`);
@@ -217,8 +227,32 @@ try {
       maxDif = Math.max(maxDif, Math.abs(await pose() - antes));
     }
     ok(maxDif > 0.5, `el ${nombre} mueve los huesos de verdad (${maxDif.toFixed(2)})`);
+
+    // ⚠️ QUE NO SE TELETRANSPORTE. Kusher lo reporto asi: "se bugea, hace el
+    // movimiento, y vuelve a aparecer". Los clips venian con root motion: las
+    // caderas arrancaban a medio metro del cuerpo. Se mide la posicion de las
+    // caderas EN EL MUNDO durante el gesto contra donde estaban parado.
+    const caderas = () => page.evaluate(() => {
+      const bob = window.__bob;
+      bob.model?.updateMatrixWorld(true);
+      let h = null;
+      bob.model?.traverse((o) => { if (o.isBone && /hips|pelvis/i.test(o.name) && !h) h = o; });
+      if (!h) return null;
+      const v = new h.position.constructor();
+      h.getWorldPosition?.(v);
+      return { x: v.x, y: v.y, z: v.z };
+    });
     // Que termine solo y devuelva el control: un gesto que se queda pegado deja
     // a BOB en esa pose para el resto de la partida.
+    // Cuanto se corrio de donde estaba parado, en horizontal.
+    let corrimiento = 0;
+    for (let i = 0; i < 12; i++) {
+      await cuadros(1);
+      const c = await caderas();
+      if (c && caderasAntes) corrimiento = Math.max(corrimiento, Math.hypot(c.x - caderasAntes.x, c.z - caderasAntes.z));
+    }
+    ok(corrimiento < 0.25, `el ${nombre} NO teletransporta a BOB (se corrio ${corrimiento.toFixed(2)} m)`);
+
     // ⚠️ La espera se calcula con el LARGO DEL CLIP, no con un numero redondo.
     // El golpe dura 6,87 s y el juego avanza como mucho 0,05 s por cuadro: son
     // ~140 cuadros. Con 60 fijos daba "no termina solo" un gesto que terminaba
