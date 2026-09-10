@@ -1881,6 +1881,10 @@ renderer.setAnimationLoop(() => {
   const twentyTimeOpen = !!twentyTimeInteract?.isOpen();
   const packageMissionOpen = isPackageMissionOpen();
   const packageMissionPlaying = activePackageMission?.isPlaying() ?? false;
+  if (minigameOpen) {
+    updateElevatorTestState();
+    return;
+  }
   if (!loading && !editorActive && !seated && !phoneOpen && !minigameOpen && !twentyTimeOpen
     && (!packageMissionOpen || packageMissionPlaying)) {
     bob.update(dt, input, tpCam.yaw, currentPlayerColliders(), camera.position);
