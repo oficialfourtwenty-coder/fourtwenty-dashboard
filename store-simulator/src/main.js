@@ -366,9 +366,7 @@ function isPackageMissionOpen() {
 }
 
 function getArcadeActivityName(destinationId) {
-  return Number(destinationId) === PACKAGE_MISSION_DESTINATION_ID
-    ? PACKAGE_MISSION_NAME
-    : getMinigameName(destinationId);
+  return getMinigameName(destinationId);
 }
 
 async function openMinigameFor(destinationId) {
@@ -386,9 +384,6 @@ async function openMinigameFor(destinationId) {
 }
 
 function openArcadeActivity(destinationId) {
-  if (Number(destinationId) === PACKAGE_MISSION_DESTINATION_ID) {
-    return startPackageStationMission();
-  }
   return openMinigameFor(destinationId);
 }
 const streetElevator = new ElevatorController(scene, {
