@@ -71,6 +71,12 @@ export function leerMando() {
     // mover en el plano: el stick hacia ARRIBA da -1 y adelante es +1
     mover: { x: izq.x, z: -izq.y },
     girar: der.x,
+    // Mirar con el stick derecho, estilo GTA. Es el MISMO stick que en el
+    // editor gira y escala: quien lo use tiene que fijarse si el editor esta
+    // abierto, o las dos cosas pasan a la vez.
+    // Arriba del stick da -1 y "mirar para arriba" es subir la camara: por eso
+    // se invierte, para que empujar arriba levante la vista.
+    mirar: { x: der.x, y: -der.y },
     // arriba del stick derecho = agrandar
     escalar: -der.y,
     subir: gatillo(pad, BOTON.R2) - gatillo(pad, BOTON.L2),

@@ -20,7 +20,10 @@ const URL_BASE = args.includes('--url')
   ? args[args.indexOf('--url') + 1]
   : (process.env.SMOKE_URL ?? 'http://127.0.0.1:5173');
 
-const BOTON = { CRUZ: 0, CIRCULO: 1, CUADRADO: 2, L1: 4, R1: 5, ARRIBA: 12, ABAJO: 13, IZQ: 14, DER: 15 };
+const BOTON = { CRUZ: 0, CIRCULO: 1, CUADRADO: 2, L1: 4, R1: 5, TRIANGULO: 3, ARRIBA: 12, ABAJO: 13, IZQ: 14, DER: 15 };
+
+// ejes: 0/1 stick izquierdo, 2/3 stick derecho
+const eje = (i, v) => page.evaluate(([a, b]) => { window.__pad.ejes[a] = b; }, [i, v]);
 
 const fallos = [];
 const ok = (cond, texto) => {
@@ -269,6 +272,65 @@ try {
   await apretar(BOTON.R1);
   ok(await page.evaluate(() => !window.__bob._gesto), 'caminando NO arranca el gesto');
   await page.evaluate(() => { window.__pad.ejes[1] = 0; });
+  // ── 6. La camara con el stick derecho ───────────────────────────────────
+  console.log('\nCAMARA');
+  const camara = () => page.evaluate(() => ({
+    yaw: window.__cam.yaw, pitch: window.__cam.pitch,
+    x: window.__cam.camera.position.x, y: window.__cam.camera.position.y, z: window.__cam.camera.position.z,
+  }));
+  const c0 = await camara();
+  await eje(2, 1);                       // stick derecho a la derecha
+  // ⚠️ `cuadros()` cuenta cuantas veces alguien pregunto por el joystick, y
+  // ahora preguntan VARIOS por cuadro (el juego, la camara, el Banapod). O sea
+  // que 4 "cuadros" puede ser un solo cuadro de verdad. La camara gira 2,6
+  // rad/s con dt topeado en 0,05 s: son 7° por cuadro. Con 4 medi 7° y marque
+  // error donde no habia. Se pide bastante mas.
+  await cuadros(24);
+  await eje(2, 0);
+  const c1 = await camara();
+  const giro = Math.abs(Math.atan2(Math.sin(c1.yaw - c0.yaw), Math.cos(c1.yaw - c0.yaw)));
+  ok(giro > 0.15, `el stick derecho gira la camara (${(giro * 180 / Math.PI).toFixed(0)}°)`);
+  ok(Math.hypot(c1.x - c0.x, c1.z - c0.z) > 0.3, 'y la camara se mueve de verdad en el mundo');
+
+  await eje(3, -1);                      // stick derecho arriba = levantar la vista
+  await cuadros(24);
+  await eje(3, 0);
+  const c2 = await camara();
+  ok(c2.pitch > c1.pitch + 0.05, `sube la vista (picado ${c1.pitch.toFixed(2)} → ${c2.pitch.toFixed(2)})`);
+  ok(c2.pitch <= 1.001, `no se pasa del tope de arriba (${c2.pitch.toFixed(2)})`);
+  ok(c2.y > c1.y, 'la camara sube al levantar la vista');
+
+  // ── 7. El cursor del editor ─────────────────────────────────────────────
+  console.log('\nCURSOR DEL EDITOR');
+  await apretar(BOTON.TRIANGULO ?? 3);
+  ok(await page.evaluate(() => window.__worldEditor.isEnabled()) === true, '△ abre el editor');
+  await cuadros(2);
+  const cruz = () => page.evaluate(() => {
+    const c = document.getElementById('ft-cursor-mando');
+    if (!c || c.style.display === 'none') return null;
+    return { x: parseFloat(c.style.left), y: parseFloat(c.style.top) };
+  });
+  const k0 = await cruz();
+  ok(k0 !== null, 'aparece la cruz del cursor');
+
+  await eje(0, 1);                       // stick izquierdo a la derecha
+  await cuadros(3);
+  await eje(0, 0);
+  const k1 = await cruz();
+  ok(k1 && k1.x > k0.x + 20, `la cruz se mueve a la derecha (${k0?.x.toFixed(0)} → ${k1?.x.toFixed(0)})`);
+
+  // Con el editor abierto el stick derecho NO tiene que mover la camara:
+  // ahi gira y escala el objeto.
+  const cc0 = await camara();
+  await eje(2, 1);
+  await cuadros(24);
+  await eje(2, 0);
+  const cc1 = await camara();
+  ok(Math.abs(cc1.yaw - cc0.yaw) < 0.01, 'con el editor abierto el stick derecho NO mueve la camara');
+
+  await apretar(BOTON.TRIANGULO ?? 3);
+  ok(await page.evaluate(() => window.__worldEditor.isEnabled()) === false, '△ cierra el editor');
+  ok(await cruz() === null, 'la cruz desaparece al cerrar el editor');
 } catch (error) {
   fallos.push(`explotó: ${error.message}`);
   console.error(error);

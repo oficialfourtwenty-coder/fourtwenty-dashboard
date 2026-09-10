@@ -739,6 +739,20 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   //   L1 mantenido      fino (lento)
   //   ✕ duplicar   ○ soltar   Options guardar
   //
+  // ---- Y SIN NADA SELECCIONADO, EL STICK ES UN CURSOR ----------------------
+  // Kusher: "al abrir el editor la idea es que pueda mover el cursor para
+  // editar con el mismo jostick, que facilite el trabajo". O sea que no haya
+  // que soltar el joystick y agarrar el mouse para elegir la proxima casa.
+  //
+  //   sin nada seleccionado → el stick izquierdo mueve una cruz en pantalla
+  //   ✕  agarra lo que este debajo de la cruz
+  //   ▢  lo marca / desmarca para agrupar (lo mismo que SHIFT + click)
+  //   ○  suelta lo seleccionado y vuelve al cursor
+  //
+  // ⚠️ NO ES UN MOUSE DE VERDAD: no hay hover ni se pueden apretar los botones
+  // del panel de la izquierda. Elige objetos del mundo, que es donde se pierde
+  // el tiempo. El panel se sigue usando con el mouse.
+  //
   // ⚠️ MOVER ES RELATIVO A LA CAMARA, no a los ejes del mundo. Empujando el
   // stick para adelante el objeto se aleja EN PANTALLA, mire uno de donde
   // mire. Con ejes del mundo, despues de orbitar media vuelta el stick mueve
@@ -748,6 +762,56 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   const VEL_GIRAR = 1.4;      // rad/s
   const VEL_ESCALAR = 0.7;    // por segundo
   const FINO = 0.22;
+  const VEL_CURSOR = 900;     // pixeles por segundo
+
+  // La cruz del cursor. Se crea una sola vez y se prende y apaga; crearla y
+  // destruirla en cada apertura del editor deja basura en el DOM.
+  let cruz = null;
+  let cruzX = 0, cruzY = 0;
+  function laCruz() {
+    if (cruz) return cruz;
+    cruz = document.createElement('div');
+    cruz.id = 'ft-cursor-mando';
+    cruz.style.cssText = [
+      'position:fixed', 'z-index:9998', 'pointer-events:none', 'display:none',
+      'width:26px', 'height:26px', 'margin:-13px 0 0 -13px',
+      'border:2px solid #39ff6a', 'border-radius:50%',
+      'box-shadow:0 0 10px rgba(57,255,106,.8), inset 0 0 6px rgba(57,255,106,.5)',
+    ].join(';');
+    const punto = document.createElement('div');
+    punto.style.cssText = 'position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;background:#39ff6a;border-radius:50%';
+    cruz.appendChild(punto);
+    document.body.appendChild(cruz);
+    cruzX = window.innerWidth / 2;
+    cruzY = window.innerHeight / 2;
+    return cruz;
+  }
+
+  function verCruz(visible) {
+    const c = laCruz();
+    c.style.display = visible ? 'block' : 'none';
+    if (visible) { c.style.left = `${cruzX}px`; c.style.top = `${cruzY}px`; }
+  }
+
+  /**
+   * Que objeto editable hay bajo la cruz. Es el MISMO camino que usa el click
+   * del mouse (`onPointerDown`): se arma el mismo rayo con las mismas listas.
+   * Escribirlo dos veces distintas seria tener dos formas de elegir que se
+   * desincronizan.
+   */
+  function loQueHayBajoLaCruz() {
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.set(
+      ((cruzX - rect.left) / rect.width) * 2 - 1,
+      -((cruzY - rect.top) / rect.height) * 2 + 1,
+    );
+    const roots = getEditableObjects()
+      .filter((entry) => isEditableEffectivelyVisible(entry.id) && isInCurrentScene(entry.object3D))
+      .map((entry) => entry.object3D);
+    raycaster.setFromCamera(pointer, camera);
+    const hit = raycaster.intersectObjects(roots, true)[0]?.object;
+    return hit ? findEditableRoot(hit)?.userData?.editorId ?? null : null;
+  }
 
   let mandoLazo = 0;
   let mandoAntes = new Set();
@@ -763,7 +827,8 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     mandoUltimo = ahora;
 
     const mando = leerMando();
-    if (!mando) { mandoAntes.clear(); return; }
+    // Sin joystick no hay cruz: el mouse ya sirve para elegir.
+    if (!mando) { mandoAntes.clear(); if (cruz) cruz.style.display = 'none'; return; }
 
     // botones: solo el flanco (recien apretados)
     const nuevos = new Set();
@@ -772,10 +837,37 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
 
     if (nuevos.has(BOTON.OPTIONS)) saveNow('Layout local guardado (joystick).');
     if (nuevos.has(BOTON.CIRCULO)) deselect();
-    if (nuevos.has(BOTON.CRUZ)) duplicateSelected();
+    // ⚠️ La ✕ hace DOS cosas segun el momento: sin nada agarrado AGARRA lo que
+    // hay bajo la cruz, y con algo agarrado lo DUPLICA. Por eso el duplicar se
+    // decide aca, mirando si hay seleccion, y no mas abajo.
+    if (nuevos.has(BOTON.CRUZ) && getEditableById(state.selectedId)?.object3D) duplicateSelected();
 
     const entry = getEditableById(state.selectedId);
-    if (!entry?.object3D || entry.locked) { fotoGesto = null; return; }
+
+    // ---- MODO CURSOR: sin nada agarrado, el stick mueve la cruz ------------
+    if (!entry?.object3D) {
+      fotoGesto = null;
+      verCruz(true);
+      // El stick da x hacia la derecha y z hacia adelante; en pantalla
+      // "adelante" es hacia ARRIBA, o sea y negativa.
+      const paso = VEL_CURSOR * (mando.preciso ? FINO : 1) * dt;
+      cruzX = Math.min(window.innerWidth - 2, Math.max(2, cruzX + mando.mover.x * paso));
+      cruzY = Math.min(window.innerHeight - 2, Math.max(2, cruzY - mando.mover.z * paso));
+      cruz.style.left = `${cruzX}px`;
+      cruz.style.top = `${cruzY}px`;
+
+      if (nuevos.has(BOTON.CRUZ)) {
+        const id = loQueHayBajoLaCruz();
+        if (id) selectId(id);
+      }
+      if (nuevos.has(BOTON.CUADRADO)) {
+        const id = loQueHayBajoLaCruz();
+        if (id) alternarMarca(id);
+      }
+      return;
+    }
+    verCruz(false);
+    if (entry.locked) { fotoGesto = null; return; }
     const objeto = entry.object3D;
 
     if (!mando.activo) {
@@ -826,6 +918,10 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     mandoLazo = 0;
     fotoGesto = null;
     mandoAntes.clear();
+    // ⚠️ La cruz se apaga al cerrar el editor. Kusher ya reporto lo mismo con
+    // los cubos verdes de los grupos ("tambien queda eso verde"): un ayudante
+    // del editor no tiene por que verse jugando.
+    if (cruz) cruz.style.display = 'none';
     if (!prender) return;
     mandoUltimo = performance.now();
     mandoLazo = requestAnimationFrame(pasoDelMando);

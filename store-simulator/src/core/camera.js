@@ -6,13 +6,28 @@
 // así no se mete en muros al entrar al local o ir al fondo.
 // (la versión con mouse-orbit quedó en camera.backup.js)
 import * as THREE from 'three';
+import { leerMando } from './mando.js';
 
 const FOCUS_HEIGHT = 1.15; // mira al pecho, no a la cabeza → cámara más baja
 const CAM_LAG = 7;         // inercia del giro (menos = más pesada)
 const FOLLOW_LAG = 7;      // inercia del seguimiento de posición
 const FACE_ALIGN = 3.2;    // qué tan rápido sigue el giro de BOB (A/D)
 const WALK_ALIGN = 2.6;    // respaldo: alinear detrás de la marcha (billboard)
-const PITCH = 0.24;        // ángulo fijo, leve picado (estilo GTA)
+const PITCH = 0.24;        // ángulo de arranque, leve picado (estilo GTA)
+
+// ---- MIRAR CON EL STICK DERECHO (pedido de Kusher, "estilo gta") -----------
+// Hasta ahora la camara era FIJA: siempre detras de BOB y con el mouse libre
+// para clickear productos. Eso no cambia — el mouse sigue libre. Lo que se suma
+// es el stick derecho del joystick, que es donde la mano ya lo busca.
+const VEL_MIRAR = 2.6;     // rad/s girando alrededor de BOB
+const VEL_PICADO = 1.5;    // rad/s subiendo y bajando la vista
+const PICADO_MIN = -0.30;  // mirando un poco desde abajo
+const PICADO_MAX = 1.00;   // casi desde arriba (util para acomodar cosas)
+// ⚠️ CUANTO ESPERA ANTES DE VOLVER SOLA. Sin esta pausa la camara pelea con la
+// mano: soltas el stick y en el mismo cuadro empieza a acomodarse detras de
+// BOB, asi que mirar una vidriera es imposible. Con la pausa, la vista se queda
+// donde la dejaste y recien despues vuelve sola, como en GTA.
+const PAUSA_MANUAL = 1.4;  // segundos
 
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
@@ -31,12 +46,36 @@ export class ThirdPersonCamera {
     this._chest = new THREE.Vector3();
     this._cp = new THREE.Vector3();
     this._first = true;
+    this.pitch = PITCH;
+    this._manualHasta = 0;      // reloj interno hasta el que manda la mano
+    this._reloj = 0;
   }
 
   update(dt, targetPos, floorY, facingYaw = null, ceilingHeight = 3.4) {
+    this._reloj += dt;
+
+    // 0) Stick derecho: mirar alrededor.
+    // ⚠️ CON EL EDITOR ABIERTO NO. Ahi el stick derecho gira y escala el objeto
+    // seleccionado; si ademas moviera la camara, acomodar algo seria imposible.
+    const editorAbierto = typeof window !== 'undefined' && !!window.__worldEditor?.isEnabled?.();
+    const mando = editorAbierto ? null : leerMando();
+    if (mando && (mando.mirar.x || mando.mirar.y)) {
+      this.targetYaw -= mando.mirar.x * VEL_MIRAR * dt;
+      this.yaw = this.targetYaw;          // sin inercia mientras la mano manda
+      this.pitch = THREE.MathUtils.clamp(
+        this.pitch + mando.mirar.y * VEL_PICADO * dt, PICADO_MIN, PICADO_MAX,
+      );
+      this._manualHasta = this._reloj + PAUSA_MANUAL;
+    } else if (this._reloj > this._manualHasta && this.pitch !== PITCH) {
+      // El picado vuelve solo a su angulo de siempre, despacio.
+      this.pitch += (PITCH - this.pitch) * Math.min(1, 1.6 * dt);
+      if (Math.abs(this.pitch - PITCH) < 0.002) this.pitch = PITCH;
+    }
+    const manual = this._reloj <= this._manualHasta;
+
     // 1) La cámara sigue el GIRO de BOB (A/D lo rotan; el mouse queda libre):
     //    siempre busca quedar detrás de su espalda, girando con él.
-    if (!this._first) {
+    if (!this._first && !manual) {
       if (facingYaw !== null) {
         const behind = facingYaw + Math.PI;
         this.targetYaw += wrap(behind - this.targetYaw) * Math.min(1, FACE_ALIGN * dt);
@@ -67,9 +106,9 @@ export class ThirdPersonCamera {
 
     // 4) Posición orbital detrás del foco, pitch fijo.
     const cp = this._cp.set(
-      this.focus.x + Math.sin(this.yaw) * Math.cos(PITCH) * this.dist,
-      this.focus.y + Math.sin(PITCH) * this.dist,
-      this.focus.z + Math.cos(this.yaw) * Math.cos(PITCH) * this.dist,
+      this.focus.x + Math.sin(this.yaw) * Math.cos(this.pitch) * this.dist,
+      this.focus.y + Math.sin(this.pitch) * this.dist,
+      this.focus.z + Math.cos(this.yaw) * Math.cos(this.pitch) * this.dist,
     );
 
     // 5) Clamp a los límites de la escena actual (paredes) y al piso/techo.
