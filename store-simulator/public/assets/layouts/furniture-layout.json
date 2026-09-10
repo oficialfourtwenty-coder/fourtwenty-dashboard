@@ -1,83 +1,5 @@
 [
   {
-    "id": "elevator-street",
-    "name": "Ascensor FOURTWENTY (mover completo)",
-    "type": "elevator",
-    "model": "",
-    "position": [
-      -18.526738743851485,
-      0,
-      3
-    ],
-    "rotation": [
-      0,
-      1.5138288785956007,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "car-up-luca",
-    "name": "Volkswagen up! Pepper TSI — Luca (mover completo)",
-    "type": "car",
-    "model": "",
-    "position": [
-      -2.1659797370525817,
-      0,
-      11.356616090708657
-    ],
-    "rotation": [
-      0,
-      -0.17330179948450342,
-      0
-    ],
-    "scale": [
-      1.3543344032931057,
-      1.1335378090765016,
-      1.4183622137204304
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "car-corolla-fer",
-    "name": "Toyota Corolla 2019 SLINE — Fer (mover completo)",
-    "type": "car",
-    "model": "",
-    "position": [
-      6.4,
-      0,
-      9.05
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
     "id": "calle-kit:0",
     "name": "Calle Burela · asfalto",
     "type": "calle-kit",
@@ -188,8 +110,8 @@
     "model": "",
     "position": [
       0,
-      -0.773389107608963,
-      -0.7363355782210105
+      0,
+      -0.08
     ],
     "rotation": [
       0,
@@ -215,7 +137,7 @@
     "position": [
       -0.04379649745622416,
       0,
-      -4.967712395589951
+      0
     ],
     "rotation": [
       0,
@@ -256,7 +178,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": false,
+    "visible": true,
     "manageShadows": false
   },
   {
@@ -282,7 +204,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": false,
+    "visible": true,
     "manageShadows": false
   },
   {
@@ -334,7 +256,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": true,
+    "visible": false,
     "manageShadows": false
   },
   {
@@ -343,9 +265,9 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -0.7776786183108957,
-      0.5395597649548851,
-      3.655387087875198
+      1.036763088704367,
+      0.45607253567246664,
+      6.134335042797561
     ],
     "rotation": [
       0,
@@ -353,14 +275,14 @@
       0
     ],
     "scale": [
-      0.6684816577077595,
-      2.070933420378171,
+      1,
+      1,
       1
     ],
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": true,
+    "visible": false,
     "manageShadows": false
   },
   {
@@ -369,9 +291,9 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -0.7884218702268966,
-      1.0355558118427086,
-      3.677045928924625
+      -4,
+      0.5,
+      2.6
     ],
     "rotation": [
       0,
@@ -379,14 +301,14 @@
       0
     ],
     "scale": [
-      0.6271585850163648,
+      1,
       1,
       1
     ],
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": true,
+    "visible": false,
     "manageShadows": false
   },
   {
@@ -421,9 +343,9 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -8.75760068786925,
-      1.261366574916806,
-      3.7159552775844156
+      -5.03317243034321,
+      0.7,
+      2.8527297233644653
     ],
     "rotation": [
       0,
@@ -464,7 +386,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": false,
+    "visible": true,
     "manageShadows": false
   },
   {
@@ -473,9 +395,9 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -1.928497764360782,
-      1.3033011713345861,
-      3.6409006150448957
+      -2.1883604888477324,
+      0.7,
+      2.6593470633855807
     ],
     "rotation": [
       0,
@@ -516,7 +438,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": false,
+    "visible": true,
     "manageShadows": false
   },
   {
@@ -542,7 +464,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": false,
+    "visible": true,
     "manageShadows": false
   },
   {
@@ -568,7 +490,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": false,
+    "visible": true,
     "manageShadows": false
   },
   {
@@ -577,9 +499,9 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -5.94511026008185,
+      -5.5,
       2.25,
-      7.764692314155812
+      7.542217959269975
     ],
     "rotation": [
       0,
@@ -603,9 +525,9 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -5.730016051626834,
+      -5.5,
       4.6,
-      7.903378564633432
+      7.127789653708488
     ],
     "rotation": [
       0,
@@ -707,9 +629,9 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -6.02157942184491,
+      -5.5,
       0.025,
-      7.66790324260625
+      7.45267694331133
     ],
     "rotation": [
       0,
@@ -719,7 +641,7 @@
     "scale": [
       1,
       1,
-      0.9137951715381051
+      1
     ],
     "castShadow": true,
     "receiveShadow": true,
@@ -2241,7 +2163,7 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -0.06777300970150346,
+      0.057660857275592114,
       0.225,
       -2.71
     ],
@@ -2345,7 +2267,7 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      2.772066873516703,
+      -3,
       2.0831476507092592,
       -1.26
     ],
@@ -2371,9 +2293,9 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -5.531669775107137,
+      -4.7175675148538945,
       2.0500000000000003,
-      -1.4807984044910691
+      -1.26
     ],
     "rotation": [
       0,
@@ -2397,7 +2319,7 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      5.654544451366954,
+      6,
       2.0500000000000003,
       -1.26
     ],
@@ -2423,7 +2345,7 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      16.084050860959504,
+      12.072402403949791,
       2.0500000000000003,
       -1.1489763622677938
     ],
@@ -2475,7 +2397,7 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -2.1907744733637853,
+      0,
       0.9,
       -4.46
     ],
@@ -2485,7 +2407,7 @@
       -0.17952135719033935
     ],
     "scale": [
-      1.001409286048643,
+      1,
       1,
       1
     ],
@@ -2605,70 +2527,18 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      0,
-      2.25,
-      -4.4399999999999995
+      -2.7775446548610727,
+      1.467602307718272,
+      -4.931812206950647
     ],
     "rotation": [
-      0,
-      0,
-      0
+      -2.7229584702593237,
+      1.5036239777661502,
+      2.722119284898808
     ],
     "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:49.17.0",
-    "name": "Vidriera FOURTWENTY espejo reflejo",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      1.9,
-      0,
-      0
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:49.17.1",
-    "name": "Vidriera FOURTWENTY espejo collider",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      1.9,
-      0,
-      0
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
+      0.5417541897077711,
+      1.2878588508978244,
       1
     ],
     "castShadow": true,
@@ -3064,7 +2934,7 @@
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
-    "visible": true,
+    "visible": false,
     "manageShadows": false
   },
   {
@@ -3074,7 +2944,7 @@
     "model": "",
     "position": [
       0,
-      0.41736945762725663,
+      0.4,
       -8.46
     ],
     "rotation": [
@@ -3179,7 +3049,7 @@
     "position": [
       -1.3,
       2.0500000000000003,
-      -10.548419885396656
+      -10.46
     ],
     "rotation": [
       0,
@@ -3299,8 +3169,7 @@
     "receiveShadow": true,
     "locked": false,
     "visible": false,
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.42",
@@ -3326,8 +3195,7 @@
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.43",
@@ -3353,8 +3221,7 @@
     "receiveShadow": true,
     "locked": false,
     "visible": false,
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.44",
@@ -3380,8 +3247,7 @@
     "receiveShadow": true,
     "locked": false,
     "visible": false,
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.45",
@@ -3433,8 +3299,7 @@
     "receiveShadow": true,
     "locked": false,
     "visible": false,
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.47",
@@ -3460,8 +3325,7 @@
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.48",
@@ -3487,8 +3351,7 @@
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.49",
@@ -3514,8 +3377,7 @@
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.50",
@@ -3986,6 +3848,110 @@
     "manageShadows": false
   },
   {
+    "id": "calle-kit:49.62",
+    "name": "Interior local · prenda colgada izquierda 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.72,
+      2.1629950826250957,
+      -8.129264067549151
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.63",
+    "name": "Interior local · prenda colgada izquierda 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.6859843711988547,
+      2.23604072549294,
+      -7.73070918877686
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      0.6161453064562523,
+      0.7325990350045618,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.64",
+    "name": "Interior local · prenda colgada izquierda 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.68,
+      2.17742718457637,
+      -6.960807886042075
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.65",
+    "name": "Interior local · prenda colgada izquierda 4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.7304655180775566,
+      2.099060914428575,
+      -7.317623821683748
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1.1575388909907327,
+      1.0510534751653937,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
     "id": "calle-kit:49.66",
     "name": "Interior local · exhibidor jean completo",
     "type": "calle-kit",
@@ -4409,7 +4375,7 @@
     "position": [
       0.4,
       2.0500000000000003,
-      -11.582056142485747
+      -11.46
     ],
     "rotation": [
       0,
@@ -4480,6 +4446,32 @@
     "manageShadows": false
   },
   {
+    "id": "calle-kit:49.76",
+    "name": "Stock selector · remera PISO 1 · ARCHIVE",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.7830362312622008,
+      2.17,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
     "id": "calle-kit:49.77",
     "name": "Stock selector · etiqueta PISO 1 · ARCHIVE",
     "type": "calle-kit",
@@ -4506,6 +4498,32 @@
     "manageShadows": false
   },
   {
+    "id": "calle-kit:49.78",
+    "name": "Stock selector · remera PISO 2 · ORIGEN",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.21,
+      2.17,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
     "id": "calle-kit:49.79",
     "name": "Stock selector · etiqueta PISO 2 · ORIGEN",
     "type": "calle-kit",
@@ -4513,6 +4531,32 @@
     "position": [
       1.21,
       1.77,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.80",
+    "name": "Stock selector · remera PISO 3 · HOOP SEASON",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.7,
+      2.17,
       -11.360000000000001
     ],
     "rotation": [
@@ -4558,6 +4602,32 @@
     "manageShadows": false
   },
   {
+    "id": "calle-kit:49.82",
+    "name": "Stock selector · remera PISO 4 · BOB",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.19,
+      2.17,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
     "id": "calle-kit:49.83",
     "name": "Stock selector · etiqueta PISO 4 · BOB",
     "type": "calle-kit",
@@ -4565,6 +4635,32 @@
     "position": [
       2.19,
       1.77,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.84",
+    "name": "Stock selector · remera PISO 5 · CULTURA",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.6799999999999997,
+      2.17,
       -11.360000000000001
     ],
     "rotation": [
@@ -4870,81 +4966,30 @@
     "manageShadows": false
   },
   {
-    "id": "calle-kit:49.87",
-    "name": "Interior local · interruptor rosa luces blancas",
+    "id": "calle-kit:13-copia-1",
+    "name": "Edificio fondo paralelo izquierda (copia)",
     "type": "calle-kit",
     "model": "",
     "position": [
-      2.86,
-      1.7,
-      -5.2
+      -29.128280344250108,
+      9.913701126940797,
+      -26.87397682704694
     ],
     "rotation": [
       0,
-      0,
+      1.1925017709930317,
       0
     ],
     "scale": [
       1,
       1,
-      1
+      7.895707128028191
     ],
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:50",
-    "name": "Sol dinamico",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      64.31225654373692,
-      55.578176096850896,
-      6
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:51",
-    "name": "Luna dinamica",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      64.31225654373691,
-      -55.5781760968509,
-      6
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": false,
+    "cloneOf": "calle-kit:13",
     "manageShadows": false
   },
   {
@@ -4980,7 +5025,7 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -22.351769830609673,
+      -23.009477251777966,
       -0.0014956407163027041,
       6.788060288310436
     ],
@@ -4990,7 +5035,7 @@
       0
     ],
     "scale": [
-      0.18161753845501666,
+      0.2059407296305532,
       0.9825789761058001,
       1
     ],
@@ -5007,7 +5052,7 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      23.042736378280814,
+      21.822736878107982,
       0,
       6.788060288310436
     ],
@@ -5047,6 +5092,33 @@
       0.2059407296305532,
       0.9825789761058001,
       1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-5",
+    "name": "Vereda gris frente al local (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.6,
+      0,
+      2.958393180799528
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
     ],
     "castShadow": true,
     "receiveShadow": true,
@@ -5574,7 +5646,7 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -14.93384104296107,
+      -11.062376973196253,
       3.825,
       -3.099644397468597
     ],
@@ -5909,7 +5981,7 @@
     ],
     "scale": [
       0.11444066891629927,
-      1.4002292461432346,
+      1.0701803326442634,
       1.4479419360698684
     ],
     "castShadow": true,
@@ -6268,8 +6340,7 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.47-copia-2",
@@ -6296,8 +6367,7 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.47-copia-3",
@@ -6324,8 +6394,7 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.47-copia-4",
@@ -6352,8 +6421,7 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.47-copia-5",
@@ -6380,8 +6448,7 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.47-copia-6",
@@ -6408,8 +6475,7 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.47-copia-7",
@@ -6436,8 +6502,7 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.47-copia-8",
@@ -6464,8 +6529,7 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.47-copia-9",
@@ -6492,8 +6556,7 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.47",
-    "manageShadows": false,
-    "lightRange": 2
+    "manageShadows": false
   },
   {
     "id": "calle-kit:49.35-copia-2",
@@ -6528,7 +6591,7 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -5.994252887577061,
+      -4.830152379222251,
       2.0500000000000003,
       -0.9417015192610021
     ],
@@ -6555,7 +6618,7 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -6.281749305468853,
+      -5.273018051928194,
       2.0500000000000003,
       -0.9417015192610021
     ],
@@ -6582,9 +6645,9 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -5.901656576433836,
+      -5.657443093261727,
       2.0500000000000003,
-      -1.606563603971089
+      -1.4595155658727945
     ],
     "rotation": [
       0,
@@ -6601,6 +6664,33 @@
     "locked": false,
     "visible": true,
     "cloneOf": "calle-kit:49.8",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-12",
+    "name": "Vereda gris frente al local (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.299655170494589,
+      0,
+      2.958393180799528
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03508912398570142,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
     "manageShadows": false
   },
   {
@@ -6754,7 +6844,7 @@
       0
     ],
     "scale": [
-      0.40058992939020216,
+      0.25027934271008595,
       1.524008527895529,
       1
     ],
@@ -6960,9 +7050,9 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      -38.2781113889214,
+      8.017766005880484,
       0.225,
-      -24.126682231196497
+      -20.783068402194914
     ],
     "rotation": [
       0,
@@ -7090,375 +7180,24 @@
     "manageShadows": false
   },
   {
-    "id": "calle-kit:3.1-copia-1",
-    "name": "Cartel neon FOURTWENTY · texto (copia)",
+    "id": "calle-kit:49.11-copia-3",
+    "name": "Alero techo galeria salvia (copia)",
     "type": "calle-kit",
     "model": "",
     "position": [
-      0.27445793547114916,
-      0.24153849506619718,
-      -0.832204497332905
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      0.7274598913802176,
-      0.8763580270765475,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:3.1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:49.16-copia-1",
-    "name": "Toldo negro local FOURTWENTY (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      2.3205047845161957,
-      1.7394657503884938,
-      -6.779100686990087
-    ],
-    "rotation": [
-      -1.590708190479506,
-      0,
-      0
-    ],
-    "scale": [
-      0.11338971377462531,
-      1,
-      0.44282880016723997
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:49.16",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:1-copia-26",
-    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -19.611796081818184,
-      0,
-      2.958393180799528
-    ],
-    "rotation": [
-      -1.5707963267948963,
-      0,
-      0
-    ],
-    "scale": [
-      0.03284796391664913,
-      0.9828077986348537,
-      0.9403166531559783
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:1-copia-27",
-    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -21.451926868450617,
-      0,
-      2.958393180799528
-    ],
-    "rotation": [
-      -1.5707963267948963,
-      0,
-      0
-    ],
-    "scale": [
-      0.03284796391664913,
-      0.9828077986348537,
-      0.9403166531559783
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:1-copia-28",
-    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -23.29296083853778,
-      0,
-      2.958393180799528
-    ],
-    "rotation": [
-      -1.5707963267948963,
-      0,
-      0
-    ],
-    "scale": [
-      0.03284796391664913,
-      0.9828077986348537,
-      0.9403166531559783
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:1-copia-29",
-    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -25.134922821587036,
-      0,
-      2.958393180799528
-    ],
-    "rotation": [
-      -1.5707963267948963,
-      0,
-      0
-    ],
-    "scale": [
-      0.03284796391664913,
-      0.9828077986348537,
-      0.9403166531559783
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:1-copia-30",
-    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -26.976352794726534,
-      0,
-      2.958393180799528
-    ],
-    "rotation": [
-      -1.5707963267948963,
-      0,
-      0
-    ],
-    "scale": [
-      0.03284796391664913,
-      0.9828077986348537,
-      0.9403166531559783
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:49.8-copia-6",
-    "name": "Columna salvia galeria 4 (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -10.784104606855756,
-      2.01286503922267,
-      -4.564772287046887
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1.423574623276208,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:49.8",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:49.3-copia-2",
-    "name": "Plataforma galeria nivel local (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      8.617766005880483,
-      0.225,
-      -20.783068402194914
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      11.48650931675643
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:49.3",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:49.14-copia-7",
-    "name": "Persianas verdes locales derecha (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -12.224420247061756,
-      1.9514030780661815,
-      -4.471101212773658
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      0.20538413778099088,
-      1.524008527895529,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:49.14",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:49.8-copia-7",
-    "name": "Columna salvia galeria 4 (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -13.627738484017716,
-      2.01286503922267,
-      -4.564772287046887
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1.423574623276208,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:49.8",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:49.5-copia-2",
-    "name": "Columna salvia galeria 1 (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -19.167817437923134,
-      0.5141066150610016,
-      -3.6710735775276397
-    ],
-    "rotation": [
-      -1.5802405502005121,
-      -0.017888819082575808,
-      -1.6385218578007426
-    ],
-    "scale": [
-      0.6763664987825284,
-      2.1397923527596534,
-      2.708257856048724
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:49.5",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:49.5-copia-1",
-    "name": "Columna salvia galeria 1 (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -14.575674076759281,
-      0.5178621139280903,
-      -4.049494090098907
-    ],
-    "rotation": [
-      -1.5726916139125453,
-      0.05709273802847378,
-      -1.105498178479192
-    ],
-    "scale": [
-      0.6763664987825284,
-      0.8830528638412013,
-      2.708257856048724
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:49.5",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:49.11-copia-5",
-    "name": "Alero techo galeria salvia (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      10.979571198485687,
+      15.181096257581785,
       3.825,
-      -11.003621781965197
+      -5.973520764293713
     ],
     "rotation": [
       0,
-      1.4478173568431205,
+      1.5533556469067642,
       0
     ],
     "scale": [
-      0.5238169876491654,
+      -0.34191435396939807,
       1,
-      1.069733773506025
+      1.034546359525033
     ],
     "castShadow": true,
     "receiveShadow": true,
@@ -7473,19 +7212,19 @@
     "type": "calle-kit",
     "model": "",
     "position": [
-      14.972029218064748,
+      15.781096257581785,
       3.825,
-      -7.853390382075936
+      -5.973520764293713
     ],
     "rotation": [
       0,
-      1.3975347750495095,
+      1.5533556469067642,
       0
     ],
     "scale": [
-      -0.6628656804362023,
+      0.5238169876491654,
       1,
-      1.034546359525033
+      0.3337508644385191
     ],
     "castShadow": true,
     "receiveShadow": true,
@@ -7495,176 +7234,14 @@
     "manageShadows": false
   },
   {
-    "id": "calle-kit:15.0-copia-1",
-    "name": "Cantero principal izquierdo · ladrillo (copia)",
-    "type": "calle-kit",
+    "id": "destino-1:origen-pared-izquierda",
+    "name": "ORIGEN · pared izquierda",
+    "type": "destino-1",
     "model": "",
     "position": [
-      -9.167768869300271,
-      0.5395597649548851,
-      3.655387087875198
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      0.5065953118786393,
-      2.070933420378171,
-      0.9018153711474484
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.0",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:15.5-copia-1",
-    "name": "Cantero principal izquierdo · arbusto 4 (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -1.3284977643607818,
-      1.3033011713345861,
-      3.541206540194465
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1.314244393344303,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.5",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:15.5-copia-2",
-    "name": "Cantero principal izquierdo · arbusto 4 (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -1.74491705746706,
-      1.3324212031202836,
-      3.541206540194465
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1.0128994342584694,
-      1.9620577016222904,
-      1.0576775317477258
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.5",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:15.5-copia-3",
-    "name": "Cantero principal izquierdo · arbusto 4 (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -0.6728716310841956,
-      1.192049386474275,
-      3.7388731809504385
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1.0128994342584694,
-      1.9620577016222904,
-      1.0576775317477258
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.5",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:15.5-copia-4",
-    "name": "Cantero principal izquierdo · arbusto 4 (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      0.06420117344078202,
-      1.192049386474275,
-      3.8514396332534915
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      2.0440366130186995,
-      1.9620577016222904,
-      1.0576775317477258
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.5",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:15.1-copia-1",
-    "name": "Cantero principal izquierdo · tierra (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -9.175995067652824,
-      1.0355558118427086,
-      3.677045928924625
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      0.4875840144922961,
-      1,
-      0.922229032950457
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:15.3-copia-1",
-    "name": "Cantero principal izquierdo · arbusto 2 (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -9.696123330578297,
-      1.261366574916806,
-      3.7159552775844156
+      -5.72,
+      1.85,
+      2.45
     ],
     "rotation": [
       0,
@@ -7680,18 +7257,17 @@
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "cloneOf": "calle-kit:15.3",
     "manageShadows": false
   },
   {
-    "id": "calle-kit:15.3-copia-2",
-    "name": "Cantero principal izquierdo · arbusto 2 (copia) (copia)",
-    "type": "calle-kit",
+    "id": "destino-1:origen-pared-derecha",
+    "name": "ORIGEN · pared derecha",
+    "type": "destino-1",
     "model": "",
     "position": [
-      -10.005956409713619,
-      1.261366574916806,
-      3.7159552775844156
+      5.72,
+      1.85,
+      2.45
     ],
     "rotation": [
       0,
@@ -7707,372 +7283,20 @@
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "cloneOf": "calle-kit:15.3",
     "manageShadows": false
   },
   {
-    "id": "calle-kit:1-copia-5",
-    "name": "Vereda gris frente al local (copia) (copia) (copia)",
-    "type": "calle-kit",
+    "id": "destino-1:origen-pared-fondo",
+    "name": "ORIGEN · pared del fondo",
+    "type": "destino-1",
     "model": "",
     "position": [
-      0.593125040534036,
       0,
-      2.9577612600013246
-    ],
-    "rotation": [
-      -1.5707963267948963,
-      0,
-      0
-    ],
-    "scale": [
-      0.03284796391664913,
-      0.9828077986348537,
-      0.9403166531559783
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:1-copia-12",
-    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -1.2459524091767147,
-      0,
-      2.9577612600013246
-    ],
-    "rotation": [
-      -1.5707963267948963,
-      0,
-      0
-    ],
-    "scale": [
-      0.03284796391664913,
-      0.9828077986348537,
-      0.9403166531559783
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:15.0-copia-2",
-    "name": "Cantero principal izquierdo · ladrillo (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      1.6967242365070838,
-      0.2924782547689988,
-      -1.1974013097386091
+      1.85,
+      -3.95
     ],
     "rotation": [
       0,
-      0,
-      0
-    ],
-    "scale": [
-      1.9356951190100975,
-      1.5943686121234768,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.0",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:15.1-copia-2",
-    "name": "Cantero principal izquierdo · tierra (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      1.619235092284506,
-      0.6769849903213553,
-      -1.2303270997891567
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1.9537321033878337,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:15.5-copia-5",
-    "name": "Cantero principal izquierdo · arbusto 4 (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -22.18842422659064,
-      0.2558558062607095,
-      -17.53054468702502
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      40.17508318887885,
-      1.9620577016222904,
-      39.27706574758879
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.5",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:15.5-copia-6",
-    "name": "Cantero principal izquierdo · arbusto 4 (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      73.54461093693699,
-      -0.0514339065472853,
-      -17.53054468702502
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      125.64848864107103,
-      1.9620577016222904,
-      519.9579825633998
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.5",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:1-copia-31",
-    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      20.789097604311813,
-      0,
-      2.9577612600013246
-    ],
-    "rotation": [
-      -1.5707963267948963,
-      0,
-      0
-    ],
-    "scale": [
-      0.03284796391664913,
-      0.9828077986348537,
-      0.9403166531559783
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:1-copia-32",
-    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      22.628616262519486,
-      0,
-      2.9577612600013246
-    ],
-    "rotation": [
-      -1.5707963267948963,
-      0,
-      0
-    ],
-    "scale": [
-      0.03284796391664913,
-      0.9828077986348537,
-      0.9403166531559783
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:1-copia-33",
-    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      24.464536440663288,
-      0,
-      2.9577612600013246
-    ],
-    "rotation": [
-      -1.5707963267948963,
-      0,
-      0
-    ],
-    "scale": [
-      0.03284796391664913,
-      0.9828077986348537,
-      0.9403166531559783
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:1-copia-34",
-    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      26.30367576636549,
-      0,
-      2.9577612600013246
-    ],
-    "rotation": [
-      -1.5707963267948963,
-      0,
-      0
-    ],
-    "scale": [
-      0.03284796391664913,
-      0.9828077986348537,
-      0.9403166531559783
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:1-copia-35",
-    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      28.14335890500554,
-      0,
-      2.9577612600013246
-    ],
-    "rotation": [
-      -1.5707963267948963,
-      0,
-      0
-    ],
-    "scale": [
-      0.03284796391664913,
-      0.9828077986348537,
-      0.9403166531559783
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:15.5-copia-7",
-    "name": "Cantero principal izquierdo · arbusto 4 (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      59.36209289059329,
-      -0.28975057828441275,
-      3.741345059997501
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      125.64848864107103,
-      1.5017641553886392,
-      -77.06437802824495
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:15.5",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:1-copia-36",
-    "name": "Vereda gris frente al local (copia) (copia) (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -54.06529892240452,
-      -0.08677141421358159,
-      2.057908414027489
-    ],
-    "rotation": [
-      -1.5707963267948963,
-      0,
-      0
-    ],
-    "scale": [
-      0.953385466806859,
-      3.7344397933875073,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "calle-kit:1",
-    "manageShadows": false
-  },
-  {
-    "id": "calle-kit:0-copia-1",
-    "name": "Calle Burela · asfalto (copia)",
-    "type": "calle-kit",
-    "model": "",
-    "position": [
-      -31.59690658871783,
-      -0.00813325527564053,
-      13.072011494034816
-    ],
-    "rotation": [
-      -1.5707963267948963,
       0,
       0
     ],
@@ -8085,34 +7309,867 @@
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "cloneOf": "calle-kit:0",
     "manageShadows": false
   },
   {
-    "id": "calle-kit:1-copia-37",
-    "name": "Vereda gris frente al local (copia) (copia)",
-    "type": "calle-kit",
+    "id": "destino-1:origen-isla-central",
+    "name": "ORIGEN · isla central con cannabis",
+    "type": "destino-1",
     "model": "",
     "position": [
-      -10.906063282379701,
-      -2.4390212072233908e-15,
-      21.46385351475063
+      0,
+      0,
+      3.35
     ],
     "rotation": [
-      -1.5707963267948963,
+      0,
       0,
       0
     ],
     "scale": [
-      1.043398985329426,
-      2.2571888677708567,
+      1.28,
+      1.28,
+      1.28
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:origen-barral-fondo",
+    "name": "ORIGEN · barral del fondo para 3 hoodies",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -1.5457642045771236,
+      2.18,
+      -3.79
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
       1
     ],
     "castShadow": true,
     "receiveShadow": true,
     "locked": false,
     "visible": true,
-    "cloneOf": "calle-kit:1",
+    "collidable": false,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:origen-sofa-lateral",
+    "name": "ORIGEN · sofa lateral",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -4.96,
+      0,
+      5.644702927250788
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:origen-mesa-vidrio",
+    "name": "ORIGEN · mesa de vidrio",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -3.35,
+      0,
+      5.676915910679056
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:origen-vinilo-dr-dre",
+    "name": "ORIGEN · vinilo Dr. Dre sobre mesa",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -3.35,
+      0.53,
+      6.158974077213954
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "collidable": false,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:origen-mueble-vinilos",
+    "name": "ORIGEN · mueble de vinilos",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      5.15,
+      0,
+      5.960430044157899
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1.3769068192557652,
+      1.2597344968404662,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "elevator-destination-1",
+    "name": "Ascensor FOURTWENTY · ORIGEN (mover completo)",
+    "type": "elevator",
+    "model": "",
+    "position": [
+      0,
+      0,
+      10.85
+    ],
+    "rotation": [
+      0,
+      3.141592653589793,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0",
+    "name": "ORIGEN PS3 · FOURTWENTY",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.0",
+    "name": "ESFERA 360 · TAMAÑO EDITABLE",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      0,
+      1.55,
+      4.5
+    ],
+    "rotation": [
+      0,
+      -0.18,
+      0
+    ],
+    "scale": [
+      1.5,
+      1.5,
+      1.5
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.0.0",
+    "name": "ESFERA · rainforest_trail_1k.webp",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.1",
+    "name": "ORIGEN PS3 · piso",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      0,
+      -0.15,
+      3.95
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.2",
+    "name": "ORIGEN PS3 · zocalo del piso",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      0,
+      0.06,
+      -4.1499999999999995
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.3",
+    "name": "ORIGEN PS3 · zocalo del piso",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      0,
+      0.06,
+      12.05
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.4",
+    "name": "ORIGEN PS3 · zocalo del piso",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -5.9,
+      0.06,
+      3.95
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.5",
+    "name": "ORIGEN PS3 · zocalo del piso",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      5.9,
+      0.06,
+      3.95
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.6",
+    "name": "ORIGEN · pared izquierda",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -5.72,
+      1.85,
+      2.45
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.7",
+    "name": "ORIGEN · pared derecha",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      5.72,
+      1.85,
+      2.45
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.8",
+    "name": "ORIGEN · pared del fondo",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      0,
+      1.85,
+      -3.95
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:origen-display-izquierdo-1",
+    "name": "ORIGEN · exhibidor izquierdo 1",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -5.15,
+      0,
+      -0.85
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1.1,
+      1.1,
+      1.1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:origen-display-izquierdo-2",
+    "name": "ORIGEN · exhibidor izquierdo 2",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -5.15,
+      0,
+      1.75
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1.1,
+      1.1,
+      1.1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:origen-display-derecho-1",
+    "name": "ORIGEN · exhibidor derecho 1",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      5.15,
+      0,
+      -0.85
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1.1,
+      1.1,
+      1.1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:origen-display-derecho-2",
+    "name": "ORIGEN · exhibidor derecho 2",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      5.15,
+      0,
+      1.75
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1.1,
+      1.1,
+      1.1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.10",
+    "name": "ORIGEN · barral del fondo para 3 hoodies",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -1.5457642045771236,
+      2.18,
+      -3.79
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.15",
+    "name": "ORIGEN · mueble de vinilos",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      5.15,
+      0,
+      5.960430044157899
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1.3769068192557652,
+      1.2597344968404662,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.16",
+    "name": "ORIGEN · exhibidor izquierdo 1",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -5.15,
+      0,
+      -0.85
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1.1,
+      1.1,
+      1.1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.17",
+    "name": "ORIGEN · exhibidor izquierdo 2",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -5.15,
+      0,
+      1.75
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1.1,
+      1.1,
+      1.1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.18",
+    "name": "ORIGEN · exhibidor derecho 1",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      5.15,
+      0,
+      -0.85
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1.1,
+      1.1,
+      1.1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.19",
+    "name": "ORIGEN · exhibidor derecho 2",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      5.15,
+      0,
+      1.75
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1.1,
+      1.1,
+      1.1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.9",
+    "name": "ORIGEN · isla central con cannabis",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      0,
+      0,
+      3.35
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1.28,
+      1.28,
+      1.28
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.12",
+    "name": "ORIGEN · sofa lateral",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -4.96,
+      0,
+      5.644702927250788
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.13",
+    "name": "ORIGEN · mesa de vidrio",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -3.35,
+      0,
+      5.676915910679056
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.14",
+    "name": "ORIGEN · vinilo Dr. Dre sobre mesa",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      -3.35,
+      0.53,
+      6.158974077213954
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "destino-1:0.10-copia-1",
+    "name": "ORIGEN · barral del fondo para 3 hoodies (copia)",
+    "type": "destino-1",
+    "model": "",
+    "position": [
+      1.1936239129555273,
+      2.1139587987232935,
+      -3.581176643294114
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "destino-1:0.10",
     "manageShadows": false
   },
   {
@@ -8864,554 +8921,6 @@
     "height": 20
   },
   {
-    "id": "destino-1:origen-pared-izquierda",
-    "name": "ORIGEN · pared izquierda",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -5.72,
-      1.85,
-      2.45
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:origen-pared-derecha",
-    "name": "ORIGEN · pared derecha",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      5.72,
-      1.85,
-      2.45
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:origen-pared-fondo",
-    "name": "ORIGEN · pared del fondo",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      0,
-      1.85,
-      -3.95
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:origen-isla-central",
-    "name": "ORIGEN · isla central con cannabis",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      0,
-      0,
-      3.35
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1.28,
-      1.28,
-      1.28
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:origen-barral-fondo",
-    "name": "ORIGEN · barral del fondo para 3 hoodies",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -1.5457642045771236,
-      2.18,
-      -3.79
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "collidable": false,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:origen-sofa-lateral",
-    "name": "ORIGEN · sofa lateral",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -4.96,
-      0,
-      5.644702927250788
-    ],
-    "rotation": [
-      0,
-      1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:origen-mesa-vidrio",
-    "name": "ORIGEN · mesa de vidrio",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -3.35,
-      0,
-      5.676915910679056
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:origen-vinilo-dr-dre",
-    "name": "ORIGEN · vinilo Dr. Dre sobre mesa",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -3.35,
-      0.53,
-      6.158974077213954
-    ],
-    "rotation": [
-      0,
-      1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "collidable": false,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:origen-mueble-vinilos",
-    "name": "ORIGEN · mueble de vinilos",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      5.15,
-      0,
-      5.960430044157899
-    ],
-    "rotation": [
-      0,
-      -1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1.3769068192557652,
-      1.2597344968404662,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "elevator-destination-1",
-    "name": "Ascensor FOURTWENTY · ORIGEN (mover completo)",
-    "type": "elevator",
-    "model": "",
-    "position": [
-      0,
-      0,
-      10.85
-    ],
-    "rotation": [
-      0,
-      3.141592653589793,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0",
-    "name": "ORIGEN PS3 · FOURTWENTY",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      0,
-      0,
-      0
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.0",
-    "name": "ESFERA 360 · TAMAÑO EDITABLE",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      0,
-      1.55,
-      4.5
-    ],
-    "rotation": [
-      0,
-      -0.18,
-      0
-    ],
-    "scale": [
-      1.5,
-      1.5,
-      1.5
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.0.0",
-    "name": "ESFERA · rainforest_trail_1k.webp",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      0,
-      0,
-      0
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.1",
-    "name": "ORIGEN PS3 · piso",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      0,
-      -0.15,
-      3.95
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.2",
-    "name": "ORIGEN PS3 · zocalo del piso",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      0,
-      0.06,
-      -4.1499999999999995
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.3",
-    "name": "ORIGEN PS3 · zocalo del piso",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      0,
-      0.06,
-      12.05
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.4",
-    "name": "ORIGEN PS3 · zocalo del piso",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -5.9,
-      0.06,
-      3.95
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.5",
-    "name": "ORIGEN PS3 · zocalo del piso",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      5.9,
-      0.06,
-      3.95
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.6",
-    "name": "ORIGEN · pared izquierda",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -5.72,
-      1.85,
-      2.45
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.7",
-    "name": "ORIGEN · pared derecha",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      5.72,
-      1.85,
-      2.45
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.8",
-    "name": "ORIGEN · pared del fondo",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      0,
-      1.85,
-      -3.95
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
     "id": "pieza:plano-mtuvhleg-1",
     "name": "Bordado · FOURTWENTY blanco",
     "type": "pieza",
@@ -9769,266 +9278,6 @@
     }
   },
   {
-    "id": "destino-1:origen-display-izquierdo-1",
-    "name": "ORIGEN · exhibidor izquierdo 1",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -5.15,
-      0,
-      -0.85
-    ],
-    "rotation": [
-      0,
-      1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1.1,
-      1.1,
-      1.1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:origen-display-izquierdo-2",
-    "name": "ORIGEN · exhibidor izquierdo 2",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -5.15,
-      0,
-      1.75
-    ],
-    "rotation": [
-      0,
-      1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1.1,
-      1.1,
-      1.1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:origen-display-derecho-1",
-    "name": "ORIGEN · exhibidor derecho 1",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      5.15,
-      0,
-      -0.85
-    ],
-    "rotation": [
-      0,
-      -1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1.1,
-      1.1,
-      1.1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:origen-display-derecho-2",
-    "name": "ORIGEN · exhibidor derecho 2",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      5.15,
-      0,
-      1.75
-    ],
-    "rotation": [
-      0,
-      -1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1.1,
-      1.1,
-      1.1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.10",
-    "name": "ORIGEN · barral del fondo para 3 hoodies",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -1.5457642045771236,
-      2.18,
-      -3.79
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.15",
-    "name": "ORIGEN · mueble de vinilos",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      5.15,
-      0,
-      5.960430044157899
-    ],
-    "rotation": [
-      0,
-      -1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1.3769068192557652,
-      1.2597344968404662,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.16",
-    "name": "ORIGEN · exhibidor izquierdo 1",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -5.15,
-      0,
-      -0.85
-    ],
-    "rotation": [
-      0,
-      1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1.1,
-      1.1,
-      1.1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.17",
-    "name": "ORIGEN · exhibidor izquierdo 2",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -5.15,
-      0,
-      1.75
-    ],
-    "rotation": [
-      0,
-      1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1.1,
-      1.1,
-      1.1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.18",
-    "name": "ORIGEN · exhibidor derecho 1",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      5.15,
-      0,
-      -0.85
-    ],
-    "rotation": [
-      0,
-      -1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1.1,
-      1.1,
-      1.1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.19",
-    "name": "ORIGEN · exhibidor derecho 2",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      5.15,
-      0,
-      1.75
-    ],
-    "rotation": [
-      0,
-      -1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1.1,
-      1.1,
-      1.1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
     "id": "prenda:remera-oversize:mxkblc-copia-3",
     "name": "Remera oversize 1 (copia)",
     "type": "prenda",
@@ -10289,137 +9538,6 @@
     "locked": false,
     "visible": true,
     "cloneOf": "prenda:remera-regular:vmooh3"
-  },
-  {
-    "id": "destino-1:0.9",
-    "name": "ORIGEN · isla central con cannabis",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      0,
-      0,
-      3.35
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1.28,
-      1.28,
-      1.28
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.12",
-    "name": "ORIGEN · sofa lateral",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -4.96,
-      0,
-      5.644702927250788
-    ],
-    "rotation": [
-      0,
-      1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.13",
-    "name": "ORIGEN · mesa de vidrio",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -3.35,
-      0,
-      5.676915910679056
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.14",
-    "name": "ORIGEN · vinilo Dr. Dre sobre mesa",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      -3.35,
-      0.53,
-      6.158974077213954
-    ],
-    "rotation": [
-      0,
-      1.5707963267948966,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "manageShadows": false
-  },
-  {
-    "id": "destino-1:0.10-copia-1",
-    "name": "ORIGEN · barral del fondo para 3 hoodies (copia)",
-    "type": "destino-1",
-    "model": "",
-    "position": [
-      1.1936239129555273,
-      2.1139587987232935,
-      -3.581176643294114
-    ],
-    "rotation": [
-      0,
-      0,
-      0
-    ],
-    "scale": [
-      1,
-      1,
-      1
-    ],
-    "castShadow": true,
-    "receiveShadow": true,
-    "locked": false,
-    "visible": true,
-    "cloneOf": "destino-1:0.10",
-    "manageShadows": false
   },
   {
     "id": "pieza:grupo-mtuy482t-1",
