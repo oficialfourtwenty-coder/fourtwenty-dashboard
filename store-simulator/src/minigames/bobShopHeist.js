@@ -102,8 +102,8 @@ const GUARDS = Object.freeze([
 ]);
 
 const SHOPPERS = Object.freeze([
-  { path: [[-6.1, 10.3], [-6.1, 5.6], [-5.1, 5.6], [-5.1, 10.3]], speed: 0.82, colors: [0x293b50, 0x343a32] },
-  { path: [[0.2, -4.8], [-3.1, -4.8], [-3.1, -6.1], [0.2, -6.1]], speed: 0.68, colors: [0x77543a, 0x2f3438] },
+  { path: [[-6.1, 10.3], [-6.1, 5.6], [-5.1, 5.6], [-5.1, 10.3]], speed: 0.82 },
+  { path: [[0.2, -4.8], [-3.1, -4.8], [-3.1, -6.1], [0.2, -6.1]], speed: 0.68 },
 ]);
 
 const KEYBOARD_CODES = new Set([
@@ -326,30 +326,6 @@ function makeBackpack() {
   return group;
 }
 
-function makePlayerOutfit(topColor = 0x672334, bottomColor = 0x4d5140) {
-  const group = new THREE.Group();
-  const burgundy = makeMaterial(topColor, 0.94, 0);
-  const cargo = makeMaterial(bottomColor, 0.92, 0);
-  const white = makeMaterial(0xe9e4da, 0.88, 0);
-  const hoodie = new THREE.Mesh(new THREE.CapsuleGeometry(0.31, 0.46, 7, 14), burgundy);
-  hoodie.position.y = 1.03;
-  hoodie.scale.z = 0.8;
-  group.add(hoodie);
-  const shirtEdge = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.31, 0.07, 16), white);
-  shirtEdge.position.y = 0.75;
-  group.add(shirtEdge);
-  const waist = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.16, 6, 12), cargo);
-  waist.position.y = 0.64;
-  waist.scale.z = 0.82;
-  group.add(waist);
-  for (const side of [-1, 1]) {
-    const trouser = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.43, 6, 10), cargo);
-    trouser.position.set(side * 0.16, 0.35, 0);
-    group.add(trouser);
-  }
-  return group;
-}
-
 function makeFallbackBob({ guard = false } = {}) {
   const group = new THREE.Group();
   const fur = makeMaterial(0x8d4e25, 0.9, 0);
@@ -361,7 +337,7 @@ function makeFallbackBob({ guard = false } = {}) {
   return group;
 }
 
-function makeBobActor(gltf, { guard = false, customer = false, colors = null } = {}) {
+function makeBobActor(gltf, { guard = false } = {}) {
   const rig = new THREE.Group();
   const pose = new THREE.Group();
   rig.add(pose);
@@ -398,8 +374,7 @@ function makeBobActor(gltf, { guard = false, customer = false, colors = null } =
     pose.add(visual);
   }
   if (guard) pose.add(makeSecurityUniform());
-  else if (customer) pose.add(makePlayerOutfit(...(colors ?? [0x3d4650, 0x34383b])));
-  else pose.add(makePlayerOutfit(), makeBackpack());
+  else pose.add(makeBackpack());
   rig.add(makeBlobShadow(guard ? 1.02 : 1.18));
   let stealPlaying = false;
 
@@ -926,7 +901,7 @@ export function createBobShopHeistGame() {
       };
     });
     shoppers = SHOPPERS.map((config, index) => {
-      const actor = makeBobActor(bobGltf, { customer: true, colors: config.colors });
+      const actor = makeBobActor(bobGltf);
       const [x, z] = config.path[0];
       scene.add(actor.rig);
       return { ...config, x, z, target: 1, angle: index ? Math.PI / 2 : Math.PI, pause: index * 0.8, actor };
@@ -1065,18 +1040,26 @@ export function createBobShopHeistGame() {
   function updateGuards(dt, ambientOnly = false) {
     if (!guards.length) return;
     for (const guard of guards) {
-      const sees = !ambientOnly && guardSeesPlayer(guard);
-      if (sees) {
+      const seesPlayer = !ambientOnly && guardSeesPlayer(guard);
+      const seesTheft = seesPlayer && Boolean(steal);
+      if (seesTheft) {
         guard.lastSeen.x = player.x;
         guard.lastSeen.z = player.z;
         guard.lostTime = 0;
-        guard.awareness = clamp(guard.awareness + dt * (player.crouch ? 0.42 : player.running ? 1.05 : 0.7), 0, 1);
+        guard.awareness = clamp(guard.awareness + dt * 1.35, 0, 1);
         guard.state = guard.awareness > 0.7 || suspicion > 68 ? 'chase' : 'investigate';
+      } else if (guard.state === 'chase' && seesPlayer) {
+        // Una vez que presencio el robo, puede seguir a BOB mientras lo vea.
+        // Ver a un cliente antes del delito nunca alcanza para llegar aca.
+        guard.lastSeen.x = player.x;
+        guard.lastSeen.z = player.z;
+        guard.lostTime = 0;
       } else {
-        guard.awareness = clamp(guard.awareness - dt * (guard.state === 'patrol' ? 0.28 : 0.08), 0, 1);
+        guard.awareness = clamp(guard.awareness - dt * 0.58, 0, 1);
         if (guard.state !== 'patrol') {
           guard.lostTime += dt;
-          if (guard.lostTime > 6.2) {
+          const calmDelay = guard.state === 'chase' ? 6.2 : 2.2;
+          if (guard.lostTime > calmDelay) {
             guard.state = 'patrol';
             guard.pause = 0.9;
             guard.lostTime = 0;
@@ -1292,13 +1275,14 @@ export function createBobShopHeistGame() {
   }
 
   function updateSuspicion(dt, now) {
-    visibleGuards = guards.filter(guardSeesPlayer);
+    // La barra representa evidencia del robo, no la cercania a seguridad.
+    // Un guardia puede mirar a BOB como a cualquier cliente sin penalizarlo.
+    visibleGuards = steal ? guards.filter(guardSeesPlayer) : [];
     const seen = visibleGuards.length > 0;
     if (seen) {
-      const exposure = player.running ? 1.8 : player.crouch ? 0.62 : 1;
-      suspicion += 19 * visibleGuards.length * exposure * (steal ? 1.65 : 1) * dt;
-      setMessage(steal ? 'Te vieron robando. Cortá visión o soltá la prenda.' : 'Seguridad te está identificando.', 0.12);
-    } else suspicion -= (guards.some((guard) => guard.state !== 'patrol') ? 3.2 : 9.5) * dt;
+      suspicion += 31 * visibleGuards.length * dt;
+      setMessage('Te vieron robando. Cortá visión o soltá la prenda.', 0.12);
+    } else suspicion -= 22 * dt;
     suspicion = clamp(suspicion, 0, 100);
     if (suspicion >= 100) finish('lose');
     audio.update(now, suspicion, seen);

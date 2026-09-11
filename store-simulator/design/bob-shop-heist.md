@@ -19,7 +19,8 @@ aguantar la accion de robo mientras un guardia puede darse vuelta.
    seguridad. Agacharse reduce la exposicion, pero resulta mas lento.
 3. **Robo comprometido.** Cerca de una prenda, hay que mantener la accion. BOB
    extiende el brazo, la prenda viaja a la mochila y el progreso puede cancelarse
-   si el jugador suelta el control.
+   si el jugador suelta el control. Los guardias solo identifican a BOB si lo
+   tienen en su campo visual durante esta accion.
 4. **Presion creciente.** Cada objeto suma dinero. Al pasar $350.000 y $700.000,
    los guardias patrullan mas rapido, miran mas lejos e investigan faltantes.
 5. **Escape.** Llegar al millon no completa la mision por si solo. BOB tiene que
@@ -43,13 +44,13 @@ superior.
 Cada guardia usa tres estados: patrulla, investigacion y persecucion. La vision
 depende de distancia, angulo, piso y linea de vista. Islas, exhibidores y muebles
 cortan la vision. Correr genera un punto de ruido que el guardia mas cercano va a
-investigar. Una mirada parcial llena sospecha; una mirada sostenida identifica a
-BOB y termina la mision.
+investigar, pero ver a BOB caminar o pasar cerca se considera comportamiento de
+cliente y no genera sospecha. Solo presenciar el robo llena la barra; si BOB
+cancela a tiempo o corta la vision, la evidencia baja rapidamente.
 
 Los guardias son instancias del BOB GLB del simulador con uniforme y linterna
-superpuestos. Los clientes tambien usan ese GLB, pero siguen rutas lentas y no
-participan de la deteccion; su funcion es hacer que BOB no parezca solo dentro de
-un escenario preparado para el robo.
+superpuestos. El jugador y los clientes usan el GLB sin ropa geometrica agregada;
+los clientes siguen rutas lentas y no participan de la deteccion.
 
 ## Interfaz y tension
 
