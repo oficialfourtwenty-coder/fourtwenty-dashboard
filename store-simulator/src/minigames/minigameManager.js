@@ -42,13 +42,16 @@ export function createMinigameManager({ onOpenChange = () => {} } = {}) {
 
   function showResult(gameResult) {
     activeGame?.pause?.();
-    const won = gameResult === 'win';
-    kicker.textContent = won ? 'PARTIDA COMPLETADA' : 'FIN DE LA PARTIDA';
-    title.textContent = won ? 'Ganaste un descuento!' : 'Te atraparon';
-    discount.hidden = !won;
-    code.hidden = !won;
-    note.hidden = !won;
-    retry.textContent = won ? 'JUGAR DE NUEVO' : 'REINTENTAR';
+    const details = typeof gameResult === 'object' && gameResult ? gameResult : null;
+    const status = details?.status ?? gameResult;
+    const won = status === 'win';
+    const showDiscount = details?.discount ?? won;
+    kicker.textContent = details?.kicker ?? (won ? 'PARTIDA COMPLETADA' : 'FIN DE LA PARTIDA');
+    title.textContent = details?.title ?? (won ? 'Ganaste un descuento!' : 'Te atraparon');
+    discount.hidden = !showDiscount;
+    code.hidden = !showDiscount;
+    note.hidden = !showDiscount;
+    retry.textContent = details?.retryLabel ?? (won ? 'JUGAR DE NUEVO' : 'REINTENTAR');
     result.hidden = false;
   }
 

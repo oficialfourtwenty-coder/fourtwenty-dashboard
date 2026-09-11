@@ -33,6 +33,16 @@
   box-shadow: 0 0 52px rgba(207, 173, 103, 0.2);
 }
 
+.minigame-frame-mission {
+  width: calc(100vw - 28px);
+  height: calc(100vh - 28px);
+  max-width: none;
+  max-height: none;
+  border: 0;
+  box-shadow: none;
+  background: #090909;
+}
+
 .minigame-stage { width: 100%; height: 100%; min-width: 0; min-height: 0; }
 
 .maze-game {
@@ -104,23 +114,18 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #0c0b08;
-}
-
-.bob-heist-game canvas {
-  position: absolute;
-  inset: 42px 0 0;
-  display: block;
-  width: 100%;
-  height: calc(100% - 42px);
-  object-fit: contain;
-  background: #090807;
+  background: #0a0a09;
   touch-action: none;
 }
 
 .bob-heist-3d {
-  background: #11100c;
-  font-family: Arial, sans-serif;
+  --mission-yellow: #f6d65f;
+  --mission-red: #f2443c;
+  --mission-green: #a7c96b;
+  --mission-ink: rgba(8, 9, 9, 0.84);
+  background: #10100e;
+  color: #f5f1e8;
+  font-family: "Arial Narrow", "Helvetica Neue", sans-serif;
 }
 
 .bob-heist-3d .bob-heist-render {
@@ -136,6 +141,35 @@
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.bob-heist-cinematic,
+.bob-heist-danger {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.bob-heist-cinematic {
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.52) 0, transparent 17%, transparent 74%, rgba(0, 0, 0, 0.35) 100%);
+}
+
+.bob-heist-danger {
+  opacity: 0;
+  background: radial-gradient(circle at 50% 48%, transparent 36%, rgba(120, 0, 0, 0.58) 100%);
+  transition: opacity 180ms ease;
+}
+
+.bob-heist-3d.is-danger .bob-heist-danger {
+  opacity: 0.5;
+  animation: bob-heist-breathe 1.15s ease-in-out infinite;
+}
+
+.bob-heist-3d.is-chased .bob-heist-danger {
+  opacity: 0.9;
+  animation-duration: 0.48s;
 }
 
 .bob-heist-hud {
@@ -160,75 +194,125 @@
 .bob-heist-hud strong { color: #f4f4f4; }
 
 .bob-heist-hud-3d {
-  height: 58px;
-  justify-content: flex-start;
-  gap: 18px;
+  inset: 22px 24px auto;
+  width: auto;
+  height: auto;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 28px;
+  padding: 0;
   border-bottom: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0));
-  color: #fff6c0;
-  font: 800 13px Arial, sans-serif;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+  background: transparent;
+  color: #fff;
+  font: 800 12px "Arial Narrow", "Helvetica Neue", sans-serif;
+  letter-spacing: 0;
+  text-shadow: 0 2px 7px rgba(0, 0, 0, 0.8);
 }
 
-.bob-heist-face {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  border: 3px solid rgba(255, 220, 93, 0.72);
-  border-radius: 999px;
-  background: radial-gradient(circle at 50% 42%, #9b5627 0 45%, #392012 46% 100%);
-  color: #160d08;
-  font-size: 11px;
-}
-
-.bob-heist-bananas {
+.bob-heist-objective,
+.bob-heist-money,
+.bob-heist-wanted {
   display: flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 92px;
+  min-width: 190px;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.bob-heist-bananas i {
-  width: 16px;
-  height: 32px;
-  border-right: 7px solid #ffe12f;
-  border-radius: 50%;
-  transform: rotate(14deg);
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
+.bob-heist-objective {
+  padding-left: 11px;
+  border-left: 4px solid var(--mission-yellow);
 }
 
-.bob-heist-bananas i.dim {
-  border-right-color: rgba(230, 230, 210, 0.25);
+.bob-heist-objective span,
+.bob-heist-money span,
+.bob-heist-wanted span {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  line-height: 1;
 }
+
+.bob-heist-objective strong,
+.bob-heist-money strong {
+  color: #fff;
+  font-size: 18px;
+  line-height: 1.15;
+}
+
+.bob-heist-money {
+  align-items: flex-end;
+  margin-left: auto;
+  text-align: right;
+}
+
+.bob-heist-money strong {
+  color: var(--mission-green);
+  font-size: 24px;
+}
+
+.bob-heist-wanted {
+  width: 220px;
+}
+
+.bob-heist-wanted > div:first-child {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.bob-heist-wanted strong {
+  color: #fff;
+  font-size: 15px;
+}
+
+.bob-heist-wanted-track {
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(0, 0, 0, 0.58);
+}
+
+.bob-heist-wanted-track i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--mission-yellow);
+  box-shadow: 0 0 12px rgba(246, 214, 95, 0.55);
+  transition: width 100ms linear, background 160ms ease;
+}
+
+.bob-heist-3d.is-danger .bob-heist-wanted-track i { background: #ef9b38; }
+.bob-heist-3d.is-chased .bob-heist-wanted-track i { background: var(--mission-red); }
 
 .bob-heist-hint {
   position: absolute;
   left: 50%;
-  bottom: 16px;
-  z-index: 2;
+  bottom: 25px;
+  z-index: 4;
   max-width: min(760px, calc(100% - 28px));
   transform: translateX(-50%);
   box-sizing: border-box;
-  padding: 9px 12px;
-  border: 1px solid rgba(240, 210, 105, 0.38);
-  background: rgba(8, 7, 5, 0.78);
-  color: #fff3b6;
-  font-size: 12px;
-  font-weight: 700;
+  padding: 9px 16px;
+  border: 0;
+  border-left: 3px solid var(--mission-yellow);
+  background: var(--mission-ink);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
   text-align: center;
+  text-shadow: 0 2px 4px #000;
 }
 
 .bob-heist-progress {
   position: absolute;
   left: 50%;
-  bottom: 54px;
-  z-index: 2;
-  width: min(320px, calc(100% - 40px));
-  height: 10px;
+  bottom: 72px;
+  z-index: 4;
+  width: min(380px, calc(100% - 40px));
+  height: 9px;
   transform: translateX(-50%);
-  border: 1px solid #655833;
-  background: #11100c;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: rgba(0, 0, 0, 0.74);
 }
 
 .bob-heist-progress[hidden] { display: none; }
@@ -237,24 +321,65 @@
   display: block;
   width: 0;
   height: 100%;
-  background: linear-gradient(90deg, #9b7cff, #ffe15c);
+  background: var(--mission-yellow);
+  box-shadow: 0 0 10px rgba(246, 214, 95, 0.65);
+}
+
+.bob-heist-progress span {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  width: max-content;
+  max-width: 90vw;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  text-shadow: 0 2px 5px #000;
 }
 
 .bob-heist-minimap {
   position: absolute;
   left: 24px;
   bottom: 24px;
-  z-index: 2;
-  width: 148px;
-  height: 148px;
-  border: 3px solid rgba(255, 255, 255, 0.48);
+  z-index: 4;
+  width: 156px;
+  height: 156px;
+  border: 3px solid rgba(238, 238, 231, 0.62);
   border-radius: 999px;
   background:
-    linear-gradient(rgba(255,255,255,0.06), rgba(255,255,255,0.06)),
-    repeating-linear-gradient(0deg, transparent 0 33px, rgba(255,255,255,0.1) 34px 35px),
-    repeating-linear-gradient(90deg, transparent 0 33px, rgba(255,255,255,0.1) 34px 35px),
-    rgba(24, 27, 24, 0.76);
-  box-shadow: inset 0 0 24px rgba(0,0,0,0.65), 0 5px 18px rgba(0,0,0,0.45);
+    linear-gradient(90deg, transparent 47%, rgba(255, 255, 255, 0.13) 48% 52%, transparent 53%),
+    linear-gradient(0deg, transparent 47%, rgba(255, 255, 255, 0.13) 48% 52%, transparent 53%),
+    rgba(20, 24, 22, 0.8);
+  box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.74), 0 5px 18px rgba(0, 0, 0, 0.5);
+}
+
+.bob-heist-minimap::before,
+.bob-heist-minimap::after {
+  content: "";
+  position: absolute;
+  background: rgba(221, 198, 150, 0.18);
+  transform: rotate(-18deg);
+}
+
+.bob-heist-minimap::before { inset: 18px 66px; }
+.bob-heist-minimap::after { inset: 66px 13px; }
+
+.bob-heist-floor {
+  position: absolute;
+  right: 9px;
+  top: 8px;
+  z-index: 2;
+  display: grid;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
 }
 
 .bob-heist-minimap b,
@@ -269,11 +394,13 @@
   height: 0;
   border-left: 9px solid transparent;
   border-right: 9px solid transparent;
+  z-index: 2;
   border-bottom: 22px solid #fff;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
 }
 
 .bob-heist-minimap i {
+  z-index: 2;
   width: 9px;
   height: 9px;
   border-radius: 999px;
@@ -281,20 +408,263 @@
   box-shadow: 0 0 8px rgba(255, 44, 44, 0.8);
 }
 
+.bob-heist-minimap i.alert {
+  width: 12px;
+  height: 12px;
+  background: #ff1919;
+  animation: bob-heist-dot 0.45s ease-in-out infinite alternate;
+}
+
+.bob-heist-touch-actions {
+  position: absolute;
+  right: 26px;
+  bottom: 28px;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 54px 88px;
+  grid-template-rows: 42px 42px;
+  gap: 8px;
+  align-items: center;
+}
+
+.bob-heist-action,
+.bob-heist-crouch,
+.bob-heist-run {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  border: 2px solid rgba(255, 255, 255, 0.76);
+  border-radius: 999px;
+  background: rgba(7, 8, 8, 0.55);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.42);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.bob-heist-action:active,
+.bob-heist-crouch:active,
+.bob-heist-run:active {
+  border-color: var(--mission-yellow);
+  background: rgba(246, 214, 95, 0.28);
+}
+
 .bob-heist-action {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  width: 88px;
+  height: 88px;
+  border-width: 3px;
+}
+
+.bob-heist-action span {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  border-radius: 50%;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.bob-heist-crouch,
+.bob-heist-run {
+  width: 54px;
+  height: 42px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.bob-heist-run { grid-column: 1; grid-row: 2; }
+.bob-heist-crouch { grid-column: 1; grid-row: 1; }
+
+.bob-heist-stick {
+  position: absolute;
+  left: 26px;
+  bottom: 26px;
+  z-index: 5;
+  display: none;
+  width: 132px;
+  height: 132px;
+  border: 2px solid rgba(255, 255, 255, 0.38);
+  border-radius: 50%;
+  background: rgba(8, 9, 9, 0.32);
+}
+
+.bob-heist-stick i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255, 255, 255, 0.62);
+  border-radius: 50%;
+  background: rgba(9, 10, 10, 0.7);
+}
+
+.bob-heist-controls {
   position: absolute;
   right: 28px;
-  bottom: 30px;
-  z-index: 2;
-  width: 86px;
-  height: 86px;
-  border: 4px solid rgba(255,255,255,0.86);
-  border-radius: 999px;
-  background: rgba(0,0,0,0.42);
+  bottom: 124px;
+  z-index: 4;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 9px;
+  font-weight: 800;
+  text-shadow: 0 2px 4px #000;
+}
+
+.bob-heist-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  padding: clamp(30px, 6vw, 84px);
+  background:
+    linear-gradient(90deg, rgba(5, 5, 5, 0.96), rgba(5, 5, 5, 0.66) 55%, rgba(5, 5, 5, 0.9)),
+    #080808;
+  transition: opacity 520ms ease, visibility 520ms ease;
+}
+
+.bob-heist-3d:not(.is-loading) .bob-heist-loading {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.bob-heist-loading-mark {
+  position: absolute;
+  left: clamp(30px, 6vw, 84px);
+  top: clamp(30px, 6vw, 72px);
+  padding-bottom: 8px;
+  border-bottom: 3px solid var(--mission-yellow);
   color: #fff;
-  font-size: 36px;
-  cursor: pointer;
-  box-shadow: 0 5px 18px rgba(0,0,0,0.42);
+  font-size: clamp(18px, 2.4vw, 30px);
+  font-weight: 900;
+}
+
+.bob-heist-loading p {
+  margin: 0 0 7px;
+  color: var(--mission-yellow);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.bob-heist-loading strong {
+  color: #fff;
+  font-size: clamp(30px, 5vw, 64px);
+  line-height: 1;
+}
+
+.bob-heist-loading-rules {
+  display: grid;
+  gap: 6px;
+  margin-top: 20px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.bob-heist-loading-track {
+  width: min(520px, 76vw);
+  height: 4px;
+  margin-top: 25px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.bob-heist-loading-track i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--mission-yellow);
+  transition: width 180ms ease;
+}
+
+.bob-heist-loading small {
+  margin-top: 9px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+}
+
+.bob-heist-mission-card {
+  position: absolute;
+  left: clamp(26px, 6vw, 90px);
+  top: 50%;
+  z-index: 7;
+  display: flex;
+  max-width: min(560px, 72vw);
+  flex-direction: column;
+  padding-left: 18px;
+  transform: translateY(-50%) translateX(-22px);
+  border-left: 5px solid var(--mission-yellow);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bob-heist-3d.is-briefing .bob-heist-mission-card {
+  animation: bob-heist-card 2.7s ease both;
+}
+
+.bob-heist-mission-card span {
+  color: var(--mission-yellow);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.bob-heist-mission-card strong {
+  margin-top: 5px;
+  color: #fff;
+  font-size: clamp(34px, 5.5vw, 72px);
+  line-height: 0.96;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.85);
+}
+
+.bob-heist-mission-card p {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 14px;
+  font-weight: 700;
+  text-shadow: 0 2px 5px #000;
+}
+
+.bob-heist-3d.loot-flash::after {
+  content: "+ BOTÍN";
+  position: absolute;
+  left: 50%;
+  top: 36%;
+  z-index: 8;
+  transform: translate(-50%, -50%);
+  color: var(--mission-green);
+  font-size: 26px;
+  font-weight: 900;
+  text-shadow: 0 3px 10px #000;
+  animation: bob-heist-loot 260ms ease-out both;
+}
+
+@keyframes bob-heist-card {
+  0% { opacity: 0; transform: translateY(-50%) translateX(-22px); }
+  18%, 72% { opacity: 1; transform: translateY(-50%) translateX(0); }
+  100% { opacity: 0; transform: translateY(-50%) translateX(15px); }
+}
+
+@keyframes bob-heist-breathe {
+  from { filter: saturate(1); }
+  to { filter: saturate(1.4); }
+}
+
+@keyframes bob-heist-dot {
+  to { transform: translate(-50%, -50%) scale(1.35); }
+}
+
+@keyframes bob-heist-loot {
+  from { opacity: 0; transform: translate(-50%, -30%) scale(0.9); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 .minigame-result {
@@ -329,17 +699,77 @@
   cursor: pointer;
 }
 
+.minigame-frame-mission .minigame-result {
+  z-index: 12;
+  align-items: flex-start;
+  padding: clamp(36px, 8vw, 118px);
+  background: rgba(5, 6, 6, 0.94);
+  text-align: left;
+}
+
+.minigame-frame-mission .minigame-result-kicker {
+  margin: 0;
+  color: #f6d65f;
+  font: 900 13px "Arial Narrow", "Helvetica Neue", sans-serif;
+  letter-spacing: 0;
+}
+
+.minigame-frame-mission .minigame-result-title {
+  max-width: 760px;
+  margin: 8px 0 26px;
+  color: #fff;
+  font: 900 clamp(38px, 7vw, 88px) / 0.96 "Arial Narrow", "Helvetica Neue", sans-serif;
+  letter-spacing: 0;
+}
+
+.minigame-frame-mission .minigame-result-actions {
+  margin-top: 0;
+}
+
+.minigame-frame-mission .minigame-result-actions button {
+  min-height: 46px;
+  border-color: rgba(255, 255, 255, 0.48);
+  border-radius: 3px;
+  background: #151716;
+  font-family: "Arial Narrow", "Helvetica Neue", sans-serif;
+}
+
+.minigame-frame-mission .minigame-result-actions button:first-child {
+  border-color: #f6d65f;
+  background: #2a2618;
+}
+
 @media (orientation: landscape) and (max-height: 600px) {
   #minigame-overlay { padding: 4px; }
   .minigame-frame { width: min(100%, 900px); height: 100%; }
   .maze-status { height: 34px; font-size: 10px; }
   .maze-canvas-wrap { inset: 34px 0 0; }
   .bob-heist-hud { height: 34px; font-size: 10px; gap: 8px; padding: 0 8px; }
-  .bob-heist-game canvas { top: 34px; height: calc(100% - 34px); }
+  .minigame-frame-mission { width: calc(100vw - 8px); height: calc(100vh - 8px); }
   .bob-heist-3d .bob-heist-render canvas { top: 0; height: 100%; }
   .bob-heist-hint { bottom: 7px; font-size: 10px; }
-  .bob-heist-hud-3d { height: 44px; }
-  .bob-heist-face { width: 38px; height: 38px; font-size: 9px; }
+  .bob-heist-hud-3d { inset: 10px 12px auto; height: auto; }
   .bob-heist-minimap { width: 108px; height: 108px; left: 14px; bottom: 12px; }
-  .bob-heist-action { width: 62px; height: 62px; right: 16px; bottom: 15px; font-size: 26px; }
+  .bob-heist-touch-actions { right: 12px; bottom: 12px; transform: scale(0.78); transform-origin: right bottom; }
+  .bob-heist-controls { display: none; }
+  .bob-heist-progress { bottom: 44px; }
+}
+
+@media (pointer: coarse), (max-width: 760px) {
+  .bob-heist-stick { display: block; }
+  .bob-heist-minimap { left: 18px; bottom: 172px; width: 112px; height: 112px; }
+  .bob-heist-controls { display: none; }
+  .bob-heist-hud-3d { inset: 14px 14px auto; gap: 10px; }
+  .bob-heist-objective { min-width: 0; }
+  .bob-heist-objective strong { font-size: 13px; }
+  .bob-heist-money { min-width: 0; }
+  .bob-heist-money strong { font-size: 17px; }
+  .bob-heist-wanted { min-width: 100px; width: 120px; }
+  .bob-heist-wanted span { font-size: 8px; }
+  .bob-heist-hint {
+    bottom: 132px;
+    width: min(250px, calc(100% - 32px));
+    max-width: none;
+    font-size: 10px;
+  }
 }
