@@ -70,7 +70,10 @@
       "id": "origen",
       "nombre": "ORIGEN",
       "piso": 2,
-      "categoriaTN": "",
+      "categoriaTN": [
+        "37555117",
+        "37555129"
+      ],
       "productos": []
     },
     {
