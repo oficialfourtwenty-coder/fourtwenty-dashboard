@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "actualizado": "2026-07-13T18:09:17.123Z",
+  "actualizado": "2026-09-14T22:39:11.068Z",
   "origen": "tiendanube",
   "colecciones": [
     {
@@ -74,7 +74,678 @@
         "37555117",
         "37555129"
       ],
-      "productos": []
+      "productos": [
+        {
+          "id": "tn-331708297",
+          "productId": 331708297,
+          "nombre": "fourtwenty n' Black Mamba",
+          "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"fourtwenty\", en su edici&oacute;n \"Black Mamba\".",
+          "precio": "42000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1431-9efb74e29a8589bef317744734412708-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1431-9efb74e29a8589bef317744734412708-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/4321-d5f5bc035252c8290717744735649878-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07989-3-125e192106c61ab58817736023543357-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07719-11dc5b2ab5e1207ddb17736023146488-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc08889-d43f1c16f92a2f4a3917736024087592-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07113-47221437cfcbc5b81517736023913054-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07998-3f7abd326a9ea26e5c17736024325034-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc06018-ef03cb376d9ad018e517736023984185-1024-1024.jpg"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/remera-rap-street-cannabica/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1476115799,
+              "talle": "S / Edicion Black Mamba",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476115809,
+              "talle": "M / Edicion Black Mamba",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476115816,
+              "talle": "L / Edicion Black Mamba",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476115825,
+              "talle": "XL / Edicion Black Mamba",
+              "precio": "42000.00",
+              "stock": 0
+            }
+          ]
+        },
+        {
+          "id": "tn-331708600",
+          "productId": 331708600,
+          "nombre": "fourtwenty n' White Chocolate",
+          "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"fourtwenty\", en su edici&oacute;n \"White Chocolate\".",
+          "precio": "42000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/6661616-ccccb67bc4c6aca1ef17744749812973-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/6661616-ccccb67bc4c6aca1ef17744749812973-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/54132-de6e873ff48f6535cd17744749750462-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07969-2-dc1f91e4b7050f868817736065574023-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/nombre-de-archivo-perdido-3889-bc7bf23c7ed1b44b8c17736204073886-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc01099-474667d22715c8f76917736065632323-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc03123-4f82e78a135d07987a17736065707479-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc06841-529951923679aeff1c17736066099649-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc05019-88f6d2ff359f92cea117736065882527-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc06844-e26c1cd28e57e1fea717736065806739-1024-1024.jpg"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/fourtwenty-n-white-chocolate/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1476116898,
+              "talle": "S / Edición White Chocolate",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476116913,
+              "talle": "M / Edición White Chocolate",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476116933,
+              "talle": "L / Edición White Chocolate",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476116946,
+              "talle": "XL / Edición White Chocolate",
+              "precio": "42000.00",
+              "stock": 0
+            }
+          ]
+        },
+        {
+          "id": "tn-331752496",
+          "productId": 331752496,
+          "nombre": "fourtwenty n' Yin",
+          "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"fourtwenty\", en su color \"Yin\".",
+          "precio": "42000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/193832-4689bd6f704d4eae2d17744748758722-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/193832-4689bd6f704d4eae2d17744748758722-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/9182-35e8820a4004ae1d3717744748905965-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07982-3-ec0cb45c62aa17110017737014296461.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07848-fe8eb976ba4bb732d117736209836369-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc04207-5979cc3bfa8f32621417736206059855-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07071-c9f68a609e9b13b29117736208518213-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc08049-50fa55275633aa146717736210728753-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07644-1effd7c44cd742bd1917736208961302-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc06959-924115315f0baaaa9317736207029239-1024-1024.jpg"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/fourtwenty-n-yin/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1476355143,
+              "talle": "S / Yin",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476355181,
+              "talle": "M / Yin",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476355213,
+              "talle": "L / Yin",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476355221,
+              "talle": "XL / Yin",
+              "precio": "42000.00",
+              "stock": 0
+            }
+          ]
+        },
+        {
+          "id": "tn-331755232",
+          "productId": 331755232,
+          "nombre": "fourtwenty n' Yang",
+          "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"fourtwenty\", en su color \"Yang\".",
+          "precio": "42000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1112-c550ce58685f038c1817744730016025-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1112-c550ce58685f038c1817744730016025-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/11222-0fdecf35c264940b7f17744730961848-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc01674-4773bec5c359a7ae5017736228535564-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07992-2-da43e311aa316795f817737013633460-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc02750-f1e839c6cbd5e0f21917736228632118-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc08044-02c07f8524853300e817736230096995-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc02286-4c5830700cdb3e744517736228329781-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07904-2-1f3b4a7f95b7430f8717736230471532-1024-1024.jpg"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/fourtwenty-n-yang/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1476372408,
+              "talle": "S / Yin",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476372425,
+              "talle": "M / Yin",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476372439,
+              "talle": "L / Yin",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476372451,
+              "talle": "XL / Yin",
+              "precio": "42000.00",
+              "stock": 0
+            }
+          ]
+        },
+        {
+          "id": "tn-331763061",
+          "productId": 331763061,
+          "nombre": "chala n' Yang",
+          "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"chala\", en su color \"Yang\".",
+          "precio": "42000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1122-7eeee34451e011ff6617744728998412-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1122-7eeee34451e011ff6617744728998412-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/112-e371234b7eb9376a4c17744729108912-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07991-3-550a80a98c5305337917737013218749-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07082-c6b2e8d5b51704042017736231951326-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07991-4-e4cd990463101724b517736232499219-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc08034-e34d0bf330b8b4158e17736232173739-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07906-17578a94dd121bae5317736232729265-1024-1024.jpg"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/chala-n-yang/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1476426953,
+              "talle": "S / Yin",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476426962,
+              "talle": "M / Yin",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476426969,
+              "talle": "L / Yin",
+              "precio": "42000.00",
+              "stock": 2
+            },
+            {
+              "variantId": 1476426973,
+              "talle": "XL / Yin",
+              "precio": "42000.00",
+              "stock": 0
+            }
+          ]
+        },
+        {
+          "id": "tn-331764328",
+          "productId": 331764328,
+          "nombre": "chala n' Black Mamba",
+          "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"420\", en su Edicion \"Black Mamba\".",
+          "precio": "42000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1222-947c629ea6efba086917744724467610-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1222-947c629ea6efba086917744724467610-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/112-b1756e1d482b528ceb17744726282171-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07931-863523ba271da3900317737112351167-1024-1024.jpg"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/chala-n-black-mamba/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1476444602,
+              "talle": "S / Edicion Black Mamba",
+              "precio": "42000.00",
+              "stock": 1
+            },
+            {
+              "variantId": 1476444623,
+              "talle": "M / Edicion Black Mamba",
+              "precio": "42000.00",
+              "stock": 1
+            },
+            {
+              "variantId": 1476444640,
+              "talle": "L / Edicion Black Mamba",
+              "precio": "42000.00",
+              "stock": 2
+            },
+            {
+              "variantId": 1476444656,
+              "talle": "XL / Edicion Black Mamba",
+              "precio": "42000.00",
+              "stock": 1
+            }
+          ]
+        },
+        {
+          "id": "tn-331765801",
+          "productId": 331765801,
+          "nombre": "chala n' Yin",
+          "descripcion": "Remera de la colecci&oacute;n \"Origen\". El logo chala en versi&oacute;n Yin: el lado sereno, la pausa antes del movimiento. Prenda esencial para el d&iacute;a a d&iacute;a, f&aacute;cil de combinar. Eleg&iacute; tu talle abajo y llev&aacute; la filosof&iacute;a puesta.",
+          "precio": "42000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/2221-aefa9793f74d97a1dc17744737611372-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/2221-aefa9793f74d97a1dc17744737611372-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/222222-49214611a20b62d19517744739305452-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc06242-d9557395addd3915d617736238456812-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07980-3-712610586734772efc17737011935591-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc08053-1c56a891d3ed7b8db617736237989051-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc08025-561762b31730b2452f17736238864300-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07880-2-d9d96e9b55d2b6e90617736239219165-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07881-c460baa57d8e854be817736239082210-1024-1024.jpg"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/chala-n-yin/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1476445559,
+              "talle": "S / Yin",
+              "precio": "42000.00",
+              "stock": 4
+            },
+            {
+              "variantId": 1476445563,
+              "talle": "M / Yin",
+              "precio": "42000.00",
+              "stock": 6
+            },
+            {
+              "variantId": 1476445566,
+              "talle": "L / Yin",
+              "precio": "42000.00",
+              "stock": 4
+            },
+            {
+              "variantId": 1476445571,
+              "talle": "XL / Yin",
+              "precio": "42000.00",
+              "stock": 12
+            }
+          ]
+        },
+        {
+          "id": "tn-331766491",
+          "productId": 331766491,
+          "nombre": "chala n' White Chocolate",
+          "descripcion": "Remera de la colecci&oacute;n \"Origen\". El logo chala en edici&oacute;n White Chocolate: tonos claros, limpia y vers&aacute;til. Una base que va con todo y no pasa de moda. Eleg&iacute; tu talle y hacela tuya.",
+          "precio": "42000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/22112212-686c05e5db8085fbea17744740304115-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/22112212-686c05e5db8085fbea17744740304115-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/222222-6f57e3bd47d6afdbec17744739526272-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07968-3-fbfb67f96e93bf509317737011280463-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc04180-3a97632b56e6d8e53117736243634466-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07239-c891983e693b77950317736244078929-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc08028-2-e1bf92dd19a27c248217736244658276-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc06898-2d9f697eaeeee2c3b717736244538104-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07948-689d18a1b8817942e617736244980942-1024-1024.jpg"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/chala-n-white-chocolate/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1476450663,
+              "talle": "S / Edición White Chocolate",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1476450668,
+              "talle": "M / Edición White Chocolate",
+              "precio": "42000.00",
+              "stock": 5
+            },
+            {
+              "variantId": 1476450677,
+              "talle": "L / Edición White Chocolate",
+              "precio": "42000.00",
+              "stock": 5
+            },
+            {
+              "variantId": 1476450741,
+              "talle": "XL / Edición White Chocolate",
+              "precio": "42000.00",
+              "stock": 15
+            }
+          ]
+        },
+        {
+          "id": "tn-331969696",
+          "productId": 331969696,
+          "nombre": "420 n' Yin",
+          "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"420\", en su edici&oacute;n \"Yin\"\n\n\".",
+          "precio": "42000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/5155151-a3c61f410c28eed39217744743898045-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/5155151-a3c61f410c28eed39217744743898045-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/9182-78065712259050dbd117744745369489-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc05876-2d5a852b41b92038bc17737018065317-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07979-3-434a3c1e9d07355d3917737016705311-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc05811-e77452f2179691d29917737018274856-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc08002-2-1200e95d8866a8248f17737017543060-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07940-445540cbc0e63135f217737016787252-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc08011-8792c4a83ab1255c1f17737017644502-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07884-2-ebc311b6a0cd74d60917737017260266-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07885-30bdda86704b74aad617737017321137-1024-1024.jpg"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/420-n-yin/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1477295784,
+              "talle": "S / Yin",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1477295787,
+              "talle": "M / Yin",
+              "precio": "42000.00",
+              "stock": 1
+            },
+            {
+              "variantId": 1477295790,
+              "talle": "L / Yin",
+              "precio": "42000.00",
+              "stock": 1
+            },
+            {
+              "variantId": 1477295792,
+              "talle": "XL / Yin",
+              "precio": "42000.00",
+              "stock": 1
+            }
+          ]
+        },
+        {
+          "id": "tn-331980236",
+          "productId": 331980236,
+          "nombre": "420 n' Yang",
+          "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"420\", en su color \"Yang\".",
+          "precio": "42000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/420111-33d2587f4619f9886017744732600973-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/420111-33d2587f4619f9886017744732600973-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/11222-0a0a351b14938d40ff17744732765047-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07993-3-78ae2c0e957e2b9d9a17737061373498-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07178-f4dfb1cd18c0a2d15717737060075102-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07993-4-3852c4056bbee375bc17737061518871-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc08008-12133d3096db747f9117737061664244-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07995-284e5b1b0a3c5aa76d17737061559895-1024-1024.jpg"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/420-n-yang/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1477336410,
+              "talle": "S / Yang",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1477336412,
+              "talle": "M / Yang",
+              "precio": "42000.00",
+              "stock": 1
+            },
+            {
+              "variantId": 1477336421,
+              "talle": "L / Yang",
+              "precio": "42000.00",
+              "stock": 3
+            },
+            {
+              "variantId": 1477336423,
+              "talle": "XL / Yang",
+              "precio": "42000.00",
+              "stock": 0
+            }
+          ]
+        },
+        {
+          "id": "tn-331981741",
+          "productId": 331981741,
+          "nombre": "420 n' White Chocolate",
+          "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"420\", en su edici&oacute;n \"White Chocolate\".",
+          "precio": "42000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/12421-ba421d26afb21452a617744742847503-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/12421-ba421d26afb21452a617744742847503-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/54132-62344a380cc8966ecf17744742094037-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/captura-de-pantalla-2026-03-16-a-las-22-10-27-4cfc2aeb8cad05e44217737102112056-1024-1024.png"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/420-n-white-chocolate1/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1477337624,
+              "talle": "S / Edición White Chocolate",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1477337629,
+              "talle": "M / Edición White Chocolate",
+              "precio": "42000.00",
+              "stock": 1
+            },
+            {
+              "variantId": 1477337634,
+              "talle": "L / Edición White Chocolate",
+              "precio": "42000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1477337637,
+              "talle": "XL / Edición White Chocolate",
+              "precio": "42000.00",
+              "stock": 0
+            }
+          ]
+        },
+        {
+          "id": "tn-331992952",
+          "productId": 331992952,
+          "nombre": "420 n' Black Mamba",
+          "descripcion": "Remera de la colecci&oacute;n \"Origen\" con el sello 420 en edici&oacute;n Black Mamba: negro profundo, actitud directa. Calce urbano, lista para la calle. Eleg&iacute; tu talle y sumala al carrito.",
+          "precio": "42000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/123-e93d6ee87ada8b71b217744697826302-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/123-e93d6ee87ada8b71b217744697826302-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/4321-8153414c36fa52a29d17744735949631-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07988-4-4ba00fc736d0c0f0b317737113505673-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07063-3e69e769f8bf9b83f617737113889194-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07147-d7ec1b9417a1ea4abc17737113757405-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07988-af1841ec801b3a1f6617737113464280-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07899-2-f8d0f8fecd990fc77917737113643425-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc07896-2-76480604d854a5b59117737114212074-1024-1024.jpg"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/420-n-black-mamba/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1477368679,
+              "talle": "S / Edicion Black Mamba",
+              "precio": "42000.00",
+              "stock": 6
+            },
+            {
+              "variantId": 1477368680,
+              "talle": "M / Edicion Black Mamba",
+              "precio": "42000.00",
+              "stock": 2
+            },
+            {
+              "variantId": 1477368682,
+              "talle": "L / Edicion Black Mamba",
+              "precio": "42000.00",
+              "stock": 5
+            },
+            {
+              "variantId": 1477368684,
+              "talle": "XL / Edicion Black Mamba",
+              "precio": "42000.00",
+              "stock": 0
+            }
+          ]
+        },
+        {
+          "id": "tn-331994820",
+          "productId": 331994820,
+          "nombre": "Hoodie Origen",
+          "descripcion": "Hoodie n' color Verde de la primer coleccion \"Origen\". Sesion hecha en Amsterdam",
+          "precio": "73000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofverh-a8b8451548fbabe6ad17743087455125-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofverh-a8b8451548fbabe6ad17743087455125-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc00382-079c662871feec157017737119413792-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc00386-b6c945daaeddda73ce17737119601647-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc00447-b6187bc888ac6c4f7317737119978348-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/captura-de-pantalla-2026-03-16-a-las-22-47-03-0506b8b36f7ed559a417737120289732-1024-1024.png"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/hoodie-origen/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1477375536,
+              "talle": "S",
+              "precio": "73000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1477375537,
+              "talle": "M",
+              "precio": "73000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1477375538,
+              "talle": "L",
+              "precio": "73000.00",
+              "stock": 0
+            }
+          ]
+        },
+        {
+          "id": "tn-331994872",
+          "productId": 331994872,
+          "nombre": "Hoodie Origen",
+          "descripcion": "Hoodie n' color Verde de la primer coleccion \"Origen\". Sesion hecha en Amsterdam",
+          "precio": "73000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofazh-ef66b106fb5df6993317743080721828-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofazh-ef66b106fb5df6993317743080721828-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/captura-de-pantalla-2026-03-16-a-las-22-53-00-ff91624399da51946717737123910120-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/captura-de-pantalla-2026-03-16-a-las-22-53-28-d6dcdf9a017ab3efef17737124135606-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/captura-de-pantalla-2026-03-16-a-las-22-54-37-c6d5cd38842deae96f17737124823839-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc00514-69cbcbe82f283c45b717737125272133-1024-1024.jpg"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/hoodie-origen1/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1477375758,
+              "talle": "S",
+              "precio": "73000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1477375760,
+              "talle": "M",
+              "precio": "73000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1477375761,
+              "talle": "L",
+              "precio": "73000.00",
+              "stock": 0
+            }
+          ]
+        },
+        {
+          "id": "tn-331995921",
+          "productId": 331995921,
+          "nombre": "Hoodie Origen",
+          "descripcion": "Hoodie n' color negro, edicion Black Mamba, de la primer coleccion \"Origen\". Sesion hecha en Amsterdam",
+          "precio": "73000.00",
+          "moneda": "ARS",
+          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofmbh-5aa8a019948d04c9c917743077020357-1024-1024.png",
+          "imagenes": [
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofmbh-5aa8a019948d04c9c917743077020357-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/captura-de-pantalla-2026-03-16-a-las-22-58-24-d650c70aef1eb447f317737127093251-1024-1024.png",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc00366-8f0e42a05bd1397de617737126373339-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc00299-c8755a26d5f2f21fbf17737127247136-1024-1024.jpg",
+            "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc00315-eef187bba6457058fd17737126652066-1024-1024.jpg"
+          ],
+          "link": "https://www.fourtwentyofficial.com/productos/hoodie-origen2/",
+          "activo": true,
+          "variantes": [
+            {
+              "variantId": 1477378779,
+              "talle": "S / Negro",
+              "precio": "73000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1477378780,
+              "talle": "M / Negro",
+              "precio": "73000.00",
+              "stock": 0
+            },
+            {
+              "variantId": 1477378782,
+              "talle": "L / Negro",
+              "precio": "73000.00",
+              "stock": 0
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "hoop",
