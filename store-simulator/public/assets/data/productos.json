@@ -16,9 +16,10 @@
           "descripcion": "Remera de algodón peinado 24/1 con logo bordado. Prenda de ejemplo: editala desde el panel de administración (tecla P).",
           "precio": "42000",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/obsesionnegra-ead94eeed8092d0d8c17742324893867-1024-1024.webp",
+          "imagen": "assets/productos/local-1.webp",
           "link": "https://www.fourtwentyofficial.com/productos/fourtwenty-n-yang/",
-          "activo": true
+          "activo": true,
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/obsesionnegra-ead94eeed8092d0d8c17742324893867-1024-1024.webp"
         },
         {
           "id": "local-2",
@@ -82,7 +83,7 @@
           "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"fourtwenty\", en su edici&oacute;n \"Black Mamba\".",
           "precio": "42000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1431-9efb74e29a8589bef317744734412708-1024-1024.png",
+          "imagen": "assets/productos/tn-331708297.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1431-9efb74e29a8589bef317744734412708-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/4321-d5f5bc035252c8290717744735649878-1024-1024.png",
@@ -120,7 +121,8 @@
               "precio": "42000.00",
               "stock": 0
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1431-9efb74e29a8589bef317744734412708-1024-1024.png"
         },
         {
           "id": "tn-331708600",
@@ -129,7 +131,7 @@
           "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"fourtwenty\", en su edici&oacute;n \"White Chocolate\".",
           "precio": "42000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/6661616-ccccb67bc4c6aca1ef17744749812973-1024-1024.png",
+          "imagen": "assets/productos/tn-331708600.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/6661616-ccccb67bc4c6aca1ef17744749812973-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/54132-de6e873ff48f6535cd17744749750462-1024-1024.png",
@@ -168,7 +170,8 @@
               "precio": "42000.00",
               "stock": 0
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/6661616-ccccb67bc4c6aca1ef17744749812973-1024-1024.png"
         },
         {
           "id": "tn-331752496",
@@ -177,7 +180,7 @@
           "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"fourtwenty\", en su color \"Yin\".",
           "precio": "42000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/193832-4689bd6f704d4eae2d17744748758722-1024-1024.png",
+          "imagen": "assets/productos/tn-331752496.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/193832-4689bd6f704d4eae2d17744748758722-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/9182-35e8820a4004ae1d3717744748905965-1024-1024.png",
@@ -216,7 +219,8 @@
               "precio": "42000.00",
               "stock": 0
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/193832-4689bd6f704d4eae2d17744748758722-1024-1024.png"
         },
         {
           "id": "tn-331755232",
@@ -225,7 +229,7 @@
           "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"fourtwenty\", en su color \"Yang\".",
           "precio": "42000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1112-c550ce58685f038c1817744730016025-1024-1024.png",
+          "imagen": "assets/productos/tn-331755232.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1112-c550ce58685f038c1817744730016025-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/11222-0fdecf35c264940b7f17744730961848-1024-1024.png",
@@ -263,7 +267,8 @@
               "precio": "42000.00",
               "stock": 0
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1112-c550ce58685f038c1817744730016025-1024-1024.png"
         },
         {
           "id": "tn-331763061",
@@ -272,7 +277,7 @@
           "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"chala\", en su color \"Yang\".",
           "precio": "42000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1122-7eeee34451e011ff6617744728998412-1024-1024.png",
+          "imagen": "assets/productos/tn-331763061.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1122-7eeee34451e011ff6617744728998412-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/112-e371234b7eb9376a4c17744729108912-1024-1024.png",
@@ -309,7 +314,8 @@
               "precio": "42000.00",
               "stock": 0
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1122-7eeee34451e011ff6617744728998412-1024-1024.png"
         },
         {
           "id": "tn-331764328",
@@ -318,7 +324,7 @@
           "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"420\", en su Edicion \"Black Mamba\".",
           "precio": "42000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1222-947c629ea6efba086917744724467610-1024-1024.png",
+          "imagen": "assets/productos/tn-331764328.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1222-947c629ea6efba086917744724467610-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/112-b1756e1d482b528ceb17744726282171-1024-1024.png",
@@ -351,7 +357,8 @@
               "precio": "42000.00",
               "stock": 1
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/1222-947c629ea6efba086917744724467610-1024-1024.png"
         },
         {
           "id": "tn-331765801",
@@ -360,7 +367,7 @@
           "descripcion": "Remera de la colecci&oacute;n \"Origen\". El logo chala en versi&oacute;n Yin: el lado sereno, la pausa antes del movimiento. Prenda esencial para el d&iacute;a a d&iacute;a, f&aacute;cil de combinar. Eleg&iacute; tu talle abajo y llev&aacute; la filosof&iacute;a puesta.",
           "precio": "42000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/2221-aefa9793f74d97a1dc17744737611372-1024-1024.png",
+          "imagen": "assets/productos/tn-331765801.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/2221-aefa9793f74d97a1dc17744737611372-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/222222-49214611a20b62d19517744739305452-1024-1024.png",
@@ -398,7 +405,8 @@
               "precio": "42000.00",
               "stock": 12
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/2221-aefa9793f74d97a1dc17744737611372-1024-1024.png"
         },
         {
           "id": "tn-331766491",
@@ -407,7 +415,7 @@
           "descripcion": "Remera de la colecci&oacute;n \"Origen\". El logo chala en edici&oacute;n White Chocolate: tonos claros, limpia y vers&aacute;til. Una base que va con todo y no pasa de moda. Eleg&iacute; tu talle y hacela tuya.",
           "precio": "42000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/22112212-686c05e5db8085fbea17744740304115-1024-1024.png",
+          "imagen": "assets/productos/tn-331766491.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/22112212-686c05e5db8085fbea17744740304115-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/222222-6f57e3bd47d6afdbec17744739526272-1024-1024.png",
@@ -445,7 +453,8 @@
               "precio": "42000.00",
               "stock": 15
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/22112212-686c05e5db8085fbea17744740304115-1024-1024.png"
         },
         {
           "id": "tn-331969696",
@@ -454,7 +463,7 @@
           "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"420\", en su edici&oacute;n \"Yin\"\n\n\".",
           "precio": "42000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/5155151-a3c61f410c28eed39217744743898045-1024-1024.png",
+          "imagen": "assets/productos/tn-331969696.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/5155151-a3c61f410c28eed39217744743898045-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/9182-78065712259050dbd117744745369489-1024-1024.png",
@@ -494,7 +503,8 @@
               "precio": "42000.00",
               "stock": 1
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/5155151-a3c61f410c28eed39217744743898045-1024-1024.png"
         },
         {
           "id": "tn-331980236",
@@ -503,7 +513,7 @@
           "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"420\", en su color \"Yang\".",
           "precio": "42000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/420111-33d2587f4619f9886017744732600973-1024-1024.png",
+          "imagen": "assets/productos/tn-331980236.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/420111-33d2587f4619f9886017744732600973-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/11222-0a0a351b14938d40ff17744732765047-1024-1024.png",
@@ -540,7 +550,8 @@
               "precio": "42000.00",
               "stock": 0
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/420111-33d2587f4619f9886017744732600973-1024-1024.png"
         },
         {
           "id": "tn-331981741",
@@ -549,7 +560,7 @@
           "descripcion": "Remera de la colecci&oacute;n \"Origen\", esencial con el logotipo \"420\", en su edici&oacute;n \"White Chocolate\".",
           "precio": "42000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/12421-ba421d26afb21452a617744742847503-1024-1024.png",
+          "imagen": "assets/productos/tn-331981741.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/12421-ba421d26afb21452a617744742847503-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/54132-62344a380cc8966ecf17744742094037-1024-1024.png",
@@ -582,7 +593,8 @@
               "precio": "42000.00",
               "stock": 0
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/12421-ba421d26afb21452a617744742847503-1024-1024.png"
         },
         {
           "id": "tn-331992952",
@@ -591,7 +603,7 @@
           "descripcion": "Remera de la colecci&oacute;n \"Origen\" con el sello 420 en edici&oacute;n Black Mamba: negro profundo, actitud directa. Calce urbano, lista para la calle. Eleg&iacute; tu talle y sumala al carrito.",
           "precio": "42000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/123-e93d6ee87ada8b71b217744697826302-1024-1024.png",
+          "imagen": "assets/productos/tn-331992952.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/123-e93d6ee87ada8b71b217744697826302-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/4321-8153414c36fa52a29d17744735949631-1024-1024.png",
@@ -629,7 +641,8 @@
               "precio": "42000.00",
               "stock": 0
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/123-e93d6ee87ada8b71b217744697826302-1024-1024.png"
         },
         {
           "id": "tn-331994820",
@@ -638,7 +651,7 @@
           "descripcion": "Hoodie n' color Verde de la primer coleccion \"Origen\". Sesion hecha en Amsterdam",
           "precio": "73000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofverh-a8b8451548fbabe6ad17743087455125-1024-1024.png",
+          "imagen": "assets/productos/tn-331994820.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofverh-a8b8451548fbabe6ad17743087455125-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/dsc00382-079c662871feec157017737119413792-1024-1024.jpg",
@@ -667,7 +680,8 @@
               "precio": "73000.00",
               "stock": 0
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofverh-a8b8451548fbabe6ad17743087455125-1024-1024.png"
         },
         {
           "id": "tn-331994872",
@@ -676,7 +690,7 @@
           "descripcion": "Hoodie n' color Verde de la primer coleccion \"Origen\". Sesion hecha en Amsterdam",
           "precio": "73000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofazh-ef66b106fb5df6993317743080721828-1024-1024.png",
+          "imagen": "assets/productos/tn-331994872.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofazh-ef66b106fb5df6993317743080721828-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/captura-de-pantalla-2026-03-16-a-las-22-53-00-ff91624399da51946717737123910120-1024-1024.png",
@@ -705,7 +719,8 @@
               "precio": "73000.00",
               "stock": 0
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofazh-ef66b106fb5df6993317743080721828-1024-1024.png"
         },
         {
           "id": "tn-331995921",
@@ -714,7 +729,7 @@
           "descripcion": "Hoodie n' color negro, edicion Black Mamba, de la primer coleccion \"Origen\". Sesion hecha en Amsterdam",
           "precio": "73000.00",
           "moneda": "ARS",
-          "imagen": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofmbh-5aa8a019948d04c9c917743077020357-1024-1024.png",
+          "imagen": "assets/productos/tn-331995921.png",
           "imagenes": [
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofmbh-5aa8a019948d04c9c917743077020357-1024-1024.png",
             "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/captura-de-pantalla-2026-03-16-a-las-22-58-24-d650c70aef1eb447f317737127093251-1024-1024.png",
@@ -743,7 +758,8 @@
               "precio": "73000.00",
               "stock": 0
             }
-          ]
+          ],
+          "imagenRemota": "https://dcdn-us.mitiendanube.com/stores/002/069/705/products/ofmbh-5aa8a019948d04c9c917743077020357-1024-1024.png"
         }
       ]
     },
