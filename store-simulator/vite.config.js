@@ -12,6 +12,25 @@ import { buildMusicManifest } from './tools/musicManifest.mjs';
 //     llegan al navegador ni al bundle.
 // En el build de producción nada de esto existe: el juego lee el JSON
 // estático y el admin guarda en localStorage + Exportar.
+//
+// ⚠️⚠️ ESTOS ENDPOINTS SOLO ATIENDEN A LA PROPIA MAQUINA. Comprobado el 16/09
+// atacandolos de verdad: sin esta guarda, cualquiera en la misma red —un wifi
+// de bar, la red de un coworking— podia, SIN NINGUNA CREDENCIAL:
+//   · GET  /api/productos  → bajarse el catalogo entero
+//   · POST /api/productos  → PISAR productos.json en el disco (medido: quedo
+//                            una sola coleccion llamada "prueba-intrusion")
+//   · POST /api/estampa    → escribir archivos dentro del repo
+//   · GET  /api/tn/status  → ver el id de la tienda y si hay credenciales
+//   · POST /api/tn/sync    → disparar un sync con el token de Tiendanube
+//
+// Y no hacia falta que nadie escribiera `--host`: `server: { host: true }`
+// (mas abajo) hace que Vite escuche en la red POR DEFECTO. Medido: sin pasarle
+// ninguna opcion, anuncia `Network: http://192.0.2.2:5240/`.
+//
+// El host abierto se conserva a proposito —Kusher prueba el simulador desde el
+// celular por wifi (ver CLAUDE.md seccion 11)— asi que lo que se cierra son
+// los endpoints de escritura, no el servidor. El juego se sigue viendo desde
+// el telefono; lo que no se puede desde el telefono es administrar.
 function adminApiPlugin() {
   const productosPath = resolve(import.meta.dirname, 'public/assets/data/productos.json');
   const estampasDir = resolve(import.meta.dirname, 'public/assets/estampas');
@@ -23,12 +42,41 @@ function adminApiPlugin() {
     campana: 'public/assets/campana',
   };
 
+  // ⚠️ CON TOPE DE TAMAÑO. Sin tope, un cuerpo interminable llena la memoria
+  // del proceso hasta voltearlo: no hace falta ser hacker, alcanza con un bug.
+  // 12 MB entran de sobra para una estampa (100-400 KB) y para el catalogo.
+  const TOPE_CUERPO = 12 * 1024 * 1024;
   const readBody = (req) => new Promise((resolveBody, reject) => {
     let body = '';
-    req.on('data', (chunk) => { body += chunk; });
+    let bytes = 0;
+    req.on('data', (chunk) => {
+      bytes += chunk.length;
+      if (bytes > TOPE_CUERPO) {
+        req.destroy();
+        reject(new Error(`cuerpo demasiado grande (tope ${TOPE_CUERPO} bytes)`));
+        return;
+      }
+      body += chunk;
+    });
     req.on('end', () => resolveBody(body));
     req.on('error', reject);
   });
+
+  // ¿La peticion viene de esta misma computadora?
+  // ⚠️ Se mira la IP del socket, no una cabecera: `Host`, `Origin` y
+  // `X-Forwarded-For` los escribe quien llama y se falsifican escribiendolas.
+  // La IP del otro extremo de la conexion TCP no.
+  const ES_LOCAL = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+  function soloDeEstaMaquina(req, res) {
+    const quien = req.socket?.remoteAddress ?? '';
+    if (ES_LOCAL.has(quien)) return true;
+    json(res, 403, {
+      error: 'Esta funcion solo se puede usar desde la computadora donde corre el simulador.',
+      detalle: `pedido desde ${quien}`,
+    });
+    console.warn(`[seguridad] ${req.method} ${req.url} rechazado: viene de ${quien}, no de esta maquina.`);
+    return false;
+  }
 
   const json = (res, status, data) => {
     res.statusCode = status;
@@ -54,6 +102,7 @@ function adminApiPlugin() {
       });
 
       server.middlewares.use('/api/productos', async (req, res) => {
+        if (!soloDeEstaMaquina(req, res)) return;
         try {
           if (req.method === 'GET') {
             if (!existsSync(productosPath)) return json(res, 404, { error: 'productos.json no existe' });
@@ -89,6 +138,7 @@ function adminApiPlugin() {
       // (fotos de campaña para los cuadros). Por defecto estampas, para que la
       // llamada vieja siga funcionando igual.
       server.middlewares.use('/api/estampa', async (req, res) => {
+        if (!soloDeEstaMaquina(req, res)) return;
         if (req.method !== 'POST') return json(res, 405, { error: 'usar POST' });
         try {
           const { nombre, dataUrl, carpeta = 'estampas' } = JSON.parse(await readBody(req));
@@ -119,6 +169,7 @@ function adminApiPlugin() {
       });
 
       server.middlewares.use('/api/tn/status', async (req, res) => {
+        if (!soloDeEstaMaquina(req, res)) return;
         try {
           const { loadEnv, credencialesCompletas } = await import('./tools/tiendanube/api.mjs');
           const env = loadEnv(import.meta.dirname);
@@ -132,6 +183,7 @@ function adminApiPlugin() {
       });
 
       server.middlewares.use('/api/tn/sync', async (req, res) => {
+        if (!soloDeEstaMaquina(req, res)) return;
         if (req.method !== 'POST') return json(res, 405, { error: 'usar POST' });
         try {
           const { runSync } = await import('./tools/tiendanube/sync.mjs');
