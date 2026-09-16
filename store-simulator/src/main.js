@@ -66,7 +66,11 @@ const scene = new THREE.Scene();
 // cielo celeste de día despejado (spec); niebla lejana para ampliar el campo
 // visual sin que se recorte el mapa (las torres de fondo se ven).
 scene.background = new THREE.Color(0x9fc4e8);
-scene.fog = new THREE.Fog(0xb9d3ec, 30, 110);
+// ⚠️ LA NIEBLA Y EL ALCANCE DE LA CAMARA DEFINEN EL TAMAÑO DEL MUNDO.
+// Con la calle 3 veces mas ancha (CAMPO en street.js), pararse en una punta y
+// mirar a la otra son ~168 m: con el alcance viejo de 140 el otro extremo
+// simplemente NO SE DIBUJABA, y desde 110 ya era color de niebla plano.
+scene.fog = new THREE.Fog(0xb9d3ec, 45, 220);
 
 // Reflejos de ambiente (RoomEnvironment): les da vida a los PBR sin HDR externo.
 const pmrem = new THREE.PMREMGenerator(renderer);
@@ -76,7 +80,7 @@ scene.environmentIntensity = 0.22;
 
 let activeScene = scene;
 
-const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 140);
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 280);
 const editableColliderBox = new THREE.Box3();
 const editableColliderPartBox = new THREE.Box3();
 const editableColliderSize = new THREE.Vector3();

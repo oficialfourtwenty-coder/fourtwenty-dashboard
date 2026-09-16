@@ -74,7 +74,24 @@ export const SPAWN = new THREE.Vector3(0, 0, 6); // vereda, mirando a la galerí
 // Ojo: MAP_MIN_Z se calcula a partir de esto, asi que el limite del mundo se
 // corre solo y no hay que tocarlo aparte.
 const GAP_X0 = 0.4, GAP_X1 = LOCAL_HALF, GAP_STUB = 6;
-const MAP_HALF_X = FRENTE * MAP_SCALE;
+
+// ---- CUANTO CAMPO HAY PARA CAMINAR (pedido de Kusher, 16/09) --------------
+// "extender los limites un x3". Es el corral invisible donde puede andar BOB:
+// mas alla de esto hay paredes de colision que lo frenan, aunque el barrio
+// siga dibujado atras.
+//
+// ⚠️ SE ESTIRA SOLO A LO LARGO DE LA CALLE (el eje X), y hay una razon medida.
+// El piso —asfalto, vereda, plaza hexagonal, escalones, plataforma— esta todo
+// dibujado como `MAP_HALF_X * 2`, asi que al agrandar X el suelo se agranda
+// SOLO y BOB siempre pisa algo.
+// En Z no pasa lo mismo: el asfalto mide 10,1 m fijos y la vereda `Z_CURB-3.5`.
+// Estirar Z mandaria a BOB a caminar sobre el vacio a los pocos metros. Y el
+// fondo (MAP_MIN_Z) menos todavia: ahi esta la pared trasera del local con el
+// Stock selector y el ascensor.
+// Subir CAMPO a 4 o 5 sigue siendo seguro por la misma razon; lo que no se
+// puede es tocar el Z sin dibujar piso nuevo primero.
+const CAMPO = 3;
+const MAP_HALF_X = FRENTE * MAP_SCALE * CAMPO;
 const MAP_MIN_Z = (Z_LOCAL_BACK - GAP_STUB) * MAP_SCALE;
 const MAP_MAX_Z = (Z_CURB + 1) * MAP_SCALE;
 
