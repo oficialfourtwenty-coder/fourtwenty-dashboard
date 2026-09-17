@@ -5,9 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:lan": "vite --host 0.0.0.0",
     "avion": "vite --host 127.0.0.1 --port 5202 --strictPort",
-    "chala": "node tools/chala/server.mjs",
-    "vuelo": "node tools/chala/vuelo.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "tn:setup": "node tools/tiendanube/setup.mjs",

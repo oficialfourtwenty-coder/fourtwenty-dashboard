@@ -23,14 +23,9 @@ import { buildMusicManifest } from './tools/musicManifest.mjs';
 //   · GET  /api/tn/status  → ver el id de la tienda y si hay credenciales
 //   · POST /api/tn/sync    → disparar un sync con el token de Tiendanube
 //
-// Y no hacia falta que nadie escribiera `--host`: `server: { host: true }`
-// (mas abajo) hace que Vite escuche en la red POR DEFECTO. Medido: sin pasarle
-// ninguna opcion, anuncia `Network: http://192.0.2.2:5240/`.
-//
-// El host abierto se conserva a proposito —Kusher prueba el simulador desde el
-// celular por wifi (ver CLAUDE.md seccion 11)— asi que lo que se cierra son
-// los endpoints de escritura, no el servidor. El juego se sigue viendo desde
-// el telefono; lo que no se puede desde el telefono es administrar.
+// El servidor normal escucha solo en esta Mac. Para probar desde el celular en
+// una red propia y confiable hay que pedirlo explicitamente con `npm run
+// dev:lan`. La guarda por IP de los endpoints se conserva como segunda barrera.
 function adminApiPlugin() {
   const productosPath = resolve(import.meta.dirname, 'public/assets/data/productos.json');
   const estampasDir = resolve(import.meta.dirname, 'public/assets/estampas');
@@ -199,6 +194,6 @@ function adminApiPlugin() {
 
 export default defineConfig({
   base: './',
-  server: { host: true },
+  server: { host: '127.0.0.1' },
   plugins: [adminApiPlugin()],
 });
