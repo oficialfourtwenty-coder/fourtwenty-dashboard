@@ -112,7 +112,11 @@ export function streetSampleGround(x, z) {
 }
 
 export function isInsideLocal(pos) {
-  return pos.z < Z_FACADE;
+  const insideShop = pos.x > -LOCAL_HALF && pos.x < LOCAL_HALF
+    && pos.z < Z_FACADE && pos.z > Z_LOCAL_BACK;
+  const insideStockPocket = pos.x > GAP_X0 && pos.x < GAP_X1
+    && pos.z <= Z_LOCAL_BACK && pos.z > Z_LOCAL_BACK - GAP_STUB;
+  return insideShop || insideStockPocket;
 }
 
 // ---- Ayudantes decorativos --------------------------------------------------
