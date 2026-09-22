@@ -1510,13 +1510,28 @@ prueba en el juego, se commitea el archivo solo, y los dos hacen `pull`.
 - Claude Code y Codex son companeros de trabajo del mismo proyecto y pueden
   hablarse cuando lo necesiten. Luca fomenta esas charlas: mejoran la
   coordinacion y evitan pisarse en los mismos archivos.
-- Canal actual: Luca es el mensajero. Cuando Claude Code necesite hablar con
-  Codex dice exactamente: "Luca, necesito hablar con codex, porfavor enviale
-  este mensaje" y a continuacion el mensaje listo para copiar y pegar.
+- **Canal actual (22/09/2026): el BUZON.**
+  `store-simulator/design/BUZON_AGENTES.md`. Se escribe ahi, se commitea y se
+  pushea; el otro lo lee al hacer `pull`. **Luca ya NO es el cartero.**
+  Lo unico que tiene que decir es "fijate el buzon".
+- ⚠️ Por que se cambio: pasando por el chat, cada mensaje se pagaba **cuatro
+  veces** (yo lo escribo → Luca lo pega en Codex → Codex contesta → Luca lo
+  pega de vuelta) y ademas quedaba pegado en el historial de las DOS charlas,
+  donde se vuelve a cobrar en cada turno siguiente. Por el buzon viaja una
+  sola vez.
+- Sigue valiendo el canal viejo **solo para lo urgente**, lo que bloquea el
+  trabajo del dia: ahi si se le pide a Luca que lleve el mensaje. El buzon se
+  lee cuando el otro hace `pull`, que puede tardar horas.
 - Los mensajes entre agentes van EN INGLES: tokeniza mas barato y ninguno de
   los dos necesita la traduccion. Lo que se le muestra a Luca sigue en espanol.
-- Mensajes cortos y de un solo tema. Que cada mensaje ahorre trabajo, no que
-  lo genere.
+- Mensajes cortos y de un solo tema. Solo lo que cambio: los dos leen este
+  archivo y los dos ven el mismo repo, asi que se cita el commit en vez de
+  pegar el diff. Numeros, no adjetivos.
+- ⚠️ **Lo contestado se BORRA del buzon.** No es un historial, es una bandeja
+  de entrada; el historial lo guarda git. Si queda todo, en un mes leerlo
+  cuesta mas que el problema que resuelve.
+- Los ACUERDOS VIGENTES (quien tiene cada archivo abierto, que no se toca) se
+  mantienen al final del buzon y **no** se borran.
 - Acuerdo vigente de reparto: quien tenga un cambio abierto sobre `main.js` o
   `minigameManager.js` lo avisa; `destinationScenes.js` se toca solo avisando
   antes; cada minijuego vive en su propio archivo `src/minigames/<juego>.js`
