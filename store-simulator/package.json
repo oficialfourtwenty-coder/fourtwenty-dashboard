@@ -15,7 +15,8 @@
     "smoke": "node tools/smoke/recorrido.mjs",
     "diagnostico": "node tools/smoke/diagnostico-viajes.mjs",
     "modelos": "node tools/smoke/verificar-modelos.mjs",
-    "tn:fotos": "node tools/tiendanube/bajar-fotos.mjs"
+    "tn:fotos": "node tools/tiendanube/bajar-fotos.mjs",
+    "tn:probar": "node tools/tiendanube/probar-compra.mjs"
   },
   "dependencies": {
     "three": "0.184.0"
