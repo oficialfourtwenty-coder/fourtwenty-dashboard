@@ -1115,38 +1115,119 @@ Leer el detalle de intentos y decisiones en
 
 ## 7. Compra: requisito de lanzamiento
 
-Estado actual:
+### ✅ TIENDANUBE YA CONTESTO (04/09/2026) — ESTO YA NO ES UNA SUPOSICION
 
-- Existe base de productos, panel de producto y carrito visual.
-- Existe sincronizacion de catalogo Tiendanube para desarrollo.
-- No existe backend de produccion, checkout completo, cobro, webhook ni
-  sincronizacion de una venta real.
+La consulta escrita que esta seccion pedia hacer **se hizo y la contestaron**.
+Respondio Gonzalo F. del soporte de socios. Lo que dice manda sobre cualquier
+plan anterior, y en particular **deja sin efecto todo el diseño alrededor de
+Mercado Pago**.
 
-Experiencia objetivo:
+**1. NO se puede cobrar fuera del checkout oficial.** Ni siquiera siendo una
+app privada de la propia tienda. Textual: *"la plataforma restringe este
+comportamiento para mantener la seguridad e integridad del flujo de las
+ordenes"*. O sea que **no integramos Mercado Pago**: el pago lo cobra
+Tiendanube con los medios que Kusher ya tenga configurados en su tienda.
 
-1. BOB elige prendas dentro del mundo.
-2. El celular muestra carrito, talles, cantidades y total.
-3. Nombre, contacto, direccion y envio se completan dentro del simulador.
-4. El servidor vuelve a validar producto, stock, envio y precio.
-5. `Pagar` crea un checkout unico de Mercado Pago.
-6. El unico tramo externo deseado es confirmar el pago en Mercado Pago.
-7. Mercado Pago vuelve al simulador y un webhook confirma el estado real.
-8. Se muestra aprobado, pendiente o rechazado.
-9. El pedido se sincroniza con Tiendanube si la plataforma autoriza ese flujo.
+**2. El camino oficial es DRAFT ORDERS.** El recurso `Cart` NO sirve: solo lee
+o modifica carritos que creo el propio visitante navegando la tienda. Lo que
+si se puede:
 
-Reglas de seguridad:
+```
+POST /draft_orders   → con los datos del comprador y los productos
+                     → devuelve `checkout_url`
+```
 
+Se redirige al jugador a esa URL y paga en el checkout oficial. Scope
+`write_draft_orders` o `write_orders`.
+
+⚠️ Esto ademas resuelve los **productos no publicados** (`published: false`):
+no se pueden comprar por el carrito normal del storefront, pero SI por draft
+order. Es la via para vender algo exclusivo del simulador.
+
+**3. Los FT$ se gastan como CUPON, y esta soportado.** `POST /coupons` (scope
+`write_coupons`) y se aplica con `POST /checkouts/{cart_id}/coupon` (scope
+`read_orders` o `write_orders`). No hay tope de cupones por dia ni por mes;
+solo rige el limite general de la API.
+Esta era la pieza que faltaba de la economia FT$: el saldo vive en NUESTRO
+servidor y, al pagar, el servidor emite un cupon por ese monto. El navegador
+nunca decide cuanto.
+
+**4. El webhook de pago es `order/paid`** (o el macro `order/updated`).
+⚠️ **SE VALIDA CON EL CLIENT SECRET DE LA APP.** Tiendanube manda la cabecera
+`x-linkedstore-hmac-sha256` y hay que recalcular un HMAC-SHA256 sobre el
+**cuerpo CRUDO** del pedido, con el Client Secret como clave, y comparar.
+Ver la advertencia de seguridad mas abajo: esto cambia lo que significa que
+ese secreto se filtre.
+
+**5. Reconocer al comprador por mail:** `GET /customers?email=...`, scope
+`read_customers`. Sirve para reconocerlo, no para loguearlo — Tiendanube
+sigue sin tener login de clientes para apps externas.
+
+**6. Limite de peticiones:** balde con fugas, capacidad 40 y salida de 2 por
+segundo (x10 en planes Next o Evolution). El servidor tiene que encolar y
+esperar con retroceso exponencial ante un 429.
+
+**7. Ambiente de pruebas:** tienda demo gratis desde `partners.tiendanube.com`,
+y se le puede pedir a soporte que active el **Modo Desarrollador**, que
+habilita la seccion "Aplicacion de Prueba" en el admin de la tienda demo.
+
+### El flujo que queda, entonces
+
+1. BOB elige prendas en el mundo.
+2. El Banapod muestra carrito, talles y cantidades.
+3. `Pagar` → **nuestro servidor** crea un draft order con los `variant_id` y
+   las cantidades, y (si hay saldo FT$) emite y aplica el cupon.
+4. Tiendanube devuelve `checkout_url` y el jugador termina ahi.
+5. El webhook `order/paid`, **verificado por HMAC**, confirma.
+6. Se muestra aprobado, pendiente o rechazado.
+
+⚠️ **El precio ya no lo calculamos nosotros y eso es mejor.** Mandamos ids y
+cantidades; el precio, el stock y el envio los pone Tiendanube. La regla de
+"nunca confiar en el precio del navegador" se cumple sola.
+
+### ⚠️ Lo que NO contestaron y sigue abierto
+
+**La reserva de stock.** Un draft order no reserva: entre que se crea la URL y
+se paga, otro puede llevarse la ultima unidad. Con poco volumen no se nota;
+conviene preguntarlo antes de vender en serio.
+
+### Reglas de seguridad
+
+- ⚠️ **EL CLIENT SECRET AHORA ES LA LLAVE DEL DINERO.** Ya no es solo la
+  credencial de la app: es la clave con la que se firma el webhook de pago.
+  Quien la tenga puede **falsificar un "order/paid"** y hacer que el sistema
+  crea que le pagaron. El 10/09 ese secreto quedo escrito en un chat y
+  **todavia no se roto**. Rotarlo paso de higiene a **requisito antes de que
+  la compra salga a produccion**.
 - Nunca confiar en el precio enviado por el navegador.
-- Nunca poner credenciales de Tiendanube o Mercado Pago en frontend.
-- Nunca manejar datos crudos de tarjeta en codigo propio.
-- El redirect no prueba un pago: manda el webhook verificado.
-- Antes de produccion, consultar por escrito a Tiendanube si permite checkout
-  externo para una integracion privada de la propia tienda.
-- Si no lo permite, usar el checkout oficial de Tiendanube como respaldo.
-- Empezar con un producto, un talle y un envio sencillo en sandbox.
+- Nunca poner credenciales de Tiendanube en el frontend.
+- **No se manejan datos de tarjeta en ningun momento**: el pago ocurre entero
+  adentro del checkout de Tiendanube. Eso saca del medio todo el riesgo de
+  tarjetas, que antes era el punto mas delicado del plan viejo.
+- El redirect no prueba un pago: manda el webhook verificado por HMAC.
+- Verificar la firma sobre el **cuerpo crudo**. Si el servidor parsea el JSON
+  antes de calcular el HMAC, la firma no coincide nunca y la tentacion es
+  saltearse la validacion: ahi se abre la puerta.
+- Cada evento se procesa UNA sola vez (idempotencia): Tiendanube puede
+  reintentar el mismo webhook.
+- Empezar con un producto, un talle y un envio sencillo, en la tienda demo con
+  Modo Desarrollador.
 
-La forma final no esta cerrada. No asumir Mercado Pago Bricks, Checkout Pro o
-checkout Tiendanube hasta completar la prueba y validacion oficial.
+### Permisos que faltan pedir
+
+El token actual tiene solo `write_products`. Para todo lo de arriba hacen
+falta, desde "Datos basicos" en la configuracion de la app en partners:
+
+| scope | para que |
+|---|---|
+| `write_draft_orders` (o `write_orders`) | crear el pedido y obtener `checkout_url` |
+| `read_customers` | reconocer al comprador por mail |
+| `write_coupons` | emitir el cupon de FT$ |
+| `read_orders` | aplicar el cupon y leer el estado |
+
+⚠️ Al cambiar los scopes hay que **volver a autorizar la app** y canjear un
+`code` nuevo (`npm run tn:token -- <code>`). El token viejo no gana permisos
+solo.
 
 ## 8. Rendimiento, peso y Cloudflare
 
@@ -1484,7 +1565,10 @@ lanzamiento web deben cumplirse todos estos puntos:
   fase 2 del plan, junto con la compra y el login. Adelantarlo sin servidor
   deja el saldo en el navegador, donde cualquiera se lo edita.
 - No construir la plataforma multi-marca 2027.
-- No asumir una arquitectura de pago como aprobada.
+- La arquitectura de pago **ya esta definida por Tiendanube** (seccion 7,
+  respuesta del 04/09): draft orders + checkout oficial. **No volver a
+  proponer Mercado Pago, Bricks ni Checkout Pro**: no esta permitido cobrar
+  fuera de su checkout, ni siendo app privada de la propia tienda.
 - No reemplazar todo el mundo de una vez sin pedido directo; normalmente mostrar
   primero una prueba pequeña cuando el riesgo sea alto.
 - No subir musica sin permiso ni modelos sin revisar peso/licencia.
