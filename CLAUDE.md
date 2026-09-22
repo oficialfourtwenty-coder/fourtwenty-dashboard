@@ -11,6 +11,17 @@ y cualquier colaborador antes de trabajar. El dueno no programa: explicar los
 cambios con palabras simples, mostrar como probarlos y no asumir decisiones de
 producto que no esten escritas aqui.
 
+## 0. COMO CONTESTARLE A KUSHER (regla fija, 22/09/2026)
+
+- **Menos de 10 renglones SIEMPRE**, salvo que el pida expresamente que
+  desarrolles. Kusher lo pidio asi: respuestas cortas, sin relleno.
+- **Estilo "caveman" siempre**: sin articulos ni cortesias, frases cortas, al
+  grano. Se apaga solo si el dice "stop caveman" o pide que desarrolles.
+- Excepciones donde SI se escribe normal y completo: **avisos de seguridad**,
+  **confirmaciones de algo que no se puede deshacer**, y **pasos en orden**
+  donde recortar palabras haria dudar del orden.
+- El codigo, los commits y los mensajes para Codex se escriben normales.
+
 ## 1. Fuente de verdad y version oficial
 
 - Repositorio: `oficialfourtwenty-coder/fourtwenty-dashboard`.
