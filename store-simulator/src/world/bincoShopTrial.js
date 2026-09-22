@@ -4,6 +4,7 @@ import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
 import { bindProductVisual } from './productVisuals.js';
+import { cieloDePiso } from './cieloDePiso.js';
 
 const ROOM_W = 12;
 const ROOM_D = 18;
@@ -12,7 +13,9 @@ const ROOM_MIN_Z = -4.5;
 const ROOM_MAX_Z = 13.5;
 const ROOM_CENTER_Z = 4.5;
 const ROOM_HALF_W = ROOM_W / 2;
-const DEFAULT_ENVIRONMENT_URL = 'assets/environments/urban-alley-01-4k.exr';
+// ⚠️ YA NO HAY ARCHIVO POR DEFECTO — ver `world/cieloDePiso.js`. Un piso sin
+// panoramica propia recibe `backgroundUrl = null` y se dibuja el cielo por
+// codigo. Antes el respaldo era un EXR de 7,29 MB que ademas no tenia rango HDR.
 const sharedEnvironmentTextureCache = new Map();
 let sharedDestinationDaylight = null;
 
@@ -300,9 +303,9 @@ function addFluorescent(group, x, z, length, mats) {
 }
 
 export function addEditableHdriSphere(group, scene, {
-  backgroundUrl = DEFAULT_ENVIRONMENT_URL,
-  lightingUrl = DEFAULT_ENVIRONMENT_URL,
-  filename = 'urban-alley-01-4k.exr',
+  backgroundUrl = null,
+  lightingUrl = null,
+  filename = 'cielo generado (sin archivo)',
   custom = false,
 } = {}) {
   const environmentRoot = new THREE.Group();
@@ -330,13 +333,18 @@ export function addEditableHdriSphere(group, scene, {
     let background;
     let customTextureLoaded = false;
     try {
-      background = custom
-        ? await loadEquirectangularTexture(backgroundUrl)
-        : await loadSharedEnvironmentTexture(backgroundUrl);
-      customTextureLoaded = custom;
+      // Sin archivo propio no se descarga nada: el cielo se dibuja por codigo.
+      background = backgroundUrl
+        ? (custom
+          ? await loadEquirectangularTexture(backgroundUrl)
+          : await loadSharedEnvironmentTexture(backgroundUrl))
+        : cieloDePiso();
+      customTextureLoaded = custom && !!backgroundUrl;
     } catch (error) {
-      console.warn(`No se pudo cargar la esfera ${filename}; se usara la esfera base.`, error);
-      background = await loadSharedEnvironmentTexture(DEFAULT_ENVIRONMENT_URL);
+      // ⚠️ El respaldo ya no es otra descarga que tambien puede fallar: es el
+      // cielo generado, que no puede fallar porque no depende de la red.
+      console.warn(`No se pudo cargar la esfera ${filename}; se usara el cielo generado.`, error);
+      background = cieloDePiso();
     }
 
     if (scene.userData.disposed) {
@@ -349,7 +357,9 @@ export function addEditableHdriSphere(group, scene, {
     }
 
     material.map = background;
-    material.toneMapped = isHdrEnvironment(customTextureLoaded ? backgroundUrl : DEFAULT_ENVIRONMENT_URL);
+    // El cielo generado ya sale en sRGB, igual que una panoramica WebP: no se
+    // le aplica tone mapping. Solo un HDR real lo necesita.
+    material.toneMapped = customTextureLoaded && isHdrEnvironment(backgroundUrl);
     material.color.setHex(0xffffff);
     material.needsUpdate = true;
 
@@ -361,7 +371,7 @@ export function addEditableHdriSphere(group, scene, {
         lighting = await loadSharedEnvironmentTexture(lightingUrl);
       } catch (error) {
         console.warn('No se pudo cargar la iluminacion de la esfera; se conserva la luz base.', error);
-        lighting = await loadSharedEnvironmentTexture(DEFAULT_ENVIRONMENT_URL);
+        lighting = cieloDePiso();
       }
     }
     if (scene.userData.disposed) return;

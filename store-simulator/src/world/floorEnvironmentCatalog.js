@@ -3,7 +3,13 @@ const environmentAssets = import.meta.glob(
   { eager: true, query: '?url', import: 'default' },
 );
 
-const DEFAULT_ENVIRONMENT_URL = 'assets/environments/urban-alley-01-4k.exr';
+// ⚠️ NO HAY MAS ARCHIVO POR DEFECTO. Antes era `urban-alley-01-4k.exr`
+// (7.288.874 bytes, un callejon con graffitis). Kusher decidio el 22/09/2026 no
+// usarlo en ningun piso, y ademas estaba medido que no tenia rango HDR: era una
+// foto comun aplastada adentro de un contenedor de 16 bits. Se borro.
+// Cuando un piso no trae panoramica propia, `backgroundUrl` y `lightingUrl`
+// vuelven en null y la esfera se dibuja con `cieloDePiso()`, por codigo, sin
+// descargar nada. Ver `world/cieloDePiso.js`.
 const FLOOR_FOLDERS = Object.freeze({
   1: '1-origen',
   2: '2-hoop-season',
@@ -40,9 +46,9 @@ export function environmentForDestination(destinationId) {
   const selected = folder ? imageForFolder(folder) : null;
   if (!selected) {
     return {
-      backgroundUrl: DEFAULT_ENVIRONMENT_URL,
-      lightingUrl: DEFAULT_ENVIRONMENT_URL,
-      filename: 'urban-alley-01-4k.exr',
+      backgroundUrl: null,
+      lightingUrl: null,
+      filename: 'cielo generado (sin archivo)',
       custom: false,
     };
   }
