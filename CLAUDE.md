@@ -1134,23 +1134,38 @@ si se puede:
 
 ```
 POST /draft_orders   → con los datos del comprador y los productos
-                     → devuelve `checkout_url`
+                     → devuelve una URL de pago
 ```
 
-Se redirige al jugador a esa URL y paga en el checkout oficial. Scope
-`write_draft_orders` o `write_orders`.
+Se redirige al jugador a esa URL y paga en el checkout oficial.
+
+⚠️ **DOS NOMBRES QUE NO COINCIDEN Y HAY QUE CONFIRMAR CON UNA LLAMADA REAL:**
+- Gonzalo dice que el campo es `checkout_url`. La documentacion publica del
+  recurso Draft Order habla de **`abandoned_checkout_url`**. Puede ser lo
+  mismo con otro nombre, o no.
+- Gonzalo dice scope `write_draft_orders` **o** `write_orders`. En la
+  documentacion aparece `write_orders`; puede que `write_draft_orders` no
+  exista como permiso separado. Mirar que casillas ofrece de verdad partners.
+
+Ninguna de las dos cosas cambia el plan: se resuelven con UNA llamada contra
+la tienda demo. Pero no escribir codigo asumiendo el nombre del campo.
 
 ⚠️ Esto ademas resuelve los **productos no publicados** (`published: false`):
 no se pueden comprar por el carrito normal del storefront, pero SI por draft
 order. Es la via para vender algo exclusivo del simulador.
 
-**3. Los FT$ se gastan como CUPON, y esta soportado.** `POST /coupons` (scope
-`write_coupons`) y se aplica con `POST /checkouts/{cart_id}/coupon` (scope
-`read_orders` o `write_orders`). No hay tope de cupones por dia ni por mes;
-solo rige el limite general de la API.
-Esta era la pieza que faltaba de la economia FT$: el saldo vive en NUESTRO
-servidor y, al pagar, el servidor emite un cupon por ese monto. El navegador
-nunca decide cuanto.
+**3. Los cupones por API existen.** `POST /coupons` (scope `write_coupons`) y
+se aplican con `POST /checkouts/{cart_id}/coupon` (scope `read_orders` o
+`write_orders`). No hay tope de cupones por dia ni por mes; solo rige el
+limite general de la API.
+
+⚠️ **PERO QUE ESO SIRVA PARA LOS FT$ ES UNA SUPOSICION NUESTRA, NO ALGO QUE
+HAYAN DICHO.** Gonzalo describio aplicar un cupon a un CARRITO ACTIVO
+(`/checkouts/{cart_id}/coupon`). Un draft order NO es un carrito del
+storefront: son dos objetos distintos. **Nadie confirmo que se le pueda pegar
+un cupon a un draft order.** Es la pieza que haria funcionar la economia FT$
+y esta SIN VERIFICAR. Si no se puede, el descuento habria que meterlo como
+linea o precio del propio draft order, o preguntarlo de nuevo.
 
 **4. El webhook de pago es `order/paid`** (o el macro `order/updated`).
 ⚠️ **SE VALIDA CON EL CLIENT SECRET DE LA APP.** Tiendanube manda la cabecera
