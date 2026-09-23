@@ -1150,40 +1150,48 @@ POST /draft_orders   → con los datos del comprador y los productos
 
 Se redirige al jugador a esa URL y paga en el checkout oficial.
 
-⚠️ **DOS NOMBRES QUE NO COINCIDEN Y HAY QUE CONFIRMAR CON UNA LLAMADA REAL:**
-- Gonzalo dice que el campo es `checkout_url`. La documentacion publica del
-  recurso Draft Order habla de **`abandoned_checkout_url`**. Puede ser lo
-  mismo con otro nombre, o no.
-- Gonzalo dice scope `write_draft_orders` **o** `write_orders`. En la
-  documentacion aparece `write_orders`; puede que `write_draft_orders` no
-  exista como permiso separado. Mirar que casillas ofrece de verdad partners.
+⚠️ **UN NOMBRE POR CONFIRMAR CON UNA LLAMADA REAL:** Gonzalo dice que el campo
+es `checkout_url`. La documentacion publica del recurso Draft Order habla de
+**`abandoned_checkout_url`**. Puede ser lo mismo con otro nombre, o no.
+El scope se resuelve mirando que casillas ofrece de verdad partners (Gonzalo
+menciono `write_draft_orders` o `write_orders`; en la doc solo aparece
+`write_orders`, puede que el otro no exista como permiso separado).
 
-Ninguna de las dos cosas cambia el plan: se resuelven con UNA llamada contra
-la tienda demo. Pero no escribir codigo asumiendo el nombre del campo.
+Esto se resuelve con UNA llamada contra la tienda demo. Pero no escribir
+codigo asumiendo el nombre del campo.
 
 ⚠️ Esto ademas resuelve los **productos no publicados** (`published: false`):
 no se pueden comprar por el carrito normal del storefront, pero SI por draft
 order. Es la via para vender algo exclusivo del simulador.
 
-**3. Los cupones por API existen.** `POST /coupons` (scope `write_coupons`) y
-se aplican con `POST /checkouts/{cart_id}/coupon` (scope `read_orders` o
-`write_orders`). No hay tope de cupones por dia ni por mes; solo rige el
-limite general de la API.
+**3. Los FT$ se descuentan DENTRO del draft order — no con cupon.**
+Confirmado por Gonzalo el 23/09/2026. El endpoint `POST /checkouts/{cart_id}/coupon`
+trabaja SOLO sobre carritos activos del storefront, no sobre draft orders.
 
-⚠️ **PERO QUE ESO SIRVA PARA LOS FT$ ES UNA SUPOSICION NUESTRA, NO ALGO QUE
-HAYAN DICHO.** Gonzalo describio aplicar un cupon a un CARRITO ACTIVO
-(`/checkouts/{cart_id}/coupon`). Un draft order NO es un carrito del
-storefront: son dos objetos distintos. **Nadie confirmo que se le pueda pegar
-un cupon a un draft order.** Es la pieza que haria funcionar la economia FT$
-y esta SIN VERIFICAR. Si no se puede, el descuento habria que meterlo como
-linea o precio del propio draft order, o preguntarlo de nuevo.
+La forma correcta es inyectar el descuento en el cuerpo del propio
+`POST /draft_orders` con dos parametros:
+- `discount`: el monto o el porcentaje
+- `discount_type`: `"percentage"` o `"absolute"`
+
+⚠️ Esto es MEJOR que la via del cupon: menos objetos que crear (no hace falta
+emitir un cupon aparte por cada compra), no hace falta el scope
+`write_coupons`, y el descuento queda atado al pedido, no puede reusarse ni
+compartirse por accidente. Los FT$ se calculan en el servidor y se meten como
+`discount` al crear el pedido, punto.
 
 **4. El webhook de pago es `order/paid`** (o el macro `order/updated`).
 ⚠️ **SE VALIDA CON EL CLIENT SECRET DE LA APP.** Tiendanube manda la cabecera
 `x-linkedstore-hmac-sha256` y hay que recalcular un HMAC-SHA256 sobre el
 **cuerpo CRUDO** del pedido, con el Client Secret como clave, y comparar.
-Ver la advertencia de seguridad mas abajo: esto cambia lo que significa que
-ese secreto se filtre.
+
+⚠️ **PERO EL HMAC SOLO NO ALCANZA — HAY QUE PEDIR EL PEDIDO A LA API.**
+Confirmado por Gonzalo el 23/09/2026 como buena practica de seguridad:
+despues de validar la firma, el backend hace `GET /orders/{id}`, verifica que
+el pedido exista, que corresponda al `store_id`, y que `payment_status` diga
+`"paid"`. Sin ese chequeo, cualquiera que tenga el Client Secret podria
+firmar un `order/paid` inventado y cobrarnos con FT$ un pedido que no existe.
+Con el chequeo, ademas de la firma tendria que haber creado el pedido en
+Tiendanube, cosa que no puede hacer sin autenticarse.
 
 **5. Reconocer al comprador por mail:** `GET /customers?email=...`, scope
 `read_customers`. Sirve para reconocerlo, no para loguearlo — Tiendanube
@@ -1211,20 +1219,34 @@ habilita la seccion "Aplicacion de Prueba" en el admin de la tienda demo.
 cantidades; el precio, el stock y el envio los pone Tiendanube. La regla de
 "nunca confiar en el precio del navegador" se cumple sola.
 
-### ⚠️ Lo que NO contestaron y sigue abierto
+### ✅ Reserva de stock — contestado (23/09/2026)
 
-**La reserva de stock.** Un draft order no reserva: entre que se crea la URL y
-se paga, otro puede llevarse la ultima unidad. Con poco volumen no se nota;
-conviene preguntarlo antes de vender en serio.
+`POST /draft_orders` acepta el parametro `inventory_behaviour`:
+- `"bypass"` (por defecto): NO reserva; el stock se descuenta recien cuando el
+  pago se confirma.
+- `"claim"`: reserva la unidad en el momento de crear el borrador.
+
+Para el simulador usamos `"claim"`: entre que BOB genera el link de pago y el
+comprador termina el checkout de Tiendanube pueden pasar varios minutos, y no
+queremos que dos personas paguen la misma remera. Si algun dia hace falta
+control mas fino (por ejemplo soltar la reserva a los N minutos), Tiendanube
+tiene ademas el callback `cart/before-update` con comandos `stock_limit`.
 
 ### Reglas de seguridad
 
-- ⚠️ **EL CLIENT SECRET AHORA ES LA LLAVE DEL DINERO.** Ya no es solo la
-  credencial de la app: es la clave con la que se firma el webhook de pago.
-  Quien la tenga puede **falsificar un "order/paid"** y hacer que el sistema
-  crea que le pagaron. El 10/09 ese secreto quedo escrito en un chat y
-  **todavia no se roto**. Rotarlo paso de higiene a **requisito antes de que
-  la compra salga a produccion**.
+- ⚠️ **EL CLIENT SECRET NO SE PUEDE REGENERAR** — confirmado por Gonzalo el
+  23/09/2026, textual: "no es posible regenerar el Client Secret desde el
+  portal de partners". La unica salida cuando queda expuesto es **crear una
+  aplicacion nueva** (nuevo App ID y nuevo Client Secret) y volver a
+  autorizarla en la tienda. El del 10/09 quedo escrito en un chat, asi que
+  hay que hacer la app nueva de cero. Va a pasar igual cuando la primera app
+  se autorice, porque los scopes tambien se piden ahi.
+- ⚠️ **Ese secreto es la llave del dinero:** con el se firma el webhook de
+  pago. Sin la defensa doble (HMAC + `GET /orders/{id}` con
+  `payment_status: "paid"`) cualquiera que lo tenga puede falsificar un
+  `order/paid`. Con la defensa doble, ademas de la firma tendria que haber
+  logrado crear el pedido en Tiendanube, cosa que no puede hacer sin
+  autenticarse.
 - Nunca confiar en el precio enviado por el navegador.
 - Nunca poner credenciales de Tiendanube en el frontend.
 - **No se manejan datos de tarjeta en ningun momento**: el pago ocurre entero
@@ -1246,10 +1268,13 @@ falta, desde "Datos basicos" en la configuracion de la app en partners:
 
 | scope | para que |
 |---|---|
-| `write_draft_orders` (o `write_orders`) | crear el pedido y obtener `checkout_url` |
+| `write_draft_orders` (o `write_orders`) | crear el pedido con `discount` incluido y obtener `checkout_url` |
+| `read_orders` | el `GET /orders/{id}` que confirma que el pago existe de verdad |
 | `read_customers` | reconocer al comprador por mail |
-| `write_coupons` | emitir el cupon de FT$ |
-| `read_orders` | aplicar el cupon y leer el estado |
+
+⚠️ **YA NO hace falta `write_coupons`.** Se pedia para emitir el cupon de FT$,
+pero el 23/09/2026 se confirmo que el descuento va DENTRO del propio draft
+order (parametros `discount` + `discount_type`). Un permiso menos que pedir.
 
 ⚠️ Al cambiar los scopes hay que **volver a autorizar la app** y canjear un
 `code` nuevo (`npm run tn:token -- <code>`). El token viejo no gana permisos
