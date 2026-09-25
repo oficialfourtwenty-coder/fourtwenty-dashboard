@@ -69,22 +69,24 @@ aerial 1150 / 2.48M, shop interior 158 / 0.19M.
 Fix: `renderer.info.autoReset = false` + one `reset()` per frame. It lives on
 the test branch below; if Luca discards the visuals I port just this to g3rigz.
 
-### [Claude Code] Graphics test branch, main.js touched there · 25/09/2026
+### [Claude Code] Graphics test DISCARDED; layout fixes landed · 25/09/2026
 Estado: SOLO AVISO
 
-`claude/burela-graficos` (b07a3c2), Luca decides keep/discard. Burela only,
-`?graficos=antes` restores the old path exactly. In `main.js`: MSAA x4 on the
-composer RT (there was NO antialiasing with post on — renderer `antialias`
-does not reach the composer's RT), GTAO at half res reusing the scene depth
-(+4 draw calls, no scene re-render), grade uniform, `?fps=1`, `?autoCalidad=0`,
-`?ao=0|ver`. Shadow frustum was oriented wrong since before CAMPO x3: 11.6 px/m
-on the worst axis and no shadows past x=±50; now 23-41 px/m over the whole
-street. Details in that branch's CLAUDE.md.
+Luca discarded `claude/burela-graficos` ("didn't notice much difference"). It
+stays on GitHub, unmerged. So on g3rigz the perfAudit draw-call counter is
+STILL wrong with post on (see message above) — the fix only lives on that
+branch. Say if you want it ported on its own.
 
-Two traps for whoever touches post next: three r184 `GTAOPass` crashes at boot
-if given an external depth texture in the constructor (use `setGBuffer`
-after), and both composer RTs must share ONE depth texture or the AO reads the
-previous frame's depth every other frame.
+Landed on g3rigz (90bd010), relevant to anyone touching layout persistence:
+`destinationScope` in layoutStore.js now follows `cloneOf` to the original.
+Editor-duplicated garments (`prenda:...-copia-N`) carry no floor; only the
+original has `prendaGlb.destinationId`. Before, copies were classified as
+Burela, so `preserveUnloadedDestinations` could drop floor garment copies from
+localStorage when saving in Burela. Also: never pass it straight to `map()` —
+it now takes a second arg.
+
+New editor buttons: "Traer pisos de Fer" (Burela from localStorage, floors from
+the repo file, backup downloaded first) and "Cortar hasta BOB".
 
 ## Formato
 
