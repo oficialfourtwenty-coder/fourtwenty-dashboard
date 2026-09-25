@@ -9,6 +9,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildStreet, SPAWN, isInsideLocal, streetSampleGround, STREET_BOUNDS, LOCAL_BOUNDS, CEILING_OUT, CEILING_IN } from './world/street.js';
 import { buildBuilding, buildLights, getColliders, sampleGround as shopSampleGround, floorIndexAt, FLOOR_YS, FLOOR_H, INTERIOR } from './world/building.js';
@@ -47,12 +48,19 @@ import { createCartStore } from './data/cartStore.js';
 import { createPhone } from './ui/phone.js';
 import { initMobileControls } from './ui/mobileControls.js';
 import { createDayNightCycle } from './world/dayNightCycle.js';
+import { crearGraficosBurela, GRAFICOS_NUEVOS } from './world/graficosBurela.js';
+import { crearContadorFps } from './ui/contadorFps.js';
 import { createMinigameManager } from './minigames/minigameManager.js';
 import { loadMinigame, getMinigameName } from './minigames/registry.js';
 
 const URL_PARAMS = new URLSearchParams(location.search);
 const QUALITY = URL_PARAMS.get('q') === 'low' ? 'low' : 'high';
 const PERF_AUDIT = URL_PARAMS.get('perfAudit') === '1';
+// `?autoCalidad=0` apaga el auto-downgrade. Lo usan las fotos de antes/despues
+// (`tools/smoke/fotos-burela.mjs`): el navegador de pruebas dibuja por SOFTWARE,
+// "detecta" que va lento y apaga sombras y postproceso a mitad de la sesion, y
+// las fotos saldrian sin lo que se esta queriendo comparar.
+const AUTO_CALIDAD = URL_PARAMS.get('autoCalidad') !== '0';
 
 const canvas = document.getElementById('game');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: QUALITY === 'high' });
@@ -161,21 +169,49 @@ function sampleStepHeight(x, z, footY, steppables) {
 
 // ---- Post-processing (bloom sutil + grade cálido + viñeta, estilo GTA V) ----
 const GradeShader = {
-  uniforms: { tDiffuse: { value: null } },
+  // `uNuevo` = 1 solo en Burela con los graficos nuevos (ver graficosBurela.js).
+  // Los pisos siguen con el grade de siempre: son de Fer y la Terraza esta
+  // aprobada asi.
+  uniforms: { tDiffuse: { value: null }, uNuevo: { value: 0 } },
   vertexShader: /* glsl */`
     varying vec2 vUv;
     void main() {
       vUv = uv;
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }`,
+  // ⚠️ Esto corre ANTES del tone mapping (lo hace el OutputPass al final), o
+  // sea sobre luz LINEAL sin techo: un 0,18 es un gris medio y un 3,0 es el sol
+  // reflejado en un vidrio. Por eso el contraste se hace alrededor de 0,18 y no
+  // de 0,5, que es el gris medio de una pantalla y no de la luz.
   fragmentShader: /* glsl */`
     uniform sampler2D tDiffuse;
+    uniform float uNuevo;
     varying vec2 vUv;
     void main() {
       vec3 c = texture2D(tDiffuse, vUv).rgb;
       float lum = dot(c, vec3(0.299, 0.587, 0.114));
-      c = mix(vec3(lum), c, 1.12);                    // +saturación
-      c *= mix(vec3(1.0), vec3(1.05, 1.0, 0.92), smoothstep(0.35, 1.0, lum)); // altas luces cálidas
+
+      // Grade de siempre (pisos, interior del local, y ?graficos=antes).
+      vec3 viejo = mix(vec3(lum), c, 1.12);                    // +saturación
+      viejo *= mix(vec3(1.0), vec3(1.05, 1.0, 0.92), smoothstep(0.35, 1.0, lum)); // altas luces cálidas
+
+      // Grade nuevo de la calle.
+      // Contraste de pelicula: separa lo que esta al sol de lo que esta a la
+      // sombra sin aplastar los negros.
+      vec3 nuevo = 0.18 * pow(max(c / 0.18, vec3(0.0)), vec3(1.10));
+      float lumN = dot(nuevo, vec3(0.299, 0.587, 0.114));
+      nuevo = mix(vec3(lumN), nuevo, 1.08);
+      // Sombras levemente frias y luces tibias: la sombra de un dia de sol la
+      // ilumina el cielo (azul) y lo iluminado lo pinta el sol (tibio). Es el
+      // reparto de color de las calles de GTA V.
+      float sombra = 1.0 - smoothstep(0.02, 0.22, lumN);
+      float luz = smoothstep(0.30, 1.40, lumN);
+      nuevo *= mix(vec3(1.0), vec3(0.93, 0.99, 1.07), sombra * 0.9);
+      nuevo *= mix(vec3(1.0), vec3(1.07, 1.01, 0.91), luz);
+
+      // Se MEZCLA, no se elige: al entrar al local pasa de uno al otro en
+      // ~0,6 s en vez de cambiar de golpe (ver graficosBurela.seguirInterior).
+      c = mix(viejo, nuevo, uNuevo);
       float d = distance(vUv, vec2(0.5));
       c *= 1.0 - smoothstep(0.55, 0.95, d) * 0.32;    // viñeta leve
       gl_FragColor = vec4(c, 1.0);
@@ -185,13 +221,62 @@ const GradeShader = {
 let composer = null;
 let bloomPass = null;
 let renderPass = null;
+let gradePass = null;
+let aoPass = null;
 if (QUALITY === 'high') {
-  composer = new EffectComposer(renderer);
+  // ⚠️ SIN ESTO NO HABIA ANTIALIASING CON POSTPROCESO. El `antialias: true` del
+  // renderer solo vale cuando se dibuja DIRECTO a la pantalla; con el composer
+  // la escena se dibuja primero en una imagen intermedia, y esa venia sin
+  // suavizado: todos los bordes (autos, arboles, marcos) salian serruchados en
+  // calidad alta, justo la calidad buena. Se le pide multimuestreo x4 a esa
+  // imagen. En la Mac (GPU de tipo "tiles") el multimuestreo es casi gratis.
+  const imagenEscena = GRAFICOS_NUEVOS
+    ? new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 })
+    : undefined;
+  // La profundidad de la escena se guarda en una textura para la oclusion
+  // ambiental de abajo. Es la MISMA que ya se calcula para dibujar: no cuesta
+  // un segundo dibujado de la escena.
+  if (imagenEscena) imagenEscena.depthTexture = new THREE.DepthTexture(1, 1);
+  composer = new EffectComposer(renderer, imagenEscena);
+  // ⚠️ Las dos imagenes del composer comparten UNA textura de profundidad. El
+  // composer va alternando en cual dibuja la escena (cuantos pases "dan vuelta"
+  // la imagen por cuadro decide cual toca), y con una textura por imagen la
+  // oclusion leia, un cuadro si y otro no, la profundidad del cuadro ANTERIOR.
+  if (imagenEscena) {
+    composer.renderTarget2.depthTexture?.dispose();
+    composer.renderTarget2.depthTexture = imagenEscena.depthTexture;
+  }
   renderPass = new RenderPass(scene, camera);
   composer.addPass(renderPass);
+  if (imagenEscena) {
+    // OCLUSION AMBIENTAL (GTAO): oscurece donde dos superficies se juntan —la
+    // pared con la vereda, el auto con el asfalto, el cantero con el piso— que
+    // es lo que hace que las cosas se APOYEN en vez de flotar. Solo en Burela.
+    // Se calcula a MITAD de resolucion (ver resize) y reconstruye las normales
+    // desde la profundidad, asi que no dibuja la escena otra vez.
+    // ⚠️ La profundidad se le pasa DESPUES de crearlo, no en el constructor.
+    // En three r184, `GTAOPass` con profundidad externa en el constructor
+    // revienta: lee `normalRenderTarget.depthTexture`, un objeto que en ese
+    // caso nunca crea (solo lo usa su modo de depuracion), y el juego no
+    // arranca. Creandolo normal primero, ese objeto existe; como nunca se
+    // dibuja en el, three no le reserva memoria.
+    aoPass = new GTAOPass(scene, camera, 1, 1);
+    aoPass.setGBuffer(imagenEscena.depthTexture);
+    // Radio chico: el objetivo es la sombra de CONTACTO, no un halo oscuro
+    // alrededor de todo, que es lo que hace que el SSAO se vea "sucio".
+    aoPass.updateGtaoMaterial({ radius: 0.55, distanceExponent: 1.2, thickness: 1.0, scale: 1.0, samples: 12 });
+    aoPass.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
+    aoPass.blendIntensity = 0.85;
+    // `?ao=ver` muestra SOLO la oclusion, en blanco y negro. Para comprobar que
+    // esta trabajando y donde oscurece: en la imagen final es sutil a proposito
+    // y mirandola sola no hay que adivinar.
+    if (URL_PARAMS.get('ao') === 'ver') aoPass.output = GTAOPass.OUTPUT.Denoise;
+    composer.addPass(aoPass);
+  }
   bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.22, 0.4, 0.92);
   composer.addPass(bloomPass);
-  composer.addPass(new ShaderPass(GradeShader));
+  gradePass = new ShaderPass(GradeShader);
+  composer.addPass(gradePass);
   composer.addPass(new OutputPass());
 }
 
@@ -266,6 +351,9 @@ function resize() {
     composer.setSize(w, h);
     // el bloom trabaja a media resolución: mismo halo, mitad de costo
     bloomPass.setSize((w * ratio) / 2, (h * ratio) / 2);
+    // La oclusion tambien: es una sombra suave, a mitad de resolucion no se
+    // nota la diferencia y cuesta la cuarta parte.
+    aoPass?.setSize(Math.max(1, Math.round((w * ratio) / 2)), Math.max(1, Math.round((h * ratio) / 2)));
   }
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
@@ -284,12 +372,23 @@ resize();
 // el juego se da cuenta solo a los pocos segundos y apaga sombras + post-
 // processing — sin recargar la página ni tocar ?q=low. Una sola vez.
 let perfSamples = 0, perfSlow = 0, downgraded = false;
+let aoApagadaPorRendimiento = false;
 function checkPerf(dt) {
-  if (downgraded || QUALITY !== 'high') return;
+  if (downgraded || QUALITY !== 'high' || !AUTO_CALIDAD) return;
   perfSamples++;
   if (perfSamples < 90) return; // ~1.5s de gracia (carga inicial no cuenta)
   if (dt > 1 / 24) perfSlow++; else perfSlow = Math.max(0, perfSlow - 1);
   if (perfSlow > 40) { // ~40 cuadros lentos acumulados
+    // Primer escalon: se apaga SOLO la oclusion ambiental, que es lo mas caro
+    // de los graficos nuevos y lo que menos se extraña. Si con eso alcanza, el
+    // juego se queda con sombras, reflejos y postproceso.
+    if (aoPass && !aoApagadaPorRendimiento) {
+      aoApagadaPorRendimiento = true;
+      perfSlow = 0;
+      perfSamples = 0;
+      console.info('FOURTWENTY: rendimiento justo — se apago la oclusion ambiental.');
+      return;
+    }
     downgraded = true;
     renderer.shadowMap.enabled = false;
     const previousComposer = composer;
@@ -328,6 +427,17 @@ function activeOutdoorLighting() {
   if (world === 'street') return streetOutdoorLighting;
   return activeDestinationRecord?.outdoorLighting ?? null;
 }
+
+// Luz, sombra y reflejos nuevos de Burela. Viaja dentro de `outdoorLighting`
+// porque `dayNightCycle` ya recibe ese objeto en cada cambio de hora, igual que
+// el cielo: asi los pisos (que pasan su propio `lighting`) no se enteran.
+// Con `?graficos=antes` devuelve null y todo queda como estaba.
+streetOutdoorLighting.graficos = crearGraficosBurela({
+  renderer,
+  scene,
+  lighting: streetOutdoorLighting,
+  sombras: renderer.shadowMap.enabled,
+});
 
 const dayNight = createDayNightCycle({
   renderer,
@@ -1855,7 +1965,15 @@ let mobileInteractionAvailable = false;
 
 const timer = new THREE.Timer();
 let lastZone = null;
+// ⚠️ El contador de llamadas de dibujo se reinicia A MANO, una vez por cuadro.
+// Por defecto three lo reinicia en CADA render(), y con postproceso el ultimo
+// render del cuadro es el pase final (un solo triangulo que cubre la pantalla):
+// `perfAudit` informaba "1 llamada, 1 triangulo" y el costo real de la escena
+// no se veia. Se descubrio midiendo el salto grafico del 25/09.
+renderer.info.autoReset = false;
+const contadorFps = crearContadorFps(renderer);   // `?fps=1`
 renderer.setAnimationLoop(() => {
+  renderer.info.reset();
   timer.update();
   const rawDt = timer.getDelta();
   recordPerfFrame(rawDt);
@@ -1948,7 +2066,17 @@ renderer.setAnimationLoop(() => {
   }
   if (!editorActive) tpCam.update(dt, bob.position, floorY, bob.modelYaw, ceiling);
 
+  // Afuera, luz y grade nuevos; adentro del local (aprobado asi) vuelven los de
+  // siempre, mezclando en ~0,6 s. Los pisos del ascensor siempre con los viejos.
+  const adentroDelLocal = streetOutdoorLighting.graficos && world === 'street'
+    ? streetOutdoorLighting.graficos.seguirInterior(isInsideLocal(bob.position), dt)
+    : 1;
+  if (gradePass) gradePass.uniforms.uNuevo.value = GRAFICOS_NUEVOS && world === 'street' ? 1 - adentroDelLocal : 0;
+  // La oclusion va solo en Burela: los pisos son de Fer y no se tocan.
+  if (aoPass) aoPass.enabled = world === 'street' && !aoApagadaPorRendimiento;
   if (composer) composer.render();
   else renderer.render(activeScene, camera);
+  // Despues de dibujar: recien ahi el contador tiene el cuadro entero.
+  contadorFps?.cuadro(rawDt);
   updateElevatorTestState();
 });

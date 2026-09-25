@@ -363,6 +363,84 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
   (`carPaint.js`): son 48 pixeles de una paleta compartida de 32x4, sin tocar
   las luces traseras ni el interior.
 
+### Salto grafico de Burela — PRUEBA en `claude/burela-graficos` (25/09)
+
+⚠️ **ES UNA RAMA DE PRUEBA.** Kusher la mira y decide si queda o se descarta.
+Todo vive en `src/world/graficosBurela.js` y se apaga con **`?graficos=antes`**,
+que deja el juego exactamente como estaba (para comparar en la misma sesion).
+
+Kusher pidio "un salto grafico potente, sin perder rendimiento ni fluidez".
+Antes de tocar nada se midio por que Burela se veia plana. Ninguna causa era de
+poligonos, todas eran de luz:
+
+1. **La sombra del sol estaba orientada al reves.** El recuadro media 176 m a lo
+   ancho de la VEREDA (donde el mundo mide ~55 m) y 72 m a lo largo de la calle:
+   **11,6 pixeles por metro** en el eje peor, y mas alla de x≈±50 m no habia
+   sombra. Al estirar el campo x3 (10/09) empeoro. Ahora el recuadro se ajusta a
+   la calle entera y se gira alrededor del rayo de sol hasta encontrar el que da
+   mas pixeles: **23 a 41 px/m segun la hora**, cubriendo los ±84 m.
+2. **Los reflejos eran de un cuarto de estudio** (`RoomEnvironment`): una caja
+   gris con paneles de luz. El auto blanco se veia de yeso. Ahora se pinta un
+   reflejo con el cielo de la hora (azul arriba, bruma, rebote tibio del piso).
+3. **El relleno pesaba casi como el sol**: vereda al sol 1,5 veces mas clara que
+   la sombra. Ahora sol x1,55, hemisferica x0,25 y el cielo toma su lugar.
+4. **El asfalto no recibia sombra** (faltaba `receiveShadow`): los autos
+   flotaban. Se prende la propiedad; no se agrega ni mueve geometria.
+5. **No habia antialiasing en calidad alta.** El `antialias: true` del renderer
+   solo vale dibujando directo a pantalla; con postproceso la escena va a una
+   imagen intermedia sin suavizado. Ahora esa imagen tiene multimuestreo x4.
+
+Ademas: **oclusion ambiental** (GTAO, la sombrita de contacto donde se juntan
+dos superficies) a mitad de resolucion, **perspectiva aerea** (niebla
+exponencial: limpio cerca, azulado lejos) y un grade con sombras apenas frias y
+luces tibias. El sol se inclina un poco hacia la calle (`INCLINACION_SOL`).
+
+- ⚠️ **SOLO BURELA.** Los pisos son de Fer y la Terraza esta aprobada. Y
+  **adentro del local** (aprobado) la luz y el grade vuelven a los de siempre,
+  mezclando en ~0,6 s para que no salte cuando BOB cruza la puerta.
+- ⚠️ **Se probo inclinar el sol 34 y era demasiado**: las casas de enfrente miran
+  en contra del sol, quedaban a la sombra todo el dia y sus fotos se veian
+  barrosas. Con 14 las dos veredas siguen recibiendo luz de refilon.
+- ⚠️ **Bug de three r184 esquivado:** `GTAOPass` con profundidad externa en el
+  constructor revienta al inicio (lee `normalRenderTarget.depthTexture`, que en
+  ese caso no existe) y el juego NO ARRANCA. Se crea normal y se le pasa la
+  profundidad despues con `setGBuffer`.
+- ⚠️ **Las dos imagenes del composer comparten UNA textura de profundidad.** El
+  composer alterna en cual dibuja la escena; con una por imagen, la oclusion
+  leia un cuadro si y otro no la profundidad del cuadro anterior.
+- **Costo medido** (mismo navegador, mismas vistas): llamadas de dibujo **+4**
+  por cuadro (888 → 892 en la vereda) y triangulos +4 — o sea, el costo que mas
+  pesa en este proyecto no cambia. En el navegador de pruebas el cuadro tarda
+  30-74% mas, pero ese navegador dibuja por SOFTWARE y ahi el multimuestreo es
+  carisimo; en una GPU de Mac es casi gratis. **La medicion que vale es la de
+  Kusher con `?fps=1`.** Memoria de video: el mapa de sombra pasa de 16 a 32 MB.
+- **Si la maquina no da**, el auto-downgrade ahora tiene dos escalones: primero
+  apaga SOLO la oclusion; si sigue lento, sombras y postproceso como antes.
+
+**Contador en pantalla: `?fps=1`** (`src/ui/contadorFps.js`). Cuadros por
+segundo, el peor cuadro, llamadas de dibujo y triangulos. Para comparar en la
+Mac real: `?fps=1` contra `?fps=1&graficos=antes`.
+
+⚠️ **El contador de llamadas de `perfAudit` estaba roto.** three reinicia
+`renderer.info` en CADA `render()`, y con postproceso el ultimo del cuadro es
+el pase final (un triangulo): informaba "1 llamada, 1 triangulo" siempre. Ahora
+se reinicia a mano una vez por cuadro. Cualquier numero de llamadas medido
+antes del 25/09 con postproceso prendido no vale.
+
+**Fotos de antes y despues: `node tools/smoke/fotos-burela.mjs`.** Saca siempre
+las mismas 5 vistas (vereda, calle, enfrente, aerea e interior del local) a la
+misma hora, e imprime el costo de cada una y cuantos pixeles por metro tiene la
+sombra. `--extra graficos=antes` para la version vieja, `--vistas a,b` para
+sacar algunas. Usa `?autoCalidad=0`: sin eso, el navegador de pruebas "detecta"
+que va lento y apaga sombras y postproceso a mitad de la foto.
+⚠️ Correrlo contra la version compilada (`npm run build` + `npx vite preview`),
+no contra `npm run dev`: el servidor de desarrollo recarga la pagina cada vez
+que se guarda un archivo, y la foto se corta a la mitad.
+
+**Para verlo sin terminal:** doble click en `CAMBIAR-DE-VERSION.command` (en la
+raiz), elegir la prueba con el numero, y se abre solo. Para volver, lo mismo
+eligiendo la version normal.
+
 ### BOB
 
 - Modelo activo: `public/assets/bob/bob.glb`, **0,83 MB con Draco** (03/09).
@@ -1462,6 +1540,7 @@ Todas se corren desde `store-simulator/`.
 | `tools/rig/descoser-manos.mjs` | cortar la piel cosida entre mano y muslo |
 | `tools/smoke/mando-banapod.mjs` | 34 comprobaciones del joystick adentro del juego |
 | `tools/smoke/foto-clip.mjs` | ver un clip de BOB renderizado en una tira de 6 fotos |
+| `tools/smoke/fotos-burela.mjs` | mismas 5 fotos de Burela antes/despues + costo de cada vista |
 
 ## 10. Flujo de trabajo obligatorio
 

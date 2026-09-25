@@ -260,7 +260,11 @@ export function createMoonDisc(radius = 1.35) {
   return disc;
 }
 
-function applyLighting(lighting, renderer, sample) {
+function applyLighting(lighting, renderer, sampleOriginal) {
+  // Los graficos nuevos de Burela inclinan el recorrido del sol hacia la calle.
+  // Se ajusta la MUESTRA entera antes de usarla, asi el disco del sol, el
+  // resplandor de la cupula y la direccion de la luz siguen coincidiendo.
+  const sample = lighting.graficos?.ajustarMuestra(sampleOriginal) ?? sampleOriginal;
   const { palette } = sample;
   const scene = lighting.scene;
   if (scene.background?.isColor) scene.background.copy(palette.sky);
@@ -293,6 +297,9 @@ function applyLighting(lighting, renderer, sample) {
   // La luz de relleno de la cuadra de enfrente tambien: tenia la intensidad
   // clavada y de noche las fachadas quedaban iluminadas como al mediodia.
   lighting.rellenoFrente?.aplicar(palette);
+  // Va DESPUES de todo lo anterior: multiplica las intensidades que la paleta
+  // acaba de poner (no las del cambio anterior, que se irian acumulando).
+  lighting.graficos?.aplicar(sample);
 
   renderer.toneMappingExposure = palette.exposure;
 }
