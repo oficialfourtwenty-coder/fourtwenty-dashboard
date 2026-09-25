@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>FOURTWENTY — Store Simulator</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+    overscroll-behavior: none; touch-action: none; -webkit-text-size-adjust: 100%;
+    background: #1a140e;
+  }
+  #game { width: 100%; height: 100%; display: block; touch-action: none; }
+  #hud { position: fixed; inset: 0; pointer-events: none; font-family: 'Courier New', monospace; }
+  .hud-title {
+    position: absolute; top: 14px; left: 16px;
+    color: #f2e8c9; font-size: 13px; font-weight: bold; letter-spacing: 3px;
+    text-shadow: 2px 2px 0 #00000088;
+  }
+  .hud-floor {
+    position: absolute; top: 14px; right: 16px;
+    color: #d4af37; font-size: 13px; font-weight: bold; letter-spacing: 2px;
+    text-shadow: 2px 2px 0 #00000088;
+  }
+  .hud-help {
+    position: absolute; bottom: 12px; left: 16px;
+    color: #f2e8c9aa; font-size: 11px; letter-spacing: 1px;
+    text-shadow: 1px 1px 0 #00000088;
+  }
+  #zone-title {
+    position: absolute; bottom: 56px; left: 28px;
+    font-family: 'Arial Black', 'Arial', sans-serif; font-style: italic;
+    color: #ffffff; font-size: 44px; letter-spacing: 1px;
+    text-shadow: 3px 3px 0 #000000cc, 0 0 18px #00000088;
+    opacity: 0; transition: opacity 0.45s ease;
+    pointer-events: none;
+  }
+  #zone-title .sub {
+    display: block; font-size: 15px; font-style: normal;
+    color: #d4af37; letter-spacing: 4px; font-family: 'Courier New', monospace;
+  }
+  #zone-title.show { opacity: 1; }
+  /* Entrada: primer frame del video de Bobilonia como fondo. Es un JPG de
+     ~150 KB, asi que la pantalla se ve completa al instante; el video (10 MB)
+     recien se descarga cuando el jugador aprieta ENTRAR.
+     JPG y no WebP a proposito: el ffmpeg que trae Homebrew en la Mac de
+     Kusher viene sin el codificador de WebP, y el poster lo regenera el
+     cada vez que cambia el video. */
+  #start-overlay {
+    position: fixed; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 18px;
+    color: #f2e8c9; cursor: pointer; z-index: 40;
+    font-family: 'Courier New', monospace; text-align: center;
+    background:
+      linear-gradient(rgba(6,8,10,0.32), rgba(6,8,10,0.86)),
+      url('/assets/ui/bobilonia-intro-poster.jpg') center / cover no-repeat,
+      #12100b;
+  }
+  #start-overlay h1 {
+    font-size: clamp(30px, 6vw, 62px); letter-spacing: 10px; margin: 0;
+    color: #f4efe2; font-family: Impact, 'Arial Black', sans-serif;
+    text-shadow: 0 4px 26px rgba(0,0,0,0.85);
+  }
+  #start-overlay p  { font-size: 12px; letter-spacing: 3px; margin: 0; color: #d4af37; }
+  #start-overlay .start-cta {
+    margin-top: 10px; padding: 14px 34px; border: 2px solid #e7b94c;
+    border-radius: 6px; background: rgba(12,14,10,0.6); color: #e7b94c;
+    font-size: clamp(13px, 1.6vw, 17px); font-weight: bold; letter-spacing: 4px;
+    transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+    backdrop-filter: blur(2px);
+  }
+  #start-overlay:hover .start-cta {
+    background: #e7b94c; color: #14170f; transform: translateY(-2px);
+  }
+  #start-overlay .blink { animation: blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  #loading-screen.bobilonia-intro::before,
+  #loading-screen.bobilonia-intro::after,
+  #loading-screen.bobilonia-intro .loading-hud,
+  #loading-screen.bobilonia-intro .bob-loading-ui { display: none; }
+  #loading-screen.bobilonia-intro { background: #000; cursor: pointer; }
+  #loading-screen.bobilonia-intro #bobilonia-intro-video {
+    display: block; position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; background: #000;
+  }
+  /* "SKIPEAR VIDEO": chiquito abajo a la derecha, en TODOS los videos.
+     No es un boton: cualquier click sobre la pantalla ya saltea, asi que
+     alcanza con avisar que se puede. */
+  .intro-skip { display: none; }
+  #loading-screen.show.bobilonia-intro .intro-skip,
+  #loading-screen.show.cultura-intro .intro-skip,
+  #loading-screen.show.terrace-intro .intro-skip,
+  #loading-screen.show.hoop-intro .intro-skip,
+  #loading-screen.show.twenty-time-intro .intro-skip,
+  #loading-screen.show.bob-collection .intro-skip {
+    display: block; position: absolute; right: 22px; bottom: 18px; z-index: 3;
+    font-family: 'Courier New', monospace; font-size: 11px; letter-spacing: 2px;
+    color: rgba(255,255,255,0.62); text-shadow: 0 2px 8px #000;
+    padding: 5px 10px; border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 4px; background: rgba(0,0,0,0.35);
+  }
+
+  /* El Banapod queda tapando los videos: se esconde mientras haya una
+     pantalla de carga o un video en pantalla. Se hace con :has() y no con
+     una clase en el body para que valga para CUALQUIER video, incluidos los
+     que se sumen despues, sin tener que acordarse de tocar el JS. */
+  body:has(#loading-screen.show) #ft-phone,
+  body:has(#bob-select.show) #ft-phone,
+  body.ft-portada #ft-phone {
+    display: none !important;
+  }
+  /* Pantalla de carga BOBILONIA (selector de colecciones del stock). */
+  #loading-screen {
+    position: fixed; inset: 0; display: none; z-index: 30;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,0.82), rgba(0,0,0,0.34) 45%, rgba(0,0,0,0.72)),
+      radial-gradient(ellipse at center, #143020 0%, #0a1810 55%, #050c08 100%);
+    background-size: cover; background-position: center;
+    color: #eafff0; font-family: 'Courier New', monospace; overflow: hidden;
+  }
+  #loading-screen.show { display: flex; }
+  #loading-screen::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.45;
+  }
+  #loading-screen::after {
+    content: ""; position: absolute; inset: 16px; pointer-events: none;
+    border: 1px solid rgba(255, 79, 0, 0.42);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.55), 0 0 24px rgba(255,79,0,0.10);
+  }
+  .loading-video,
+  .bob-loading-ui {
+    display: none;
+  }
+  .loading-hud {
+    position: relative; z-index: 1; width: 100%; min-height: 100%;
+    box-sizing: border-box; padding: 34px 42px 28px;
+    display: grid; grid-template-rows: auto 1fr auto; gap: 20px;
+  }
+  .loading-top {
+    display: flex; justify-content: flex-end; align-items: center; gap: 18px;
+    color: rgba(255,255,255,0.86); font-size: 13px; letter-spacing: 2px;
+  }
+  .loading-top b { color: #ff4b00; font-weight: 900; }
+  .loading-top .slashes { color: #ff4b00; letter-spacing: 3px; font-weight: 900; }
+  .loading-main {
+    display: flex; flex-direction: column; justify-content: space-between;
+    align-items: flex-start; max-width: 58vw; padding-top: 8px;
+  }
+  .loading-title {
+    display: flex; flex-direction: column; gap: 2px;
+    font-family: Impact, 'Arial Black', 'Arial Narrow', sans-serif;
+    font-style: normal; line-height: 0.78; letter-spacing: 2px;
+    color: #ff4b00; text-transform: uppercase;
+    text-shadow: 4px 4px 0 #050505, 0 0 18px rgba(255,75,0,0.25);
+  }
+  #loading-title-main { font-size: clamp(84px, 18vw, 252px); }
+  #loading-title-sub {
+    font-size: clamp(42px, 8vw, 112px); color: rgba(255,255,255,0.92);
+    letter-spacing: clamp(10px, 2.7vw, 38px); margin-left: 6px;
+  }
+  .loading-brand {
+    margin-top: 24px; color: #ff4b00; font-size: 18px; font-weight: 900;
+    letter-spacing: 8px; text-transform: uppercase;
+  }
+  .loading-brand span {
+    display: block; margin-top: 7px; color: rgba(255,255,255,0.70);
+    font-size: 12px; font-weight: 400; letter-spacing: 6px;
+  }
+  .loading-progress {
+    width: min(720px, 58vw); margin-top: 34px;
+  }
+  .loading-progress .label {
+    color: rgba(255,255,255,0.82); font-size: 13px; letter-spacing: 9px;
+  }
+  #loading-count {
+    margin-top: 10px; font-family: Impact, 'Arial Black', sans-serif;
+    font-size: clamp(60px, 7vw, 104px); line-height: 0.9; color: #ff4b00;
+    text-shadow: 3px 3px 0 #050505, 0 0 18px rgba(255,75,0,0.42);
+  }
+  .loading-bar {
+    position: relative; margin-top: 14px; height: 24px; width: 100%;
+    border: 1px solid rgba(255, 75, 0, 0.75); background: rgba(0,0,0,0.64);
+    box-shadow: inset 0 0 12px rgba(0,0,0,0.85), 0 0 18px rgba(255,75,0,0.18);
+    overflow: hidden;
+  }
+  #loading-bar-fill {
+    position: absolute; inset: 3px auto 3px 3px; width: 0%;
+    background:
+      repeating-linear-gradient(120deg, #ff4b00 0 10px, #c33100 10px 14px, #ff6a1a 14px 22px);
+    box-shadow: 0 0 18px rgba(255, 75, 0, 0.72);
+    transition: width 80ms linear;
+  }
+  .loading-progress .micro {
+    margin-top: 11px; color: rgba(255,255,255,0.48); font-size: 11px; letter-spacing: 9px;
+  }
+  .loading-bottom {
+    position: relative; min-height: 86px; display: flex; align-items: center; gap: 22px;
+    padding: 18px 24px; border: 1px solid rgba(255,75,0,0.35);
+    background: rgba(3,3,4,0.76); box-shadow: 0 -8px 40px rgba(255,75,0,0.10);
+  }
+  #loading-message {
+    flex: 1; color: rgba(255,255,255,0.92); font-family: Impact, 'Arial Narrow', sans-serif;
+    font-size: clamp(18px, 2.2vw, 34px); font-style: italic; letter-spacing: 2px;
+    text-transform: uppercase; text-shadow: 2px 2px 0 #000;
+  }
+  #loading-message strong { color: #ff4b00; font-weight: 900; }
+  .loading-420 {
+    min-width: 140px; text-align: right; color: rgba(255,255,255,0.40);
+    font-family: Impact, 'Arial Black', sans-serif; font-size: 54px; line-height: 0.9;
+    text-shadow: 2px 2px 0 #000;
+  }
+  .loading-420 span {
+    display: block; margin-top: 8px; color: #ff4b00; font-family: 'Courier New', monospace;
+    font-size: 11px; letter-spacing: 3px;
+  }
+  #loading-screen.hoop-season {
+    background-image:
+      linear-gradient(90deg, rgba(0,0,0,0.83), rgba(0,0,0,0.22) 48%, rgba(0,0,0,0.74)),
+      linear-gradient(0deg, rgba(0,0,0,0.58), rgba(0,0,0,0.08) 42%, rgba(0,0,0,0.72)),
+      url('/assets/ui/hoop-season-loading.webp');
+  }
+  #loading-screen.bob-collection {
+    background: #030303;
+  }
+  #loading-screen.bob-collection::before,
+  #loading-screen.bob-collection::after,
+  #loading-screen.bob-collection .loading-hud,
+  #loading-screen.cultura-intro::before,
+  #loading-screen.cultura-intro::after,
+  #loading-screen.cultura-intro .loading-hud,
+  #loading-screen.cultura-intro .bob-loading-ui,
+  #loading-screen.terrace-intro::before,
+  #loading-screen.terrace-intro::after,
+  #loading-screen.terrace-intro .loading-hud,
+  #loading-screen.terrace-intro .bob-loading-ui,
+  #loading-screen.hoop-intro::before,
+  #loading-screen.hoop-intro::after,
+  #loading-screen.hoop-intro .loading-hud,
+  #loading-screen.hoop-intro .bob-loading-ui,
+  #loading-screen.twenty-time-intro::before,
+  #loading-screen.twenty-time-intro::after,
+  #loading-screen.twenty-time-intro .loading-hud,
+  #loading-screen.twenty-time-intro .bob-loading-ui {
+    display: none;
+  }
+  #loading-screen.cultura-intro,
+  #loading-screen.terrace-intro,
+  #loading-screen.hoop-intro,
+  #loading-screen.twenty-time-intro {
+    background: #000;
+    cursor: pointer;
+  }
+  #loading-screen.bob-collection #bob-loading-video,
+  #loading-screen.cultura-intro #cultura-intro-video,
+  #loading-screen.terrace-intro #terrace-intro-video,
+  #loading-screen.hoop-intro #hoop-intro-video,
+  #loading-screen.twenty-time-intro #twenty-time-intro-video {
+    display: block; position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; background: #030303;
+  }
+  #loading-screen.bob-collection .bob-loading-ui {
+    display: block; position: absolute; left: clamp(20px, 5vw, 82px);
+    right: clamp(20px, 5vw, 82px); bottom: clamp(28px, 5vh, 68px); z-index: 2;
+  }
+  .bob-loading-bar {
+    height: 18px; padding: 3px; box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,0.92);
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.30) 0 18px, transparent 18px 28px),
+      rgba(0,0,0,0.62);
+    box-shadow: 0 0 28px rgba(255,255,255,0.24);
+  }
+  #bob-loading-bar-fill {
+    width: 0%; height: 100%; background: rgba(245,245,238,1);
+    box-shadow: 0 0 24px rgba(255,255,255,0.56);
+    transition: width 70ms linear;
+  }
+  .bob-loading-caption {
+    margin-top: 12px; color: rgba(255,255,255,0.92); font-size: 15px;
+    font-weight: 700; letter-spacing: 6px; text-align: center;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.85);
+  }
+  #loading-screen:not(.hoop-season) .loading-brand,
+  #loading-screen:not(.hoop-season) .loading-420 {
+    display: none;
+  }
+  #loading-screen:not(.hoop-season) .loading-title {
+    color: #39ff6a;
+    text-shadow: 0 0 22px #39ff6a66, 3px 3px 0 #000000cc;
+  }
+  #loading-screen:not(.hoop-season) #loading-title-main {
+    font-size: clamp(64px, 10vw, 136px);
+  }
+  #loading-screen:not(.hoop-season) #loading-title-sub {
+    display: none;
+  }
+  @media (max-width: 760px) {
+    .loading-hud { padding: 22px 18px 18px; }
+    .loading-main { max-width: 92vw; }
+    .loading-progress { width: 86vw; }
+    .loading-bottom { min-height: 74px; padding: 14px; }
+    .loading-420 { display: none; }
+  }
+  #shirt-tip {
+    position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%);
+    padding: 6px 14px; border-radius: 6px; display: none; z-index: 20;
+    background: #0a1810dd; border: 1px solid #39ff6a55;
+    color: #eafff0; font-family: 'Courier New', monospace;
+    font-size: 13px; letter-spacing: 2px; pointer-events: none;
+  }
+  #elevator-panel {
+    position: fixed; inset: 0; z-index: 70; display: grid; place-items: center;
+    overflow: hidden; visibility: hidden; opacity: 0; pointer-events: none;
+    background: #020202;
+    transition: opacity 360ms ease, visibility 0s linear 360ms;
+  }
+  #elevator-panel.show {
+    visibility: visible; opacity: 1; pointer-events: auto;
+    transition: opacity 360ms ease;
+  }
+  .elevator-panel-frame {
+    position: relative; height: 100vh; height: 100dvh; max-width: 100vw;
+    aspect-ratio: 1122 / 1402; overflow: hidden; background: #050505;
+    transform: scale(1.018); filter: blur(2px);
+    transition: transform 700ms cubic-bezier(.2,.8,.2,1), filter 700ms ease;
+  }
+  #elevator-panel.show .elevator-panel-frame { transform: scale(1); filter: blur(0); }
+  .elevator-panel-frame > img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: contain; user-select: none; pointer-events: none;
+  }
+  #elevator-floor-options { position: absolute; inset: 0; }
+  .elevator-floor-option {
+    position: absolute; left: 29%; width: 42.5%; height: 6.4%;
+    margin: 0; padding: 0; border: 0;
+    appearance: none; background: transparent; cursor: pointer;
+  }
+  .elevator-floor-option::after {
+    content: ""; position: absolute; left: 81.5%; top: 10%; width: 12.5%; height: 80%;
+    z-index: 2; opacity: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center,
+      transparent 0 47%,
+      rgba(255, 190, 78, 0.05) 57%,
+      rgba(255, 199, 100, 0.18) 72%,
+      rgba(255, 176, 57, 0.08) 100%);
+    clip-path: polygon(23% 0, 77% 0, 100% 25%, 100% 75%, 77% 100%, 23% 100%, 0 75%, 0 25%);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 224, 166, 0.44),
+      inset 0 0 5px rgba(255, 164, 42, 0.10);
+    filter: drop-shadow(0 0 2px rgba(255, 166, 47, 0.34));
+    transition: opacity 120ms ease;
+  }
+  .elevator-floor-option:focus-visible {
+    outline: 1px solid rgba(255, 221, 165, 0.72);
+    outline-offset: 2px;
+  }
+  .elevator-floor-option.selected::after { opacity: 1; }
+  .elevator-floor-option:disabled { cursor: default; }
+  #elevator-led-display {
+    position: absolute; left: 31%; top: 79.3%; width: 38%; height: 13.5%;
+    z-index: 3; display: block; pointer-events: none;
+  }
+  #elevator-fade {
+    position: fixed; inset: 0; z-index: 80; opacity: 0; visibility: hidden;
+    pointer-events: none; background: #000;
+    transition-property: opacity, visibility;
+    transition-timing-function: ease, linear;
+    transition-delay: 0s, 900ms;
+  }
+  #elevator-fade.show {
+    opacity: 1; visibility: visible;
+    transition-delay: 0s, 0s;
+  }
+  body.elevator-panel-open #hud,
+  body.elevator-panel-open #shirt-tip { visibility: hidden; }
+  @media (max-aspect-ratio: 1122 / 1402) {
+    .elevator-panel-frame { width: 100vw; height: auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #elevator-panel, .elevator-panel-frame, .elevator-floor-option, .elevator-floor-option::after {
+      transition-duration: 1ms;
+    }
+  }
+  #elevator-test-controls {
+    position: fixed; left: 10px; bottom: 10px; z-index: 60; display: flex;
+    align-items: center; gap: 5px; padding: 6px; background: rgba(0,0,0,0.86);
+    border: 1px solid rgba(255,255,255,0.35); color: #fff;
+    font: 11px/1.2 monospace;
+  }
+  #elevator-test-controls button {
+    width: 30px; height: 26px; padding: 0; border: 1px solid #777;
+    border-radius: 2px; background: #242424; color: #fff; cursor: pointer;
+  }
+  #elevator-test-controls button[data-action="board"] { width: 64px; }
+  #elevator-test-state { max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+</head>
+<body class="ft-portada">
+<canvas id="game"></canvas>
+<div id="hud">
+  <div class="hud-title">FOURTWENTY</div>
+  <div class="hud-floor" id="hud-floor">PISO 1</div>
+  <div class="hud-help">WASD MOVERSE &nbsp;·&nbsp; SHIFT CORRER &nbsp;·&nbsp; CLICK / E INTERACTUAR</div>
+  <div id="zone-title"><span id="zone-name"></span><span class="sub">FOURTWENTY STORE</span></div>
+</div>
+<div id="start-overlay">
+  <h1>BOBILONIA</h1>
+  <p>FOURTWENTY STORE SIMULATOR</p>
+  <!-- sin parpadeo: un boton que se apaga la mitad del tiempo se lee como
+       un error, no como una invitacion -->
+  <div class="start-cta">ENTRAR A BOBILONIA</div>
+</div>
+<div id="loading-screen">
+  <video id="bob-loading-video" class="loading-video" playsinline preload="none">
+    <source src="/assets/ui/bob-loading.mp4" type="video/mp4">
+  </video>
+  <video id="cultura-intro-video" class="loading-video" playsinline preload="none">
+    <source src="/assets/ui/cultura-intro.mp4" type="video/mp4">
+  </video>
+  <video id="terrace-intro-video" class="loading-video" playsinline preload="none">
+    <source src="/assets/ui/terrace-intro.mp4" type="video/mp4">
+  </video>
+  <video id="hoop-intro-video" class="loading-video" playsinline preload="none">
+    <source src="/assets/ui/hoop-season-intro.mp4" type="video/mp4">
+  </video>
+  <video id="twenty-time-intro-video" class="loading-video" playsinline preload="none">
+    <source src="/assets/ui/twenty-time-intro.mp4" type="video/mp4">
+  </video>
+  <video id="bobilonia-intro-video" class="loading-video" playsinline preload="none"
+         poster="/assets/ui/bobilonia-intro-poster.jpg">
+    <source src="/assets/ui/bobilonia-intro.mp4" type="video/mp4">
+  </video>
+  <span class="intro-skip">SKIPEAR VIDEO · ESC</span>
+  <div class="bob-loading-ui">
+    <div class="bob-loading-bar"><div id="bob-loading-bar-fill"></div></div>
+    <div class="bob-loading-caption">Bobilonia</div>
+  </div>
+  <div class="loading-hud">
+    <div class="loading-top">
+      <span>FOURTWENTY</span>
+      <b id="loading-dest">BOBILONIA</b>
+      <span class="slashes">///////</span>
+    </div>
+    <div class="loading-main">
+      <div>
+        <div class="loading-title">
+          <span id="loading-title-main">BOBILONIA</span>
+          <span id="loading-title-sub"></span>
+        </div>
+        <div class="loading-brand">FOURTWENTY<span>BASKET COLLECTION</span></div>
+      </div>
+      <div class="loading-progress">
+        <div class="label">LOADING</div>
+        <div id="loading-count">0%</div>
+        <div class="loading-bar"><div id="loading-bar-fill"></div></div>
+        <div class="micro">PREPARANDO LA EXPERIENCIA</div>
+      </div>
+    </div>
+    <div class="loading-bottom">
+      <div id="loading-message">CARGANDO EL MUNDO FOURTWENTY</div>
+      <div class="loading-420">420<span>BASKET CULTURE</span></div>
+    </div>
+  </div>
+</div>
+<div id="shirt-tip"></div>
+<div id="elevator-panel" aria-hidden="true">
+  <div class="elevator-panel-frame">
+    <img src="/assets/ui/elevator-panel.jpg" alt="Panel metalico del ascensor FOURTWENTY">
+    <div id="elevator-floor-options"></div>
+    <canvas id="elevator-led-display" role="img" aria-label="Pantalla del ascensor apagada"></canvas>
+  </div>
+</div>
+<div id="elevator-fade"></div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

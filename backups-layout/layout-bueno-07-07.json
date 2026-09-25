@@ -1,0 +1,7236 @@
+[
+  {
+    "id": "calle-kit:0",
+    "name": "Calle Burela · asfalto",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      -0.00813325527564053,
+      13.072011494034816
+    ],
+    "rotation": [
+      -1.5707963267948966,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1",
+    "name": "Vereda gris frente al local",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      6.788060288310436
+    ],
+    "rotation": [
+      -1.5707963267948966,
+      0,
+      0
+    ],
+    "scale": [
+      0.2053929383035255,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:2",
+    "name": "Piso piedra hexagonal zona Burela",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.001,
+      1.75
+    ],
+    "rotation": [
+      -1.5707963267948966,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:3",
+    "name": "Cartel neon FOURTWENTY",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      3.1000000000000005,
+      -3.47
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:3.0",
+    "name": "Cartel neon FOURTWENTY · base",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      -0.08
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.5604492728807173,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:3.1",
+    "name": "Cartel neon FOURTWENTY · texto",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.04379649745622416,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.7274598913802176,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:12",
+    "name": "Edificios fondo paralelos centro",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      16,
+      -7.6284771751367595
+    ],
+    "rotation": [
+      0,
+      -0.1783097839350948,
+      0
+    ],
+    "scale": [
+      0.8956005757275814,
+      1,
+      24.219016488903208
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:13",
+    "name": "Edificio fondo paralelo izquierda",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -35.013466170715134,
+      9.913701126940797,
+      -10.38407071092874
+    ],
+    "rotation": [
+      0,
+      1.1925017709930317,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      7.895707128028191
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:14",
+    "name": "Edificio fondo paralelo derecha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      17,
+      13.65,
+      -2.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:15",
+    "name": "Cantero principal izquierdo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.8325640388291378,
+      0,
+      0.5566361846212688
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:15.0",
+    "name": "Cantero principal izquierdo · ladrillo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.036763088704367,
+      0.45607253567246664,
+      6.134335042797561
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:15.1",
+    "name": "Cantero principal izquierdo · tierra",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -4,
+      0.5,
+      2.6
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:15.2",
+    "name": "Cantero principal izquierdo · arbusto 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -4.05650263840069,
+      0.7,
+      2.5392556665609614
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:15.3",
+    "name": "Cantero principal izquierdo · arbusto 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -5.03317243034321,
+      0.7,
+      2.8527297233644653
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:15.4",
+    "name": "Cantero principal izquierdo · arbusto 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -3.9028217023688034,
+      0.7,
+      3.018734543573328
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:15.5",
+    "name": "Cantero principal izquierdo · arbusto 4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.1883604888477324,
+      0.7,
+      2.6593470633855807
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:15.6",
+    "name": "Cantero principal izquierdo · arbusto 5",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -5.909249997177502,
+      0.7,
+      2.3564276790727434
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:15.7",
+    "name": "Cantero principal izquierdo · arbusto 6",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -6.364860170015801,
+      0.7,
+      3.002627747071706
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:15.8",
+    "name": "Cantero principal izquierdo · arbusto 7",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -4.341533329270261,
+      0.7,
+      2.528856462386619
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:16",
+    "name": "Arbol cantero principal · tronco",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -5.5,
+      2.25,
+      7.542217959269975
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:17",
+    "name": "Arbol cantero principal · copa 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -5.5,
+      4.6,
+      7.127789653708488
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:18",
+    "name": "Arbol cantero principal · copa 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -4.9,
+      4.2,
+      8.161025213882596
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:19",
+    "name": "Arbol cantero principal · copa 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -6,
+      4.3,
+      2.2
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:20",
+    "name": "Arbol cantero principal · copa 4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -6.359943531443971,
+      5.2,
+      7.499169562516233
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:21",
+    "name": "Arbol cantero principal · alcorque",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -5.5,
+      0.025,
+      7.45267694331133
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:22",
+    "name": "Planta FOURTWENTY cantero principal 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -5,
+      0.5,
+      2.7
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:22.0",
+    "name": "Planta FOURTWENTY cantero principal 1 · tallo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.17,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:22.1",
+    "name": "Planta FOURTWENTY cantero principal 1 · hoja 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.5590469967413549,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:22.2",
+    "name": "Planta FOURTWENTY cantero principal 1 · hoja 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.00794061401120505,
+      0.47069761205921257,
+      0
+    ],
+    "rotation": [
+      0,
+      1.0471975511965976,
+      0
+    ],
+    "scale": [
+      1,
+      0.8368507545566956,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:22.3",
+    "name": "Planta FOURTWENTY cantero principal 1 · hoja 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.39043280612528,
+      0.010546373654467533,
+      0
+    ],
+    "rotation": [
+      0,
+      -1.0471975511965976,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:23",
+    "name": "Planta FOURTWENTY cantero principal 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -4,
+      0.5,
+      2.7
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:23.0",
+    "name": "Planta FOURTWENTY cantero principal 2 · tallo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.17,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:23.1",
+    "name": "Planta FOURTWENTY cantero principal 2 · hoja 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:23.2",
+    "name": "Planta FOURTWENTY cantero principal 2 · hoja 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      1.0471975511965976,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:23.3",
+    "name": "Planta FOURTWENTY cantero principal 2 · hoja 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      -1.0471975511965976,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:24",
+    "name": "Planta FOURTWENTY cantero principal 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -3,
+      0.5,
+      2.7
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:24.0",
+    "name": "Planta FOURTWENTY cantero principal 3 · tallo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.17,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:24.1",
+    "name": "Planta FOURTWENTY cantero principal 3 · hoja 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:24.2",
+    "name": "Planta FOURTWENTY cantero principal 3 · hoja 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      1.0471975511965976,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:24.3",
+    "name": "Planta FOURTWENTY cantero principal 3 · hoja 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      -1.0471975511965976,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:25",
+    "name": "Planta FOURTWENTY cantero principal 4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.2,
+      0.5,
+      2.7
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:25.0",
+    "name": "Planta FOURTWENTY cantero principal 4 · tallo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.17,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:25.1",
+    "name": "Planta FOURTWENTY cantero principal 4 · hoja 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.6803804765480232,
+      -0.4453596184562959,
+      -0.10313705424860586
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:25.2",
+    "name": "Planta FOURTWENTY cantero principal 4 · hoja 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      1.0471975511965976,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:25.3",
+    "name": "Planta FOURTWENTY cantero principal 4 · hoja 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.15562983934334884,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      -1.0471975511965976,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:26",
+    "name": "Cantero chico derecho",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -3.951679508984946,
+      0,
+      0.5809058491104855
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1.6675614592661825,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:26.0",
+    "name": "Cantero chico derecho · ladrillo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.3323064997473018,
+      0.25,
+      -4.159312570523928
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1.276618071609553,
+      1,
+      1.6644583513349798
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:26.1",
+    "name": "Cantero chico derecho · tierra",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.9463118046457075,
+      0.5,
+      3.0748198646092364
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1.1909477245463913,
+      1,
+      1.482254872249886
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:26.2",
+    "name": "Cantero chico derecho · arbusto 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.024859305116183,
+      0.7,
+      3.268307972762406
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1.4553904892839495,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:26.3",
+    "name": "Cantero chico derecho · arbusto 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.2541409618723351,
+      0.7,
+      3.1038106252534208
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.48427204998825524,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:26.4",
+    "name": "Cantero chico derecho · arbusto 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.541986838712298,
+      0.7,
+      3.4736698157261214
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:27",
+    "name": "Planta FOURTWENTY derecha 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      4.4,
+      0.5,
+      2.9
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:27.0",
+    "name": "Planta FOURTWENTY derecha 1 · tallo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.17,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:27.1",
+    "name": "Planta FOURTWENTY derecha 1 · hoja 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:27.2",
+    "name": "Planta FOURTWENTY derecha 1 · hoja 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      1.0471975511965976,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:27.3",
+    "name": "Planta FOURTWENTY derecha 1 · hoja 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.4854455575983563,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      -1.0471975511965976,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:28",
+    "name": "Planta FOURTWENTY derecha 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      5.5,
+      0.5,
+      2.7
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:28.0",
+    "name": "Planta FOURTWENTY derecha 2 · tallo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.17,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:28.1",
+    "name": "Planta FOURTWENTY derecha 2 · hoja 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.051516323775153694,
+      -0.44861256497111857
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:28.2",
+    "name": "Planta FOURTWENTY derecha 2 · hoja 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      1.0471975511965976,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:28.3",
+    "name": "Planta FOURTWENTY derecha 2 · hoja 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      -1.0471975511965976,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:29",
+    "name": "Arbol fondo izquierdo · tronco",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -22,
+      2.25,
+      4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:30",
+    "name": "Arbol fondo izquierdo · copa 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -22,
+      4.6,
+      4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:31",
+    "name": "Arbol fondo izquierdo · copa 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -21.4,
+      4.2,
+      4.3
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:32",
+    "name": "Arbol fondo izquierdo · copa 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -22.5,
+      4.3,
+      3.6
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:33",
+    "name": "Arbol fondo izquierdo · copa 4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -21.8,
+      5.2,
+      3.8
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:34",
+    "name": "Arbol fondo izquierdo · alcorque",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -22,
+      0.025,
+      4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:35",
+    "name": "Arbol fondo derecho · tronco",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      23,
+      2.25,
+      4.5
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:36",
+    "name": "Arbol fondo derecho · copa 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      23,
+      4.6,
+      4.5
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:37",
+    "name": "Arbol fondo derecho · copa 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      23.6,
+      4.2,
+      4.8
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:38",
+    "name": "Arbol fondo derecho · copa 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      22.5,
+      4.3,
+      4.1
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:39",
+    "name": "Arbol fondo derecho · copa 4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      23.2,
+      5.2,
+      4.3
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:40",
+    "name": "Arbol fondo derecho · alcorque",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      23,
+      0.025,
+      4.5
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:41",
+    "name": "Arbol fondo atras · tronco",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      15,
+      2.25,
+      -10
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:42",
+    "name": "Arbol fondo atras · copa 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      15,
+      4.6,
+      -10
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:43",
+    "name": "Arbol fondo atras · copa 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      15.6,
+      4.2,
+      -9.7
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:44",
+    "name": "Arbol fondo atras · copa 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      14.5,
+      4.3,
+      -10.4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:45",
+    "name": "Arbol fondo atras · copa 4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      15.2,
+      5.2,
+      -10.2
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:46",
+    "name": "Arbol fondo atras · alcorque",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      15,
+      0.025,
+      -10
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49",
+    "name": "Burela 2570 · local y galeria",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.0",
+    "name": "Cordon calle Burela",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.075,
+      8.892890830597821
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.1",
+    "name": "Escalon Burela bajo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.075,
+      -0.32
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.2",
+    "name": "Escalon Burela alto",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.15,
+      -0.64
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.3",
+    "name": "Plataforma galeria nivel local",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.057660857275592114,
+      0.225,
+      -2.71
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.4",
+    "name": "Linea roja referencia altura subida BOB",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.47000000000000003,
+      -0.99
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.5",
+    "name": "Columna salvia galeria 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -12,
+      2.0500000000000003,
+      -1.26
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.6",
+    "name": "Columna salvia galeria 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -7.5,
+      2.0500000000000003,
+      -1.3275273004793822
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.7",
+    "name": "Columna salvia galeria 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -3,
+      2.0831476507092592,
+      -1.26
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      2.0207383009071944,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.8",
+    "name": "Columna salvia galeria 4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -4.7175675148538945,
+      2.0500000000000003,
+      -1.26
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.44396110568801833,
+      1,
+      0.44649043946273265
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.9",
+    "name": "Columna salvia galeria 5",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      6,
+      2.0500000000000003,
+      -1.26
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.10",
+    "name": "Columna salvia galeria 6",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      12.072402403949791,
+      2.0500000000000003,
+      -1.1489763622677938
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1.1372073398788438,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.11",
+    "name": "Alero techo galeria salvia",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      3.825,
+      -3.3913289789230285
+    ],
+    "rotation": [
+      0,
+      -0.1834681200831786,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.12",
+    "name": "Zocalo verde frente locales",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.9,
+      -4.46
+    ],
+    "rotation": [
+      0.011486734161039937,
+      0.06334161379658311,
+      -0.17952135719033935
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.13",
+    "name": "Persianas verdes locales izquierda",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      133.3340899784195,
+      2.5,
+      -4.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.14",
+    "name": "Persianas verdes locales derecha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      4.612333709162269,
+      1.786301525824629,
+      -4.471101212773658
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.25027934271008595,
+      2.566414739446746,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.15",
+    "name": "Dintel crema local FOURTWENTY",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      3.4000000000000004,
+      -4.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.16",
+    "name": "Toldo negro local FOURTWENTY",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      3.351392378156313,
+      -4.351192829577478
+    ],
+    "rotation": [
+      -1.590708190479506,
+      0,
+      0
+    ],
+    "scale": [
+      0.9756930898945697,
+      1,
+      0.6654762722915533
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.17",
+    "name": "Vidriera FOURTWENTY vidrio principal",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.7775446548610727,
+      1.467602307718272,
+      -4.931812206950647
+    ],
+    "rotation": [
+      -2.7229584702593237,
+      1.5036239777661502,
+      2.722119284898808
+    ],
+    "scale": [
+      0.5417541897077711,
+      1.2878588508978244,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.18",
+    "name": "Vidriera FOURTWENTY montante 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.75,
+      2.25,
+      -4.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.19",
+    "name": "Vidriera FOURTWENTY montante 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.375,
+      2.25,
+      -4.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.20",
+    "name": "Vidriera FOURTWENTY montante 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      2.25,
+      -4.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.21",
+    "name": "Vidriera FOURTWENTY montante 4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.375,
+      2.25,
+      -4.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.22",
+    "name": "Vidriera FOURTWENTY montante 5",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.75,
+      1.5534782985841815,
+      -4.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1.7715496181394585,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.23",
+    "name": "Vidriera FOURTWENTY travesano 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      1.35,
+      -4.46
+    ],
+    "rotation": [
+      0,
+      -0.1741379665387134,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.24",
+    "name": "Vidriera FOURTWENTY travesano 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      1.9500000000000002,
+      -4.43979545659269
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.25",
+    "name": "Vidriera FOURTWENTY travesano 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      2.5500000000000003,
+      -4.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.26",
+    "name": "Vidriera FOURTWENTY travesano 4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      3.1500000000000004,
+      -4.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.27",
+    "name": "Reja vidriera FOURTWENTY 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.45,
+      2.25,
+      -4.4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.28",
+    "name": "Reja vidriera FOURTWENTY 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.1,
+      2.25,
+      -4.4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.29",
+    "name": "Reja vidriera FOURTWENTY 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.75,
+      2.25,
+      -4.4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.30",
+    "name": "Reja vidriera FOURTWENTY 4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.4,
+      2.25,
+      -4.4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.31",
+    "name": "Reja vidriera FOURTWENTY 5",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.0499999999999998,
+      2.25,
+      -4.4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.32",
+    "name": "Marco puerta entrada FOURTWENTY",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.5,
+      1.55,
+      -4.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.33",
+    "name": "Interior local · piso beige",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0.4,
+      -8.46
+    ],
+    "rotation": [
+      -3.13815735526004,
+      0.012180549744398842,
+      3.140220139370535
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.34",
+    "name": "Interior local · techo blanco",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      3.6500000000000004,
+      -7.460000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.35",
+    "name": "Interior local · pared izquierda",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -3,
+      2.0500000000000003,
+      -7.460000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      0.9955485485258595,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.36",
+    "name": "Interior local · pared derecha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      3,
+      2.0500000000000003,
+      -7.452724030778185
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.37",
+    "name": "Interior local · pared fondo izquierda",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.3,
+      2.0500000000000003,
+      -10.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.38",
+    "name": "Interior local · viga blanca 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.0003415903373206186,
+      3.2997024273022446,
+      -6.4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.39",
+    "name": "Interior local · viga blanca 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      3.161676731349757,
+      -8.4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.40",
+    "name": "Interior local · riel luces 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.1,
+      3.43,
+      -7.4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.41",
+    "name": "Interior local · spot 1.1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.1,
+      3.3500000000000005,
+      -5.6
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.42",
+    "name": "Interior local · spot 1.2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.1,
+      3.3500000000000005,
+      -6.8
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.43",
+    "name": "Interior local · spot 1.3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.1,
+      3.3500000000000005,
+      -8
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.44",
+    "name": "Interior local · spot 1.4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.1,
+      3.3500000000000005,
+      -9.2
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.45",
+    "name": "Interior local · riel luces 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.1,
+      3.43,
+      -7.4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.46",
+    "name": "Interior local · spot 2.1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.1,
+      3.3500000000000005,
+      -5.6
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.47",
+    "name": "Interior local · spot 2.2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.084809695208832,
+      3.1535698052091905,
+      -6.414896139460373
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.48",
+    "name": "Interior local · spot 2.3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.1,
+      3.3500000000000005,
+      -8
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.49",
+    "name": "Interior local · spot 2.4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.1,
+      3.3500000000000005,
+      -9.2
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.50",
+    "name": "Interior local · panel madera fondo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.3,
+      2.0500000000000003,
+      -10.4
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.51",
+    "name": "Interior local · neon WE ROLL DIFFERENT",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.3272953648416184,
+      2.7882050597219434,
+      -10.340000000000002
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.8223398524070885,
+      0.8380441176723731,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.52",
+    "name": "Interior local · mostrador madera cuerpo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.7910183361615335,
+      0.925,
+      -9.15
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.08201764247106902,
+      1,
+      1.4479419360698684
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.53",
+    "name": "Interior local · mostrador madera tapa",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.6,
+      1.5976494031486954,
+      -9.15
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.54",
+    "name": "Interior local · tirador mostrador 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.05,
+      1.23,
+      -8.82
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.55",
+    "name": "Interior local · tirador mostrador 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.6,
+      1.23,
+      -8.82
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.56",
+    "name": "Interior local · tirador mostrador 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.15,
+      1.23,
+      -8.82
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.57",
+    "name": "Interior local · banqueta negra 1 completa",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.2460583942402645,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.57.0",
+    "name": "Interior local · banqueta negra 1 asiento",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1,
+      1.17,
+      -9.75
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.57.1",
+    "name": "Interior local · banqueta negra 1 pata",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1,
+      0.81,
+      -9.75
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.57.2",
+    "name": "Interior local · banqueta negra 1 aro",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1,
+      0.67,
+      -9.75
+    ],
+    "rotation": [
+      1.5707963267948966,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.58",
+    "name": "Interior local · banqueta negra 2 completa",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.58.0",
+    "name": "Interior local · banqueta negra 2 asiento",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.2,
+      1.17,
+      -9.75
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.58.1",
+    "name": "Interior local · banqueta negra 2 pata",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.2,
+      0.81,
+      -9.75
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.58.2",
+    "name": "Interior local · banqueta negra 2 aro",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.2,
+      0.67,
+      -9.75
+    ],
+    "rotation": [
+      1.5707963267948966,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.59",
+    "name": "Interior local · estante pared izquierda",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.619947185137991,
+      2.6,
+      -7.329528020127064
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.42722715462806904,
+      1.0795676141242314,
+      6.2332314171936325
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.60",
+    "name": "Interior local · deco estante",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.65,
+      2.8746385677519655,
+      -7.625484640407889
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.61",
+    "name": "Interior local · barral prendas izquierdo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.6947897969170036,
+      2.413295404933133,
+      -7.551335615053167
+    ],
+    "rotation": [
+      1.5707963267948966,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.62",
+    "name": "Interior local · prenda colgada izquierda 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.72,
+      2.1629950826250957,
+      -8.129264067549151
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.63",
+    "name": "Interior local · prenda colgada izquierda 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.6859843711988547,
+      2.23604072549294,
+      -7.73070918877686
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      0.6161453064562523,
+      0.7325990350045618,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.64",
+    "name": "Interior local · prenda colgada izquierda 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.68,
+      2.17742718457637,
+      -6.960807886042075
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.65",
+    "name": "Interior local · prenda colgada izquierda 4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.7304655180775566,
+      2.099060914428575,
+      -7.317623821683748
+    ],
+    "rotation": [
+      0,
+      1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1.1575388909907327,
+      1.0510534751653937,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.66",
+    "name": "Interior local · exhibidor jean completo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.98,
+      0,
+      -0.9829173184576512
+    ],
+    "rotation": [
+      0,
+      -0.28,
+      -0.050231
+    ],
+    "scale": [
+      1,
+      0.84,
+      1.01
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.66.0",
+    "name": "Interior local · exhibidor jean base",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.2,
+      0.465,
+      -5.3
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.66.1",
+    "name": "Interior local · jean blanco pierna izquierda",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.27,
+      0.9,
+      -5.3
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.66.2",
+    "name": "Interior local · jean blanco pierna derecha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.1300000000000003,
+      0.9,
+      -5.304049898757023
+    ],
+    "rotation": [
+      -0.008988811980997099,
+      0.17692701627505444,
+      0.0007972679909746106
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.66.3",
+    "name": "Interior local · jean blanco cintura",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.2,
+      1.4,
+      -5.3
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.66.4",
+    "name": "Interior local · exhibidor jean tapa",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.2,
+      1.57,
+      -5.3
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.67",
+    "name": "Interior local · divisor madera derecho",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.7460323267221862,
+      0.9750000000000001,
+      -6.696185131964973
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.11222222630453986,
+      1.671587316752462,
+      0.2730207968619653
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.68",
+    "name": "Interior local · banqueta roja completa",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0,
+      0,
+      0
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.68.0",
+    "name": "Interior local · banqueta roja asiento",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.35,
+      1.3,
+      -7.5
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.68.1",
+    "name": "Interior local · banqueta roja pata",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.25,
+      0.87,
+      -7.6
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.68.2",
+    "name": "Interior local · banqueta roja pata",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.45,
+      0.87,
+      -7.6
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.68.3",
+    "name": "Interior local · banqueta roja pata",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.35,
+      0.87,
+      -7.38
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.69",
+    "name": "Interior local · corcho pared derecha",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.89,
+      1.95,
+      -6.8
+    ],
+    "rotation": [
+      0,
+      -1.5707963267948966,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.70",
+    "name": "Interior local · extintor",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.28,
+      1.5999999999999999,
+      -10.32
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.71",
+    "name": "Interior local · aire acondicionado split",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.8,
+      3.1700000000000004,
+      -4.62
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.72",
+    "name": "Stock selector · panel fondo oscuro",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.20205226689209255,
+      2.0500000000000003,
+      -12.31
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      2.4433781278386357,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.73",
+    "name": "Stock selector · lateral izquierdo",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.4,
+      2.0500000000000003,
+      -11.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.74",
+    "name": "Stock selector · lateral derecho",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      3,
+      2.0500000000000003,
+      -11.46
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.75",
+    "name": "Stock selector · barral cromado",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.7,
+      2.5,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      1.5707963267948966
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.76",
+    "name": "Stock selector · remera PISO 1 · ARCHIVE",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.7830362312622008,
+      2.17,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.77",
+    "name": "Stock selector · etiqueta PISO 1 · ARCHIVE",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.416387530077559,
+      1.77,
+      -9.648689654108226
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": false,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.78",
+    "name": "Stock selector · remera PISO 2 · ORIGEN",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.21,
+      2.17,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.79",
+    "name": "Stock selector · etiqueta PISO 2 · ORIGEN",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.21,
+      1.77,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.80",
+    "name": "Stock selector · remera PISO 3 · HOOP SEASON",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.7,
+      2.17,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.81",
+    "name": "Stock selector · etiqueta PISO 3 · HOOP SEASON",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.7,
+      1.77,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.82",
+    "name": "Stock selector · remera PISO 4 · BOB",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.19,
+      2.17,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.83",
+    "name": "Stock selector · etiqueta PISO 4 · BOB",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.19,
+      1.77,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.84",
+    "name": "Stock selector · remera PISO 5 · CULTURA",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.6799999999999997,
+      2.17,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.85",
+    "name": "Stock selector · etiqueta PISO 5 · CULTURA",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.6799999999999997,
+      1.77,
+      -11.360000000000001
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.86",
+    "name": "Reja verde lateral completa",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      7.3101269837382485,
+      0,
+      -3.2592993483881987
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.86.0",
+    "name": "Reja verde lateral barrote 1",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      13,
+      0.6,
+      -1.96
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.86.1",
+    "name": "Reja verde lateral barrote 2",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      13.4,
+      0.6,
+      -1.96
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.86.2",
+    "name": "Reja verde lateral barrote 3",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      13.8,
+      0.6,
+      -1.96
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.86.3",
+    "name": "Reja verde lateral barrote 4",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      14.200000000000001,
+      0.6,
+      -1.96
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.86.4",
+    "name": "Reja verde lateral barrote 5",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      14.600000000000001,
+      0.6,
+      -1.96
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.86.5",
+    "name": "Reja verde lateral barrote 6",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      15.000000000000002,
+      0.6,
+      -1.96
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.86.6",
+    "name": "Reja verde lateral barrote 7",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      15.400000000000002,
+      0.6,
+      -1.96
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.86.7",
+    "name": "Reja verde lateral barrote 8",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      15.800000000000002,
+      0.6,
+      -1.96
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.86.8",
+    "name": "Reja verde lateral travesano",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      14.5,
+      1.2,
+      -1.96
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:13-copia-1",
+    "name": "Edificio fondo paralelo izquierda (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -29.128280344250108,
+      9.913701126940797,
+      -26.87397682704694
+    ],
+    "rotation": [
+      0,
+      1.1925017709930317,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      7.895707128028191
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:13",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-1",
+    "name": "Vereda gris frente al local (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -11.506063282379701,
+      0,
+      6.788060288310436
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.2059407296305532,
+      0.9825789761058001,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-2",
+    "name": "Vereda gris frente al local (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -23.009477251777966,
+      -0.0014956407163027041,
+      6.788060288310436
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.2059407296305532,
+      0.9825789761058001,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-3",
+    "name": "Vereda gris frente al local (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      21.822736878107982,
+      0,
+      6.788060288310436
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.2059407296305532,
+      0.9825789761058001,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-4",
+    "name": "Vereda gris frente al local (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      11.5140385464671,
+      0,
+      6.788060288310436
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.2059407296305532,
+      0.9825789761058001,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-5",
+    "name": "Vereda gris frente al local (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.6,
+      0,
+      2.958393180799528
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-6",
+    "name": "Vereda gris frente al local (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.426284250073023,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-7",
+    "name": "Vereda gris frente al local (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      4.265518743212091,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-8",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      6.104852568271788,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-9",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      7.934191014991598,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-10",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      11.601842326674882,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-11",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      9.770146226660309,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-13",
+    "name": "Vereda gris frente al local (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -3.0740191434389987,
+      -0.0020035138350111836,
+      2.958393180799528
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-14",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -4.911851747224601,
+      0,
+      2.958393180799528
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-15",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -6.7524508371524625,
+      0,
+      2.958393180799528
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-16",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -8.588643680017448,
+      0,
+      2.958393180799528
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-17",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -10.420186584970153,
+      0,
+      2.958393180799528
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-18",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -12.259141261847299,
+      0,
+      2.958393180799528
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-19",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -14.09472039267611,
+      0,
+      2.958393180799528
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-20",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -15.932410124563361,
+      0,
+      2.958393180799528
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-21",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -17.768707148067126,
+      0,
+      2.958393180799528
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.1-copia-1",
+    "name": "Escalon Burela bajo (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.6,
+      -0.061634996460582625,
+      0.42437373742138207
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      2.105444555619906
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:26.3-copia-1",
+    "name": "Cantero chico derecho · arbusto 2 (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.8315495374439283,
+      0.7,
+      3.775727489122726
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.48427204998825524,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:26.3",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:26.3-copia-2",
+    "name": "Cantero chico derecho · arbusto 2 (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.4992132318189886,
+      0.7,
+      3.775727489122726
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.48427204998825524,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:26.3",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:26.0-copia-1",
+    "name": "Cantero chico derecho · ladrillo (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -5.024162055437788,
+      0.25,
+      3.6352267390090294
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:26.0",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.11-copia-1",
+    "name": "Alero techo galeria salvia (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -11.062376973196253,
+      3.825,
+      -3.099644397468597
+    ],
+    "rotation": [
+      0,
+      0.022273555602344754,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.11",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.11-copia-2",
+    "name": "Alero techo galeria salvia (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -39.159698737879125,
+      3.825,
+      -5.396155733119572
+    ],
+    "rotation": [
+      0,
+      -0.16382598218657887,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.11",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.8-copia-1",
+    "name": "Columna salvia galeria 4 (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -3.1889253192773492,
+      2.0500000000000003,
+      -4.650368640090269
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1.423574623276208,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.8",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.59-copia-1",
+    "name": "Interior local · estante pared izquierda (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.7418259809682772,
+      2.538837730106722,
+      -7.577165138007167
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.24853266445870564,
+      1.0795676141242314,
+      5.605484240552006
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.59",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.59-copia-4",
+    "name": "Interior local · estante pared izquierda (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.782457536488575,
+      2.670343311553419,
+      -6.823128425271602
+    ],
+    "rotation": [
+      -1.5659045463844996,
+      0,
+      0
+    ],
+    "scale": [
+      0.31075420372541424,
+      1.0795676141242314,
+      0.7447567966472183
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.59",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.59-copia-3",
+    "name": "Interior local · estante pared izquierda (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.7784638498317187,
+      2.674788406290558,
+      -8.330883668403693
+    ],
+    "rotation": [
+      -1.5659045463844996,
+      0,
+      0
+    ],
+    "scale": [
+      0.31075420372541424,
+      1.0795676141242314,
+      0.7447567966472183
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.59",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.59-copia-5",
+    "name": "Interior local · estante pared izquierda (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.7423686697974876,
+      2.786742195069823,
+      -7.577081474685341
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.24797422717597303,
+      0.9532890390714953,
+      5.556901883074907
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.59",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.61-copia-1",
+    "name": "Interior local · barral prendas izquierdo (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.6949728568998337,
+      2.448929410831466,
+      -8.25377049972391
+    ],
+    "rotation": [
+      -0.14009322170059618,
+      1.4670755188810047,
+      0.13875398226507357
+    ],
+    "scale": [
+      1,
+      0.07953668939649423,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.61",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.61-copia-2",
+    "name": "Interior local · barral prendas izquierdo (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.68767474708921,
+      2.448929410831466,
+      -6.832163581983417
+    ],
+    "rotation": [
+      -0.14009322170059618,
+      1.4670755188810047,
+      0.13875398226507357
+    ],
+    "scale": [
+      1,
+      0.07953668939649423,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.61",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.35-copia-1",
+    "name": "Interior local · pared izquierda (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.890075733477772,
+      2.0500000000000003,
+      -7.457487299678178
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      0.9955485485258595,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.35",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.52-copia-1",
+    "name": "Interior local · mostrador madera cuerpo (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.11997255491175185,
+      0.9287816309502153,
+      -9.15
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.08201764247106902,
+      1.4783883805210203,
+      1.4479419360698684
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.52",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.52-copia-2",
+    "name": "Interior local · mostrador madera cuerpo (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.5432063447385285,
+      1.5660220683804316,
+      -9.15
+    ],
+    "rotation": [
+      0,
+      0,
+      1.5683868383762303
+    ],
+    "scale": [
+      0.08201764247106902,
+      3.647491461363987,
+      1.4479419360698684
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.52",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.52-copia-3",
+    "name": "Interior local · mostrador madera cuerpo (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.3737565319086054,
+      1.4172003559767872,
+      -9.15
+    ],
+    "rotation": [
+      0,
+      0,
+      1.5683868383762303
+    ],
+    "scale": [
+      0.11444066891629927,
+      1.0701803326442634,
+      1.4479419360698684
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.52",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.52-copia-4",
+    "name": "Interior local · mostrador madera cuerpo (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.2190657132265097,
+      1.414771799043257,
+      -9.15
+    ],
+    "rotation": [
+      0,
+      0,
+      1.5683868383762303
+    ],
+    "scale": [
+      0.11444066891629927,
+      1.0701803326442634,
+      1.4479419360698684
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.52",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.52-copia-5",
+    "name": "Interior local · mostrador madera cuerpo (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.3974621766019808,
+      1.4135378809170673,
+      -9.15
+    ],
+    "rotation": [
+      0,
+      0,
+      1.5683868383762303
+    ],
+    "scale": [
+      0.11444066891629927,
+      1.0701803326442634,
+      1.4479419360698684
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.52",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.67-copia-1",
+    "name": "Interior local · divisor madera derecho (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.8527912765362027,
+      0.9750000000000001,
+      -6.693133437326879
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.11222222630453986,
+      1.671587316752462,
+      0.27151085464248503
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.67",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.67-copia-2",
+    "name": "Interior local · divisor madera derecho (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.3149661502705476,
+      0.9750000000000001,
+      -6.41898299462736
+    ],
+    "rotation": [
+      0,
+      1.5412612130656047,
+      0
+    ],
+    "scale": [
+      0.11557503494175843,
+      1.671587316752462,
+      0.4062772259079684
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.67",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.67-copia-3",
+    "name": "Interior local · divisor madera derecho (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.2964187049530285,
+      1.4102375700322172,
+      -6.696185131964973
+    ],
+    "rotation": [
+      0,
+      0,
+      1.5825175432230052
+    ],
+    "scale": [
+      0.11222222630453986,
+      0.8127268708970917,
+      0.27151085464248503
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.67",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.67-copia-4",
+    "name": "Interior local · divisor madera derecho (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.29897200193488,
+      1.3633424353838957,
+      -6.696185131964973
+    ],
+    "rotation": [
+      0,
+      0,
+      1.5825175432230052
+    ],
+    "scale": [
+      0.5481110354338998,
+      0.8127268708970917,
+      0.27151085464248503
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.67",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.67-copia-5",
+    "name": "Interior local · divisor madera derecho (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.613873830462987,
+      2.4451940099882843,
+      -5.227429466783517
+    ],
+    "rotation": [
+      2.4839061805233316,
+      -1.5581808464072122,
+      -2.234362748362729
+    ],
+    "scale": [
+      0.11222222630453986,
+      1.155637895524579,
+      0.07075044830487033
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.67",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.67-copia-6",
+    "name": "Interior local · divisor madera derecho (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.6415082791375784,
+      1.9699073578722404,
+      -5.227131328308589
+    ],
+    "rotation": [
+      2.4839061805233316,
+      -1.5581808464072122,
+      -2.234362748362729
+    ],
+    "scale": [
+      0.11222222630453986,
+      1.155637895524579,
+      0.10632468312571054
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.67",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.67-copia-7",
+    "name": "Interior local · divisor madera derecho (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.6389596966824294,
+      1.4360009753084348,
+      -5.227171467178104
+    ],
+    "rotation": [
+      2.4839061805233316,
+      -1.5581808464072122,
+      -2.234362748362729
+    ],
+    "scale": [
+      0.11222222630453986,
+      1.155637895524579,
+      0.1174018082979107
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.67",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.38-copia-1",
+    "name": "Interior local · viga blanca 1 (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.675193238410194,
+      1.8641089890274058,
+      -6.071856945938259
+    ],
+    "rotation": [
+      2.713911042454591,
+      -1.5638495810523056,
+      1.1431056092551006
+    ],
+    "scale": [
+      0.47168309460805785,
+      2.306376886763889,
+      2.260437601283613
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.38",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.38-copia-2",
+    "name": "Interior local · viga blanca 1 (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.9793557306815694,
+      1.8632565939184818,
+      -6.561072952001545
+    ],
+    "rotation": [
+      2.713911042454591,
+      -1.5638495810523056,
+      1.1431056092551006
+    ],
+    "scale": [
+      0.47168309460805785,
+      2.306376886763889,
+      2.260437601283613
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.38",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.9-copia-1",
+    "name": "Columna salvia galeria 5 (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      2.9941351420938696,
+      2.0500000000000003,
+      -4.611420727497967
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1.0678354972732926,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.9",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.47-copia-1",
+    "name": "Interior local · spot 2.2 (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.1825258627834534,
+      3.1535698052091905,
+      -6.414896139460373
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.47",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.47-copia-2",
+    "name": "Interior local · spot 2.2 (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.192908158915838,
+      3.1535698052091905,
+      -6.414896139460373
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.47",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.47-copia-3",
+    "name": "Interior local · spot 2.2 (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.0185531787364577,
+      3.1535698052091905,
+      -6.414896139460373
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.47",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.47-copia-4",
+    "name": "Interior local · spot 2.2 (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.8717905285966165,
+      3.1535698052091905,
+      -6.414896139460373
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.47",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.47-copia-5",
+    "name": "Interior local · spot 2.2 (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.07069306093562233,
+      3.047132968660635,
+      -8.417852652720004
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.47",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.47-copia-6",
+    "name": "Interior local · spot 2.2 (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.9746186685613107,
+      3.047132968660635,
+      -8.417852652720004
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.47",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.47-copia-7",
+    "name": "Interior local · spot 2.2 (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.8159480131492929,
+      3.047132968660635,
+      -8.417852652720004
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.47",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.47-copia-8",
+    "name": "Interior local · spot 2.2 (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -2.193009590712707,
+      3.047132968660635,
+      -8.417852652720004
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.47",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.47-copia-9",
+    "name": "Interior local · spot 2.2 (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -0.85506427482518,
+      3.047132968660635,
+      -8.417852652720004
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.47",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.35-copia-2",
+    "name": "Interior local · pared izquierda (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -3.00840592603366,
+      2.0500000000000003,
+      -7.457487299678178
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      0.9955485485258595,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.35",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.8-copia-2",
+    "name": "Columna salvia galeria 4 (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -4.830152379222251,
+      2.0500000000000003,
+      -0.9417015192610021
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.44396110568801833,
+      1,
+      0.44649043946273265
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.8",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.8-copia-3",
+    "name": "Columna salvia galeria 4 (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -5.273018051928194,
+      2.0500000000000003,
+      -0.9417015192610021
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.44396110568801833,
+      1,
+      0.44649043946273265
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.8",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.8-copia-4",
+    "name": "Columna salvia galeria 4 (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -5.657443093261727,
+      2.0500000000000003,
+      -1.4595155658727945
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.44396110568801833,
+      1,
+      0.44649043946273265
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.8",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-12",
+    "name": "Vereda gris frente al local (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -1.299655170494589,
+      0,
+      2.958393180799528
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03508912398570142,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.9-copia-2",
+    "name": "Columna salvia galeria 5 (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      6.216937663570484,
+      2.0500000000000003,
+      -4.611420727497967
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1.0678354972732926,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.9",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.14-copia-1",
+    "name": "Persianas verdes locales derecha (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      8.330698579286619,
+      1.786301525824629,
+      -4.471101212773658
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.3493435136609089,
+      6.339743283100219,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.14",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.2-copia-1",
+    "name": "Escalon Burela alto (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      0.6,
+      0.15,
+      -0.941429386937041
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.2",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.14-copia-2",
+    "name": "Persianas verdes locales derecha (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -4.87191705989016,
+      1.9514030780661815,
+      -4.512279220609632
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.25027934271008595,
+      1.524008527895529,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.14",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.8-copia-5",
+    "name": "Columna salvia galeria 4 (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -6.565705672506075,
+      2.01286503922267,
+      -4.564772287046887
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1.423574623276208,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.8",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.14-copia-3",
+    "name": "Persianas verdes locales derecha (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      -8.261484209155435,
+      1.9514030780661815,
+      -4.471101212773658
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.25027934271008595,
+      1.524008527895529,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.14",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.14-copia-4",
+    "name": "Persianas verdes locales derecha (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      1.2415689796800535,
+      1.786301525824629,
+      -4.471101212773658
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      0.4755696539286955,
+      2.566414739446746,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.14",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.36-copia-1",
+    "name": "Interior local · pared derecha (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      10.643167406778128,
+      2.0500000000000003,
+      -7.452724030778185
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.36",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.9-copia-3",
+    "name": "Columna salvia galeria 5 (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      10.504566490993504,
+      2.0500000000000003,
+      -4.549968208702167
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1.0678354972732926,
+      1,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.9",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.9-copia-4",
+    "name": "Columna salvia galeria 5 (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      10.863379534152767,
+      2.047962460649406,
+      -4.652285928184417
+    ],
+    "rotation": [
+      0,
+      1.4818693579802291,
+      0
+    ],
+    "scale": [
+      1.628674386115304,
+      1,
+      0.5500929743878041
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.9",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.14-copia-5",
+    "name": "Persianas verdes locales derecha (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      10.853028025043745,
+      2.0074856888473307,
+      -7.076986658097535
+    ],
+    "rotation": [
+      -3.141592653589793,
+      1.5056888808760616,
+      -3.141592653589793
+    ],
+    "scale": [
+      0.3813729040542819,
+      1.4683647024035762,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.14",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.9-copia-5",
+    "name": "Columna salvia galeria 5 (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      10.8044393915375,
+      1.997225330729618,
+      -9.50065547750045
+    ],
+    "rotation": [
+      0,
+      1.4818693579802291,
+      0
+    ],
+    "scale": [
+      1.628674386115304,
+      1,
+      0.5500929743878041
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.9",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.14-copia-6",
+    "name": "Persianas verdes locales derecha (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      10.656673141621448,
+      2.0074856888473307,
+      -12.03540105686511
+    ],
+    "rotation": [
+      -3.141592653589793,
+      1.5056888808760616,
+      -3.141592653589793
+    ],
+    "scale": [
+      0.47096184663856916,
+      1.4683647024035762,
+      1
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.14",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.3-copia-1",
+    "name": "Plataforma galeria nivel local (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      8.017766005880484,
+      0.225,
+      -20.783068402194914
+    ],
+    "rotation": [
+      0,
+      0,
+      0
+    ],
+    "scale": [
+      1,
+      1,
+      11.48650931675643
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.3",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-22",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      13.441349017453412,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-23",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      15.274764110478298,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-24",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      17.11129111428388,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:1-copia-25",
+    "name": "Vereda gris frente al local (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      18.949407336251113,
+      0,
+      2.9577612600013246
+    ],
+    "rotation": [
+      -1.5707963267948963,
+      0,
+      0
+    ],
+    "scale": [
+      0.03284796391664913,
+      0.9828077986348537,
+      0.9403166531559783
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:1",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.11-copia-3",
+    "name": "Alero techo galeria salvia (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      15.181096257581785,
+      3.825,
+      -5.973520764293713
+    ],
+    "rotation": [
+      0,
+      1.5533556469067642,
+      0
+    ],
+    "scale": [
+      -0.34191435396939807,
+      1,
+      1.034546359525033
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.11",
+    "manageShadows": false
+  },
+  {
+    "id": "calle-kit:49.11-copia-4",
+    "name": "Alero techo galeria salvia (copia) (copia)",
+    "type": "calle-kit",
+    "model": "",
+    "position": [
+      15.781096257581785,
+      3.825,
+      -5.973520764293713
+    ],
+    "rotation": [
+      0,
+      1.5533556469067642,
+      0
+    ],
+    "scale": [
+      0.5238169876491654,
+      1,
+      0.3337508644385191
+    ],
+    "castShadow": true,
+    "receiveShadow": true,
+    "locked": false,
+    "visible": true,
+    "cloneOf": "calle-kit:49.11",
+    "manageShadows": false
+  }
+]

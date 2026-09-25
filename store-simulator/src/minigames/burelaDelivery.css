@@ -1,0 +1,224 @@
+.burela-delivery {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: #111714;
+  color: #f5f1e8;
+  font-family: "Arial Narrow", Arial, sans-serif;
+  user-select: none;
+  touch-action: none;
+}
+
+.burela-delivery canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #243329;
+  touch-action: none;
+}
+
+.burela-delivery__hud {
+  position: absolute;
+  inset: 12px 12px auto;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(120px, 0.7fr) minmax(210px, 1.6fr) minmax(120px, 0.7fr);
+  align-items: stretch;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.burela-delivery__panel {
+  min-width: 0;
+  padding: 8px 11px;
+  border: 1px solid rgba(241, 236, 220, 0.26);
+  border-radius: 4px;
+  background: rgba(11, 15, 13, 0.84);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.42);
+}
+
+.burela-delivery__brand {
+  color: #f3ead4;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.burela-delivery__location {
+  margin-top: 3px;
+  color: #79ca8a;
+  font: 700 9px "Courier New", monospace;
+}
+
+.burela-delivery__mission {
+  text-align: center;
+}
+
+.burela-delivery__kicker {
+  display: block;
+  margin-bottom: 2px;
+  color: #a7b2a9;
+  font: 700 9px "Courier New", monospace;
+}
+
+.burela-delivery__objective {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.18;
+}
+
+.burela-delivery__damage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f5f1e8;
+  font: 900 11px "Courier New", monospace;
+  text-align: center;
+}
+
+.burela-delivery__toast {
+  position: absolute;
+  top: 82px;
+  left: 50%;
+  z-index: 3;
+  width: min(78%, 520px);
+  box-sizing: border-box;
+  padding: 9px 14px;
+  transform: translate(-50%, -10px);
+  border: 1px solid rgba(103, 216, 126, 0.56);
+  border-radius: 4px;
+  background: rgba(9, 14, 11, 0.92);
+  color: #8bf0a0;
+  font: 900 13px "Courier New", monospace;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.burela-delivery__toast.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+
+.burela-delivery__toast.alert {
+  border-color: rgba(255, 82, 69, 0.66);
+  color: #ff766b;
+}
+
+.burela-delivery__prompt {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  z-index: 3;
+  max-width: calc(100% - 28px);
+  box-sizing: border-box;
+  padding: 9px 14px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(245, 241, 232, 0.45);
+  border-radius: 4px;
+  background: rgba(8, 11, 10, 0.9);
+  color: #ffffff;
+  font: 900 12px "Courier New", monospace;
+  text-align: center;
+  white-space: normal;
+  pointer-events: none;
+}
+
+.burela-delivery__prompt[hidden] {
+  display: none;
+}
+
+.burela-delivery__touch {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .burela-delivery__touch {
+    position: absolute;
+    inset: auto 16px 18px;
+    z-index: 4;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .burela-delivery__stick,
+  .burela-delivery__action {
+    pointer-events: auto;
+    touch-action: none;
+  }
+
+  .burela-delivery__stick {
+    position: relative;
+    width: 92px;
+    height: 92px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 50%;
+    background: rgba(7, 10, 9, 0.3);
+  }
+
+  .burela-delivery__stick-knob {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 34px;
+    height: 34px;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    background: rgba(245, 241, 232, 0.28);
+  }
+
+  .burela-delivery__action {
+    width: 62px;
+    height: 62px;
+    border: 1px solid rgba(255, 255, 255, 0.48);
+    border-radius: 50%;
+    background: rgba(12, 18, 15, 0.76);
+    color: #ffffff;
+    font: 900 22px "Courier New", monospace;
+  }
+
+  .burela-delivery__prompt {
+    bottom: 24px;
+    max-width: 52%;
+  }
+}
+
+@media (max-width: 620px), (max-height: 520px) {
+  .burela-delivery__hud {
+    inset: 6px 6px auto;
+    grid-template-columns: 92px minmax(150px, 1fr) 92px;
+    gap: 4px;
+  }
+
+  .burela-delivery__panel {
+    padding: 6px 7px;
+  }
+
+  .burela-delivery__brand,
+  .burela-delivery__objective {
+    font-size: 10px;
+  }
+
+  .burela-delivery__location,
+  .burela-delivery__kicker,
+  .burela-delivery__damage {
+    font-size: 8px;
+  }
+
+  .burela-delivery__toast {
+    top: 58px;
+    font-size: 10px;
+  }
+}
