@@ -17,7 +17,6 @@ cd "$(dirname "$0")" || exit 1
 
 VERSIONES=(
   "claude/fourtwenty-store-simulator-g3rigz|Version NORMAL (la de todos los dias)"
-  "claude/burela-graficos|PRUEBA: graficos nuevos de Burela (luz, sombras, reflejos)"
 )
 
 echo ""

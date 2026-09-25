@@ -331,6 +331,30 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
   no pisarlo a ciegas.
   Lo mismo vale para los diseños de cuadros, que tienen su propio EXPORTAR JSON.
 
+### ⚠️ "No veo lo que subio Fer" → boton "Traer pisos de Fer" (25/09)
+
+- **Lo guardado en el navegador manda sobre el archivo del repo, ENTERO.**
+  `loadInitialLayout`: si hay algo local, el archivo se ignora. Cuando Fer sube
+  pisos nuevos, Kusher no los ve. Paso el 25/09: el repo tenia 12 prendas en
+  ORIGEN (verificado con un navegador limpio) y Kusher veia el piso vacio.
+- "Clear Local" lo arregla pero **borra tambien lo que Kusher acomodo en Burela
+  y no subio**. Por eso existe el boton **"Traer pisos de Fer"** (editor `T`,
+  seccion Layout, `traerPisosDelRepo` en `layoutStore.js`): Burela sale del
+  navegador y los cinco pisos del repo. Antes descarga un **respaldo** a
+  Descargas —si no puede, no hace nada— y despues recarga.
+- ⚠️ **Las COPIAS no guardan el piso.** Una prenda duplicada con el editor solo
+  tiene `cloneOf`; el piso lo guarda el original (`prendaGlb.destinationId`).
+  `destinationScope` sigue la cadena de copias. Sin eso, 10 de las 12 prendas
+  de ORIGEN se clasificaban como Burela: el boton traia 2, y **guardar en Burela
+  podia borrar del navegador las copias de los pisos**. Si se agrega otro tipo
+  de objeto creado adentro de un piso, tiene que guardar su piso o ser copia de
+  algo que lo guarde.
+- Lo que Fer haga y **no suba a GitHub** (su navegador, sus exportaciones) este
+  boton no lo puede traer. Al 25/09, lo ultimo de Fer en GitHub es
+  `fer/babilonia-assets-septiembre-3` (07/09), y su unico commit que faltaba
+  —el pack Babilonia en el catalogo— ya estaba hecho de nuestro lado con los
+  mismos 25 modelos. Lo que Fer conto del 20-21/09 NO esta subido.
+
 ### Burela: cuadra de enfrente, cielo y barrio (09/09)
 
 - **La cuadra de enfrente esta recreada con las fotos reales** de Burela 2570:
@@ -362,6 +386,30 @@ recomendacion de crear patrones reduce retrabajo, pero no limita su decision.
   pasar al lado. El Corolla de Fer se repinta de azul en la carga
   (`carPaint.js`): son 48 pixeles de una paleta compartida de 32x4, sin tocar
   las luces traseras ni el interior.
+
+### Prueba grafica de Burela — DESCARTADA (25/09)
+
+Rama `claude/burela-graficos` (queda en GitHub, sin integrar). Luz nueva,
+sombras ajustadas, reflejo de cielo, antialiasing, oclusion ambiental y niebla
+exponencial, con fotos antes/despues. **Kusher: "no note mucha diferencia, me
+parecio una decepcion".** Leccion: lo que el espera como "salto grafico" es
+mucho mas que luz; con estos modelos (arboles low-poly, fachadas lisas) la luz
+sola no lo da. Antes de otra prueba asi, acordar con el que se va a ver.
+
+Hallazgos de esa prueba que **siguen siendo ciertos en esta version** (no se
+arreglaron aca):
+- **La sombra del sol esta mal orientada:** 11,6 px/m en el eje peor y sin
+  sombra mas alla de x≈±50 m desde el campo x3 (`sun.shadow.camera` en
+  `street.js`). La rama tiene el arreglo (`graficosBurela.js`, ajuste + giro).
+- **El asfalto no recibe sombra** (`receiveShadow` falta): los autos flotan.
+- **Con postproceso no hay antialiasing:** el `antialias` del renderer no llega
+  a la imagen intermedia del composer.
+- ⚠️ **`perfAudit` cuenta mal las llamadas de dibujo** con postproceso: da
+  siempre 1 (three reinicia el contador en cada `render()`). Cualquier numero de
+  llamadas medido asi no vale. El arreglo esta en la rama (`autoReset = false`).
+- three r184: `GTAOPass` con profundidad externa en el constructor revienta al
+  arrancar; se le pasa despues con `setGBuffer`.
+- `tools/smoke/fotos-burela.mjs` y el contador `?fps=1` quedaron en esa rama.
 
 ### BOB
 
@@ -820,6 +868,24 @@ mover, duplicar y agrupar. Tope de 60 pasos.
 - ⚠️ Para saber si un objeto original esta borrado hay que mirar `visible`, NO
   si sigue en el registro: los originales quedan registrados. Una prueba mia
   midio mal justo por esto y reporto que las casas seguian ahi.
+
+**Cortar hasta BOB (25/09).** Kusher: "dejame acortar las escaleras, ya que
+debo acortarlas en un punto especifico" (las de Burela que suben al local,
+hasta antes de la pared de ladrillo de la esquina).
+- Por que hacia falta: escalones y plataforma de la galeria se construyen con
+  el ancho de TODO el campo (`MAP_HALF_X * 2`); al estirarlo x3 pasaron de 56 a
+  **168 m**. La escala del editor achica DESDE EL CENTRO (se acercan los dos
+  extremos), asi que cortar en un punto era escalar + mover + hacer la cuenta.
+- Uso: parar a BOB donde tiene que terminar, `T`, elegir la pieza (o marcar
+  varias con SHIFT + click), boton **Cortar hasta BOB** (seccion Transform). Se
+  queda el extremo LEJANO de BOB; el cercano se corta a su altura. Se guarda
+  solo y **Ctrl+Z** lo deshace.
+- Trabaja sobre el eje X propio de cada pieza con matrices de mundo (anda con
+  piezas giradas, espejadas o copias). Solo piezas de UNA malla: a un grupo lo
+  saltea y avisa. Medido: con BOB en x=20, los tres pasan de -84..84 a
+  -84..20,00.
+- Los escalones son color liso: acortarlos no deforma ninguna textura. Con una
+  pieza texturada, la textura se comprimiria a lo largo.
 
 **El cursor del joystick.** Con el editor abierto y **nada agarrado**, el stick
 izquierdo mueve una cruz verde por la pantalla: **✕** agarra lo que hay debajo,
