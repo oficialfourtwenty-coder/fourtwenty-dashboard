@@ -1564,6 +1564,31 @@ prueba en el juego, se commitea el archivo solo, y los dos hacen `pull`.
 
 ## 11. Ejecutar y verificar
 
+### Para Kusher: doble click, sin terminal (22-25/09)
+
+Dos archivos en la raiz del repositorio. En Mac un `.command` se abre con doble
+click (la primera vez: click derecho → Abrir → Abrir).
+
+- **`ABRIR-SIMULADOR.command`** — baja lo ultimo de la version en la que se
+  esta, revisa dependencias, levanta el servidor en un puerto libre y abre el
+  navegador cuando ya responde. **Nunca pisa trabajo**: si hay cambios sin
+  guardar, o la rama se separo de GitHub, avisa y abre con lo que hay.
+- **`CAMBIAR-DE-VERSION.command`** — lista numerada de versiones (la normal y
+  las de prueba), se elige con un numero, cambia y abre el simulador. Para
+  sumar una prueba nueva se agrega una linea en `VERSIONES`.
+
+Trampas que los dos ya contemplan, porque ya pasaron:
+- ⚠️ Solo cuentan como "cambios sin guardar" los archivos que git ya sigue
+  (`--untracked-files=no`). Sin eso, un `.DS_Store` —que macOS crea solo al
+  abrir la carpeta en Finder— bloqueaba la actualizacion para siempre.
+- ⚠️ git no deja la misma rama abierta en dos carpetas a la vez ("already
+  checked out"). El selector dice ESA causa en vez de un "fallo" generico: el
+  03/08 un error asi hizo perder mas de una hora.
+- La carpeta sale de donde esta el archivo, no de una ruta escrita a mano: anda
+  igual en `auditoria-rendimiento`, en el Desktop o en una copia nueva.
+
+### A mano
+
 ```bash
 cd /Users/kusher/Desktop/fourtwenty-dashboard
 git switch version-3-de-septiembre-final
