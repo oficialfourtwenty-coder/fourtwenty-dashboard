@@ -188,6 +188,7 @@ export function createEditorPanel(callbacks = {}) {
           ${button('Delete', 'delete')}
           ${button('Parent', 'parent')}
           ${button('Show/Hide', 'visible')}
+          ${button('Cortar hasta BOB', 'cortar-bob')}
         </div>
       </div>
 
@@ -224,6 +225,7 @@ export function createEditorPanel(callbacks = {}) {
           ${button('Reset File', 'reset')}
           ${button('Clear Local', 'clear')}
           ${button('Import JSON', 'import')}
+          ${button('Traer pisos de Fer', 'traer-pisos')}
         </div>
         <input type="file" accept="application/json,.json" data-field="fileInput" style="display:none">
       </div>
@@ -388,6 +390,8 @@ export function createEditorPanel(callbacks = {}) {
     else if (action === 'download') callbacks.onDownload?.();
     else if (action === 'reset') callbacks.onReset?.();
     else if (action === 'clear') callbacks.onClear?.();
+    else if (action === 'traer-pisos') callbacks.onTraerPisos?.();
+    else if (action === 'cortar-bob') callbacks.onCortarHastaBob?.();
     else if (action === 'import') fields.fileInput.click();
   });
 

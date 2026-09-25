@@ -133,7 +133,12 @@ export async function loadInitialLayout() {
   return loadBaseLayout();
 }
 
-function destinationScope(item) {
+// ⚠️ `porId` (opcional): mapa id → objeto del mismo layout. Hace falta para las
+// COPIAS. Una prenda duplicada con el editor (`prenda:remera-...-copia-3`) no
+// guarda el piso: lo guarda solo el original, en `prendaGlb.destinationId`. Sin
+// seguir `cloneOf`, las copias quedaban clasificadas como Burela. En ORIGEN son
+// 10 de las 12 prendas colgadas.
+function destinationScope(item, porId = null, visto = new Set()) {
   const nestedDestination = item?.piece?.destinationId
     ?? item?.mueble?.destinationId
     ?? item?.prendaGlb?.destinationId;
@@ -146,16 +151,95 @@ function destinationScope(item) {
   const arcade = id.match(/^destination-(\d+)-minigame-arcade/);
   if (arcade) return Number(arcade[1]);
   if (id.startsWith('origin-minigame-arcade')) return 1;
+  // Copia: pertenece al piso de su original. `visto` corta una cadena circular
+  // si algun dia un layout roto la trajera.
+  if (item?.cloneOf && porId && !visto.has(id)) {
+    visto.add(id);
+    const original = porId.get(item.cloneOf);
+    if (original) return destinationScope(original, porId, visto);
+  }
   return null;
+}
+
+const mapaPorId = (...layouts) => {
+  const mapa = new Map();
+  for (const layout of layouts) for (const item of layout ?? []) if (item?.id) mapa.set(item.id, item);
+  return mapa;
+};
+
+const NOMBRES_PISOS = { 1: 'ORIGEN', 2: 'HOOP SEASON', 3: 'CULTURA', 4: 'BOB', 5: 'TERRAZA' };
+
+// TRAER LOS PISOS DEL REPO SIN TOCAR BURELA — boton "Traer pisos de Fer" (T).
+//
+// POR QUE EXISTE. Lo guardado en el navegador MANDA sobre el archivo del repo
+// (`loadInitialLayout`: si hay algo local, el archivo se ignora ENTERO). Asi
+// que cuando Fer sube pisos nuevos, Kusher no los ve: su navegador tiene un
+// guardado viejo de esos pisos. Paso el 25/09 con ORIGEN: el repo tenia 12
+// prendas colgadas (verificado abriendo el piso con un navegador limpio) y
+// Kusher veia el piso vacio.
+//
+// La salida de siempre era "Clear Local", pero eso borra TAMBIEN lo que Kusher
+// acomodo en Burela y todavia no subio. Esto separa: Burela sale del navegador
+// (lo de Kusher) y los cinco pisos salen del repo (lo de Fer).
+//
+// A que escena pertenece cada objeto lo decide `destinationScope`, la misma
+// regla que ya usa el guardado. Los objetos CREADOS adentro de un piso (una
+// prenda, un mueble) no dicen el piso en el id, pero lo guardan adentro
+// (`prendaGlb.destinationId`, `mueble.destinationId`): por eso no se pierden,
+// que es el agujero que tuvo `fusionar-layouts.mjs` el 10/09.
+//
+// ⚠️ ANTES DE TOCAR NADA SE DESCARGA UN RESPALDO de lo que habia en el
+// navegador. Ya se perdio trabajo de layout mas de una vez; un archivo en
+// Descargas es la unica garantia que no depende de este codigo.
+export async function traerPisosDelRepo() {
+  const local = getLocalLayout() ?? [];
+  const repo = await loadBaseLayout();
+  if (!repo.length) {
+    return { ok: false, motivo: 'No se pudo leer el archivo del repo. ¿Esta andando el servidor?' };
+  }
+
+  const fecha = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+  const respaldo = `respaldo-layout-antes-de-traer-pisos-${fecha}.json`;
+  if (local.length && !downloadLayout(local, respaldo)) {
+    // Sin respaldo no se sigue: preferible no traer nada a arriesgar lo suyo.
+    return { ok: false, motivo: 'No se pudo descargar el respaldo. No se toco nada.' };
+  }
+
+  const idsLocal = mapaPorId(local);
+  const idsRepo = mapaPorId(repo);
+  const burela = local.filter((item) => destinationScope(item, idsLocal) === null);
+  const pisos = repo.filter((item) => destinationScope(item, idsRepo) !== null);
+  const resultado = [...burela, ...pisos];
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, formatLayoutJSON(resultado));
+  } catch (error) {
+    console.warn('No se pudo guardar el layout con los pisos traidos.', error);
+    return { ok: false, motivo: 'No se pudo guardar (¿memoria del navegador llena?). No se toco nada.' };
+  }
+
+  const porPiso = {};
+  for (const item of pisos) {
+    const piso = destinationScope(item, idsRepo);
+    const nombre = NOMBRES_PISOS[piso] ?? `piso ${piso}`;
+    porPiso[nombre] = (porPiso[nombre] ?? 0) + 1;
+  }
+  const prendas = pisos.filter((item) => String(item.id).startsWith('prenda:') && item.visible !== false).length;
+  return { ok: true, burela: burela.length, porPiso, prendas, respaldo: local.length ? respaldo : null };
 }
 
 function preserveUnloadedDestinations(layout) {
   const previous = getLocalLayout();
   if (!previous) return layout;
-  const loadedDestinations = new Set(layout.map(destinationScope).filter(Number.isFinite));
+  // ⚠️ Con flecha y el mapa, NO `layout.map(destinationScope)`: `map` le pasa
+  // tambien el indice y el array, y `destinationScope` ahora recibe el mapa de
+  // ids como segundo argumento (para seguir las copias). Pasado directo,
+  // guardar reventaba al primer objeto copiado.
+  const ids = mapaPorId(previous, layout);
+  const loadedDestinations = new Set(layout.map((item) => destinationScope(item, ids)).filter(Number.isFinite));
+  const idsActuales = new Set(layout.map((item) => item?.id));
   const preserved = previous.filter((item) => {
-    const scope = destinationScope(item);
-    return Number.isFinite(scope) && !loadedDestinations.has(scope);
+    const scope = destinationScope(item, ids);
+    return Number.isFinite(scope) && !loadedDestinations.has(scope) && !idsActuales.has(item?.id);
   });
   return [...preserved, ...layout];
 }

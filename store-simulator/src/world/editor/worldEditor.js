@@ -38,6 +38,7 @@ import {
   loadBaseLayout,
   parseLayoutJSON,
   saveLocalLayout,
+  traerPisosDelRepo,
 } from './layoutStore.js';
 
 const SNAP = {
@@ -183,6 +184,8 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     onDownload: () => downloadLayout(serializeCurrentLayout()),
     onReset: resetFromFile,
     onClear: clearLocal,
+    onTraerPisos: traerPisos,
+    onCortarHastaBob: cortarHastaBob,
     onImportFile: importJSONFile,
     onDuplicate: duplicateSelected,
     onDelete: deleteSelected,
@@ -1148,6 +1151,113 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   function clearLocal() {
     const ok = clearLocalLayout();
     setStatus(ok ? 'Layout local limpiado. Refresca para volver al archivo base.' : 'No se pudo limpiar localStorage.');
+  }
+
+  // ---- CORTAR HASTA BOB -----------------------------------------------------
+  // Kusher: "dejame acortar las escaleras, ya que debo acortarlas en un punto
+  // especifico" — las de Burela que suben al local, que tienen que terminar
+  // antes de la pared de ladrillo de la esquina.
+  //
+  // Por que hacia falta: los escalones y la plataforma se construyen con el
+  // ancho de TODO el campo (`MAP_HALF_X * 2`), y al estirar el campo x3 (10/09)
+  // pasaron de 56 a 168 m y atraviesan todo. Con la escala del editor se podia
+  // achicarlos, pero la escala achica DESDE EL CENTRO: los dos extremos se
+  // acercan y ninguno queda donde uno quiere. Habia que escalar y despues mover
+  // haciendo la cuenta, y en tres piezas (mas las copias).
+  //
+  // Como se usa: parar a BOB justo donde tiene que terminar la escalera, abrir
+  // el editor (T), elegir la pieza —o marcar varias con SHIFT + click— y
+  // apretar "Cortar hasta BOB". Se queda el extremo LEJANO de BOB y el cercano
+  // se corta exactamente a su altura. Con Ctrl+Z vuelve.
+  //
+  // La cuenta se hace sobre el eje LARGO propio de cada pieza (su X local) con
+  // matrices de mundo, asi funciona igual si la pieza esta girada, espejada o
+  // es una copia colgada de otro lado.
+  function cortarHastaBob() {
+    const ids = new Set(marcadasMundo);
+    if (state.selectedId) ids.add(state.selectedId);
+    if (!ids.size) { setStatus('Elegí la pieza (o marcá varias con SHIFT + click) y parate con BOB donde tiene que terminar.'); return; }
+    if (!player?.position) { setStatus('No encuentro a BOB.'); return; }
+    const bob = player.position;
+
+    const fotos = [];
+    const cortadas = [];
+    const salteadas = [];
+    const v = new THREE.Vector3();
+    for (const id of ids) {
+      const entry = getEditableById(id);
+      const o = entry?.object3D;
+      // Solo piezas de UNA malla: en un grupo no hay un "largo" unico que cortar.
+      if (!o?.isMesh || !o.geometry || entry.locked) { salteadas.push(entry?.name ?? id); continue; }
+      o.updateMatrixWorld(true);
+      if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+      const caja = o.geometry.boundingBox;
+      const centro = caja.getCenter(new THREE.Vector3());
+      const extremoA = new THREE.Vector3(caja.min.x, centro.y, centro.z).applyMatrix4(o.matrixWorld);
+      const extremoB = new THREE.Vector3(caja.max.x, centro.y, centro.z).applyMatrix4(o.matrixWorld);
+      const eje = extremoB.clone().sub(extremoA);
+      const largo = eje.length();
+      if (largo < 0.1) { salteadas.push(entry.name); continue; }
+      eje.divideScalar(largo);
+      // Donde cae BOB a lo largo de la pieza, en metros desde el extremo A. Se
+      // mide en el plano (sin la altura): BOB esta parado en la vereda, no
+      // adentro del escalon.
+      v.copy(bob).sub(extremoA);
+      const t = v.x * eje.x + v.z * eje.z + (Math.abs(eje.y) > 0.5 ? v.y * eje.y : 0);
+      if (t <= 0.05 || t >= largo - 0.05) { salteadas.push(`${entry.name} (BOB esta fuera de la pieza)`); continue; }
+
+      fotos.push([id, fotoDeTransform(o)]);
+      // Se queda el extremo LEJANO de BOB.
+      const quedaA = t > largo / 2;
+      const xQueQueda = quedaA ? caja.min.x : caja.max.x;
+      const nuevoLargo = quedaA ? t : largo - t;
+      const antes = new THREE.Vector3(xQueQueda, centro.y, centro.z).applyMatrix4(o.matrixWorld);
+      o.scale.x *= nuevoLargo / largo;
+      o.updateMatrixWorld(true);
+      const despues = new THREE.Vector3(xQueQueda, centro.y, centro.z).applyMatrix4(o.matrixWorld);
+      // Se corre la pieza lo que se movio el extremo que queda, pasado a las
+      // coordenadas del padre (la posicion de un objeto es relativa a el).
+      const corrimiento = antes.sub(despues);
+      if (o.parent) {
+        o.parent.updateMatrixWorld(true);
+        corrimiento.applyMatrix3(new THREE.Matrix3().setFromMatrix4(o.parent.matrixWorld.clone().invert()));
+      }
+      o.position.add(corrimiento);
+      o.updateMatrixWorld(true);
+      cortadas.push(`${entry.name} ${largo.toFixed(1)} → ${nuevoLargo.toFixed(1)} m`);
+    }
+
+    if (!cortadas.length) {
+      setStatus(`No se corto nada. ${salteadas.length ? `Salteadas: ${salteadas.join(', ')}.` : ''}`);
+      return;
+    }
+    historial.anotar(`cortar ${cortadas.length} pieza(s) hasta BOB`, () => { restaurarFotos(fotos); notifyWorldChanged(); });
+    notifyWorldChanged();
+    refreshPanel();
+    saveNow(`✔ Cortadas ${cortadas.length} en x = ${bob.x.toFixed(2)}. Ctrl+Z para volver.`);
+    console.info(`FOURTWENTY editor: cortar hasta BOB (x=${bob.x.toFixed(2)}, z=${bob.z.toFixed(2)}) — ${cortadas.join(' · ')}${salteadas.length ? ` — salteadas: ${salteadas.join(', ')}` : ''}`);
+  }
+
+  // Trae los cinco pisos como estan en el repo (lo ultimo de Fer) y deja
+  // Burela como la tiene Kusher en este navegador. Ver `traerPisosDelRepo`.
+  // Se recarga la pagina al terminar: los pisos se arman al entrar, y un
+  // recargado garantiza que nada quede a medio aplicar.
+  async function traerPisos() {
+    const seguir = window.confirm(
+      'Traer los pisos del ascensor como estan en el repo (lo ultimo de Fer).\n\n'
+      + '• Tu BURELA queda como esta: no se toca.\n'
+      + '• Antes se descarga un RESPALDO de todo lo que tenes ahora (va a Descargas).\n'
+      + '• Despues la pagina se recarga sola.\n\n'
+      + '¿Seguir?',
+    );
+    if (!seguir) { setStatus('No se trajo nada.'); return; }
+    setStatus('Trayendo los pisos del repo...');
+    const r = await traerPisosDelRepo();
+    if (!r.ok) { setStatus(`✖ ${r.motivo}`); return; }
+    const detalle = Object.entries(r.porPiso).map(([piso, n]) => `${piso} ${n}`).join(' · ');
+    console.info(`FOURTWENTY editor: pisos traidos del repo — ${detalle} — prendas visibles: ${r.prendas} — Burela intacta: ${r.burela} objetos — respaldo: ${r.respaldo ?? '(no habia nada guardado)'}`);
+    setStatus(`✔ Pisos traidos (${detalle}). ${r.prendas} prendas. Burela intacta. Recargando...`);
+    setTimeout(() => window.location.reload(), 1800);
   }
 
   async function importJSONFile(file) {
