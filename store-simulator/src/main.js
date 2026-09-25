@@ -262,11 +262,14 @@ if (QUALITY === 'high') {
     // dibuja en el, three no le reserva memoria.
     aoPass = new GTAOPass(scene, camera, 1, 1);
     aoPass.setGBuffer(imagenEscena.depthTexture);
-    // Radio chico: el objetivo es la sombra de CONTACTO, no un halo oscuro
+    // Radio de ~1 m: lo justo para la sombra de CONTACTO (bajo un auto, donde
+    // la pared toca la vereda, al pie de un cantero) sin volverse un halo oscuro
     // alrededor de todo, que es lo que hace que el SSAO se vea "sucio".
-    aoPass.updateGtaoMaterial({ radius: 0.55, distanceExponent: 1.2, thickness: 1.0, scale: 1.0, samples: 12 });
+    // ⚠️ Con 0,55 m NO SE VEIA: mirada sola con `?ao=ver`, la imagen salia casi
+    // blanca. En una calle las cosas miden metros, no centimetros.
+    aoPass.updateGtaoMaterial({ radius: 1.1, distanceExponent: 1.0, thickness: 1.5, scale: 1.6, samples: 12 });
     aoPass.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 12 });
-    aoPass.blendIntensity = 0.85;
+    aoPass.blendIntensity = 1.0;
     // `?ao=ver` muestra SOLO la oclusion, en blanco y negro. Para comprobar que
     // esta trabajando y donde oscurece: en la imagen final es sutil a proposito
     // y mirandola sola no hay que adivinar.
@@ -372,7 +375,10 @@ resize();
 // el juego se da cuenta solo a los pocos segundos y apaga sombras + post-
 // processing — sin recargar la página ni tocar ?q=low. Una sola vez.
 let perfSamples = 0, perfSlow = 0, downgraded = false;
-let aoApagadaPorRendimiento = false;
+// `?ao=0` la apaga desde el arranque: para medir cuanto cambia la imagen (se
+// saca la misma foto con y sin, y se restan) y para probar si una maquina
+// floja anda mejor sin ella.
+let aoApagadaPorRendimiento = URL_PARAMS.get('ao') === '0';
 function checkPerf(dt) {
   if (downgraded || QUALITY !== 'high' || !AUTO_CALIDAD) return;
   perfSamples++;
