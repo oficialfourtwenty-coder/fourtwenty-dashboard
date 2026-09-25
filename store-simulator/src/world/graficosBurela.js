@@ -89,6 +89,28 @@ const ENV_ALTO = 128;
 // en el horizonte en vez de cortarse.
 const DENSIDAD_NIEBLA = 0.007;
 
+// ⚠️ LOS VIDRIOS DE LOS AUTOS TIENEN QUE ESCRIBIR PROFUNDIDAD.
+// La oclusion ambiental trabaja con la PROFUNDIDAD de la escena, y los vidrios
+// de un GLB vienen con `depthWrite = false` (GLTFLoader se lo pone a todo lo
+// transparente). Entonces la oclusion "veia" los asientos a traves de la
+// ventanilla y oscurecia el vidrio con manchas que parecian barro: en el auto
+// blanco se ven clarito. Se detecto sacando la misma foto con y sin oclusion
+// (`?ao=0`) y ampliando: las manchas estaban SOLO con oclusion y SOLO en los
+// vidrios. Escribiendo profundidad, la oclusion ve el vidrio y no lo de atras.
+// No cambia como se dibuja el auto: lo de adentro es opaco y se dibuja antes.
+// Se llama desde cars.js cuando termina de cargar cada modelo.
+export function vidriosEscribenProfundidad(modelo) {
+  if (!GRAFICOS_NUEVOS) return 0;
+  let n = 0;
+  modelo.traverse((o) => {
+    if (!o.isMesh) return;
+    for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
+      if (m?.transparent && !m.depthWrite) { m.depthWrite = true; n++; }
+    }
+  });
+  return n;
+}
+
 export function crearGraficosBurela({ renderer, scene, lighting, sombras = true }) {
   if (!GRAFICOS_NUEVOS) return null;
   const { sun, hemisphere } = lighting;

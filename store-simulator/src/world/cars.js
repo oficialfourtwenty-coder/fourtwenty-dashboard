@@ -28,6 +28,7 @@ const cargadorDeAutos = gltfLoader;
 
 // Repintado de la carroceria de un GLB (ver `glbMatiz` mas abajo).
 import { repintarCarroceria } from './carPaint.js';
+import { vidriosEscribenProfundidad } from './graficosBurela.js';
 
 const CAR_SPECS = [
   {
@@ -487,6 +488,8 @@ class Car {
         normalizeGLTFHeight(model, this.spec.height);
         model.name = `${this.model} · modelo real`;
         model.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+        // Sin esto la oclusion ambiental mancha las ventanillas (ver graficosBurela.js).
+        vidriosEscribenProfundidad(model);
         if (this.spec.glbMatiz != null) {
           const pintado = repintarCarroceria(THREE, model, this.spec.glbMatiz);
           console.info(`[cars] ${this.id} repintado: ${pintado.pixeles} pixeles de paleta en ${pintado.texturas} textura(s)`);
