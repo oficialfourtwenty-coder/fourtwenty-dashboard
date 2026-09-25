@@ -408,6 +408,16 @@ luces tibias. El sol se inclina un poco hacia la calle (`INCLINACION_SOL`).
 - ⚠️ **Las dos imagenes del composer comparten UNA textura de profundidad.** El
   composer alterna en cual dibuja la escena; con una por imagen, la oclusion
   leia un cuadro si y otro no la profundidad del cuadro anterior.
+- ⚠️ **Los vidrios transparentes tienen que escribir profundidad.** GLTFLoader
+  les pone `depthWrite = false`, la oclusion "veia" los asientos a traves de la
+  ventanilla y el auto blanco salia con manchas de barro. Se arregla al cargar
+  cada auto (`vidriosEscribenProfundidad`). Si aparece otro objeto con vidrio
+  manchado, es esto.
+- La oclusion con radio 0,55 m **no se veia**; con 1,1 m si. Para juzgarla no
+  sirve mirarla sola (`?ao=ver` pasa por el tono final, que aplasta los grises):
+  se saca la misma foto con `?ao=0` y sin, y se restan. Medido asi: oscurece el
+  13-20% de la imagen, 19/255 en promedio, y cae en cordones, bajo los autos,
+  ruedas, huecos de ventanas y pie de canteros.
 - **Costo medido** (mismo navegador, mismas vistas): llamadas de dibujo **+4**
   por cuadro (888 → 892 en la vereda) y triangulos +4 — o sea, el costo que mas
   pesa en este proyecto no cambia. En el navegador de pruebas el cuadro tarda
