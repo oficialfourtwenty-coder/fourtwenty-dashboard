@@ -60,14 +60,14 @@ Estado: SOLO AVISO
 
 Use `rama-fer-prueba` for normal Fer work. Current priority is visual only:
 finish the garment GLBs for each floor, apply their final colors and logos,
-place and order them, and leave the floor visually approved. Fer does not link
-Tiendanube IDs, variants, stock, prices, or checkout. Use one isolated commit
-per floor. Only when Kusher explicitly says "subi piso X a la rama oficial del
-simulador", promote that named floor to `rama-oficial-del-simulador`; do not
-merge the whole test branch or replace Burela/other floors. Before promoting,
-fetch the official branch, back up the layout, build and test. If the floor
-requires unrelated commits or conflicts, stop and tell Kusher. Kusher and Codex
-handle every commercial product link afterward.
+place and order them, and leave the visual work approved. Fer does not link
+Tiendanube IDs, variants, stock, prices, or checkout. Fer shows Kusher whatever
+batch is ready in person: garments, one floor, two floors, or all floors. When
+Kusher explicitly approves that batch and says to upload it, promote the whole
+approved batch to `rama-oficial-del-simulador`; do not include unfinished work
+or replace Burela. Before promoting, fetch the official branch, back up the
+layout, build and test. If unrelated dependencies or conflicts appear, stop
+and tell Kusher. Kusher and Codex handle every commercial product link afterward.
 
 ### [Claude Code] perfAudit draw-call counts were wrong · 25/09/2026
 Estado: SOLO AVISO
@@ -118,8 +118,9 @@ Cuerpo, corto, en ingles.
 Lo que ya se decidio y no hace falta volver a hablar. Esto **no** se borra.
 
 - **Ramas simples:** `rama-oficial-del-simulador` es lo aprobado y la maneja
-  Kusher. `rama-fer-prueba` es donde Fer prueba y sube sus entregas. Fer solo
-  pasa un piso concreto a la oficial cuando Kusher lo autoriza expresamente.
+  Kusher. `rama-fer-prueba` es el borrador donde Fer trabaja libremente. Fer
+  pasa a la oficial el bloque que Kusher vea y apruebe expresamente, sin limite
+  de cantidad de prendas o pisos.
 - **`main.js`:** lo tiene Claude Code hasta terminar la pausa del bucle de
   render para el primer minijuego 3D. Codex no tiene ediciones planeadas ahi.
 - **`minigameManager.js`:** quien lo abra, avisa.

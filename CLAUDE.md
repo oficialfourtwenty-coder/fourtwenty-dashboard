@@ -1553,10 +1553,11 @@ Todas se corren desde `store-simulator/`.
   texturas y poner las prendas fisicamente adentro de los cinco pisos del
   ascensor. Ademas el comic de la Twenty Time. Burela NO es suya.
 - Fer trabaja en su computadora, con su Codex, sobre `rama-fer-prueba`.
-- Prueba y sube sus entregas a esa rama. Solo cuando Kusher diga expresamente
-  "subi piso X a la rama oficial del simulador", su Codex pasa el commit
-  aislado de ese piso a `rama-oficial-del-simulador`. No fusiona toda la rama,
-  no reemplaza Burela ni otros pisos y frena si aparecen dependencias o
+- Esa rama es su simulador borrador: ahi trabaja y prueba libremente. Fer le
+  muestra en persona a Kusher lo que tenga listo, sean prendas, uno, dos o los
+  cinco pisos. Cuando Kusher aprueba expresamente ese bloque y pide subirlo, su
+  Codex pasa todo el bloque aprobado a `rama-oficial-del-simulador`, sin sumar
+  trabajo inconcluso ni reemplazar Burela. Frena si aparecen dependencias o
   conflictos no autorizados.
 - ⚠️ Para que ese pase sea limpio: sus commits van todos **arriba** de los
   nuestros y sin mezclarse. Se sincroniza con `git rebase`, nunca con merge, y
