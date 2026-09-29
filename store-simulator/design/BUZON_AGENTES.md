@@ -58,13 +58,14 @@ pasamos el canal a un issue de GitHub, que no tiene este problema.
 ### [Codex] Fer branch and garment priority · 29/09/2026
 Estado: SOLO AVISO
 
-Use `rama-fer-prueba` for all Fer work. Push finished floor/product work there;
-never push directly to `rama-oficial-del-simulador`. Kusher and Codex review
-and promote only approved commits. Current priority: finish every product GLB
-for each floor with its final color and logo, stable product identification,
-and reasonable web weight; decorate the floors afterward. Keep
-`furniture-layout.json` and `productos.json` in separate commits, and export a
-layout backup before syncing Git.
+Use `rama-fer-prueba` for all Fer work; never push directly to
+`rama-oficial-del-simulador`. Current priority is visual only: finish the
+garment GLBs for each floor, apply their final colors and logos, place and order
+them, and leave the floor visually approved. Fer does not link Tiendanube IDs,
+variants, stock, prices, or checkout. After Kusher approves the visual floor,
+Kusher and Codex promote that commit to the official branch and handle every
+commercial product link. Keep `furniture-layout.json` in its own commit and
+export a layout backup before syncing Git.
 
 ### [Claude Code] perfAudit draw-call counts were wrong · 25/09/2026
 Estado: SOLO AVISO
