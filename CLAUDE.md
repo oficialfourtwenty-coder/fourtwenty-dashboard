@@ -41,8 +41,8 @@ producto que no esten escritas aqui.
   `Desktop/ft-probar-0bbbb13`, `ft-probar-a209171`, `ft-probar-interior`,
   `ft-probar-layout`.
 - Aplicacion: `store-simulator/`.
-- **Rama oficial actual: `version-3-de-septiembre-final`** (etiqueta
-  `3-de-septiembre-final`). Aprobada por Kusher el 03/09 despues de probarla a
+- **Rama oficial actual: `rama-oficial-del-simulador`** (mismo checkpoint que
+  `version-3-de-septiembre-final`, etiqueta `3-de-septiembre-final`). Aprobada por Kusher el 03/09 despues de probarla a
   mano. Contiene todo lo de `version-lunes-10-de-agosto` mas la rama
   `claude/todo-junto` entera y el trabajo del 03/09.
   Lo que suma sobre la del 10 de agosto:
@@ -1552,10 +1552,10 @@ Todas se corren desde `store-simulator/`.
 - **Que le toca (09/09): la fase 1 entera** — estetica, orden, muebles,
   texturas y poner las prendas fisicamente adentro de los cinco pisos del
   ascensor. Ademas el comic de la Twenty Time. Burela NO es suya.
-- Fer trabaja en su computadora, con su Codex y una rama aislada.
-- Clona nuestra ultima version y trabaja libremente sobre ella; nunca hace
-  push a una rama oficial. Cuando termina, nosotros pasamos su trabajo a la
-  oficial.
+- Fer trabaja en su computadora, con su Codex, sobre `rama-fer-prueba`.
+- Prueba y sube sus entregas a esa rama del repositorio oficial; nunca hace
+  push a `rama-oficial-del-simulador`. Cuando termina, Kusher y Codex revisan
+  y pasan solo lo aprobado a la oficial.
 - ⚠️ Para que ese pase sea limpio: sus commits van todos **arriba** de los
   nuestros y sin mezclarse. Se sincroniza con `git rebase`, nunca con merge, y
   no toca (ni corrige, ni reordena, ni aplasta) los commits que vienen de

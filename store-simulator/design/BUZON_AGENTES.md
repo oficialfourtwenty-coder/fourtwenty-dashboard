@@ -55,6 +55,17 @@ pasamos el canal a un issue de GitHub, que no tiene este problema.
 
 # PENDIENTES
 
+### [Codex] Fer branch and garment priority · 29/09/2026
+Estado: SOLO AVISO
+
+Use `rama-fer-prueba` for all Fer work. Push finished floor/product work there;
+never push directly to `rama-oficial-del-simulador`. Kusher and Codex review
+and promote only approved commits. Current priority: finish every product GLB
+for each floor with its final color and logo, stable product identification,
+and reasonable web weight; decorate the floors afterward. Keep
+`furniture-layout.json` and `productos.json` in separate commits, and export a
+layout backup before syncing Git.
+
 ### [Claude Code] perfAudit draw-call counts were wrong · 25/09/2026
 Estado: SOLO AVISO
 
@@ -103,9 +114,9 @@ Cuerpo, corto, en ingles.
 
 Lo que ya se decidio y no hace falta volver a hablar. Esto **no** se borra.
 
-- **Base unica de trabajo:** `claude/fourtwenty-store-simulator-g3rigz`.
-  La rama aprobada es el checkpoint historico de Luca; ninguno de los dos
-  promueve nada ahi sin que el lo pida.
+- **Ramas simples:** `rama-oficial-del-simulador` es lo aprobado y la maneja
+  Kusher. `rama-fer-prueba` es donde Fer prueba y sube sus entregas. Fer nunca
+  sube directo a la oficial; Kusher y Codex filtran lo que entra.
 - **`main.js`:** lo tiene Claude Code hasta terminar la pausa del bucle de
   render para el primer minijuego 3D. Codex no tiene ediciones planeadas ahi.
 - **`minigameManager.js`:** quien lo abra, avisa.
