@@ -1553,16 +1553,16 @@ Todas se corren desde `store-simulator/`.
   texturas y poner las prendas fisicamente adentro de los cinco pisos del
   ascensor. Ademas el comic de la Twenty Time. Burela NO es suya.
 - Fer trabaja en su computadora, con su Codex, sobre `rama-fer-prueba`.
-- Esa rama es su simulador borrador: ahi trabaja y prueba libremente. Fer le
-  muestra en persona a Kusher lo que tenga listo, sean prendas, uno, dos o los
-  cinco pisos. Cuando Kusher aprueba expresamente ese bloque y pide subirlo, su
-  Codex pasa todo el bloque aprobado a `rama-oficial-del-simulador`, sin sumar
-  trabajo inconcluso ni reemplazar Burela. Frena si aparecen dependencias o
-  conflictos no autorizados.
-- ⚠️ Para que ese pase sea limpio: sus commits van todos **arriba** de los
-  nuestros y sin mezclarse. Se sincroniza con `git rebase`, nunca con merge, y
-  no toca (ni corrige, ni reordena, ni aplasta) los commits que vienen de
-  nosotros. Un commit por piso, asi Kusher puede tomar unos y otros no.
+- Esa rama es su simulador borrador: ahi trabaja, prueba y publica solamente
+  avances de prueba. Fer le muestra en persona a Kusher lo que tenga listo,
+  sean prendas, uno, dos o los cinco pisos.
+- **Fer y su Codex nunca escriben ni hacen push a
+  `rama-oficial-del-simulador`.** Cuando Kusher aprueba un bloque, Kusher y su
+  Codex principal lo revisan y lo integran desde el borrador. Si hay
+  dependencias, conflictos o trabajo inconcluso, no entra a la oficial.
+- ⚠️ Para que nuestra integracion sea limpia: los cambios de Fer deben quedar
+  en commits identificables dentro de su rama borrador, sin mezclar pisos ni
+  tocar Burela. Un commit por piso permite tomar solamente lo aprobado.
 - ⚠️ `furniture-layout.json` y `productos.json` son exportaciones de archivo
   ENTERO que Kusher tambien regenera. No se fusionan solos: gana uno y el
   trabajo del otro desaparece en silencio. Van en commits propios, nunca
