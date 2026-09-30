@@ -1,0 +1,25 @@
+ESTAMPAS DE LAS PRENDAS
+=======================
+
+Aca viven los disenos que se apoyan sobre las remeras, hoodies, pantalones y
+bermudas del mundo 3D. Son PNG con el fondo ya recortado.
+
+NO se cargan a mano en esta carpeta. Se cargan desde adentro del juego:
+
+  1. Corre `npm run dev` (hace falta: el guardado en archivo solo existe ahi).
+  2. Abri el simulador y apreta la tecla P (panel de administracion).
+  3. Abri la coleccion del piso, y en la prenda que quieras apreta
+     "Estampa de la prenda 3D" y elegi tu archivo.
+  4. Se le quita el fondo y el margen vacio solos, y el PNG se guarda ACA.
+  5. Commitea esta carpeta junto con public/assets/data/productos.json.
+
+La prenda del perchero se viste sola con el diseno del producto que tiene
+asignado. No hay que tocar codigo.
+
+Para mover o agrandar la estampa sobre la prenda: click derecho sobre la
+prenda dentro del juego (EDITOR DE PRENDA). Una estampa ubicada a mano ahi le
+gana a la del catalogo.
+
+OJO: en el build publicado (sin `npm run dev`) el panel no puede escribir
+archivos y la estampa queda guardada solo en el navegador, que aguanta unas
+20. Por eso la carga oficial se hace siempre con `npm run dev`.
