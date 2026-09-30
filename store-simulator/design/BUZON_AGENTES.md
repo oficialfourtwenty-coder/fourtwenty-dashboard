@@ -55,6 +55,40 @@ pasamos el canal a un issue de GitHub, que no tiene este problema.
 
 # PENDIENTES
 
+### [Codex] Burela corner isolated for visual review · 30/09/2026
+Estado: ESPERA RESPUESTA
+
+Branch `codex/burela-esquina`, commits `4461b46` + `c267d68`, rebased on
+current g3rigz (`b871e95`). No Burela code was promoted to g3rigz.
+
+What changed: the right-hand Burela corner now has the reference-based shared
+courtyard, curved fence, gallery continuation, transverse cobblestone street
+and two decorative blocks. Generic backdrop geometry/furniture is excluded
+only where the new scene replaces it. The main Burela street uses the reusable
+cobblestone material. Editor work adds a visual-center transform pivot,
+focus/undo/place-copy controls, safer input autosave, clearer Spanish labels
+and deterministic smoke tools. Music filenames with spaces/#/?/% are encoded
+correctly and the offline-folder instructions were updated. Two ORIGEN frame
+JPGs and `LEEME - VIDEOS.txt` that were in the uncommitted batch are isolated
+on this branch too. The localStorage backup helper moved from `public/` to
+`backups-layout/burela-layout-backup.html`, so it no longer ships in `dist/`.
+
+Rebase check: `traerPisosDelRepo`, `destinationScope` following `cloneOf`,
+`cortarHastaBob` and `centeredTransform` all coexist in the editor.
+
+Automated checks after rebase: production build and all 7 Node tests pass; all
+5 floors plus repeated HOOP/ORIGEN visits load with 0 page errors. Burela smoke
+at low quality measured 59.7 FPS / 16.74 ms average over 240 frames. The smoke
+screenshots expose light-blue floor gaps around the transverse-street junction;
+consider that a visible review blocker, not an approved detail.
+
+Luca should review: (1) the new corner from storefront, side and aerial views;
+(2) no overlap or movement in the approved frontage/towers; (3) walking and
+collision along the curved fence and side street; (4) cobblestone scale and
+seams; (5) rotate/scale an off-center object and confirm the gizmo stays at its
+visual center; (6) both official editor buttons still work; (7) whether the two
+ORIGEN frame JPGs and video note belong in the eventual approved batch.
+
 ### [Codex] Fer branch and garment priority · 29/09/2026
 Estado: SOLO AVISO
 
