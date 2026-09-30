@@ -162,10 +162,11 @@ function telaDe(prenda) {
 }
 
 // ---------------------------------------------------------------------------
-// Guardado (por NOMBRE de la prenda, igual que los cuadros: el id del editor
-// puede correrse si cambia el orden de creacion, el nombre no)
+// Guardado por id estable de cada prenda. El nombre se conserva solo como
+// respaldo para datos viejos: distintas copias pueden tener el mismo nombre.
 // ---------------------------------------------------------------------------
 let diseñosEnMemoria;
+let promesaHidratarDiseños;
 let promesaBaseDiseños;
 let baseDatosDiseños;
 
@@ -202,26 +203,30 @@ function escribirEnBase(db, value) {
   });
 }
 
-async function hidratarGuardados() {
-  if (diseñosEnMemoria) return diseñosEnMemoria;
-  diseñosEnMemoria = leerLegado();
-  try {
-    const db = await abrirBaseDiseños();
-    const durables = await leerEnBase(db);
-    if (durables && typeof durables === 'object') diseñosEnMemoria = { ...diseñosEnMemoria, ...durables };
-    if (!durables || Object.keys(diseñosEnMemoria).some(k => JSON.stringify(durables[k]) !== JSON.stringify(diseñosEnMemoria[k]))) {
-      await escribirEnBase(db, diseñosEnMemoria);
+function hidratarGuardados() {
+  // leerGuardado() puede crear el cache en memoria antes de que abra IndexedDB.
+  // Tener un objeto en memoria no significa que la base durable ya se leyo.
+  promesaHidratarDiseños ??= (async () => {
+    diseñosEnMemoria ??= leerLegado();
+    try {
+      const db = await abrirBaseDiseños();
+      const durables = await leerEnBase(db);
+      if (durables && typeof durables === 'object') diseñosEnMemoria = { ...diseñosEnMemoria, ...durables };
+      if (!durables || Object.keys(diseñosEnMemoria).some(k => JSON.stringify(durables[k]) !== JSON.stringify(diseñosEnMemoria[k]))) {
+        await escribirEnBase(db, diseñosEnMemoria);
+      }
+      // La copia durable está confirmada; recién entonces retiramos el duplicado
+      // del localStorage, que tiene un límite pequeño por sitio.
+      const copia = await leerEnBase(db);
+      if (copia && Object.keys(diseñosEnMemoria).every(k => JSON.stringify(copia[k]) === JSON.stringify(diseñosEnMemoria[k]))) {
+        localStorage.removeItem(CLAVE);
+      }
+    } catch (error) {
+      console.warn('No se pudo preparar el guardado durable de bordados.', error);
     }
-    // La copia durable está confirmada; recién entonces retiramos el duplicado
-    // del localStorage, que tiene un límite pequeño por sitio.
-    const copia = await leerEnBase(db);
-    if (copia && Object.keys(diseñosEnMemoria).every(k => JSON.stringify(copia[k]) === JSON.stringify(diseñosEnMemoria[k]))) {
-      localStorage.removeItem(CLAVE);
-    }
-  } catch (error) {
-    console.warn('No se pudo preparar el guardado durable de bordados.', error);
-  }
-  return diseñosEnMemoria;
+    return diseñosEnMemoria;
+  })();
+  return promesaHidratarDiseños;
 }
 
 function leerGuardado() {
@@ -255,8 +260,11 @@ export function diseñoDe(prenda) {
   const guardado = guardados[id];
   const preset = originShirtDesign(id);
   const legado = guardados[prenda?.name];
-  const elegido = (prenda?.userData?.garmentDesignFromLayout ? actual : null) ?? guardado
-    ?? preset ?? actual ?? legado ?? { color: prenda?.userData?.garmentModel?.color ?? null };
+  // El layout es el diseño publicado; IndexedDB guarda el ajuste posterior de
+  // esta computadora. El ajuste local debe ganar al volver a cargar el piso.
+  const diseñoDelLayout = prenda?.userData?.garmentDesignFromLayout ? actual : null;
+  const elegido = guardado ?? diseñoDelLayout ?? preset ?? actual ?? legado
+    ?? { color: prenda?.userData?.garmentModel?.color ?? null };
   return normalizarDiseño(elegido);
 }
 
@@ -825,8 +833,11 @@ export function createGarmentGlbEditor() {
       cambio();
     } else if (accion === 'guardar') {
       const todos = leerGuardado();
-      todos[garmentDesignId(prenda)] = diseño;
+      todos[garmentDesignId(prenda)] = structuredClone(diseño);
       pintarPrenda(prenda, diseño);
+      // El layout exportado toma ftDiseñoActual; avisar al editor general hace
+      // que el cambio no quede aislado en este panel.
+      window.dispatchEvent(new CustomEvent('fourtwenty:world-edited'));
       avisar('Guardando de forma segura…');
       guardar(todos).then(ok => avisar(ok ? 'Guardado en esta computadora.' : 'No se pudo completar el guardado. El diseño sigue visible; descargá una copia antes de cerrar.', !ok));
     } else if (accion === 'cerrar') cerrar();
@@ -847,6 +858,7 @@ export function createGarmentGlbEditor() {
     prenda = objetivo;
     diseño = diseñoDe(objetivo);
     ladoActivo = 'frente';
+    panel.dataset.garmentDesignId = garmentDesignId(objetivo);
     f.nombre.textContent = objetivo.name ?? 'prenda';
     panel.classList.add('is-open');
     cambio();
@@ -856,6 +868,7 @@ export function createGarmentGlbEditor() {
   function cerrar() {
     clearTimeout(timerPrevia);
     panel.classList.remove('is-open');
+    delete panel.dataset.garmentDesignId;
     prenda = null;
   }
 

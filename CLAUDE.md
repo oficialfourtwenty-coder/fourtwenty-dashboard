@@ -1568,6 +1568,24 @@ Todas se corren desde `store-simulator/`.
   trabajo del otro desaparece en silencio. Van en commits propios, nunca
   mezclados con codigo, y hay que hacer `pull` antes de exportar.
 
+#### Prendas y logos en cualquier piso
+
+- El mismo flujo sirve en ORIGEN, HOOP, CULTURA, BOB y TERRAZA: agregar la
+  prenda GLB desde `T`, abrirla con click derecho, elegir color/logo, acomodar
+  posicion, escala y rotacion, apretar **GUARDAR** y luego guardar/exportar el
+  layout del piso.
+- Cada prenda debe conservar un `id` unico. Una copia usa su propio id como
+  `garmentDesignId`; nunca el id de la remera original. Si dos prendas comparten
+  ese id, tambien comparten logo y una pisa el trabajo de la otra.
+- `garmentDesign` dentro de `furniture-layout.json` es el diseño publicado que
+  ve todo el mundo. El diseño guardado en IndexedDB es un ajuste local posterior
+  y tiene prioridad al recargar. No volver a invertir ese orden.
+- No crear mapas hardcodeados por piso para resolver logos nuevos. El logo, el
+  color y su colocacion viajan con cada prenda en `garmentDesign`; los PNG que
+  se publiquen deben quedar bajo `public/assets/` y sus rutas deben existir.
+- Antes de entregar un piso: recargar, salir y volver a entrar; confirmar que
+  cada copia mantiene su propio color/logo y exportar el layout final.
+
 ### Trabajar los DOS a la vez sobre el layout (Kusher en Burela, Fer en un piso)
 
 El codigo viaja por git y no tiene problema: Fer hace `pull` y ve la Burela

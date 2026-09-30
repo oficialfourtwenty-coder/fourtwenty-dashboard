@@ -145,11 +145,14 @@ function editableUnit(root, {
   group.scale.setScalar(scale);
   group.userData.editorUnit = true;
   group.userData.editorSelectExisting = true;
+  // editorId puede limpiarse mientras el auto-registro reconstruye el piso.
+  // Este id propio sobrevive y registra los GLB que llegan despues.
+  group.userData.originEditableId = `destino-${ORIGEN_ID}:origen-${id}`;
   if (collider) group.userData.destinationCollider = true;
   root.add(group);
 
   registerEditableObject({
-    id: `destino-${ORIGEN_ID}:origen-${id}`,
+    id: group.userData.originEditableId,
     name,
     type: 'destino-1',
     object3D: group,
@@ -239,7 +242,7 @@ function loadFittedModelInto(group, url, maxDimension) {
       // marca tambien sus mallas nuevas: asi el click las selecciona como una
       // unidad completa en vez de quedar como geometria fija.
       registerEditableObject({
-        id: group.userData.editorId,
+        id: group.userData.originEditableId,
         name: group.name,
         type: `destino-${ORIGEN_ID}`,
         object3D: group,

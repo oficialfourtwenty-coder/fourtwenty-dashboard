@@ -1,3 +1,5 @@
+import { diseñoDe, pintarPrenda } from '../../ui/garmentGlbEditor.js';
+
 const registry = new Map();
 
 function normalizeEditorColor(value) {
@@ -516,6 +518,10 @@ export function duplicateEditable(id, {
     do { cloneId = `${base}-copia-${n++}`; } while (registry.has(cloneId));
   }
 
+  // Cada copia necesita una identidad de diseño propia. Conservar el id de la
+  // original hacia que dos remeras compartieran y se pisaran el mismo logo.
+  if (clone.userData?.garmentModel) clone.userData.garmentDesignId = cloneId;
+
   cloneParent.add(clone);
   if (source.visible === false || makeVisible) clone.visible = true;
   if (makeVisible) clone.traverse((child) => { child.visible = true; });
@@ -632,6 +638,14 @@ export function restoreClones(layout) {
       entry.type = item.type ?? entry.type;
       entry.visible = item.visible !== false;
       entry.object3D.visible = entry.visible;
+      if (entry.object3D.userData?.garmentModel) {
+        entry.object3D.userData.garmentDesignId = item.id;
+        if (item.garmentDesign) {
+          entry.object3D.userData.garmentDesignFromLayout = true;
+          entry.object3D.userData.ftDiseñoActual = structuredClone(item.garmentDesign);
+        }
+        pintarPrenda(entry.object3D, diseñoDe(entry.object3D));
+      }
       if (item.color != null) applyColorToEntry(entry, item.color);
       if (item.lightRange != null) applyLightRangeToEntry(entry, item.lightRange);
       changed = true;

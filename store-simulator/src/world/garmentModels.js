@@ -147,10 +147,12 @@ export async function addGarmentModel(scene, clave, {
   }
   if (scene.userData?.disposed) return null;
   await prepararGuardadoDeBordados();
+  if (scene.userData?.disposed) return null;
 
   const root = new THREE.Group();
   root.name = name ?? preset.nombre;
-  if (id) root.userData.garmentDesignId = id;
+  const editableId = id ?? (registerEditable ? `prenda:${clave}:${Math.random().toString(36).slice(2, 8)}` : null);
+  if (editableId) root.userData.garmentDesignId = editableId;
   const modelo = gltf.scene.clone(true);
   modelo.rotation.x = preset.rotacionX ?? ROTACION_DE_PIE;
   root.add(modelo);
@@ -208,7 +210,7 @@ export async function addGarmentModel(scene, clave, {
   }
 
   if (registerEditable) registerEditableObject({
-    id: id ?? `prenda:${clave}:${Math.random().toString(36).slice(2, 8)}`,
+    id: editableId,
     name: root.name,
     type: 'prenda',
     object3D: root,
