@@ -17,7 +17,7 @@
 // destino → cómo cargar su juego. La función devuelve la factory del juego.
 const LOADERS = {
   1: loadBobsMaze, // ORIGEN
-  2: loadBobsMaze, // HOOP SEASON  → futuro: básquet
+  2: loadHoopSeason, // HOOP SEASON
   3: loadFtGrow,   // CULTURA      → FT GROW
   4: loadBobShopHeist, // BOB → sigilo en tienda FOURTWENTY
   5: loadBurelaDelivery, // TERRAZA → BURELA DELIVERY
@@ -26,6 +26,11 @@ const LOADERS = {
 async function loadBobsMaze() {
   const { createBobsMazeGame } = await import('./bobsMaze.js');
   return createBobsMazeGame;
+}
+
+async function loadHoopSeason() {
+  const { createHoopSeasonGame } = await import('./hoopSeason1v1/game.js');
+  return createHoopSeasonGame;
 }
 
 async function loadFtGrow() {
@@ -47,7 +52,7 @@ async function loadBobShopHeist() {
 // para que agregar un juego sea un solo lugar a tocar.
 const NAMES = {
   1: "BOB'S MAZE",
-  2: "BOB'S MAZE",
+  2: 'HOOP SEASON 1V1',
   3: 'FT GROW',
   4: 'BOB SHOP HEIST',
   5: 'BURELA DELIVERY',

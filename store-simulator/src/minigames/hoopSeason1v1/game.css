@@ -1,0 +1,136 @@
+.hoop-game {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #17130f;
+  color: #f3efe6;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  touch-action: none;
+}
+
+.hoop-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hoop-hud {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: 5px 12px;
+  min-width: 260px;
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  background: rgba(14, 15, 15, 0.72);
+  backdrop-filter: blur(7px);
+  pointer-events: none;
+}
+
+.hoop-hud strong {
+  grid-column: 1 / -1;
+  color: #f3efe6;
+  font-size: 13px;
+  letter-spacing: 0;
+}
+
+.hoop-hud span {
+  color: #bbb7ae;
+  font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.hoop-hud i {
+  padding-left: 8px;
+  border-left: 3px solid #ece7dc;
+  color: #ece7dc;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.hoop-hud i.rival {
+  border-color: #c52835;
+  color: #ef6973;
+}
+
+.hoop-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #17130f;
+}
+
+.hoop-loading span {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255, 255, 255, 0.18);
+  border-top-color: #e9e4da;
+  border-radius: 50%;
+  animation: hoop-spin 0.75s linear infinite;
+}
+
+.hoop-touch {
+  position: absolute;
+  right: 20px;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: 20px;
+  display: none;
+  align-items: flex-end;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.hoop-touch-stick,
+.hoop-touch-sprint {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  background: rgba(10, 10, 10, 0.40);
+  pointer-events: auto;
+}
+
+.hoop-touch-knob {
+  position: absolute;
+  top: 34px;
+  left: 34px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(240, 236, 225, 0.82);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+}
+
+.hoop-touch-sprint {
+  width: 66px;
+  height: 66px;
+}
+
+.hoop-touch-sprint::before,
+.hoop-touch-sprint::after {
+  content: '';
+  position: absolute;
+  top: 21px;
+  width: 17px;
+  height: 17px;
+  border-top: 4px solid #f0ece1;
+  border-right: 4px solid #f0ece1;
+  transform: rotate(45deg);
+}
+
+.hoop-touch-sprint::before { left: 13px; }
+.hoop-touch-sprint::after { left: 29px; }
+.hoop-touch-sprint:active { background: rgba(197, 40, 53, 0.72); }
+
+@media (pointer: coarse), (max-width: 720px) {
+  .hoop-touch { display: flex; }
+  .hoop-hud { min-width: 226px; }
+}
+
+@keyframes hoop-spin { to { transform: rotate(360deg); } }

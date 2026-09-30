@@ -44,11 +44,11 @@ if (!BOB || !ORIGEN || !NOMBRE || !SALIDA) {
 }
 
 const FPS = 30;
-const REFERENCIA = 'Walking';   // de aca sale donde van las caderas
+const REFERENCIA = /walk|caminar/i;   // de aca sale donde van las caderas
 
 // Mixamo → BOB. Los que no estan aca (dedos, HeadTop_End) se ignoran, y los que
 // BOB tiene de mas (head_end, headfront) se quedan en su pose de reposo.
-const MAPA = {
+const MAPA_MESHY = {
   Hips: 'Hips',
   Spine: 'Spine02',   // ⚠️ invertido a proposito, ver arriba
   Spine1: 'Spine01',
@@ -59,6 +59,21 @@ const MAPA = {
   RightShoulder: 'RightShoulder', RightArm: 'RightArm', RightForeArm: 'RightForeArm', RightHand: 'RightHand',
   LeftUpLeg: 'LeftUpLeg', LeftLeg: 'LeftLeg', LeftFoot: 'LeftFoot', LeftToeBase: 'LeftToeBase',
   RightUpLeg: 'RightUpLeg', RightLeg: 'RightLeg', RightFoot: 'RightFoot', RightToeBase: 'RightToeBase',
+};
+
+// El BOB de la marca usa el rig de 41 huesos. Tiene twists extra y nombres
+// propios, pero la cadena humanoide principal es equivalente a Mixamo.
+const MAPA_OFICIAL = {
+  Hips: 'Hip',
+  Spine: 'Waist',
+  Spine1: 'Spine01',
+  Spine2: 'Spine02',
+  Neck: 'NeckTwist01',
+  Head: 'Head',
+  LeftShoulder: 'L_Clavicle', LeftArm: 'L_Upperarm', LeftForeArm: 'L_Forearm', LeftHand: 'L_Hand',
+  RightShoulder: 'R_Clavicle', RightArm: 'R_Upperarm', RightForeArm: 'R_Forearm', RightHand: 'R_Hand',
+  LeftUpLeg: 'L_Thigh', LeftLeg: 'L_Calf', LeftFoot: 'L_Foot', LeftToeBase: 'L_ToeBase',
+  RightUpLeg: 'R_Thigh', RightLeg: 'R_Calf', RightFoot: 'R_Foot', RightToeBase: 'R_ToeBase',
 };
 
 // ── GLB ─────────────────────────────────────────────────────────────────────
@@ -158,12 +173,16 @@ const bob = abrir(BOB);
 const src = abrir(ORIGEN);
 const eBob = esqueleto(bob);
 const eSrc = esqueleto(src);
+const esBobOficial = eBob.porNombre.has('Pelvis') && eBob.porNombre.has('L_Upperarm');
+const MAPA = esBobOficial ? MAPA_OFICIAL : MAPA_MESHY;
+const NODO_CADERA = esBobOficial ? 'Hip' : 'Hips';
 
 const clip = src.json.animations?.find((a) => true);
 if (!clip) { console.error('\n✖ El archivo de origen no trae ninguna animacion.\n'); process.exit(1); }
 
 console.log('\n─────── TRAER ANIMACION AL BOB ───────\n');
 console.log(`origen: "${clip.name}" · destino: "${NOMBRE}"`);
+console.log(`rig destino: ${esBobOficial ? 'BOB oficial (41 huesos)' : 'BOB Meshy (24 huesos)'}`);
 
 // ── curvas del origen, ya muestreadas ───────────────────────────────────────
 // Cada canal de glTF tiene su propia linea de tiempo. Se las lleva a una sola,
@@ -242,7 +261,7 @@ const tiempos = [];
 const rotPorNodo = new Map();   // nodo bob -> array de quats
 for (const p of pares) rotPorNodo.set(p.iB, []);
 const traslacionHips = [];
-const iHipsBob = eBob.porNombre.get('Hips');
+const iHipsBob = eBob.porNombre.get(NODO_CADERA);
 const iHipsSrc = eSrc.porNombre.get('Hips');
 
 for (let f = 0; f < cuadros; f++) {
@@ -284,7 +303,7 @@ for (let f = 0; f < cuadros; f++) {
 }
 
 // ── dejarlo en el lugar (mismo criterio que clips-bob.mjs) ──────────────────
-const refClip = bob.json.animations.find((a) => a.name === REFERENCIA);
+const refClip = bob.json.animations.find((a) => REFERENCIA.test(a.name));
 const refCh = refClip?.channels.find((ch) => ch.target.node === iHipsBob && ch.target.path === 'translation');
 if (refCh) {
   const V = datos(bob, refClip.samplers[refCh.sampler].output);
@@ -320,7 +339,7 @@ if (refCh) {
   for (const p of traslacionHips) for (let e = 0; e < 3; e++) p[e] += centro[e] - medio[e];
   console.log(`caderas: se movian ${antes.map((x) => x.toFixed(1)).join(' × ')} → ahora ${[0, 1, 2].map((e) => rango(traslacionHips, e).toFixed(1)).join(' × ')} (caminando: ${rangoRef.map((x) => x.toFixed(1)).join(' × ')})`);
 } else {
-  console.log(`⚠️ No hay clip "${REFERENCIA}" para centrar: las caderas quedan donde caigan.`);
+  console.log('⚠️ No hay clip de caminar para centrar: las caderas quedan donde caigan.');
 }
 
 // ── escribir el clip nuevo ──────────────────────────────────────────────────
