@@ -1,0 +1,13 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Burela - inspeccion de layout</title>
+<style>body{font:14px monospace;padding:24px;background:#f4f6f5;color:#24352d}pre{white-space:pre-wrap}</style>
+<h1>Layout local de Burela</h1>
+<pre id="report">Leyendo...</pre>
+<script type="module">
+const raw = localStorage.getItem('fourtwenty-editor-layout-burela-retro') || '[]';
+const layout = JSON.parse(raw);
+const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw)))].map(x => x.toString(16).padStart(2, '0')).join('');
+const selected = layout.filter(x => /Edificio|Reja verde lateral completa|Columna salvia galeria 6|Alero techo galeria salvia|Plataforma galeria nivel local|Barrio alrededor/.test(x.name));
+document.getElementById('report').textContent = JSON.stringify({hash, count:layout.length, selected:selected.map(x => ({id:x.id,name:x.name,p:x.position,r:x.rotation,s:x.scale,v:x.visible}))}, null, 2);
+</script>

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { crearSistemaDeGrupos } from './gruposDeMundo.js';
 import { crearHistorial, fotoDeTransform, aplicarFoto } from './deshacer.js';
+import { createCenteredTransform } from './centeredTransform.js';
 import { leerMando, BOTON } from '../../core/mando.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { addFurnitureItem } from '../furniture.js';
@@ -105,6 +106,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   };
 
   const transformControls = new TransformControls(camera, renderer.domElement);
+  const centeredTransform = createCenteredTransform();
   const transformHelper = transformControls.getHelper();
   transformHelper.visible = false;
   transformHelper.userData.editorHelper = true; // que el auto-registro los ignore
@@ -122,6 +124,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   orbit.maxDistance = 80;
 
   let saveTimer = 0;
+  let pendingSave = false;
 
   // Editor de cuadros: aparece solo cuando el objeto seleccionado ES un cuadro.
   // Se cuelga de la seleccion del editor de mundo en vez de tener su propia
@@ -175,8 +178,13 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     onToggleSpace: toggleSpace,
     onToggleSnap: toggleSnap,
     onDeselect: deselect,
-    onSelectId: duplicateFromObjectList,
+    onSelectId: selectId,
+    onPlaceCopy: () => state.selectedId && duplicateFromObjectList(state.selectedId),
+    onFocus: focusSelected,
+    onUndo: deshacerUltimo,
     onTransformInput: applyInputTransform,
+    onTransformStart: beginInputTransform,
+    onTransformEnd: finishInputTransform,
     onColorInput: applyInputColor,
     onLightRangeInput: applyInputLightRange,
     onSave: () => saveNow('Layout local guardado.'),
@@ -305,7 +313,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
         const cuantos = grupos.restaurar();
         if (cuantos) notaGrupos(`${cuantos} conjunto(s) guardado(s)`);
       }
-      setStatus('Edit Mode activo. Click izq: orbitar / seleccionar · click der: pan · rueda: zoom.');
+      setStatus('Editor activo. Click: seleccionar · arrastrar fondo: orbitar · click der: desplazar · rueda: zoom · F: enfocar.');
     } else {
       deselect();
       // ⚠️ Al cerrar el editor se apaga TODO lo verde: las marcas y los mangos
@@ -361,6 +369,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       transformHelper.visible = false;
       return;
     }
+    if (!transformControls.dragging) centeredTransform.sync();
     boxHelper.setFromObject(state.selectedObject);
     boxHelper.visible = true;
     transformHelper.visible = !getEditableById(state.selectedId)?.locked;
@@ -373,11 +382,12 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       return;
     }
     state.selectedObject = entry.object3D;
+    centeredTransform.attach(entry.object3D);
     if (entry.locked) {
       transformControls.detach();
       setStatus(`${entry.name} esta bloqueado.`);
     } else {
-      transformControls.attach(entry.object3D);
+      transformControls.attach(centeredTransform.handle);
       transformControls.setMode(state.mode);
       transformControls.setSpace(state.space);
       applySnapping();
@@ -388,6 +398,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   }
 
   function selectId(id) {
+    finishInputTransform();
     const entry = getEditableById(id);
     if (!entry) {
       setStatus(`Objeto no encontrado: ${id}`);
@@ -399,27 +410,71 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   }
 
   function deselect() {
+    finishInputTransform();
     state.selectedId = null;
     state.selectedObject = null;
     transformControls.detach();
+    centeredTransform.detach();
     boxHelper.visible = false;
     transformHelper.visible = false;
     refreshPanel();
   }
 
   function applyInputTransform(group, index, value) {
-    if (!Number.isFinite(value) || !state.selectedObject) return;
-    if (group === 'position') state.selectedObject.position.setComponent(index, value);
+    if (!Number.isFinite(value) || !state.selectedObject || getEditableById(state.selectedId)?.locked) return;
+    if (!['position', 'rotation', 'scale'].includes(group) || ![0, 1, 2].includes(index)) return;
+    centeredTransform.sync();
+    const handle = centeredTransform.handle;
+    if (group === 'position') {
+      const delta = value - state.selectedObject.position.getComponent(index);
+      handle.position.setComponent(index, handle.position.getComponent(index) + delta);
+    }
     if (group === 'rotation') {
       const values = [state.selectedObject.rotation.x, state.selectedObject.rotation.y, state.selectedObject.rotation.z];
       values[index] = value;
-      state.selectedObject.rotation.set(values[0], values[1], values[2]);
+      handle.rotation.set(values[0], values[1], values[2], state.selectedObject.rotation.order);
     }
-    if (group === 'scale') state.selectedObject.scale.setComponent(index, Math.max(0.001, value));
+    if (group === 'scale') handle.scale.setComponent(index, Math.max(0.001, value));
+    centeredTransform.apply();
+    grupos.propagar(state.selectedId);
     updateHelper();
-    refreshPanel();
+    refreshSelected();
     notifyWorldChanged();
     scheduleSave();
+  }
+
+  let inputTransformBefore = null;
+  function beginInputTransform() {
+    if (!inputTransformBefore && state.selectedId) inputTransformBefore = fotoParaDeshacer(state.selectedId);
+  }
+
+  function finishInputTransform() {
+    if (!inputTransformBefore?.length) return;
+    const fotos = inputTransformBefore;
+    inputTransformBefore = null;
+    const entry = getEditableById(fotos[0][0]);
+    if (!entry || JSON.stringify(fotoDeTransform(entry.object3D)) === JSON.stringify(fotos[0][1])) return;
+    historial.anotar(`editar ${entry.name}`, () => restaurarFotos(fotos));
+  }
+
+  function focusSelected() {
+    if (!state.selectedObject) { setStatus('Seleccioná un objeto para enfocarlo.'); return; }
+    state.selectedObject.updateWorldMatrix(true, true);
+    sourceBox.setFromObject(state.selectedObject);
+    if (sourceBox.isEmpty()) sourceBox.setFromCenterAndSize(state.selectedObject.getWorldPosition(sourceCenter), sourceSize.set(1, 1, 1));
+    sourceBox.getCenter(sourceCenter);
+    sourceBox.getSize(sourceSize);
+    orbitDir.copy(camera.position).sub(orbit.target);
+    if (orbitDir.lengthSq() < 0.001) orbitDir.set(1, 0.6, 1);
+    orbitDir.normalize();
+    const verticalFov = THREE.MathUtils.degToRad(camera.fov ?? 50);
+    const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * (camera.aspect || 1));
+    const distance = Math.max(2, sourceSize.length() * 0.65 / Math.sin(Math.min(verticalFov, horizontalFov) / 2));
+    orbit.maxDistance = Math.max(80, distance * 2);
+    orbit.target.copy(sourceCenter);
+    camera.position.copy(sourceCenter).addScaledVector(orbitDir, distance);
+    orbit.update();
+    setStatus(`${getEditableById(state.selectedId)?.name ?? 'Objeto'} enfocado. Arrastrá las flechas para moverlo.`);
   }
 
   function applyInputColor(value) {
@@ -451,6 +506,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   }
 
   function scheduleSave() {
+    pendingSave = true;
     clearTimeout(saveTimer);
     saveTimer = window.setTimeout(() => saveNow('Auto-save local actualizado.'), 450);
   }
@@ -458,7 +514,12 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   function saveNow(message) {
     clearTimeout(saveTimer);
     const ok = saveLocalLayout(serializeCurrentLayout(), { preserveOtherDestinations: true });
+    if (ok) pendingSave = false;
     setStatus(ok ? message : 'No se pudo guardar local.');
+  }
+
+  function flushPendingSave() {
+    if (pendingSave) saveNow('Últimos cambios guardados en esta computadora.');
   }
 
   function uniqueFurnitureId(key) {
@@ -500,9 +561,8 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       return;
     }
 
-    if (source.object3D.userData?.editorSelectExisting === true) {
-      selectId(source.id);
-      setStatus(`${source.name} seleccionado para editar.`);
+    if (source.type === 'elevator') {
+      setStatus('El ascensor no se duplica: seleccioná el original para moverlo.');
       return;
     }
 
@@ -928,7 +988,8 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     }
     verCruz(false);
     if (entry.locked) { fotoGesto = null; return; }
-    const objeto = entry.object3D;
+    centeredTransform.sync();
+    const objeto = centeredTransform.handle;
 
     if (!mando.activo) {
       // Al soltar todo se cierra el gesto: UNA sola vuelta atras por empujon.
@@ -952,11 +1013,14 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     adelante.normalize();
     derecha.set(adelante.z, 0, -adelante.x);
 
-    if (mando.mover.x || mando.mover.z) {
-      objeto.position.addScaledVector(adelante, mando.mover.z * VEL_MOVER * k);
-      objeto.position.addScaledVector(derecha, -mando.mover.x * VEL_MOVER * k);
+    if (mando.mover.x || mando.mover.z || mando.subir) {
+      objeto.getWorldPosition(spawnPos);
+      spawnPos.addScaledVector(adelante, mando.mover.z * VEL_MOVER * k);
+      spawnPos.addScaledVector(derecha, -mando.mover.x * VEL_MOVER * k);
+      spawnPos.y += mando.subir * VEL_SUBIR * k;
+      objeto.parent.worldToLocal(spawnPos);
+      objeto.position.copy(spawnPos);
     }
-    if (mando.subir) objeto.position.y += mando.subir * VEL_SUBIR * k;
     if (mando.girar) objeto.rotation.y += mando.girar * VEL_GIRAR * k;
     if (mando.escalar) {
       // Multiplicativo, no sumado: asi achicar y agrandar cuestan lo mismo y
@@ -964,7 +1028,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       const f = Math.exp(mando.escalar * VEL_ESCALAR * k);
       objeto.scale.multiplyScalar(f);
     }
-    objeto.updateMatrixWorld(true);
+    centeredTransform.apply();
 
     grupos.propagar(state.selectedId);
     updateHelper();
@@ -988,6 +1052,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   }
 
   function deshacerUltimo() {
+    finishInputTransform();
     const que = historial.deshacer();
     if (!que) { setStatus('No hay nada mas para deshacer.'); return; }
     updateHelper();
@@ -1027,6 +1092,9 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   const grupoContornos = new THREE.Group();
   grupoContornos.name = 'Editor · marcado para agrupar';
   grupoContornos.userData.editorHelper = true;   // que el auto-registro lo ignore
+  // Reutilizar el grupo de ayudas existente conserva los índices de los
+  // objetos que se cargan después: los layouts viejos siguen apuntando bien.
+  grupoContornos.add(centeredTransform.space);
   currentScene.add(grupoContornos);
 
   function dibujarMarca(id) {
@@ -1431,14 +1499,25 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     return parentId;
   }
 
+  let selectionPointer = null;
   function onPointerDown(event) {
     if (!state.enabled) return;
     // preventDefault impide que el click saque el foco de los inputs del panel;
     // lo hacemos a mano para que T/atajos vuelvan a funcionar tras editar números.
     if (isTypingTarget(document.activeElement)) document.activeElement.blur();
-    if (transformControls.dragging || transformControls.axis) return;
+    selectionPointer = null;
+    if (event.button !== 0 || transformControls.dragging || transformControls.axis) return;
     event.preventDefault();
     event.stopPropagation();
+    selectionPointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+  }
+
+  function onPointerUp(event) {
+    const start = selectionPointer;
+    selectionPointer = null;
+    if (!state.enabled || !start || start.id !== event.pointerId || transformControls.dragging) return;
+    // Orbitar o desplazar la vista no cambia lo que se está editando.
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) return;
 
     const rect = renderer.domElement.getBoundingClientRect();
     pointer.set(
@@ -1522,7 +1601,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     // como Kusher construye con `T` abierto, salir del piso era imposible.
     // El editor no usa E para nada; las demas si (WASD movian a BOB mientras
     // se edita, las flechas y los digitos son del gizmo).
-    const handled = ['Escape', 'Digit1', 'Digit2', 'Digit3', 'KeyQ', 'KeyG', 'KeyP', 'Delete', 'Backspace', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(event.code);
+    const handled = ['Escape', 'Digit1', 'Digit2', 'Digit3', 'KeyQ', 'KeyG', 'KeyP', 'KeyF', 'Delete', 'Backspace', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight'].includes(event.code);
     if (handled) {
       event.preventDefault();
       event.stopPropagation();
@@ -1534,6 +1613,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     if (event.code === 'KeyQ') toggleSpace();
     if (event.code === 'KeyG') toggleSnap();
     if (event.code === 'KeyP') selectParent();
+    if (event.code === 'KeyF') focusSelected();
     if (event.code === 'Delete' || event.code === 'Backspace') deleteSelected();
   }
 
@@ -1546,6 +1626,7 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     // mientras se arrastra el gizmo, la órbita no debe pelear por el mouse
     orbit.enabled = state.enabled && !event.value;
     if (event.value) {
+      selectionPointer = null;
       fotoAntesDeArrastrar = state.selectedId ? fotoParaDeshacer(state.selectedId) : null;
       return;
     }
@@ -1555,9 +1636,11 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
       historial.anotar(`mover ${nombre}`, () => restaurarFotos(fotos));
       fotoAntesDeArrastrar = null;
     }
+    updateHelper();
     if (state.selectedObject) saveNow('Layout local guardado.');
   });
   transformControls.addEventListener('objectChange', () => {
+    centeredTransform.apply();
     // Si lo que se movio es el mango de un conjunto, primero se reparte el
     // movimiento entre sus miembros y recien despues se refresca todo.
     if (state.selectedId) grupos.propagar(state.selectedId);
@@ -1568,7 +1651,10 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
   });
 
   renderer.domElement.addEventListener('pointerdown', onPointerDown);
+  renderer.domElement.addEventListener('pointerup', onPointerUp);
   window.addEventListener('keydown', onKeyDown, true);
+  window.addEventListener('pagehide', flushPendingSave);
+  window.addEventListener('beforeunload', flushPendingSave);
   window.addEventListener('fourtwenty:editable-registry-change', refreshPanel);
 
   refreshPanel();
@@ -1585,15 +1671,20 @@ export function initWorldEditor({ scene, camera, renderer, input, player } = {})
     // y pedirle que reparta. Mismo criterio que `window.__colliders()`.
     grupos,
     dispose() {
+      flushPendingSave();
       clearTimeout(saveTimer);
       arrancarMando(false);
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+      renderer.domElement.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('keydown', onKeyDown, true);
+      window.removeEventListener('pagehide', flushPendingSave);
+      window.removeEventListener('beforeunload', flushPendingSave);
       window.removeEventListener('fourtwenty:editable-registry-change', refreshPanel);
       transformControls.detach();
       transformControls.dispose?.();
       orbit.dispose();
       transformHelper.parent?.remove(transformHelper);
+      centeredTransform.space.parent?.remove(centeredTransform.space);
       boxHelper.parent?.remove(boxHelper);
       panel.dispose();
     },

@@ -82,7 +82,9 @@ export function createMusicPlayer() {
     const track = list.temas[index];
     if (!track) return Promise.resolve(false);
     current = { playlistId, index };
-    audio.src = TRACK_BASE + track.archivo;
+    // Los nombres se eligen desde Finder: #, ?, % y espacios deben seguir
+    // siendo parte del archivo, no fragmentos ni parametros de la URL.
+    audio.src = TRACK_BASE + track.archivo.split('/').map(encodeURIComponent).join('/');
     audio.preload = 'auto';
     return audio.play()
       .then(() => { notify(); return true; })

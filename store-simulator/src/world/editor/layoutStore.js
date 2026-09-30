@@ -4,6 +4,10 @@ const HOOP_BASE_MIGRATION_KEY = 'fourtwenty-editor-hoop-base-all-floors-v1';
 const ORIGIN_RESET_MIGRATION_KEY = 'fourtwenty-editor-origin-reset-v1';
 const HOOP_DESTINATION_ID = 2;
 const HOOP_BASE_TARGETS = [1, 3, 4, 5];
+// Todos los pisos usan el mismo layout base. Compartir la descarga durante la
+// sesión evita pedir el JSON completo cada vez que llega un mueble o cambia de
+// piso; el borrador local se sigue leyendo en cada llamada.
+let initialBaseLayoutPromise = null;
 
 function isLayout(value) {
   return Array.isArray(value);
@@ -130,7 +134,12 @@ export async function loadInitialLayout() {
   const local = getLocalLayout();
   if (local) return migrateOriginToUploadedBase(migrateHoopBaseLayout(local));
   try { localStorage.setItem(ORIGIN_RESET_MIGRATION_KEY, '1'); } catch { /* sin persistencia */ }
-  return loadBaseLayout();
+  initialBaseLayoutPromise ??= loadBaseLayout().then((layout) => {
+    // Si falló la lectura, un viaje posterior puede reintentar sin recargar.
+    if (!layout.length) initialBaseLayoutPromise = null;
+    return layout;
+  });
+  return initialBaseLayoutPromise;
 }
 
 // ⚠️ `porId` (opcional): mapa id → objeto del mismo layout. Hace falta para las
@@ -258,6 +267,7 @@ export function saveLocalLayout(layout, { preserveOtherDestinations = false } = 
 
 export function clearLocalLayout() {
   try {
+    initialBaseLayoutPromise = null;
     localStorage.removeItem(LOCAL_STORAGE_KEY);
     localStorage.removeItem(HOOP_BASE_MIGRATION_KEY);
     localStorage.removeItem(ORIGIN_RESET_MIGRATION_KEY);

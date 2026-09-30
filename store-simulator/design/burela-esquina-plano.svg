@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+<rect width="1200" height="800" fill="#f4f6f5"/>
+<g font-family="Arial,sans-serif" fill="#253732">
+<text x="48" y="50" font-size="27" font-weight="bold">BURELA 2570 / BASE DE LA ESQUINA DERECHA</text>
+<text x="48" y="80" font-size="15">Plano de implantacion. X hacia la derecha mirando el local; fondo del complejo arriba.</text>
+<rect x="50" y="125" width="710" height="415" fill="#e1e7df"/>
+<rect x="785" y="125" width="108" height="625" fill="#697476"/>
+<rect x="915" y="125" width="237" height="360" fill="#dedbd5"/>
+<rect x="915" y="675" width="237" height="75" fill="#dedbd5"/>
+<text x="1030" y="158" font-size="15" text-anchor="middle">CUADRA LATERAL</text>
+<text x="1030" y="704" font-size="15" text-anchor="middle">CUADRA DE FONDO</text>
+<text x="1030" y="727" font-size="12" text-anchor="middle">Volumenes aproximados</text>
+<g fill="#b17965" stroke="#f4f0e6" stroke-width="5">
+<rect x="115" y="165" width="175" height="106"/>
+<rect x="360" y="148" width="110" height="165"/>
+<rect x="612" y="152" width="116" height="180"/>
+</g>
+<text x="197" y="213" font-size="15" text-anchor="middle">TORRES EXISTENTES</text>
+<text x="197" y="238" font-size="13" text-anchor="middle">Conservar posiciones</text>
+<text x="669" y="235" font-size="14" text-anchor="middle">TORRE</text>
+<text x="669" y="256" font-size="13" text-anchor="middle">DE FONDO</text>
+<path d="M492 349H740V477Q740 520 696 520H492Z" fill="#91aa7f"/>
+<path d="M491 384H701V470M569 348V511" fill="none" stroke="#d9d8cf" stroke-width="17"/>
+<g fill="#68845c"><circle cx="523" cy="433" r="20"/><circle cx="634" cy="427" r="20"/><circle cx="707" cy="347" r="21"/><circle cx="645" cy="480" r="14"/></g>
+<g stroke="#786b54" stroke-width="7"><path d="M529 369h29M610 369h29M590 464h29"/></g>
+<path d="M492 520H696Q760 520 760 456V337" fill="none" stroke="#9e6651" stroke-width="12"/>
+<path d="M492 513H696Q753 513 753 456V337" fill="none" stroke="#436d59" stroke-width="3"/>
+<text x="568" y="324" font-size="16" font-weight="bold">PATIO COMUNITARIO</text>
+<text x="522" y="553" font-size="14">Muro de ladrillo + reja verde</text>
+<rect x="50" y="421" width="367" height="111" fill="#f6f7f4" stroke="#547866" stroke-width="3"/>
+<g fill="#41694f"><rect x="58" y="528" width="8" height="12"/><rect x="406" y="528" width="8" height="12"/></g>
+<text x="231" y="460" font-size="18" text-anchor="middle" font-weight="bold">FRENTE APROBADO</text>
+<text x="231" y="485" font-size="14" text-anchor="middle">Local, columnas, galeria y editor intactos</text>
+<rect x="419" y="432" width="71" height="99" fill="#cad6c5" stroke="#547866"/>
+<text x="454" y="412" font-size="12" text-anchor="middle">CONTINUIDAD</text>
+<path d="M65 570H744Q778 570 778 541" fill="none" stroke="#37a289" stroke-width="5"/>
+<text x="88" y="595" font-size="14">Bob llega por la vereda. Patio y transversal solo visibles.</text>
+<rect x="50" y="610" width="1102" height="48" fill="#697476"/>
+<text x="430" y="641" fill="white" font-size="19">CALLE BURELA</text>
+<text transform="translate(848 480) rotate(-90)" fill="white" font-size="16">CALLE TRANSVERSAL</text>
+<path d="M790 545H888" stroke="#e2b24e" stroke-width="5" stroke-dasharray="8 8"/>
+<text x="48" y="705" font-size="14">Anclajes de codigo: galeria x=-14..14; patio nuevo x=20.5..39.25;</text>
+<text x="48" y="728" font-size="14">eje de transversal x=45.25. 1 unidad = 1 m. Medidas nuevas ESTIMADAS.</text>
+<text x="48" y="766" font-size="13">Referencia: siete capturas Street View / Earth del 18-09-2026. No es un relevamiento topografico.</text>
+</g></svg>

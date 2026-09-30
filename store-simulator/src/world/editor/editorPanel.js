@@ -108,17 +108,33 @@ export function createEditorPanel(callbacks = {}) {
   root.id = PANEL_ID;
   root.innerHTML = `
     <div class="we-head">
-      <div class="we-title">FOURTWENTY WORLD EDITOR</div>
-      <div class="we-sub">T/Tab ON-OFF · 1 move · 2 rotate · 3 scale · Q space · G snap<br>
+      <div class="we-title">EDITOR DE FOURTWENTY</div>
+      <div class="we-sub">T/Tab abrir-cerrar · 1 mover · 2 rotar · 3 tamaño · Q ejes · G ajuste · F enfocar<br>
       Ctrl+C copiar · Ctrl+V pegar · Ctrl+D duplicar · Ctrl+Z deshacer · Supr borrar · P grupo padre · SHIFT+click marcar<br>JOYSTICK: stick izq mover · L2/R2 bajar-subir · stick der rotar y escalar · L1 fino · ✕ duplicar · ○ soltar · Options guardar</div>
     </div>
     <div class="we-body">
       <div class="we-row"><span>Estado</span><span class="we-pill" data-field="enabled">OFF</span></div>
       <div class="we-row"><span>Modo</span><span class="we-pill" data-field="mode">translate</span></div>
-      <div class="we-row"><span>Space</span><span class="we-pill" data-field="space">world</span></div>
-      <div class="we-row"><span>Snapping</span><span class="we-pill" data-field="snapping">OFF</span></div>
+      <div class="we-row"><span>Ejes</span><span class="we-pill" data-field="space">Mundo</span></div>
+      <div class="we-row"><span>Ajuste a grilla</span><span class="we-pill" data-field="snapping">OFF</span></div>
 
       <div class="we-selected" data-field="selected">Sin objeto seleccionado</div>
+
+      <div class="we-section">
+        <div class="we-label">Editar selección</div>
+        <div class="we-grid">
+          ${button('Mover · 1', 'mode:translate')}
+          ${button('Rotar · 2', 'mode:rotate')}
+          ${button('Tamaño · 3', 'mode:scale')}
+          ${button('Enfocar · F', 'focus')}
+          ${button('Deshacer', 'undo')}
+          ${button('Guardar', 'save')}
+          ${button('Duplicar', 'duplicate')}
+          ${button('Copia frente a BOB', 'place-copy')}
+          ${button('Exportar respaldo', 'download')}
+        </div>
+        <div class="we-color-note">Click para seleccionar. Arrastrá las flechas sobre el objeto para moverlo. Arrastrá el fondo para orbitar. Los cambios se guardan en esta computadora.</div>
+      </div>
 
       <div class="we-section" data-field="colorSection" hidden>
         <div class="we-label">Color del objeto</div>
@@ -170,24 +186,21 @@ export function createEditorPanel(callbacks = {}) {
       </div>
 
       <div class="we-section">
-        <div class="we-label">Objects <span data-field="objectCount"></span></div>
+        <div class="we-label">Objetos <span data-field="objectCount"></span></div>
         <input type="text" data-field="filter" placeholder="filtrar por nombre…" autocomplete="off" spellcheck="false">
+        <div class="we-color-note">Seleccioná una pieza de la lista para editarla. Usá Duplicar cuando quieras una copia.</div>
         <div class="we-object-list" data-field="objectList"></div>
       </div>
 
       <div class="we-section">
-        <div class="we-label">Transform</div>
+        <div class="we-label">Más herramientas</div>
         <div class="we-grid">
-          ${button('Move', 'mode:translate')}
-          ${button('Rotate', 'mode:rotate')}
-          ${button('Scale', 'mode:scale')}
-          ${button('World/Local', 'space')}
-          ${button('Snap', 'snap')}
-          ${button('Deselect', 'deselect')}
-          ${button('Duplicate', 'duplicate')}
-          ${button('Delete', 'delete')}
-          ${button('Parent', 'parent')}
-          ${button('Show/Hide', 'visible')}
+          ${button('Ejes mundo/local', 'space')}
+          ${button('Ajuste a grilla', 'snap')}
+          ${button('Soltar', 'deselect')}
+          ${button('Borrar', 'delete')}
+          ${button('Grupo padre', 'parent')}
+          ${button('Mostrar/ocultar', 'visible')}
           ${button('Cortar hasta BOB', 'cortar-bob')}
         </div>
       </div>
@@ -204,29 +217,30 @@ export function createEditorPanel(callbacks = {}) {
       </div>
 
       <div class="we-section">
-        <div class="we-label">Position</div>
+        <div class="we-label">Posición · X / Y / Z</div>
         ${inputRow('position')}
       </div>
       <div class="we-section">
-        <div class="we-label">Rotation</div>
+        <div class="we-label">Rotación · X / Y / Z (radianes)</div>
         ${inputRow('rotation')}
       </div>
       <div class="we-section">
-        <div class="we-label">Scale</div>
+        <div class="we-label">Tamaño · X / Y / Z</div>
         ${inputRow('scale', [1, 1, 1])}
       </div>
 
       <div class="we-section">
-        <div class="we-label">Layout</div>
+        <div class="we-label">Guardado y respaldos</div>
         <div class="we-grid">
-          ${button('Save Local', 'save')}
-          ${button('Copy JSON', 'copy')}
-          ${button('Download', 'download')}
-          ${button('Reset File', 'reset')}
-          ${button('Clear Local', 'clear')}
-          ${button('Import JSON', 'import')}
+          ${button('Guardar', 'save')}
+          ${button('Copiar respaldo', 'copy')}
+          ${button('Exportar respaldo', 'download')}
+          ${button('Volver al original', 'reset')}
+          ${button('Borrar guardado local', 'clear')}
+          ${button('Importar respaldo', 'import')}
           ${button('Traer pisos de Fer', 'traer-pisos')}
         </div>
+        <div class="we-color-note">El guardado automático funciona sin internet. Exportar respaldo descarga un archivo para recuperarlo con Importar respaldo.</div>
         <input type="file" accept="application/json,.json" data-field="fileInput" style="display:none">
       </div>
 
@@ -381,6 +395,9 @@ export function createEditorPanel(callbacks = {}) {
     else if (action === 'snap') callbacks.onToggleSnap?.();
     else if (action === 'deselect') callbacks.onDeselect?.();
     else if (action === 'duplicate') callbacks.onDuplicate?.();
+    else if (action === 'place-copy') callbacks.onPlaceCopy?.();
+    else if (action === 'focus') callbacks.onFocus?.();
+    else if (action === 'undo') callbacks.onUndo?.();
     else if (action === 'delete') callbacks.onDelete?.();
     else if (action === 'parent') callbacks.onSelectParent?.();
     else if (action === 'visible') callbacks.onToggleVisible?.();
@@ -410,6 +427,12 @@ export function createEditorPanel(callbacks = {}) {
   }
   root.addEventListener('input', applyTransformField);
   root.addEventListener('change', applyTransformField);
+  root.addEventListener('focusin', (event) => {
+    if (event.target.matches('[data-transform]')) callbacks.onTransformStart?.();
+  });
+  root.addEventListener('focusout', (event) => {
+    if (event.target.matches('[data-transform]')) callbacks.onTransformEnd?.();
+  });
 
   function normalizeHex(value) {
     const raw = String(value ?? '').trim();
@@ -450,8 +473,8 @@ export function createEditorPanel(callbacks = {}) {
     hide() { root.classList.remove('is-visible'); },
     setState(state) {
       fields.enabled.textContent = state.enabled ? 'ON' : 'OFF';
-      fields.mode.textContent = state.mode;
-      fields.space.textContent = state.space;
+      fields.mode.textContent = { translate: 'Mover', rotate: 'Rotar', scale: 'Tamaño' }[state.mode] ?? state.mode;
+      fields.space.textContent = state.space === 'world' ? 'Mundo' : 'Objeto';
       fields.snapping.textContent = state.snapping ? 'ON' : 'OFF';
       setButtons(state);
     },
@@ -465,6 +488,7 @@ export function createEditorPanel(callbacks = {}) {
         fields.selected.textContent = 'Sin objeto seleccionado';
         fields.colorSection.hidden = true;
         fields.lightRangeSection.hidden = true;
+        root.querySelectorAll('[data-transform]').forEach((input) => { input.disabled = true; });
         return;
       }
       fields.selected.innerHTML = `<strong>${entry.name}</strong><br>${entry.id}<br>${entry.type}${entry.locked ? ' · LOCKED' : ''}`;
@@ -491,7 +515,8 @@ export function createEditorPanel(callbacks = {}) {
       };
       for (const [group, values] of Object.entries(transforms)) {
         root.querySelectorAll(`[data-transform="${group}"]`).forEach((input) => {
-          input.value = Number(values[Number(input.dataset.index)]).toFixed(3);
+          input.disabled = entry.locked === true;
+          if (input !== document.activeElement) input.value = Number(values[Number(input.dataset.index)]).toFixed(3);
         });
       }
     },

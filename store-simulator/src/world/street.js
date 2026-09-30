@@ -17,6 +17,8 @@ import { towerFacade, veredaGranitica, VEREDA_METROS, hexPaverPs3, HEX_METROS, g
 import { buildBurelaFrente } from './burelaFrente.js';
 import { buildBurelaAlrededores } from './burelaAlrededores.js';
 import { buildBurelaCielo } from './burelaCielo.js';
+import { buildBurelaEsquina, BURELA_BACKDROP_EXCLUSIONS, openBurelaStreetInSurface } from './burelaEsquina.js';
+import { adoquinesBurelaMaterial, ADOQUIN_METROS } from './adoquinesBurela.js';
 import { box } from './gfxUtils.js';
 import { garmentTexture } from './gallery.js';
 import { addSampleGarments } from './garmentModels.js';
@@ -247,6 +249,7 @@ export function buildStreet(scene, { reflectionSize = 512, reflectionFrameInterv
     normalScale: new THREE.Vector2(0.45, 0.45), roughness: 0.9,
   });
   const hormigonMat = mat(HORMIGON, 0.9);
+  openBurelaStreetInSurface(hormigonMat);
   const salviaMat = mat(SALVIA, 0.8);
   const cremaMat = mat(CREMA, 0.85);
   const shutterMat = new THREE.MeshStandardMaterial({ map: greenShutter(2, 1), roughness: 0.6, metalness: 0.3 });
@@ -262,8 +265,11 @@ export function buildStreet(scene, { reflectionSize = 512, reflectionFrameInterv
   // ⚠️ SE ESTIRA SOLO HACIA LA VEREDA DE ENFRENTE. El borde de este lado sigue
   // en z=6, donde estaba: correrlo lo metia por debajo de la vereda que Kusher
   // acomodo a mano, y ese piso es suyo.
-  const street = new THREE.Mesh(new THREE.PlaneGeometry(MAP_HALF_X * 2 + 20, 10.1), mat(0x3a3a3c, 0.95));
-  street.name = 'Calle Burela · asfalto';
+  const streetWidth = MAP_HALF_X * 2 + 20;
+  const street = new THREE.Mesh(new THREE.PlaneGeometry(streetWidth, 10.1),
+    adoquinesBurelaMaterial(streetWidth / ADOQUIN_METROS, 10.1 / ADOQUIN_METROS));
+  street.name = 'Calle Burela · adoquines porteños';
+  street.receiveShadow = true;
   street.rotation.x = -Math.PI / 2; street.position.set(0, -0.05, Z_STREET + 3.05); scene.add(street);
   g.add(named(box(MAP_HALF_X * 2 + 4, 0.15, 0.4, 0, 0.075, Z_CURB, mat(0x8a8880, 0.9)), 'Cordon calle Burela'));
   const vereda = new THREE.Mesh(new THREE.PlaneGeometry(MAP_HALF_X * 2, Z_CURB - 3.5), veredaMat);
@@ -426,8 +432,9 @@ export function buildStreet(scene, { reflectionSize = 512, reflectionFrameInterv
   // dos lados, arriba de los techos de enfrente no habia nada, y desde arriba
   // se veia el borde del mundo). El cielo reemplaza el color plano por una
   // cupula con degradado, nubes y resplandor del sol.
-  buildBurelaAlrededores(scene);
+  buildBurelaAlrededores(scene, { exclusions: BURELA_BACKDROP_EXCLUSIONS });
   const cielo = buildBurelaCielo(scene);
+  buildBurelaEsquina(g, scene);
 
   return {
     colliders,

@@ -4,6 +4,7 @@ import { loadInitialLayout, saveLocalLayout } from './editor/layoutStore.js';
 import { BUNDLED_FURNITURE, MODEL_CATALOG_MIGRATION_KEY } from './editor/modelCatalog.js';
 import { normalizeGLTFHeight } from './gltfUtils.js';
 import { gltfLoader } from './gltfLoaders.js';
+import { replacesBurelaBackdrop } from './burelaEsquina.js';
 
 // El lector compartido ya viene con Draco puesto (ver `gltfLoaders.js`).
 const loader = gltfLoader();
@@ -172,7 +173,8 @@ export async function addFurnitureItem(scene, item) {
 
 export async function addFurniture(scene) {
   const layout = migrateBundledFurniture(await loadInitialLayout());
-  const furniture = layout.filter((item) => item.type === 'furniture');
+  const furniture = layout.filter((item) => item.type === 'furniture'
+    && !(scene.userData.burelaEsquina && replacesBurelaBackdrop(item)));
   if (!furniture.length) {
     console.warn('addFurniture: layout sin muebles editables.');
     return [];

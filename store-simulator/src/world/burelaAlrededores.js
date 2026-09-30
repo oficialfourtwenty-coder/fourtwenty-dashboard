@@ -86,6 +86,10 @@ function escalarUV(geo, w, h, d, metros) {
 }
 
 function caja(cubos, material, color, w, h, d, x, y, z, metros = 1.2, giroY = 0) {
+  const halfX = (Math.abs(Math.cos(giroY)) * w + Math.abs(Math.sin(giroY)) * d) / 2;
+  const halfZ = (Math.abs(Math.sin(giroY)) * w + Math.abs(Math.cos(giroY)) * d) / 2;
+  if (cubos.exclusions?.some(r => x + halfX > r.minX && x - halfX < r.maxX
+    && z + halfZ > r.minZ && z - halfZ < r.maxZ)) return;
   const g = new THREE.BoxGeometry(w, h, d);
   escalarUV(g, w, h, d, metros);
   // El giro va ANTES de mover: `rotateY` gira alrededor del origen, asi que si
@@ -224,10 +228,11 @@ function calleTransversal(cubos, azar, cx) {
   }
 }
 
-export function buildBurelaAlrededores(scene) {
+export function buildBurelaAlrededores(scene, { exclusions = [] } = {}) {
   const azar = dado(4200420);
   const mats = materiales();
   const cubos = {};
+  Object.defineProperty(cubos, 'exclusions', { value: exclusions });
 
   // ===========================================================================
   // 1) LA CALLE QUE SIGUE, CORTADA EN CUADRAS.

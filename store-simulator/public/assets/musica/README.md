@@ -20,12 +20,18 @@ La musica se comparte entre el celular y las radios de los autos.
 
 ## Agregar musica durante desarrollo
 
-Guardar el archivo en la carpeta correspondiente y reiniciar el servidor:
+Guardar el archivo en la carpeta correspondiente y recargar el simulador
+con Cmd+R. No hace falta reiniciar el servidor de desarrollo:
 
 ```text
 public/assets/musica/luca/nombre_tema.ext
 public/assets/musica/fer/nombre_tema.ext
 ```
+
+En `Documentos/simulador/BURELA - EDICION SIN WIFI` hay accesos directos a
+las dos carpetas. Aceptan MP3, M4A, OGG y WAV. Se pueden agregar varios temas,
+y la lista se ordena por nombre de archivo. Los archivos tienen que estar
+descargados en esta Mac para poder usarlos sin internet.
 
 Usar nombres simples. El formato publicado recomendado es MP3 mono a 44.1 kHz y
 96 kbps. Si se agrega un WAV durante desarrollo, convertirlo antes de llevarlo

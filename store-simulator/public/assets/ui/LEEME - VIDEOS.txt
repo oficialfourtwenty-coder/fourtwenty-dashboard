@@ -1,0 +1,22 @@
+VIDEOS DEL SIMULADOR
+
+Para cambiar un video, reemplazá el MP4 correspondiente conservando su
+nombre exacto. Después recargá el simulador con Cmd+R y entrá al piso.
+Guardá una copia del original fuera de esta carpeta si querés conservarlo.
+
+Entrada a Bobilonia     → bobilonia-intro.mp4
+Piso 1 - Origen        → todavía no tiene video de entrada
+Piso 2 - Hoop Season   → hoop-season-intro.mp4
+Piso 3 - Cultura       → cultura-intro.mp4
+Piso 4 - BOB           → hoy entra con fundido, sin reproducir video
+Piso 5 - Terraza       → terrace-intro.mp4
+Kiosco Twenty Time     → twenty-time-intro.mp4
+
+Formato recomendado: MP4 con video H.264 y audio AAC.
+Los videos actuales ya están optimizados; verificá el peso del reemplazo antes
+de sumarlo a una versión publicada y medí su descarga al entrar a esa pantalla.
+La imagen fija de la entrada es bobilonia-intro-poster.jpg; se cambia aparte.
+Twenty Time se ve una vez por sesión; recargá para volver a verlo.
+El archivo bob-loading.mp4 está guardado, pero la entrada actual a BOB no lo usa.
+
+Guardá el trabajo del editor antes de recargar.
