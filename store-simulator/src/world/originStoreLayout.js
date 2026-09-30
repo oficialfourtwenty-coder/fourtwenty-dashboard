@@ -10,6 +10,30 @@ import { registerEditableObject } from './editor/editableRegistry.js';
 import { gltfLoader } from './gltfLoaders.js';
 
 const ORIGEN_ID = 1;
+const modelSources = new Map();
+
+function originModel(url) {
+  if (!modelSources.has(url)) {
+    modelSources.set(url, gltfLoader().loadAsync(url).then(gltf => {
+      configureModel(gltf.scene);
+      gltf.scene.traverse(object => {
+        if (object.geometry) object.geometry.userData.sharedModelResource = true;
+        for (const material of Array.isArray(object.material) ? object.material : [object.material]) {
+          if (material) material.userData.sharedModelResource = true;
+        }
+      });
+      return gltf.scene;
+    }).catch(error => {
+      modelSources.delete(url);
+      throw error;
+    }));
+  }
+  return modelSources.get(url);
+}
+
+export function prepareOriginModels() {
+  return Promise.all([displayUrl, centralIslandUrl, backRailUrl, sofaUrl, glassTableUrl, drDreVinylUrl, vinylCabinetUrl].map(originModel));
+}
 
 function configureModel(model) {
   model.traverse((object) => {
@@ -154,15 +178,37 @@ function addWall(root, material, {
   group.add(wall);
 }
 
-function loadModelInto(group, url) {
-  gltfLoader().load(
-    url,
-    (gltf) => {
+function removeIslandRocks(model) {
+  model.traverse((object) => {
+    if (!object.isMesh || !object.name.includes('ORIGEN_Island_Stone')) return;
+    const geometry = object.geometry.clone();
+    delete geometry.userData.sharedModelResource;
+    const positions = geometry.getAttribute('position');
+    const indices = geometry.getIndex();
+    if (!positions || !indices) return;
+    const kept = [];
+    for (let i = 0; i < indices.count; i += 3) {
+      const a = indices.getX(i), b = indices.getX(i + 1), c = indices.getX(i + 2);
+      // La tapa circular termina en Y=0.22; las dos rocas sobresalen de ella.
+      if (Math.max(positions.getY(a), positions.getY(b), positions.getY(c)) <= 0.225) {
+        kept.push(a, b, c);
+      }
+    }
+    if (kept.length && kept.length < indices.count) {
+      geometry.setIndex(kept);
+      object.geometry = geometry;
+    } else geometry.dispose();
+  });
+}
+
+function loadModelInto(group, url, { withoutIslandRocks = false } = {}) {
+  originModel(url).then(
+    (source) => {
       if (!group.parent) return;
-      configureModel(gltf.scene);
-      group.add(gltf.scene);
+      const model = source.clone(true);
+      if (withoutIslandRocks) removeIslandRocks(model);
+      group.add(model);
     },
-    undefined,
     (error) => console.warn(`No se pudo cargar ${group.name}.`, error),
   );
 }
@@ -170,12 +216,10 @@ function loadModelInto(group, url) {
 // Los modelos externos vienen en escalas y origenes distintos. Esta envoltura
 // los centra, apoya en el piso y les da una medida real sin modificar el GLB.
 function loadFittedModelInto(group, url, maxDimension) {
-  gltfLoader().load(
-    url,
-    (gltf) => {
+  originModel(url).then(
+    (source) => {
       if (!group.parent) return;
-      const model = gltf.scene;
-      configureModel(model);
+      const model = source.clone(true);
       model.updateMatrixWorld(true);
       const box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
@@ -203,7 +247,6 @@ function loadFittedModelInto(group, url, maxDimension) {
         collidable: group.userData.destinationCollider === true,
       });
     },
-    undefined,
     (error) => console.warn(`No se pudo cargar ${group.name}.`, error),
   );
 }
@@ -261,18 +304,15 @@ function addSideDisplays(root) {
     { id: 'display-derecho-2', name: 'ORIGEN · exhibidor derecho 2', position: [5.15, 0, 1.75], rotationY: -Math.PI / 2, scale: 1.1 },
   ];
 
-  gltfLoader().load(
-    displayUrl,
-    (gltf) => {
+  originModel(displayUrl).then(
+    (source) => {
       if (!root.parent) return;
       for (const placement of placements) {
         const group = editableUnit(root, { ...placement, collider: true });
-        const model = gltf.scene.clone(true);
-        configureModel(model);
-        group.add(model);
+        const model = source.clone(true);
+          group.add(model);
       }
     },
-    undefined,
     (error) => console.warn('No se pudieron cargar los exhibidores de ORIGEN.', error),
   );
 }
@@ -305,6 +345,28 @@ export function addOriginStoreLayout(root) {
     position: [0, 1.85, -3.95],
   });
 
+  // Complete the plaster shell behind the elevator while leaving its cabin clear.
+  for (const side of [-1, 1]) {
+    addWall(root, plaster, {
+      id: `pared-lateral-ascensor-${side}`,
+      name: `ORIGEN · cierre lateral del ascensor ${side < 0 ? 'izquierdo' : 'derecho'}`,
+      size: [0.18, 3.7, 3.33],
+      position: [side * 5.72, 1.85, 10.515],
+    });
+    addWall(root, plaster, {
+      id: `pared-trasera-ascensor-${side}`,
+      name: `ORIGEN · cierre posterior del ascensor ${side < 0 ? 'izquierdo' : 'derecho'}`,
+      size: [4.38, 3.7, 0.18],
+      position: [side * 3.53, 1.85, 12.18],
+    });
+  }
+  addWall(root, plaster, {
+    id: 'dintel-posterior-ascensor',
+    name: 'ORIGEN · cierre superior del ascensor',
+    size: [2.68, 0.8, 0.18],
+    position: [0, 3.3, 12.18],
+  });
+
   addSideDisplays(root);
 
   const island = editableUnit(root, {
@@ -314,7 +376,7 @@ export function addOriginStoreLayout(root) {
     scale: 1.28,
     collider: true,
   });
-  loadModelInto(island, centralIslandUrl);
+  loadModelInto(island, centralIslandUrl, { withoutIslandRocks: true });
 
   const rail = editableUnit(root, {
     id: 'barral-fondo',
