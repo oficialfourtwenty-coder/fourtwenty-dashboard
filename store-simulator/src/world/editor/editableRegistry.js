@@ -173,6 +173,7 @@ function serializeEntry(entry) {
   if (entry.mueble) data.mueble = entry.mueble;
   // Idem para una prenda GLB colgada a mano (world/garmentModels.js).
   if (entry.prendaGlb) data.prendaGlb = entry.prendaGlb;
+  if (entry.object3D?.userData?.garmentModel && entry.object3D.userData.ftDiseñoActual) data.garmentDesign = structuredClone(entry.object3D.userData.ftDiseñoActual);
   return data;
 }
 

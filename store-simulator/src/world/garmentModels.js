@@ -22,7 +22,7 @@
 
 import * as THREE from 'three';
 import { getEditableById, registerEditableObject } from './editor/editableRegistry.js';
-import { diseñoDe, pintarPrenda } from '../ui/garmentGlbEditor.js';
+import { diseñoDe, pintarPrenda, originShirtDesign, prepararGuardadoDeBordados } from '../ui/garmentGlbEditor.js';
 import { gltfLoader } from './gltfLoaders.js';
 
 const loader = gltfLoader();
@@ -118,6 +118,7 @@ export async function addGarmentModel(scene, clave, {
   scale = 1,
   finalScale = null,
   color = null,
+  garmentDesign = null,
   id = null,
   name = null,
   // En que escena se colgo. Se guarda para que al recargar vuelva SOLO ahi:
@@ -145,9 +146,11 @@ export async function addGarmentModel(scene, clave, {
     return null;
   }
   if (scene.userData?.disposed) return null;
+  await prepararGuardadoDeBordados();
 
   const root = new THREE.Group();
   root.name = name ?? preset.nombre;
+  if (id) root.userData.garmentDesignId = id;
   const modelo = gltf.scene.clone(true);
   modelo.rotation.x = preset.rotacionX ?? ROTACION_DE_PIE;
   root.add(modelo);
@@ -195,8 +198,12 @@ export async function addGarmentModel(scene, clave, {
   // `applySavedGlbGarmentDesigns` la prenda todavia no existe en la escena, asi
   // que no la encontraba y el diseño de Kusher no aparecia nunca.
   if (!preset.soloPercha) {
+    if (garmentDesign) {
+      root.userData.garmentDesignFromLayout = true;
+      root.userData.ftDiseñoActual = garmentDesign;
+    }
     const diseño = diseñoDe(root);
-    if (colorGuardado) diseño.color = colorGuardado;
+    if (colorGuardado && !garmentDesign && !originShirtDesign(id)) diseño.color = colorGuardado;
     if (diseño.frente?.imagen || diseño.dorso?.imagen || diseño.color) pintarPrenda(root, diseño);
   }
 
@@ -278,6 +285,7 @@ export function restorePrendasGlb(scene, layout, destinoDeLaEscena) {
       rotation: item.rotation ?? [0, 0, 0],
       finalScale: item.scale ?? [1, 1, 1],
       color: item.color ?? null,
+      garmentDesign: item.garmentDesign ?? null,
       destinationId: destinoDeLaEscena,
       persistente: true,
     })

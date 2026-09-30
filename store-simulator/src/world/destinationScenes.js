@@ -117,13 +117,13 @@ export function disposeDestinationScene(record, player) {
   const disposedTextures = new Set();
   record.scene.traverse((object) => {
     if (!object.userData?.sharedDestinationLight) object.shadow?.dispose?.();
-    if (object.geometry?.dispose && !disposedGeometries.has(object.geometry)) {
+    if (object.geometry?.dispose && !object.geometry.userData?.sharedModelResource && !disposedGeometries.has(object.geometry)) {
       disposedGeometries.add(object.geometry);
       object.geometry.dispose();
     }
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     for (const material of materials) {
-      if (!material?.dispose || disposedMaterials.has(material)) continue;
+      if (!material?.dispose || material.userData?.sharedModelResource || disposedMaterials.has(material)) continue;
       disposedMaterials.add(material);
       for (const value of Object.values(material)) {
         if (!value?.isTexture || !value.userData?.destinationOwned || disposedTextures.has(value)) continue;

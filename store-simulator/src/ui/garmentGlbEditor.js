@@ -7,30 +7,57 @@
 // `garmentSurfacePoint`. Nada de eso existe en un GLB: la forma es la que modelo
 // Fer y no hay funcion de superficie que recorrer.
 //
-// Pero el GLB trae algo mejor: un mapa UV bien hecho, con el frente y el dorso
-// en zonas SEPARADAS (medido el 10/08: frente ~U 0.24-0.33, dorso ~U 0.65-0.76).
-// Entonces la estampa no se calcula en 3D: se PINTA en un lienzo plano que
-// despues se usa como textura de la tela. Eso es literalmente lo que pidio
-// Kusher — "poder armar las prendas yo con los diseños".
-//
-// La ventaja practica: el diseño se puede mover a cualquier lado de la prenda,
-// no solo al pecho, y se ve al instante.
+// El color sí usa el mapa UV del GLB. Los bordados se colocan como capas 3D
+// independientes sobre frente/espalda: no se deforman aunque cada modelo tenga
+// un UV distinto y se mueven con coordenadas simples dentro del pecho.
 
 import * as THREE from 'three';
 import { leerImagen } from './estampaImagen.js';
 
 const CLAVE = 'ft-prendas-glb-v1';
+const ORIGEN_REMERAS = new Map([
+  ...[
+    ['prenda:remera-oversize:mxkblc', 'fourtwenty-negro.png'],
+    ['prenda:remera-oversize:mxkblc-copia-1', 'cannabis-negro.png'],
+    ['prenda:remera-oversize:mxkblc-copia-2', '420-negro.png'],
+  ].map(([id, image]) => [id, { color: '#202124', image }]),
+  ...[
+    ['prenda:remera-regular:vmooh3', 'fourtwenty-blanco.png'],
+    ['prenda:remera-regular:vmooh3-copia-1', 'cannabis-blanco.png'],
+    ['prenda:remera-regular:vmooh3-copia-2', '420-blanco.png'],
+  ].map(([id, image]) => [id, { color: '#ffffff', image }]),
+  ...[
+    ['prenda:remera-oversize:mxkblc-copia-3', 'fourtwenty-blanco.png'],
+    ['prenda:remera-oversize:mxkblc-copia-4', 'cannabis-verde.png'],
+    ['prenda:remera-oversize:mxkblc-copia-5', '420-negro.png'],
+  ].map(([id, image]) => [id, { color: '#202124', image }]),
+  ...[
+    ['prenda:remera-regular:vmooh3-copia-3', 'fourtwenty-negro.png'],
+    ['prenda:remera-regular:vmooh3-copia-4', 'cannabis-verde.png'],
+    ['prenda:remera-regular:vmooh3-copia-5', '420-negro.png'],
+  ].map(([id, image]) => [id, { color: '#ffffff', image }]),
+]);
+function garmentDesignId(prenda) {
+  return prenda?.userData?.garmentDesignId ?? prenda?.userData?.editorId ?? prenda?.name;
+}
+export function originShirtDesign(id) {
+  const spec = ORIGEN_REMERAS.get(id);
+  if (!spec) return null;
+  return { color: spec.color, frente: { ...LADO_BASE, imagen: `/assets/bordados/${spec.image}` }, dorso: { ...LADO_BASE } };
+}
+
 // ⚠️ 2048 y no 1024. El logo ocupa una fraccion chica del mapa —en el pecho,
 // como un 16% del ancho— asi que a 1024 le tocaban ~160 pixeles y se veia
 // pastoso, nada parecido a un bordado. A 2048 son ~330 y se lee la trama.
 // El costo se controla con el cache de abajo: dos prendas con el MISMO diseño
 // comparten una sola textura, asi que 20 remeras con 4 diseños son 4 texturas.
-const LADO = 2048;
 const LADO_SIN_IMAGEN = 512;   // color plano: no hace falta resolucion
 
 // Texturas ya pintadas, por diseño. Sin esto cada prenda colgada se llevaba su
 // propia textura de 2048: veinte prendas eran 320 MB de memoria de video.
 const cacheDeTexturas = new Map();
+const cacheDeBordados = new Map();
+const NOMBRE_CAPA_BORDADO = '__ft_bordado_3d__';
 const PANEL_ID = 'ft-garment-glb-editor';
 export const BORDADOS = Object.freeze([
   { archivo: 'fourtwenty-blanco.png', nombre: 'FOURTWENTY blanco' },
@@ -46,10 +73,9 @@ export const BORDADOS = Object.freeze([
 // del pecho-frente del GLB; es un punto de partida, no una jaula: se mueve.
 const LADO_BASE = Object.freeze({
   imagen: null,
-  u: 0.285,
-  v: 0.835,           // centro vertical
-  ancho: 0.16,
-  alto: 0.16,
+  x: 0.5,              // coordenadas simples dentro del pecho, no UV
+  y: 0.30,
+  tamaño: 0.52,
   rotacion: 0,        // grados
   espejar: false,
   // Relieve del bordado. Un logo pegado plano se lee como calcomania; un
@@ -59,12 +85,7 @@ const LADO_BASE = Object.freeze({
   relieve: 0.5,
 });
 
-const ladoBase = (lado) => ({
-  ...LADO_BASE,
-  // Frente y espalda ocupan sectores distintos del UV. Estos centros salen
-  // de medir los GLB reales, no de adivinar con sliders sobre el mapa entero.
-  u: lado === 'dorso' ? 0.70 : 0.285,
-});
+const ladoBase = () => ({ ...LADO_BASE });
 
 export const DISEÑO_BASE = Object.freeze({
   color: null,        // null = el color con el que vino el GLB
@@ -75,17 +96,31 @@ export const DISEÑO_BASE = Object.freeze({
 // Compatibilidad con todo lo ya guardado: hasta esta mejora el diseño era un
 // solo objeto plano. Al abrirlo pasa al FRENTE y la espalda nace vacía.
 function normalizarDiseño(raw = {}) {
+  const normalizarLado = (valor = {}, lado = 'frente') => {
+    const salida = { ...ladoBase(), ...valor };
+    // Migra los diseños anteriores: conserva la posicion visual elegida, pero
+    // deja de depender del UV distinto de cada remera o hoodie.
+    if (!Number.isFinite(valor.x) && Number.isFinite(valor.u)) {
+      const zona = lado === 'dorso'
+        ? { minU: 0.57, maxU: 0.83, minV: 0.58, maxV: 0.96 }
+        : { minU: 0.16, maxU: 0.41, minV: 0.58, maxV: 0.96 };
+      salida.x = Math.max(0, Math.min(1, (valor.u - zona.minU) / (zona.maxU - zona.minU)));
+      salida.y = Math.max(0, Math.min(1, (zona.maxV - valor.v) / (zona.maxV - zona.minV)));
+      salida.tamaño = Math.max(0.08, Math.min(0.95, valor.ancho / (zona.maxU - zona.minU)));
+    }
+    return salida;
+  };
   if (raw.frente || raw.dorso) {
     return {
       color: raw.color ?? null,
-      frente: { ...ladoBase('frente'), ...(raw.frente ?? {}) },
-      dorso: { ...ladoBase('dorso'), ...(raw.dorso ?? {}) },
+      frente: normalizarLado(raw.frente, 'frente'),
+      dorso: normalizarLado(raw.dorso, 'dorso'),
     };
   }
   const { color = null, ...ladoAnterior } = raw;
   return {
     color,
-    frente: { ...ladoBase('frente'), ...ladoAnterior },
+    frente: normalizarLado(ladoAnterior, 'frente'),
     dorso: ladoBase('dorso'),
   };
 }
@@ -130,28 +165,259 @@ function telaDe(prenda) {
 // Guardado (por NOMBRE de la prenda, igual que los cuadros: el id del editor
 // puede correrse si cambia el orden de creacion, el nombre no)
 // ---------------------------------------------------------------------------
-function leerGuardado() {
+let diseñosEnMemoria;
+let promesaBaseDiseños;
+let baseDatosDiseños;
+
+function leerLegado() {
   try { return JSON.parse(localStorage.getItem(CLAVE)) ?? {}; } catch { return {}; }
 }
 
-function guardar(todos) {
-  try { localStorage.setItem(CLAVE, JSON.stringify(todos)); return true; }
-  catch { return false; }
+function abrirBaseDiseños() {
+  if (baseDatosDiseños) return Promise.resolve(baseDatosDiseños);
+  promesaBaseDiseños ??= new Promise((resolve, reject) => {
+    const request = indexedDB.open('bobilonia-designs', 1);
+    request.onupgradeneeded = () => request.result.createObjectStore('designs');
+    request.onsuccess = () => { baseDatosDiseños = request.result; resolve(baseDatosDiseños); };
+    request.onerror = () => { promesaBaseDiseños = null; reject(request.error); };
+  });
+  return promesaBaseDiseños;
+}
+
+function leerEnBase(db) {
+  return new Promise((resolve, reject) => {
+    const request = db.transaction('designs').objectStore('designs').get('garment-designs-v1');
+    request.onsuccess = () => resolve(request.result ?? null);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function escribirEnBase(db, value) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('designs', 'readwrite');
+    tx.objectStore('designs').put(value, 'garment-designs-v1');
+    tx.oncomplete = resolve;
+    tx.onabort = () => reject(tx.error ?? Error('Guardado interrumpido'));
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function hidratarGuardados() {
+  if (diseñosEnMemoria) return diseñosEnMemoria;
+  diseñosEnMemoria = leerLegado();
+  try {
+    const db = await abrirBaseDiseños();
+    const durables = await leerEnBase(db);
+    if (durables && typeof durables === 'object') diseñosEnMemoria = { ...diseñosEnMemoria, ...durables };
+    if (!durables || Object.keys(diseñosEnMemoria).some(k => JSON.stringify(durables[k]) !== JSON.stringify(diseñosEnMemoria[k]))) {
+      await escribirEnBase(db, diseñosEnMemoria);
+    }
+    // La copia durable está confirmada; recién entonces retiramos el duplicado
+    // del localStorage, que tiene un límite pequeño por sitio.
+    const copia = await leerEnBase(db);
+    if (copia && Object.keys(diseñosEnMemoria).every(k => JSON.stringify(copia[k]) === JSON.stringify(diseñosEnMemoria[k]))) {
+      localStorage.removeItem(CLAVE);
+    }
+  } catch (error) {
+    console.warn('No se pudo preparar el guardado durable de bordados.', error);
+  }
+  return diseñosEnMemoria;
+}
+
+function leerGuardado() {
+  if (!diseñosEnMemoria) diseñosEnMemoria = leerLegado();
+  return diseñosEnMemoria;
+}
+
+export async function prepararGuardadoDeBordados() {
+  return hidratarGuardados();
+}
+
+async function guardar(todos) {
+  diseñosEnMemoria = todos;
+  try {
+    const db = await abrirBaseDiseños();
+    await escribirEnBase(db, todos);
+    const copia = await leerEnBase(db);
+    if (!copia || Object.keys(todos).some(k => JSON.stringify(copia[k]) !== JSON.stringify(todos[k]))) return false;
+    localStorage.removeItem(CLAVE);
+    return true;
+  } catch (error) {
+    console.warn('No se pudo guardar el bordado en IndexedDB.', error);
+    return false;
+  }
 }
 
 export function diseñoDe(prenda) {
-  const guardado = leerGuardado()[prenda?.name];
-  return normalizarDiseño(guardado ?? { color: prenda?.userData?.garmentModel?.color ?? null });
+  const id = garmentDesignId(prenda);
+  const guardados = leerGuardado();
+  const actual = prenda?.userData?.ftDiseñoActual;
+  const guardado = guardados[id];
+  const preset = originShirtDesign(id);
+  const legado = guardados[prenda?.name];
+  const elegido = (prenda?.userData?.garmentDesignFromLayout ? actual : null) ?? guardado
+    ?? preset ?? actual ?? legado ?? { color: prenda?.userData?.garmentModel?.color ?? null };
+  return normalizarDiseño(elegido);
 }
 
 // ---------------------------------------------------------------------------
-// El lienzo: aca esta todo el trabajo real
+// El color usa el UV del GLB. El bordado NO: vive como una capa 3D plana sobre
+// el pecho. Asi nunca se retuerce por el mapa UV particular de cada modelo.
 // ---------------------------------------------------------------------------
+function cajaLocalDeTela(prenda, tela) {
+  tela.geometry?.computeBoundingBox?.();
+  prenda.updateMatrixWorld(true);
+  tela.updateMatrixWorld(true);
+  const caja = tela.geometry?.boundingBox;
+  if (!caja) return null;
+  const aPrenda = new THREE.Matrix4()
+    .copy(prenda.matrixWorld).invert()
+    .multiply(tela.matrixWorld);
+  const resultado = new THREE.Box3();
+  for (const x of [caja.min.x, caja.max.x]) {
+    for (const y of [caja.min.y, caja.max.y]) {
+      for (const z of [caja.min.z, caja.max.z]) {
+        resultado.expandByPoint(new THREE.Vector3(x, y, z).applyMatrix4(aPrenda));
+      }
+    }
+  }
+  return resultado;
+}
+
+function quitarCapasBordado(prenda) {
+  const capas = prenda.children.filter((o) => o.userData?.ftCapaBordado);
+  for (const capa of capas) {
+    prenda.remove(capa);
+    capa.material?.map?.dispose?.();
+    capa.geometry?.dispose?.();
+    capa.material?.dispose?.();
+  }
+}
+
+function texturaBordado(url, alCargar) {
+  let registro = cacheDeBordados.get(url);
+  if (registro) return registro;
+  registro = { imagen: null, aspecto: 1, cargando: true };
+  cacheDeBordados.set(url, registro);
+  const imagen = new Image();
+  imagen.onload = () => {
+    registro.imagen = imagen;
+    registro.aspecto = imagen.width / Math.max(1, imagen.height) || 1;
+    registro.cargando = false;
+    alCargar?.();
+  };
+  imagen.src = url;
+  return registro;
+}
+
+const ZONA_PECHO = Object.freeze({
+  'remera-oversize': { ancho: 0.46, inicio: 0.25, alto: 0.47 },
+  'remera-regular': { ancho: 0.45, inicio: 0.24, alto: 0.48 },
+  hoodie: { ancho: 0.43, inicio: 0.29, alto: 0.39 },
+});
+
+function superficieDePecho(prenda, tela, caja, nombreLado) {
+  const posicion = tela.geometry?.attributes?.position;
+  if (!posicion) return null;
+  const indice = tela.geometry.index;
+  const aPrenda = new THREE.Matrix4().copy(prenda.matrixWorld).invert().multiply(tela.matrixWorld);
+  const medida = caja.getSize(new THREE.Vector3());
+  const centro = caja.getCenter(new THREE.Vector3());
+  const zona = ZONA_PECHO[prenda.userData?.garmentModel?.clave] ?? ZONA_PECHO['remera-regular'];
+  const ancho = medida.x * zona.ancho;
+  const izquierda = centro.x - ancho / 2;
+  const arriba = caja.max.y - medida.y * zona.inicio;
+  const alto = medida.y * zona.alto;
+  const signo = nombreLado === 'frente' ? 1 : -1;
+  const salida = [];
+  const normales = [];
+  const uvs = [];
+  const a = new THREE.Vector3();
+  const b = new THREE.Vector3();
+  const c = new THREE.Vector3();
+  const normal = new THREE.Vector3();
+  const centroTri = new THREE.Vector3();
+  const total = indice ? indice.count : posicion.count;
+  const leer = (n, destino) => destino.fromBufferAttribute(posicion, indice ? indice.getX(n) : n).applyMatrix4(aPrenda);
+  for (let i = 0; i + 2 < total; i += 3) {
+    leer(i, a); leer(i + 1, b); leer(i + 2, c);
+    centroTri.copy(a).add(b).add(c).multiplyScalar(1 / 3);
+    const u = (centroTri.x - izquierda) / ancho;
+    const v = (arriba - centroTri.y) / alto;
+    normal.subVectors(b, a).cross(new THREE.Vector3().subVectors(c, a)).normalize();
+    if (u < 0 || u > 1 || v < 0 || v > 1 || normal.z * signo < 0.08) continue;
+    const empuje = normal.clone().multiplyScalar(Math.max(0.0004, medida.z * 0.002));
+    for (const p of [a, b, c]) {
+      salida.push(p.x + empuje.x, p.y + empuje.y, p.z + empuje.z);
+      normales.push(normal.x, normal.y, normal.z);
+      uvs.push((p.x - izquierda) / ancho, 1 - ((arriba - p.y) / alto));
+    }
+  }
+  if (!salida.length) return null;
+  const geometria = new THREE.BufferGeometry();
+  geometria.setAttribute('position', new THREE.Float32BufferAttribute(salida, 3));
+  geometria.setAttribute('normal', new THREE.Float32BufferAttribute(normales, 3));
+  geometria.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  return geometria;
+}
+
+function texturaDeDiseño(config, registro) {
+  if (!registro.imagen) return null;
+  const lienzo = document.createElement('canvas');
+  lienzo.width = lienzo.height = 1024;
+  const ctx = lienzo.getContext('2d');
+  const caja = (config.tamaño ?? 0.52) * lienzo.width;
+  const w = registro.aspecto >= 1 ? caja : caja * registro.aspecto;
+  const h = registro.aspecto >= 1 ? caja / registro.aspecto : caja;
+  ctx.translate((config.x ?? 0.5) * lienzo.width, (config.y ?? 0.30) * lienzo.height);
+  ctx.rotate((config.rotacion ?? 0) * Math.PI / 180);
+  if (config.espejar) ctx.scale(-1, 1);
+  ctx.drawImage(registro.imagen, -w / 2, -h / 2, w, h);
+  const textura = new THREE.CanvasTexture(lienzo);
+  textura.colorSpace = THREE.SRGBColorSpace;
+  textura.anisotropy = 16;
+  return textura;
+}
+
+function aplicarCapasBordado(prenda, tela, diseño) {
+  quitarCapasBordado(prenda);
+  const caja = cajaLocalDeTela(prenda, tela);
+  if (!caja) return;
+  for (const nombreLado of ['frente', 'dorso']) {
+    const config = diseño[nombreLado];
+    if (!config?.imagen) continue;
+    const registro = texturaBordado(config.imagen, () => {
+      aplicarCapasBordado(prenda, tela, prenda.userData.ftDiseñoActual ?? diseño);
+    });
+    const geometria = superficieDePecho(prenda, tela, caja, nombreLado);
+    const textura = texturaDeDiseño(config, registro);
+    if (!geometria || !textura) { geometria?.dispose(); continue; }
+    const material = new THREE.MeshBasicMaterial({
+      map: textura,
+      transparent: true,
+      alphaTest: 0.025,
+      depthWrite: false,
+      depthTest: true,
+      polygonOffset: true,
+      polygonOffsetFactor: -4,
+      polygonOffsetUnits: -4,
+      side: THREE.DoubleSide,
+      toneMapped: false,
+    });
+    const capa = new THREE.Mesh(geometria, material);
+    capa.name = `${NOMBRE_CAPA_BORDADO}-${nombreLado}`;
+    capa.userData.ftCapaBordado = true;
+    capa.renderOrder = 200;
+    prenda.add(capa);
+  }
+}
+
 export function pintarPrenda(prenda, diseño, { usarCache = true, lado = null } = {}) {
   const tela = telaDe(prenda);
   if (!tela?.material) return null;
 
   const completo = normalizarDiseño(diseño);
+  prenda.userData.ftDiseñoActual = completo;
   if (prenda.userData?.garmentModel && completo.color) {
     prenda.userData.garmentModel.color = completo.color;
   }
@@ -159,7 +425,7 @@ export function pintarPrenda(prenda, diseño, { usarCache = true, lado = null } 
   tela.userData.colorOriginal ??= tela.material.color.getHex();
 
   // Misma pinta => misma textura. Se compara el diseño entero, imagen incluida.
-  const clave = JSON.stringify(completo);
+  const clave = JSON.stringify({ color: completo.color });
   const cacheada = usarCache ? cacheDeTexturas.get(clave) : null;
   if (cacheada) {
     tela.userData.texturaTemporal?.dispose?.();
@@ -168,12 +434,12 @@ export function pintarPrenda(prenda, diseño, { usarCache = true, lado = null } 
     tela.material.color.set(0xffffff);
     tela.material.needsUpdate = true;
     tela.userData.lienzoPrenda = cacheada.lienzo;
+    aplicarCapasBordado(prenda, tela, completo);
     return cacheada.lienzo;
   }
 
   const lienzo = document.createElement('canvas');
-  const tieneImagen = Boolean(completo.frente.imagen || completo.dorso.imagen);
-  lienzo.width = lienzo.height = lado ?? (tieneImagen ? LADO : LADO_SIN_IMAGEN);
+  lienzo.width = lienzo.height = lado ?? LADO_SIN_IMAGEN;
   tela.userData.lienzoPrenda = lienzo;
   const ctx = lienzo.getContext('2d');
   // Sin esto el logo sale con escalones al achicarlo.
@@ -204,55 +470,19 @@ export function pintarPrenda(prenda, diseño, { usarCache = true, lado = null } 
   tela.material.color.set(0xffffff);
   tela.material.needsUpdate = true;
 
-  const dibujarLado = (config) => {
-    if (!config.imagen) return;
-    const img = new Image();
-    img.onload = () => {
-    // La proporcion del archivo manda: estirar un logo para llenar un cuadrado
-    // lo deforma. Se encaja dentro de la caja pedida sin deformarlo.
-    const caja = config.ancho * LADO_ACTUAL;
-    const proporcion = img.width / Math.max(1, img.height);
-    const w = proporcion >= 1 ? caja : caja * proporcion;
-    const h = proporcion >= 1 ? caja / proporcion : caja;
-    // El eje V del mapa va al reves que el Y del lienzo.
-    const cx = config.u * LADO_ACTUAL;
-    const cy = (1 - config.v) * LADO_ACTUAL;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate((config.rotacion ?? 0) * Math.PI / 180);
-    if (config.espejar) ctx.scale(-1, 1);
-
-    // RELIEVE: una copia oscura apenas corrida, debajo del logo. Es lo que hace
-    // que se lea como hilo levantado sobre la tela y no como una calcomania.
-    const relieve = config.relieve ?? 0;
-    if (relieve > 0) {
-      const corrimiento = Math.max(1, (relieve * LADO_ACTUAL) / 380);
-      ctx.globalAlpha = 0.42 * relieve;
-      ctx.filter = 'brightness(0.18)';
-      ctx.drawImage(img, -w / 2 + corrimiento, -h / 2 + corrimiento, w, h);
-      ctx.filter = 'none';
-      ctx.globalAlpha = 1;
-    }
-    ctx.drawImage(img, -w / 2, -h / 2, w, h);
-    ctx.restore();
-      textura.needsUpdate = true;
-    };
-    img.src = config.imagen;
-  };
-
-  dibujarLado(completo.frente);
-  dibujarLado(completo.dorso);
+  aplicarCapasBordado(prenda, tela, completo);
   return lienzo;
 }
 
 /** Repinta las prendas GLB de una escena con lo que Kusher tenga guardado. */
 export function applySavedGlbGarmentDesigns(scene) {
   const todos = leerGuardado();
-  if (!Object.keys(todos).length) return 0;
   let pintadas = 0;
   scene?.traverse?.((o) => {
-    if (!esPrendaGlb(o) || !todos[o.name]) return;
-    pintarPrenda(o, normalizarDiseño(todos[o.name]));
+    if (!esPrendaGlb(o)) return;
+    const id = garmentDesignId(o);
+    if (!todos[id] && !todos[o.name] && !originShirtDesign(id) && !o.userData.garmentDesignFromLayout) return;
+    pintarPrenda(o, diseñoDe(o));
     pintadas++;
   });
   return pintadas;
@@ -347,7 +577,7 @@ export function createGarmentGlbEditor() {
     </div>
 
     <div class="gg-label">Tamaño <span data-f="tamTxt"></span></div>
-    <input type="range" data-f="tam" min="0.02" max="0.6" step="0.005">
+    <input type="range" data-f="tam" min="0.08" max="0.95" step="0.01">
     <div class="gg-label">Girar <span data-f="rotTxt"></span></div>
     <input type="range" data-f="rot" min="-180" max="180" step="1">
 
@@ -373,10 +603,6 @@ export function createGarmentGlbEditor() {
   let timerPrevia = null;
   let arrastrando = false;
   const imagenesPrevia = new Map();
-  const ZONAS = {
-    frente: { minU: 0.16, maxU: 0.41, minV: 0.58, maxV: 0.96 },
-    dorso: { minU: 0.57, maxU: 0.83, minV: 0.58, maxV: 0.96 },
-  };
   // Como tratar el fondo de la proxima imagen que se suba.
   let modoFondo = 'auto';
   const TEXTO_FONDO = { auto: 'Fondo: automático', true: 'Fondo: quitar', false: 'Fondo: dejar' };
@@ -447,13 +673,12 @@ export function createGarmentGlbEditor() {
       return;
     }
 
-    const zona = ZONAS[ladoActivo];
     const area = { x: 150, y: 165, w: 260, h: 420 };
-    const nx = limitar((lado.u - zona.minU) / (zona.maxU - zona.minU), 0, 1);
-    const ny = limitar((zona.maxV - lado.v) / (zona.maxV - zona.minV), 0, 1);
+    const nx = limitar(lado.x ?? 0.5, 0, 1);
+    const ny = limitar(lado.y ?? 0.30, 0, 1);
     const cx = area.x + nx * area.w;
     const cy = area.y + ny * area.h;
-    const tamaño = limitar((lado.ancho / (zona.maxU - zona.minU)) * area.w, 22, 310);
+    const tamaño = limitar((lado.tamaño ?? 0.52) * area.w, 22, 310);
     let img = imagenesPrevia.get(lado.imagen);
     if (!img) {
       img = new Image();
@@ -486,9 +711,9 @@ export function createGarmentGlbEditor() {
 
   function pintarControles() {
     const lado = ladoActual();
-    f.tam.value = lado.ancho;
+    f.tam.value = lado.tamaño;
     f.rot.value = lado.rotacion ?? 0;
-    f.tamTxt.textContent = `${Math.round(lado.ancho * 100)}%`;
+    f.tamTxt.textContent = `${Math.round(lado.tamaño * 100)}%`;
     f.rotTxt.textContent = `${Math.round(lado.rotacion ?? 0)}°`;
     if (diseño.color) f.color.value = diseño.color;
     f.fondoBtn.textContent = TEXTO_FONDO[String(modoFondo)] ?? TEXTO_FONDO.auto;
@@ -515,8 +740,7 @@ export function createGarmentGlbEditor() {
 
   f.rot.addEventListener('input', () => { ladoActual().rotacion = Number(f.rot.value); cambio(); });
   f.tam.addEventListener('input', () => {
-    // Ancho y alto van juntos: separarlos deforma el logo y nadie quiere eso.
-    ladoActual().ancho = ladoActual().alto = Number(f.tam.value);
+    ladoActual().tamaño = Number(f.tam.value);
     cambio();
   });
   f.color.addEventListener('input', () => { diseño.color = f.color.value; cambio(); });
@@ -532,13 +756,12 @@ export function createGarmentGlbEditor() {
   for (const boton of panel.querySelectorAll('[data-preset]')) {
     boton.addEventListener('click', () => {
       const lado = ladoActual();
-      const zona = ZONAS[ladoActivo];
       const preset = boton.dataset.preset;
-      const nx = preset === 'pecho' ? 0.30 : 0.50;
-      const ny = preset === 'grande' ? 0.48 : 0.32;
-      lado.u = zona.minU + nx * (zona.maxU - zona.minU);
-      lado.v = zona.maxV - ny * (zona.maxV - zona.minV);
-      if (preset === 'grande') lado.ancho = lado.alto = 0.22;
+      lado.x = preset === 'pecho' ? 0.28 : 0.50;
+      lado.y = preset === 'grande' ? 0.44 : 0.30;
+      if (preset === 'pecho') lado.tamaño = 0.25;
+      if (preset === 'centro') lado.tamaño = 0.52;
+      if (preset === 'grande') lado.tamaño = 0.90;
       cambio();
     });
   }
@@ -550,9 +773,8 @@ export function createGarmentGlbEditor() {
     // Misma zona visual usada por dibujarSilueta, llevada de 560x700 a CSS.
     const nx = limitar(((ev.clientX - rect.left) / rect.width - 150 / 560) / (260 / 560), 0, 1);
     const ny = limitar(((ev.clientY - rect.top) / rect.height - 165 / 700) / (420 / 700), 0, 1);
-    const zona = ZONAS[ladoActivo];
-    lado.u = zona.minU + nx * (zona.maxU - zona.minU);
-    lado.v = zona.maxV - ny * (zona.maxV - zona.minV);
+    lado.x = nx;
+    lado.y = ny;
     cambio();
   }
 
@@ -603,10 +825,10 @@ export function createGarmentGlbEditor() {
       cambio();
     } else if (accion === 'guardar') {
       const todos = leerGuardado();
-      todos[prenda.name] = diseño;
-      const ok = guardar(todos);
+      todos[garmentDesignId(prenda)] = diseño;
       pintarPrenda(prenda, diseño);
-      avisar(ok ? 'Guardado en esta computadora.' : 'No entró: liberá espacio.', !ok);
+      avisar('Guardando de forma segura…');
+      guardar(todos).then(ok => avisar(ok ? 'Guardado en esta computadora.' : 'No se pudo completar el guardado. El diseño sigue visible; descargá una copia antes de cerrar.', !ok));
     } else if (accion === 'cerrar') cerrar();
   });
 
